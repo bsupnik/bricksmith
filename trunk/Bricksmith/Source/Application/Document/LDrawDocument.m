@@ -51,10 +51,10 @@
 #import "MinifigureDialogController.h"
 #import "MovePanel.h"
 #import "PartBrowserDataSource.h"
-#import "PartBrowserPanel.h"
+#import "PartBrowserPanelController.h"
 #import "PartReport.h"
 #import "PieceCountPanel.h"
-#import "RotationPanel.h"
+#import "RotationPanelController.h"
 #import "ScrollViewCategory.h"
 #import "StringUtilities.h"
 #import "UserDefaultsCategory.h"
@@ -75,7 +75,6 @@
     if (self)
 	{
 		[self setDocumentContents:[LDrawFile file]];
-        insertionMode = insertAtEnd;
 		[self setGridSpacingMode:gridModeMedium];
     }
     return self;
@@ -109,13 +108,14 @@
 //==============================================================================
 - (void) windowControllerDidLoadNib:(NSWindowController *) aController
 {
-	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
-	NSUserDefaults          *userDefaults       = [NSUserDefaults standardUserDefaults];
-	NSWindow                *window             = [aController window];
-	NSToolbar               *toolbar            = nil;
-	NSString                *savedSizeString    = nil;
-	NSInteger               drawerState         = 0;
-	NSUInteger              counter             = 0;
+	NSNotificationCenter	*notificationCenter 	= [NSNotificationCenter defaultCenter];
+	NSUserDefaults			*userDefaults			= [NSUserDefaults standardUserDefaults];
+	NSWindow				*window 				= [aController window];
+	NSToolbar				*toolbar				= nil;
+	NSString				*savedSizeString		= nil;
+	NSInteger				drawerState 			= 0;
+	NSUInteger				counter 				= 0;
+	NSNumberFormatter		*coordinateFormatter	= [[NSNumberFormatter alloc] init];
 
     [super windowControllerDidLoadNib:aController];
 	
@@ -145,6 +145,7 @@
 	   &&	[userDefaults boolForKey:PART_BROWSER_STYLE_KEY] == PartBrowserShowAsDrawer)
 	{
 		[partBrowserDrawer open];
+		[self->partsBrowser scrollSelectedCategoryToCenter];
 	}
 	
 	
@@ -161,6 +162,23 @@
 	[viewportArranger		setAutosaveName:@"HorizontalLDrawSplitview2.1"];
 	[self updateViewportAutosaveNamesAndRestore:YES];
 	
+	// Mouse hover coordinates
+	[coordinateFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+	[coordinateFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
+	[coordinateFormatter setMaximumFractionDigits:0];
+	[coordinateFormatter setMinimumFractionDigits:0];
+	
+	[self->coordinateFieldX setFormatter:coordinateFormatter];
+	[self->coordinateFieldY setFormatter:coordinateFormatter];
+	[self->coordinateFieldZ setFormatter:coordinateFormatter];
+	
+	
+	// update scope step display controls
+	[self setStepDisplay:NO];
+	
+	//Display our model.
+	[self loadDataIntoDocumentUI];
+	
 	// Set opening zoom percentages
 	LDrawGLView	*mainViewport = [self main3DViewport];
 	{
@@ -171,6 +189,8 @@
 		{
 			currentViewport = [allViewports objectAtIndex:counter];
 			
+			// For brand new viewports which are not yet displaying a model, set 
+			// the default zoom factor. 
 			if(currentViewport == mainViewport)
 			{
 				[currentViewport setZoomPercentage:100];
@@ -182,18 +202,24 @@
 
 			// Scrolling to center doesn't seem to work at restoration time, so 
 			// do it again here. 
-			[currentViewport scrollCenterToPoint:NSMakePoint( NSMidX([currentViewport frame]), NSMidY([currentViewport frame]) )];
+			[currentViewport scrollCenterToModelPoint:ZeroPoint3];
+
+			// For views which are displaying a model, we'll fit the model onscreen
+			// (This has no effect for empty models)
+			CGFloat unfitZoom	= [currentViewport zoomPercentage];
+			CGFloat fitZoom 	= 0.0;
+
+			[currentViewport zoomToFit:nil];
+			fitZoom = [currentViewport zoomPercentage];
+
+			// Back out a wee bit so the user has some room to work with his model
+			if(unfitZoom != fitZoom)
+			{
+				[currentViewport setZoomPercentage:(fitZoom * 0.9)];
+			}
  		}
 	}
-	
 	[[self foremostWindow] makeFirstResponder:mainViewport]; //so we can move it immediately.
-
-	// update scope step display controls
-	[self setStepDisplay:NO];
-	
-	//Display our model.
-	[self loadDataIntoDocumentUI];
-	
 	
 	//Notifications we want.
 	[notificationCenter addObserver:self
@@ -217,6 +243,9 @@
 	
 	// (none currently necessary!)
 
+	// Release memory
+	[coordinateFormatter release];
+	
 }//end windowControllerDidLoadNib:
 
 
@@ -280,6 +309,21 @@
 	return success;
 	
 }//end readFromFile:ofType:
+
+
+//========== showWindows =======================================================
+//
+// Purpose:		Overrides NSDocument method to fix a bug whereby the window is 
+//				not main once opened. This bug is some sort of odd interplay 
+//				with the progress panel; if you don't show the progress panel, 
+//				the bug goes away. 
+//
+//==============================================================================
+- (void) showWindows
+{
+	[super showWindows];
+	[[self windowForSheet] makeKeyAndOrderFront:self]; // manually force what is normally automatic behavior.
+}
 
 
 //========== revertToContentsOfURL:ofType:error: ===============================
@@ -1420,7 +1464,7 @@
 	NSPasteboard	*pasteboard			= [NSPasteboard generalPasteboard];
 	NSUndoManager	*undoManager		= [self undoManager];
 	
-	[self pasteFromPasteboard:pasteboard preventNameCollisions:YES];
+	[self pasteFromPasteboard:pasteboard preventNameCollisions:YES parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"", nil)];
 	
@@ -1508,7 +1552,7 @@
 	NSUndoManager	*undoManager		= [self undoManager];
 	
 	[self writeDirectives:selectedObjects toPasteboard:pasteboard];
-	[self pasteFromPasteboard:pasteboard preventNameCollisions:YES];
+	[self pasteFromPasteboard:pasteboard preventNameCollisions:YES parent:nil index:NSNotFound];
 
 	[undoManager setActionName:NSLocalizedString(@"UndoDuplicate", nil)];
 	
@@ -1538,9 +1582,9 @@
 //==============================================================================
 - (IBAction) orderFrontRotationPanel:(id)sender
 {
-	RotationPanel *panel = [RotationPanel rotationPanel];
+	RotationPanelController *rotateController = [RotationPanelController rotationPanel];
 	
-	[panel makeKeyAndOrderFront:self];
+	[[rotateController window] makeKeyAndOrderFront:self];
 
 }//end openRotationPanel:
 
@@ -1842,6 +1886,32 @@
 }//end hideParts:
 
 
+//========== showAllParts: =====================================================
+//
+// Purpose:		Unhides all hidden parts.
+//
+//==============================================================================
+- (IBAction) showAllParts:(id)sender
+{
+	LDrawModel  *activeModel    = [[self documentContents] activeModel];
+	NSArray     *elements       = [activeModel allEnclosedElements];
+	id          currentElement  = nil;
+	NSInteger   counter         = 0;
+	
+	// Show everything
+	for(counter = 0; counter < [elements count]; counter++)
+	{
+		currentElement = [elements objectAtIndex:counter];
+		
+		if(		[currentElement respondsToSelector:@selector(setHidden:)]
+		   &&	[currentElement isHidden] == YES)
+		{
+			[self setElement:currentElement toHidden:NO]; //undoable hook.
+		}
+	}
+}//end showAllParts:
+
+
 //========== snapSelectionToGrid: ==============================================
 //
 // Purpose:		Aligns all selected parts to the current grid setting.
@@ -1908,7 +1978,7 @@
 {
 	LDrawMPDModel	*newModel		= [LDrawMPDModel model];
 
-	[self addModel:newModel preventNameCollisions:YES];
+	[self addModel:newModel atIndex:NSNotFound preventNameCollisions:YES];
 	[self setActiveModel:newModel];
 	[[self documentContents] noteNeedsDisplay];
 	
@@ -1922,10 +1992,9 @@
 //==============================================================================
 - (IBAction) addStepClicked:(id)sender
 {
-
 	LDrawStep		*newStep		= [LDrawStep emptyStep];
 
-	[self addStep:newStep];
+	[self addStep:newStep atIndex:NSNotFound];
 	
 }//end addStepClicked:
 
@@ -1939,9 +2008,9 @@
 //==============================================================================
 - (IBAction) addPartClicked:(id)sender
 {	
-	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
-	PartBrowserStyleT	 partBrowserStyle	= [userDefaults integerForKey:PART_BROWSER_STYLE_KEY];
-	PartBrowserPanel	*partBrowserPanel	= nil;
+	NSUserDefaults				*userDefaults			= [NSUserDefaults standardUserDefaults];
+	PartBrowserStyleT			partBrowserStyle		= [userDefaults integerForKey:PART_BROWSER_STYLE_KEY];
+	PartBrowserPanelController	*partBrowserController	= nil;
 	
 	switch(partBrowserStyle)
 	{
@@ -1957,13 +2026,13 @@
 			
 		case PartBrowserShowAsPanel:
 			
-			partBrowserPanel = [PartBrowserPanel sharedPartBrowserPanel];
+			partBrowserController = [PartBrowserPanelController sharedPartBrowserPanel];
 			
 			//is it open and foremost?
-			if([partBrowserPanel isKeyWindow] == YES)
-				[[partBrowserPanel partBrowser] addPartClicked:sender];
+			if([[partBrowserController window] isKeyWindow] == YES)
+				[[partBrowserController partBrowser] addPartClicked:sender];
 			else
-				[partBrowserPanel makeKeyAndOrderFront:sender];
+				[[partBrowserController window] makeKeyAndOrderFront:sender];
 			
 			break;
 	} 
@@ -1981,13 +2050,36 @@
 //==============================================================================
 - (void) addSubmodelReferenceClicked:(id)sender
 {
-	NSString		*partName		= nil;
+	NSString		*partName			= nil;
+	LDrawMPDModel	*referencedModel = [[self documentContents] modelWithName:nil];
+	LDrawMPDModel	*destinationModel	= [self selectedModel];
+	BOOL			circularReference	= NO;
 	
-	partName = [[sender representedObject] modelName];
+	if(destinationModel == nil)
+		destinationModel = [[self documentContents] activeModel];
+		
+	partName			= [[sender representedObject] modelName];
+	referencedModel 	= [[self documentContents] modelWithName:partName];
+	circularReference	= [referencedModel containsReferenceTo:[destinationModel modelName]];
 	
 	//We got a part; let's add it!
-	if(partName != nil){
+	if(partName != nil && circularReference == NO){
 		[self addPartNamed:partName];
+	}
+	
+	if(circularReference)
+	{
+		NSAlert *alert = [[NSAlert alloc] init];
+		
+		[alert setMessageText:NSLocalizedString(@"CircularReferenceMessage", nil)];
+		[alert setInformativeText:NSLocalizedString(@"CircularReferenceInformative", nil)];
+		
+		NSBeep();
+		[alert beginSheetModalForWindow:[self windowForSheet]
+						  modalDelegate:nil
+						 didEndSelector:NULL
+							contextInfo:NULL ];
+		[alert release];
 	}
 }//end addSubmodelReferenceClicked:
 
@@ -2013,7 +2105,7 @@
 	
 	[newLine setLDrawColor:selectedColor];
 	
-	[self addStepComponent:newLine];
+	[self addStepComponent:newLine parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddLine", nil)];
 	[[self documentContents] noteNeedsDisplay];
@@ -2043,7 +2135,7 @@
 	
 	[newTriangle setLDrawColor:selectedColor];
 	
-	[self addStepComponent:newTriangle];
+	[self addStepComponent:newTriangle parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddTriangle", nil)];
 	[[self documentContents] noteNeedsDisplay];
@@ -2075,7 +2167,7 @@
 	
 	[newQuadrilateral setLDrawColor:selectedColor];
 	
-	[self addStepComponent:newQuadrilateral];
+	[self addStepComponent:newQuadrilateral parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddQuadrilateral", nil)];
 	[[self documentContents] noteNeedsDisplay];
@@ -2097,7 +2189,7 @@
 	
 	[newConditional setLDrawColor:selectedColor];
 	
-	[self addStepComponent:newConditional];
+	[self addStepComponent:newConditional parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddConditionalLine", nil)];
 	[[self documentContents] noteNeedsDisplay];
@@ -2115,7 +2207,7 @@
 	LDrawComment	*newComment		= [[[LDrawComment alloc] init] autorelease];
 	NSUndoManager	*undoManager	= [self undoManager];
 	
-	[self addStepComponent:newComment];
+	[self addStepComponent:newComment parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddComment", nil)];
 }//end addCommentClicked:
@@ -2131,7 +2223,7 @@
 	LDrawMetaCommand	*newCommand		= [[[LDrawMetaCommand alloc] init] autorelease];
 	NSUndoManager		*undoManager	= [self undoManager];
 	
-	[self addStepComponent:newCommand];
+	[self addStepComponent:newCommand parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddMetaCommand", nil)];
 }//end addCommentClicked:
@@ -2154,7 +2246,7 @@
 	{
 		minifigure = [minifigDialog minifigure];
 		[minifigure optimizeOpenGL];
-		[self addModel:minifigure preventNameCollisions:YES];
+		[self addModel:minifigure atIndex:NSNotFound preventNameCollisions:YES];
 	}
 	
 	[minifigDialog release];
@@ -2196,13 +2288,8 @@
 - (void) addDirective:(LDrawDirective *)newDirective
 			 toParent:(LDrawContainer * )parent
 {
-	NSInteger index = 0;
+	NSInteger index = [[parent subdirectives] count];
 	
-	if(self->insertionMode == insertAtEnd)
-		index = [[parent subdirectives] count];
-	else
-		index = 0;
-		
 	[self addDirective:newDirective
 			  toParent:parent
 			   atIndex:index];
@@ -2222,18 +2309,23 @@
 	NSUndoManager	*undoManager	= [self undoManager];
 	
 	[[self documentContents] lockForEditing];
+	self->lockViewingAngle = YES;
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 			deleteDirective:newDirective ];
-		
+	
+		// Turn off change notifications while mutating steps. Fixes Step 
+		// Display bug in which the viewing angle changes whenever inserting a 
+		// part. 
 		[parent insertDirective:newDirective atIndex:index];
 	}
 	CGLLockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
 	{
 		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
-		[[self documentContents] optimizeVertexes];
+		[self->documentContents optimizeVertexes];
 		
 	}
+	self->lockViewingAngle = NO;
 	CGLUnlockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
 	[[self documentContents] unlockEditor];
 	
@@ -2255,6 +2347,7 @@
 	NSInteger       index           = [[parent subdirectives] indexOfObject:doomedDirective];
 	
 	[[self documentContents] lockForEditing];
+	self->lockViewingAngle = YES;
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 				addDirective:doomedDirective
@@ -2262,9 +2355,11 @@
 					 atIndex:index ];
 		
 		[parent removeDirective:doomedDirective];
+
 		[self updateInspector];
-		[[self documentContents] optimizeVertexes];
+		[self->documentContents optimizeVertexes];
 	}
+	self->lockViewingAngle = NO;
 	[[self documentContents] unlockEditor];
 
 }//end deleteDirective:
@@ -2300,7 +2395,7 @@
 		//Do the move.
 		[object moveBy:moveVector];
 		
-		[[object enclosingModel] optimizeVertexes];
+		[self->documentContents optimizeVertexes];
 //		[object optimizeOpenGL];
 
 	}
@@ -2415,7 +2510,7 @@
 		[undoManager setActionName:actionName];
 		
 		[element setHidden:hideFlag];
-		[[element enclosingModel] optimizeVertexes];
+		[self->documentContents optimizeVertexes];
 	}
 	[element noteNeedsDisplay];
 
@@ -2440,7 +2535,7 @@
 	{
 		[object setLDrawColor:newColor];
 		[object optimizeOpenGL];
-		[[object enclosingModel] optimizeVertexes];
+		[self->documentContents optimizeVertexes];
 	}
 	[[self documentContents] unlockEditor];
 	[self updateInspector];
@@ -2686,7 +2781,7 @@
 		}
 		
 		else if(	[currentObject	isKindOfClass:[LDrawContainer class]] == NO
-				&&	[newParent		isKindOfClass:[LDrawStep class]] == NO)
+				&&	[newParent		isKindOfClass:[LDrawContainer class]] == NO)
 		{
 //			NSLog(@"killing thingy-not-in-step");
 			dragOperation	= NSDragOperationNone;
@@ -2717,48 +2812,13 @@
 	if(newParent == nil)
 		newParent = [self documentContents];
 	
-	LDrawDirective  *selectionTarget        = nil;
-	NSArray         *newSiblings            = [newParent subdirectives];
 	NSPasteboard    *pasteboard             = [info draggingPasteboard];
 	NSUndoManager   *undoManager            = [self undoManager];
 	NSOutlineView   *sourceView             = [info draggingSource];
-	NSInteger       selectionIndex          = 0;
 	NSMutableArray  *doomedObjects          = [NSMutableArray array];
 	NSArray         *pastedObjects          = nil;
 	BOOL            renameDuplicateModels   = YES;
 	NSInteger       counter                 = 0;
-	
-	//Due to an unfortunate lack of foresight in the design, the main pasting 
-	// code determines the paste location by looking at the current selection.
-	// So if we want to use the pasting code (and we do!), we must create a 
-	// selection before pasting.
-	//We select the item below which we are dropping this drag.
-	if(dropIndex > 0){
-		//get the sibling *above* the drop location.
-		selectionTarget = [newSiblings objectAtIndex:dropIndex-1]; 
-	}
-	else{
-		//a drop at the top of the container; get the container itself.
-		selectionTarget = newParent;
-	}
-	
-	// Select the item. Watch out--drops at the very top of the file will be 
-	// asking to select the LDrawFile itself, which is impossible. So we 
-	// deselect all; that conveys the concept implicitly. 
-	selectionIndex = [outlineView rowForItem:selectionTarget];
-	if(selectionIndex < 0)
-	{	//selectionTarget not displayed in outline. That means the root object--the File.
-		[outlineView deselectAll:self];
-	}
-	else
-	{
-		[outlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:selectionIndex]
-				 byExtendingSelection:NO ];
-	}
-	
-	//The standard pasting code will now automatically insert the dragged 
-	// objects *directly below* the selection--effectively doing the drag.
-	
 	
 	if(sourceView == outlineView)
 	{
@@ -2787,22 +2847,11 @@
 		renameDuplicateModels = NO;
 	}
 	
-	
-	//     Do The Move.
-	//
-	// Due to more lack of foresight, we need to include a special flag if the 
-	// move is happening at position 0 in newParent. The trouble is: in a normal 
-	// copy/paste or new-part operation, we want to insert the new element at 
-	// the *bottom* of the list in the absence of a different selection. But in 
-	// a drag, we want to add the  items in the explicit position indicated by 
-	// the user. If that position happens to be at the top of the list, then we 
-	// are in a pickle. So we set up the insertionMode flag to change the 
-	// behavior of the -addDirective:toParent: method just for this drag. 
-	self->insertionMode = insertAtBeginning;
+	// Do The Move.
 	pastedObjects = [self pasteFromPasteboard:pasteboard
-						preventNameCollisions:renameDuplicateModels];
-	self->insertionMode = insertAtEnd; //revert back to normal behavior.
-	
+						preventNameCollisions:renameDuplicateModels
+									   parent:newParent
+										index:dropIndex];
 	
 	if(sourceView == outlineView)
 	{
@@ -2873,6 +2922,12 @@
 	NSInteger		selectedStepIndex	= 0;
 	NSInteger       counter             = 0;
 	
+	// This method can be called from LDrawOpenGLView (in which case we already 
+	// have a context we want to use) or it might be called on its own. Since 
+	// selecting parts can trigger OpenGL commands, we should make sure we have 
+	// a context active, but we should also restore the current context when 
+	// we're done. 
+	NSOpenGLContext *originalContext = [NSOpenGLContext currentContext];
 	[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
 	
 	//Deselect all the previously-selected directives
@@ -2910,8 +2965,63 @@
 	//See if we just selected a new part; if so, we must remember it.
 	if([lastSelectedItem isKindOfClass:[LDrawPart class]])
 		[self setLastSelectedPart:lastSelectedItem];
-
+	
+	[originalContext makeCurrentContext];
+	
 }//end outlineViewSelectionDidChange:
+
+
+#pragma mark -
+#pragma mark MOUSE COORDINATES
+#pragma mark -
+
+//========== LDrawGLView:mouseIsOverPoint:confidence: ==========================
+//
+// Purpose:		Display the 3D world coordinates of the mouse as it hovers over 
+//				the model. 
+//
+//==============================================================================
+- (void) LDrawGLView:(LDrawGLView *)glView mouseIsOverPoint:(Point3)modelPoint confidence:(Tuple3)confidence
+{
+	[self->coordinateFieldX setFloatValue:modelPoint.x];
+	[self->coordinateFieldY setFloatValue:modelPoint.y];
+	[self->coordinateFieldZ setFloatValue:modelPoint.z];
+	
+	NSColor *questionableColor	= [NSColor colorWithCalibratedWhite:0.3 alpha:1.0];
+	NSColor *confidentColor 	= [NSColor colorWithCalibratedWhite:0.1 alpha:1.0];
+	
+	[self->coordinateFieldX setTextColor:(confidence.x == 0.0) ? questionableColor : confidentColor];
+	[self->coordinateFieldY setTextColor:(confidence.y == 0.0) ? questionableColor : confidentColor];
+	[self->coordinateFieldZ setTextColor:(confidence.z == 0.0) ? questionableColor : confidentColor];
+	[self->coordinateLabelX setTextColor:(confidence.x == 0.0) ? questionableColor : confidentColor];
+	[self->coordinateLabelY setTextColor:(confidence.y == 0.0) ? questionableColor : confidentColor];
+	[self->coordinateLabelZ setTextColor:(confidence.z == 0.0) ? questionableColor : confidentColor];
+	
+	[self->coordinateFieldX setHidden:NO];
+	[self->coordinateFieldY setHidden:NO];
+	[self->coordinateFieldZ setHidden:NO];
+	[self->coordinateLabelX setHidden:NO];
+	[self->coordinateLabelY setHidden:NO];
+	[self->coordinateLabelZ setHidden:NO];
+}
+
+
+//========== LDrawGLViewMouseExited: ===========================================
+//
+// Purpose:		The mouse location is no longer relevant to coordinate display. 
+//				This could be because the mouse exited the view, or because it 
+//				is controlling a tool which is not coordinate sensitive. 
+//
+//==============================================================================
+- (void) LDrawGLViewMouseNotPositioning:(LDrawGLView *)glView
+{
+	[self->coordinateFieldX setHidden:YES];
+	[self->coordinateFieldY setHidden:YES];
+	[self->coordinateFieldZ setHidden:YES];
+	[self->coordinateLabelX setHidden:YES];
+	[self->coordinateLabelY setHidden:YES];
+	[self->coordinateLabelZ setHidden:YES];
+}
 
 
 #pragma mark -
@@ -2975,11 +3085,11 @@
 	else
 	{
 		[self writeDirectives:directives toPasteboard:pasteboard];
-		[self pasteFromPasteboard:pasteboard preventNameCollisions:YES];
+		[self pasteFromPasteboard:pasteboard preventNameCollisions:YES parent:nil index:NSNotFound];
 		[undoManager setActionName:NSLocalizedString(@"UndoDrop", nil)];
 	}
 	
-	[[documentContents activeModel] optimizeVertexes];
+	[self->documentContents optimizeVertexes];
 
 }//end LDrawGLView:acceptDrop:
 
@@ -3028,12 +3138,11 @@
 //==============================================================================
 - (void) LDrawGLViewPartsWereDraggedIntoOblivion:(LDrawGLView *)glView
 {
-	id          currentDirective    = nil;
+	NSArray *directivesToDelete = [[self->selectedDirectives mutableCopy] autorelease];
+	id		currentDirective	= nil;
 	
-	while([self->selectedDirectives count] > 0)
+	for(currentDirective in directivesToDelete)
 	{
-		currentDirective	= [self->selectedDirectives lastObject];
-		
 		if([currentDirective isKindOfClass:[LDrawDrawableElement class]])
 		{
 			// Even though the directive has been drag-deleted, we still need to 
@@ -3156,7 +3265,7 @@
 		success = YES;
 	}
 
-	[[documentContents activeModel] optimizeVertexes];
+	[self->documentContents optimizeVertexes];
 	
 	return success;
 	
@@ -3414,10 +3523,14 @@
 		{
 			[self addModelsToMenus];
 		}
-		// If a step changed and we're in step display, we need to reset the 
-		// step's viewing angle. 
+		// If step display attributes changed and we're in step display, we need 
+		// to reset the step's viewing angle. 
+		// Note: Unfortunately, this is called when the step's content array 
+		//		 changes, and we have no way of distinguishing that case except 
+		//		 for a cheesy hack ivar "lockViewingAngle".
 		else if(	[[notification object] isKindOfClass:[LDrawStep class]]
-				&&	[[[self documentContents] activeModel] stepDisplay] == YES)
+				&&	[[[self documentContents] activeModel] stepDisplay] == YES
+				&&	self->lockViewingAngle == NO)
 		{
 			[self updateViewingAngleToMatchStep];
 		}
@@ -4024,12 +4137,10 @@
 //				magic. To this I respond, "don't do that."
 //
 //==============================================================================
-- (void) addModel:(LDrawMPDModel *)newModel preventNameCollisions:(BOOL)renameModels
+- (void) addModel:(LDrawMPDModel *)newModel atIndex:(NSInteger)insertAtIndex preventNameCollisions:(BOOL)renameModels
 {
 	NSString        *proposedModelName  = [newModel modelName];
-	LDrawModel      *selectedModel      = [self selectedModel];
 	NSUndoManager   *undoManager        = [self undoManager];
-	NSInteger       indexOfModel        = 0;
 	NSInteger       rowForItem          = 0;
 	
 	// Derive a non-duplicating name for this new model
@@ -4042,21 +4153,17 @@
 		[newModel setModelName:proposedModelName];
 	}
 	
-	
-	// Add directly after the currently-selected model?
-	if(selectedModel != nil)
+	// Insert
+	if(insertAtIndex == NSNotFound)
 	{
-		indexOfModel = [[self documentContents] indexOfDirective:selectedModel];
-		[self addDirective:newModel
-				  toParent:[self documentContents]
-				   atIndex:indexOfModel+1 ];
+		[self addDirective:newModel toParent:[self documentContents]];
 	}
-	// Add to the end of the model list.
 	else
-		[self addDirective:newModel
-				  toParent:[self documentContents] ];
+	{
+		[self addDirective:newModel toParent:[self documentContents] atIndex:insertAtIndex];
+	}
 	
-	//Select the new model.
+	// Select the new model.
 	[fileContentsOutline expandItem:newModel];
 	rowForItem = [fileContentsOutline rowForItem:newModel];
 	[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
@@ -4069,34 +4176,33 @@
 
 //========== addStep: ==========================================================
 //
-// Purpose:		Adds newStep to the currently-displayed model. If a part of 
-//				the model is already selected, the step will be added after 
-//				selection. Otherwise, the step appears at the end of the list.
+// Purpose:		Adds newStep to the currently-displayed model. If you specify an 
+//				index, it will be inserted there. Otherwise, the step appears at 
+//				the end of the list. 
 //
 //==============================================================================
-- (void) addStep:(LDrawStep *)newStep
+- (void) addStep:(LDrawStep *)newStep atIndex:(NSInteger)insertAtIndex
 {
-	LDrawStep		*selectedStep	= [self selectedStep];
 	LDrawMPDModel	*selectedModel	= [self selectedModel];
 	NSUndoManager	*undoManager	= [self undoManager];
 	
-	//We need to synchronize our addition with the model currently active.
+	// Synchronize our addition with the model currently active.
 	if(selectedModel == nil)
 		selectedModel = [[self documentContents] activeModel];
 	else
 		[[self documentContents] setActiveModel:selectedModel];
 	
-	if(selectedStep != nil){
-		NSInteger indexOfStep = [selectedModel indexOfDirective:selectedStep];
-		[self addDirective:newStep
-				  toParent:selectedModel
-				   atIndex:indexOfStep+1 ];
+	// Insert
+	if(insertAtIndex == NSNotFound)
+	{
+		[self addDirective:newStep toParent:selectedModel];
 	}
 	else
-		[self addDirective:newStep
-				  toParent:selectedModel ];
+	{
+		[self addDirective:newStep toParent:selectedModel atIndex:insertAtIndex];
+	}
 	
-	//Select the new step.
+	// Select the new step.
 	[fileContentsOutline expandItem:selectedModel];
 	[fileContentsOutline expandItem:newStep];
 	NSInteger rowForItem = [fileContentsOutline rowForItem:newStep];
@@ -4138,7 +4244,7 @@
 		
 		[newPart optimizeOpenGL];
 		
-		[self addStepComponent:newPart];
+		[self addStepComponent:newPart parent:nil index:NSNotFound];
 		
 		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
 		[[self documentContents] noteNeedsDisplay];
@@ -4153,46 +4259,43 @@
 //
 // Parameters:	newDirective: a directive which can be added to a step. These 
 //						include parts, geometric primitives, and comments.
+//				parent - requested target step; if nil, uses the last visible step
+//				insertAtIndex - index in parent.
 //
 //==============================================================================
 - (void) addStepComponent:(LDrawDirective *)newDirective
+				   parent:(LDrawContainer*)parent
+					index:(NSInteger)insertAtIndex
 {
-	LDrawDirective  *selectedComponent  = [self selectedStepComponent];
-	LDrawStep       *selectedStep       = [self selectedStep];
-	LDrawMPDModel   *selectedModel      = [self selectedModel];
-	NSInteger       indexOfElement      = 0;
-	NSInteger       rowForItem          = 0;
-	
-	//We need to synchronize our addition with the model currently active.
+	LDrawContainer	*targetContainer	= parent;
+	LDrawMPDModel	*selectedModel		= [self selectedModel];
+	NSInteger		rowForItem			= 0;
+
+	// Synchronize our addition with the model currently active.
 	if(selectedModel == nil)
 		selectedModel = [[self documentContents] activeModel];
 	else
 		[[self documentContents] setActiveModel:selectedModel];
 	
-	//We may have the model itself selected, in which case we will add this new 
+	// We may have the model itself selected, in which case we will add this new 
 	// element to the very bottom of the model.
-	if(selectedStep == nil)
-		selectedStep = [selectedModel visibleStep];
+	if(targetContainer == nil)
+		targetContainer = [selectedModel visibleStep];
 		
-	//It is also possible we have the step itself selected, in which case the 
-	// new coponent will be added to the bottom of the step.
-	if(selectedComponent == nil)
+	if(insertAtIndex == NSNotFound)
 	{
-		[self addDirective:newDirective
-				  toParent:selectedStep ];
+		// At a user's request, all new components are inserted in the last 
+		// visible step. That's how duplicating drag-and-drops work anyway. 
+		[self addDirective:newDirective toParent:targetContainer ];
 	}
-	//Otherwise, we add the new element right after the selected element.
 	else
 	{
-		indexOfElement = [selectedStep indexOfDirective:selectedComponent];
-		[self addDirective:newDirective
-				  toParent:selectedStep
-				   atIndex:indexOfElement+1 ];
+		[self addDirective:newDirective toParent:targetContainer atIndex:insertAtIndex ];
 	}
 
 	// Show the new element.
 	[fileContentsOutline expandItem:selectedModel];
-	[fileContentsOutline expandItem:selectedStep];
+	[fileContentsOutline expandItem:targetContainer];
 	
 	// Select it too.
 	rowForItem = [fileContentsOutline rowForItem:newDirective];
@@ -4435,20 +4538,8 @@
 	NSInteger   selectedRow     = [fileContentsOutline selectedRow];
 	id          selectedItem    = [fileContentsOutline itemAtRow:selectedRow];
 	
-	if(selectedItem == nil || [selectedItem isKindOfClass:[LDrawFile class]])
-		return nil;
-		
-	else if([selectedItem isKindOfClass:[LDrawModel class]])
-		return selectedItem;
-		
-	else if([selectedItem isKindOfClass:[LDrawStep class]])
-		return (LDrawMPDModel *)[selectedItem enclosingModel];
-		
-	else { //some kind of basic element.
-		LDrawStep *enclosingStep = (LDrawStep*)[selectedItem enclosingDirective];
-		return (LDrawMPDModel *)[enclosingStep enclosingModel];
-		
-	}
+	return (LDrawMPDModel*)[selectedItem enclosingModel];
+
 }//end selectedModel
 
 
@@ -4463,19 +4554,8 @@
 	NSInteger   selectedRow     = [fileContentsOutline selectedRow];
 	id          selectedItem    = [fileContentsOutline itemAtRow:selectedRow];
 	
-	//If a model is selected, a step can't be!
-	if(		selectedItem == nil
-	   ||	[selectedItem isKindOfClass:[LDrawFile class]]
-	   ||	[selectedItem isKindOfClass:[LDrawModel class]])
-		return nil;
-	
-	//The step itself is selected.
-	else if([selectedItem isKindOfClass:[LDrawStep class]])
-		return selectedItem;
-	
-	else { //some kind of basic element.
-		return (LDrawStep*)[selectedItem enclosingDirective];
-	}
+	return [selectedItem enclosingStep];
+
 }//end selectedStep
 
 
@@ -4680,10 +4760,14 @@
 //
 // Parameters:	pasteboard		- where the archived directives live
 //				renameModels	- add "copy X" suffixes to pasted models as needed. 
+//				parent			- add objects to this component (pass nil for default behavior)
+//				insertAtIndex	- child index within parent (pass NSNotFound for default behavior)
 //
 //==============================================================================
 - (NSArray *) pasteFromPasteboard:(NSPasteboard *) pasteboard
 			preventNameCollisions:(BOOL)renameModels
+						   parent:(LDrawContainer*)parent
+							index:(NSInteger)insertAtIndex
 {
 	NSArray         *objects        = nil;
 	id              currentObject   = nil; //some kind of unarchived LDrawDirective
@@ -4692,7 +4776,7 @@
 	NSInteger       counter         = 0;
 	
 	//We must make sure we have the proper pasteboard type available.
-	if([[pasteboard types] containsObject:LDrawDirectivePboardType])
+ 	if([[pasteboard types] containsObject:LDrawDirectivePboardType])
 	{
 		//Unarchived everything and dump it into our file.
 		objects = [pasteboard propertyListForType:LDrawDirectivePboardType];
@@ -4703,11 +4787,11 @@
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-				[self addModel:currentObject preventNameCollisions:renameModels];
+				[self addModel:currentObject atIndex:insertAtIndex preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
-				[self addStep:currentObject];
+				[self addStep:currentObject atIndex:insertAtIndex];
 			else
-				[self addStepComponent:currentObject];
+				[self addStepComponent:currentObject parent:parent index:insertAtIndex];
 			
 			[currentObject optimizeOpenGL];
 			[addedObjects addObject:currentObject];

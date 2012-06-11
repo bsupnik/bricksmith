@@ -10,10 +10,9 @@
 #ifndef LDrawKeywords_h
 #define LDrawKeywords_h
 
-// Structure
-#define LDRAW_MPD_FILE_START_MARKER				@"0 FILE"
-#define LDRAW_MPD_FILE_END_MARKER				@"0 NOFILE"
-#define LDRAW_STEP								@"0 STEP"
+// MPD
+#define LDRAW_MPD_SUBMODEL_START				@"FILE"
+#define LDRAW_MPD_SUBMODEL_END					@"NOFILE"
 
 //Comment markers
 #define LDRAW_COMMENT_WRITE						@"WRITE"
@@ -37,15 +36,26 @@
 // Model header
 #define LDRAW_HEADER_NAME						@"Name:"
 #define LDRAW_HEADER_AUTHOR						@"Author:"
-#define LDRAW_HEADER_OFFICIAL_MODEL				@"LDraw.org Official Model Repository"
-#define LDRAW_HEADER_UNOFFICIAL_MODEL			@"Unofficial Model"
+#define LDRAW_CATEGORY							@"!CATEGORY"
+#define LDRAW_KEYWORDS							@"!KEYWORDS"
 
-// Rotation Steps
-#define LDRAW_ROTATION_STEP						@"0 ROTSTEP"
+// Steps and Rotation Steps
+#define LDRAW_STEP_TERMINATOR					@"STEP"
+#define LDRAW_ROTATION_STEP_TERMINATOR			@"ROTSTEP"
 #define LDRAW_ROTATION_END						@"END"
 #define LDRAW_ROTATION_RELATIVE					@"REL"
 #define LDRAW_ROTATION_ABSOLUTE					@"ABS"
 #define LDRAW_ROTATION_ADDITIVE					@"ADD"
+
+// Textures
+#define LDRAW_TEXTURE							@"!TEXMAP"
+#define LDRAW_TEXTURE_GEOMETRY					@"!:"
+#define LDRAW_TEXTURE_METHOD_PLANAR				@"PLANAR"
+#define LDRAW_TEXTURE_START						@"START"
+#define LDRAW_TEXTURE_NEXT						@"NEXT"
+#define LDRAW_TEXTURE_FALLBACK					@"FALLBACK"
+#define LDRAW_TEXTURE_END						@"END"
+#define LDRAW_TEXTURE_GLOSSMAP					@"GLOSSMAP"
 
 // Important Categories
 #define LDRAW_MOVED_CATEGORY					@"Moved"

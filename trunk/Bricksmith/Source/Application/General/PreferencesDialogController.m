@@ -687,7 +687,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	// Initial Window State
 	//
 	
-	//OpenGL viewer settings -- see -restoreConfiguration in LDrawGLView.
+	// OpenGL viewer settings -- see -restoreConfiguration in LDrawGLView.
 	[initialDefaults setObject:[NSNumber numberWithInteger:ViewOrientation3D]			forKey:[LDRAW_GL_VIEW_ANGLE			stringByAppendingString:@" fileGraphicView_0"]];
 	[initialDefaults setObject:[NSNumber numberWithInteger:ProjectionModePerspective]	forKey:[LDRAW_GL_VIEW_PROJECTION	stringByAppendingString:@" fileGraphicView_0"]];
 	
@@ -703,9 +703,10 @@ PreferencesDialogController *preferencesDialog = nil;
 	//
 	// Part Browser
 	//
-	[initialDefaults setObject:NSLocalizedString(@"Brick", nil)			forKey:PART_BROWSER_PREVIOUS_CATEGORY];
-	[initialDefaults setObject:[NSNumber numberWithInteger:0]			forKey:PART_BROWSER_PREVIOUS_SELECTED_ROW];
-	[initialDefaults setObject:[NSArray array]							forKey:FAVORITE_PARTS_KEY];
+	[initialDefaults setObject:[NSNumber numberWithInteger:SearchModeAllCategories] forKey:PART_BROWSER_SEARCH_MODE];
+	[initialDefaults setObject:NSLocalizedString(@"Brick", nil)						forKey:PART_BROWSER_PREVIOUS_CATEGORY];
+	[initialDefaults setObject:[NSNumber numberWithInteger:0]						forKey:PART_BROWSER_PREVIOUS_SELECTED_ROW];
+	[initialDefaults setObject:[NSArray array]										forKey:FAVORITE_PARTS_KEY];
 	
 	//
 	// Tool Palette

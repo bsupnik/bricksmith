@@ -76,7 +76,6 @@
 	[self setModelDescription:@""];
 	[self setFileName:@""];
 	[self setAuthor:@""];
-	[self setLDrawRepositoryStatus:LDrawUnofficialModel];
 	
 	[self setStepDisplay:NO];
 	
@@ -160,7 +159,6 @@
 	modelDescription	= [[decoder decodeObjectForKey:@"modelDescription"] retain];
 	fileName			= [[decoder decodeObjectForKey:@"fileName"] retain];
 	author				= [[decoder decodeObjectForKey:@"author"] retain];
-	ldrawDotOrgStatus	= [decoder decodeIntForKey:@"ldrawDotOrgStatus"];
 	
 	return self;
 	
@@ -181,7 +179,6 @@
 	[encoder encodeObject:modelDescription	forKey:@"modelDescription"];
 	[encoder encodeObject:fileName			forKey:@"fileName"];
 	[encoder encodeObject:author			forKey:@"author"];
-	[encoder encodeInt:ldrawDotOrgStatus	forKey:@"ldrawDotOrgStatus"];
 	
 }//end encodeWithCoder:
 
@@ -198,7 +195,6 @@
 	[copied setModelDescription:[self modelDescription]];
 	[copied setFileName:[self fileName]];
 	[copied setAuthor:[self author]];
-	[copied setLDrawRepositoryStatus:[self ldrawRepositoryStatus]];
 	
 	[copied setStepDisplay:[self stepDisplay]];
 	[copied setMaximumStepIndexForStepDisplay:[self maximumStepIndexForStepDisplay]];
@@ -290,12 +286,7 @@
 	//Write out the file header in all of its irritating glory.
 	[written appendFormat:@"0 %@%@", [self modelDescription], CRLF];
 	[written appendFormat:@"0 %@ %@%@", LDRAW_HEADER_NAME, [self fileName], CRLF];
-	[written appendFormat:@"0 %@ %@%@", LDRAW_HEADER_AUTHOR, [self author], CRLF];
-	if([self ldrawRepositoryStatus] == LDrawOfficialModel)
-		[written appendFormat:@"0 %@%@", LDRAW_HEADER_OFFICIAL_MODEL, CRLF];
-	else
-		[written appendFormat:@"0 %@%@", LDRAW_HEADER_UNOFFICIAL_MODEL, CRLF];
-		
+	[written appendFormat:@"0 %@ %@%@", LDRAW_HEADER_AUTHOR, [self author], CRLF];		
 	
 	//Write out all the steps in the file.
 	for(counter = 0; counter < numberSteps; counter++)
@@ -503,18 +494,6 @@
 	return author;
 	
 }//end author
-
-
-//========== ldrawRepositoryStatus =============================================
-//
-// Purpose:		Returns whether or not this is an official LDraw.org model.
-//
-//==============================================================================
-- (LDrawDotOrgModelStatusT) ldrawRepositoryStatus
-{
-	return ldrawDotOrgStatus;
-	
-}//end ldrawRepositoryStatus
 
 
 //========== maximumStepIndexDisplayed =========================================
@@ -843,18 +822,6 @@
 }//end setAuthor:
 
 
-//========== setLDrawRepositoryStatus: =========================================
-//
-// Purpose:		Changes whether or not this is an official ldraw.org model.
-//
-//==============================================================================
-- (void) setLDrawRepositoryStatus:(LDrawDotOrgModelStatusT) newStatus
-{
-	ldrawDotOrgStatus = newStatus;
-	
-}//end setLDrawRepositoryStatus:
-
-
 //========== setMaximumStepIndexForStepDisplay: ================================
 //
 // Purpose:		Sets the index of the last step drawn. If the model is not 
@@ -888,6 +855,18 @@
 	self->stepDisplayActive = flag;
 	
 }//end setStepDisplay:
+
+
+//========== setVertexesNeedRebuilding =========================================
+//
+// Purpose:		Marks all the optimizations of this vertex collection as needing 
+//				rebuilding. 
+//
+//==============================================================================
+- (void) setVertexesNeedRebuilding
+{
+	[self->vertexes setVertexesNeedRebuilding];
+}
 
 
 #pragma mark -
@@ -1194,12 +1173,14 @@
 //==============================================================================
 - (void) optimizeVertexes
 {
+	[super optimizeVertexes];
+
 	// Allow primitives to be visible when displaying the model itself.
 	LDrawColor *parentColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
 	
 	if([vertexes isOptimizedForColor:parentColor])
 	{
-		// The vertexs have already been optimized for any referencing colors. 
+		// The vertexes have already been optimized for any referencing colors. 
 		// Just rebuild the existing color optimizations. 
 		[self->vertexes rebuildAllOptimizations];
 	}
@@ -1232,18 +1213,19 @@
 - (NSUInteger) parseHeaderFromLines:(NSArray *)lines
 				   beginningAtIndex:(NSUInteger)index
 {
-	NSString        *currentLine        = nil;
-	NSUInteger      counter             = 0;
-	BOOL			lineValidForHeader	= NO;
-	NSUInteger		firstNonHeaderIndex	= index;
+	NSString	*currentLine		= nil;
+	NSUInteger	counter 			= 0;
+	BOOL		lineValidForHeader	= NO;
+	NSUInteger	firstNonHeaderIndex = index;
+	NSString	*payload			= nil;
 	
 	@try
 	{
 		//First line. Should be a description of the model.
 		currentLine = [lines objectAtIndex:index];
-		if([self line:currentLine isValidForHeader:@""])
+		if([self line:currentLine isValidForHeader:@"" info:&payload])
 		{
-			[self setModelDescription:[currentLine substringFromIndex:2]];
+			[self setModelDescription:payload];
 			firstNonHeaderIndex++;
 		}
 		
@@ -1255,32 +1237,30 @@
 		{
 			currentLine         = [lines objectAtIndex:counter];
 			lineValidForHeader  = NO; // assume not, then disprove
+			payload				= nil;
 			
 			//Second line. Should be file name.
-			if([self line:currentLine isValidForHeader:@"Name: "])
+			if([self line:currentLine isValidForHeader:LDRAW_HEADER_NAME info:&payload])
 			{
-				[self setFileName:[currentLine substringFromIndex:[@"0 Name: " length]]];
+				[self setFileName:payload];
 				lineValidForHeader = YES;
 			}
 			//Third line. Should be author name.
-			else if([self line:currentLine isValidForHeader:@"Author: "])
+			else if([self line:currentLine isValidForHeader:LDRAW_HEADER_AUTHOR info:&payload])
 			{
-				[self setAuthor:[currentLine substringFromIndex:[@"0 Author: " length]]];
+				[self setAuthor:payload];
 				lineValidForHeader = YES;
 			}
-			//Fourth line. Should be officiality status.
-			else if([self line:currentLine isValidForHeader:@""])
+			//Fourth line. MLCad used it as a nonstandard way of indicating 
+			//official status. Since it was nonstandard, nobody used it. 
+			else if([self line:currentLine isValidForHeader:@"" info:&payload])
 			{
-				if([currentLine containsString:@"LDraw.org Official" options:NSCaseInsensitiveSearch])
-					[self setLDrawRepositoryStatus:LDrawOfficialModel];
-				else
-					[self setLDrawRepositoryStatus:LDrawUnofficialModel];
-				
-				//If the model was flagged as either official or un-official, then this was 
-				// part of the header and we delete it. Otherwise, who knows what it is?
-				// Just leave it be then.
-				if([currentLine containsString:@"official" options:NSCaseInsensitiveSearch])
+				if(		[payload isEqualToString:@"LDraw.org Official Model Repository"]
+				   ||	[payload isEqualToString:@"Unofficial Model"] )
 				{
+					// Bricksmith followed MLCad spewing out this garbage for 
+					// years. It is unnecessary. Now I am just stripping it out 
+					// of any file I encounter. 
 					lineValidForHeader = YES;
 				}
 			}
@@ -1309,16 +1289,34 @@
 //==============================================================================
 - (BOOL)		line:(NSString *)line
 	isValidForHeader:(NSString *)headerKey
+				info:(NSString**)infoPtr
 {
-	BOOL isValid = NO;
+	NSString	*parsedField	= nil;
+	NSString	*workingLine	= line;
+	BOOL		isValid	= NO;
 	
-	if( [line hasPrefix:[NSString stringWithFormat:@"0 %@", headerKey]] )
+	parsedField = [LDrawUtilities readNextField:  line
+									  remainder: &workingLine ];
+	if([parsedField isEqualToString:@"0"])
 	{
-		isValid = YES;
-	}
-	else
-		isValid = NO;
+		if([headerKey length] > 0)
+		{
+			parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
+			isValid = [parsedField isEqualToString:headerKey];
+		}
+		else
+		{
+			isValid = YES;
+		}
+
 		
+		if(isValid)
+		{
+			if(infoPtr)
+				*infoPtr = [workingLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+		}
+	}
+	
 	return isValid;
 	
 }//end line:isValidForHeader:
@@ -1334,7 +1332,6 @@
 {
 	[super registerUndoActions:undoManager];
 	
-	[[undoManager prepareWithInvocationTarget:self] setLDrawRepositoryStatus:[self ldrawRepositoryStatus]];
 	[[undoManager prepareWithInvocationTarget:self] setAuthor:[self author]];
 	[[undoManager prepareWithInvocationTarget:self] setFileName:[self fileName]];
 	[[undoManager prepareWithInvocationTarget:self] setModelDescription:[self modelDescription]];

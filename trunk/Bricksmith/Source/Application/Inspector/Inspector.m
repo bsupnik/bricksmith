@@ -88,30 +88,38 @@
 	NSString	*errorString		= nil;
 	id			 objectToInspect	= nil;
 	
-	
-	//No matter what, the current inspector is changing.
-	// End any editing happening in the current inspector. It is very important 
-	// to do this *before* attempting to replace the inspector!
-	[inspectorPanel makeFirstResponder:nil];
-	[currentInspector release];
-	currentInspector = nil;
-	
-	
 	//No object to inspect? Just show the empty message.
 	if(objects == nil || [objects count] == 0)
+	{
 		errorString = NSLocalizedString(@"EmptySelection", nil);
+		[self unloadInspector];
+	}
 	else if([objects count] > 1)
+	{
 		errorString = NSLocalizedString(@"MultipleSelection", nil);
+		[self unloadInspector];
+	}
 	else{
 		//We have an object; let's see if we can get an inspector for it.
 		objectToInspect = [objects objectAtIndex:0];
 		
-		foundInspector = [self loadInspectorForObject:objectToInspect];
+		if([currentInspector object] != objectToInspect)
+		{
+			[self unloadInspector];
+		
+			foundInspector = [self loadInspectorForObject:objectToInspect];
 
-		//We have an object, but it doesn't have an inspector we understand.
-		// Display a message indicating there is nothing here to inspect.
-		if(foundInspector == NO)
-			errorString = NSLocalizedString(@"NoInspector", nil);
+			//We have an object, but it doesn't have an inspector we understand.
+			// Display a message indicating there is nothing here to inspect.
+			if(foundInspector == NO)
+				errorString = NSLocalizedString(@"NoInspector", nil);
+		}
+		else
+		{
+			foundInspector = YES;
+			[currentInspector revert:self]; //calling revert should set the values of the palette.
+		}
+
 	}
 	
 	if(foundInspector == NO){
@@ -162,6 +170,21 @@
 	return foundInspector;
 	
 }//end loadInspectorForObject:
+
+
+//========== unloadInspector ===================================================
+//
+// Purpose:		Destroys the current inspector object.
+//
+//==============================================================================
+- (void) unloadInspector
+{
+	// End any editing happening in the current inspector. It is very important 
+	// to do this *before* attempting to replace the inspector!
+	[inspectorPanel makeFirstResponder:nil];
+	[currentInspector release];
+	currentInspector = nil;
+}
 
 
 //========== show ==============================================================

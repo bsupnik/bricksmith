@@ -17,6 +17,7 @@
 #import "PartLibrary.h"
 
 #import "LDrawFile.h"
+#import "LDrawKeywords.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
 #import "LDrawPathNames.h"
@@ -40,15 +41,27 @@ NSString *LDrawPartLibraryDidChangeNotification = @"LDrawPartLibraryDidChangeNot
 //The part catalog is a dictionary of parts filed by Category name.
 #define PARTS_CATALOG_KEY						@"Part Catalog"
 	//subdictionary keys.
-	#define PART_NUMBER_KEY						@"Part Number"
-	#define PART_NAME_KEY						@"Part Name"
-	//#define PART_CATEGORY_KEY					@"Category"
+NSString	*PART_NUMBER_KEY	= @"Part Number";
+NSString	*PART_NAME_KEY		= @"Part Name";
+NSString	*PART_CATEGORY_KEY	= @"Category";
+NSString	*PART_KEYWORDS_KEY	= @"Keywords";
 
 //Raw dictionary containing each part filed by number.
 #define PARTS_LIST_KEY							@"Part List"
 	//subdictionary keys.
 	//PART_NUMBER_KEY							(defined above)
 	//PART_NAME_KEY								(defined above)
+
+NSString	*CategoryNameKey		= @"Name";
+NSString	*CategoryDisplayNameKey = @"DisplayName";
+NSString	*CategoryChildrenKey	= @"Children";
+
+NSString	*Category_All			= @"AllCategories";
+NSString	*Category_Favorites		= @"Favorites";
+NSString	*Category_Alias			= @"Alias";
+NSString	*Category_Moved			= @"Moved";
+NSString	*Category_Primitives	= @"Primitives";
+NSString	*Category_Subparts		= @"Subparts";
 
 @implementation PartLibrary
 
@@ -105,17 +118,19 @@ static PartLibrary *SharedPartLibrary = nil;
 #pragma mark ACCESSORS
 #pragma mark -
 
-//========== allPartNames ======================================================
+//========== allPartCatalogRecords =============================================
 //
 // Purpose:		Returns all the part numbers in the library.
 //
 //==============================================================================
-- (NSArray *) allPartNames
+- (NSArray *) allPartCatalogRecords
 {
-	// all the reference numbers for parts.
-	return [[self->partCatalog objectForKey:PARTS_LIST_KEY] allKeys];
+	NSDictionary	*partList	= [self->partCatalog objectForKey:PARTS_LIST_KEY];
 	
-}//end allPartNames
+	// all the reference numbers for parts.
+	return [partList allValues];
+	
+}//end allPartCatalogRecords
 
 
 //========== categories ========================================================
@@ -131,6 +146,104 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end categories
 
 
+//========== categoryHierarchy =================================================
+//
+// Purpose:		Returns an outline-conducive list of all available categories.
+//
+//==============================================================================
+- (NSArray *) categoryHierarchy
+{
+	NSMutableArray  *fullCategoryList   = [NSMutableArray array];
+	NSMutableArray	*libraryItems		= [NSMutableArray array];
+	NSMutableArray	*categoryItems		= [NSMutableArray array];
+	NSMutableArray	*otherItems			= [NSMutableArray array];
+	
+	// Library group
+	[libraryItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_All,										CategoryNameKey,
+							 [self displayNameForCategory:Category_All],		CategoryDisplayNameKey,
+							 nil]];
+	
+	[libraryItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_Favorites,								CategoryNameKey,
+							 [self displayNameForCategory:Category_Favorites],	CategoryDisplayNameKey,
+							 nil]];
+							 
+	[fullCategoryList addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								 @"Library",										CategoryNameKey,
+								 NSLocalizedString(@"CategoryGroup_Library",nil),	CategoryDisplayNameKey,
+								 libraryItems,										CategoryChildrenKey,
+								 nil]];
+	
+	// Main categories
+	NSArray *categories = [[self categories] sortedArrayUsingSelector:@selector(compare:)];
+	for(NSString *name in categories)
+	{
+		if(		[name isEqualToString:Category_Alias] == NO
+		   &&	[name isEqualToString:Category_Moved] == NO
+		   &&	[name isEqualToString:Category_Primitives] == NO
+		   &&	[name isEqualToString:Category_Subparts] == NO )
+		{
+			[categoryItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+									  name,									CategoryNameKey,
+									  [self displayNameForCategory:name],	CategoryDisplayNameKey,
+									  nil]];
+		}
+	}
+	[fullCategoryList addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								 @"Part Categories",										CategoryNameKey,
+								 NSLocalizedString(@"CategoryGroup_PartCategories",nil),	CategoryDisplayNameKey,
+								 categoryItems,												CategoryChildrenKey,
+								 nil]];
+	
+	// Other categories
+	
+	[otherItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_Alias,									CategoryNameKey,
+							 [self displayNameForCategory:Category_Alias],		CategoryDisplayNameKey,
+							 nil]];
+	
+	[otherItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_Moved,									CategoryNameKey,
+							 [self displayNameForCategory:Category_Moved],		CategoryDisplayNameKey,
+							 nil]];
+	
+	[otherItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_Primitives,								CategoryNameKey,
+							 [self displayNameForCategory:Category_Primitives],	CategoryDisplayNameKey,
+							 nil]];
+	
+	[otherItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+							 Category_Subparts,									CategoryNameKey,
+							 [self displayNameForCategory:Category_Subparts],	CategoryDisplayNameKey,
+							 nil]];
+	
+	[fullCategoryList addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								 @"Other",										CategoryNameKey,
+								 NSLocalizedString(@"CategoryGroup_Other",nil),	CategoryDisplayNameKey,
+								 otherItems,									CategoryChildrenKey,
+								 nil]];
+								 
+	return fullCategoryList;
+	
+}//end categoryHierarchy
+
+
+//========== categoryForPartName: ==============================================
+//
+// Purpose:		Returns the part's category.
+//
+//==============================================================================
+- (NSString *) categoryForPartName:(NSString *)partName
+{
+	NSDictionary	*partList		= [self->partCatalog objectForKey:PARTS_LIST_KEY];
+	NSDictionary	*catalogInfo	= [partList objectForKey:partName];
+	NSString		*category		= [catalogInfo objectForKey:PART_CATEGORY_KEY];
+	
+	return category;
+}
+
+
 //========== favoritePartNames =================================================
 //
 // Purpose:		Returns all the part names the user has bookmarked as his 
@@ -144,25 +257,101 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end favoritePartNames
 
 
-//========== partNamesInCategory: ==============================================
+//========== displayNameForCategory: ===========================================
+//
+// Purpose:		Returns the human-friendly category name
+//
+//==============================================================================
+- (NSString *) displayNameForCategory:(NSString *)categoryName
+{
+	NSString *displayName = nil;
+	
+	if([categoryName isEqualToString:Category_All])
+	{
+		displayName = NSLocalizedString(@"AllCategories", nil);
+	}
+	else if([categoryName isEqualToString:Category_Favorites])
+	{
+		displayName = NSLocalizedString(@"FavoritesCategory", nil);
+	}
+	else
+	{
+		displayName = NSLocalizedString(categoryName, nil);
+	}
+	return displayName;
+}
+
+
+//========== favoritePartCatalogRecords ========================================
+//
+// Purpose:		Returns all the part info records the user has bookmarked as his 
+//				favorites. 
+//
+//==============================================================================
+- (NSArray *) favoritePartCatalogRecords
+{
+	NSDictionary	*partList		= [self->partCatalog objectForKey:PARTS_LIST_KEY];
+	NSMutableArray	*parts			= [NSMutableArray array];
+	NSDictionary	*partInfo		= nil;
+	
+	for(NSString *partName in self->favorites)
+	{
+		partInfo = [partList objectForKey:partName];
+		
+		if(partInfo)
+			[parts addObject:partInfo];
+	}
+	
+	return parts;
+	
+}//end favoritePartNames
+
+
+//========== partCatalogRecordsInCategory: =====================================
 //
 // Purpose:		Returns all the parts in the given category. Returns nil if the 
 //				category doesn't exist. 
 //
 //==============================================================================
-- (NSArray *) partNamesInCategory:(NSString *)categoryName
+- (NSArray *) partCatalogRecordsInCategory:(NSString *)categoryName
 {
-	NSArray *category   = [[partCatalog objectForKey:PARTS_CATALOG_KEY] objectForKey:categoryName];
-	NSArray *parts      = nil;
+	NSArray	*parts		= nil;
 	
-	if(category != nil)
+	if([categoryName isEqualToString:Category_All])
 	{
-		parts = [category valueForKey:PART_NUMBER_KEY];
+		// Retrieve all parts. We can do this by getting the entire (unsorted) 
+		// contents of PARTS_LIST_KEY in the partCatalog, which is actually 
+		// a dictionary of all parts.
+		parts = [self allPartCatalogRecords];
+		
+	}
+	else if([categoryName isEqualToString:Category_Favorites])
+	{
+		parts = [self favoritePartCatalogRecords];
+	}
+	else
+	{
+		NSArray 		*category			= [[partCatalog objectForKey:PARTS_CATALOG_KEY] objectForKey:categoryName];
+		NSDictionary	*partList			= [self->partCatalog objectForKey:PARTS_LIST_KEY];
+		NSMutableArray	*partsInCategory	= [NSMutableArray array];
+		NSString		*partName			= nil;
+		NSDictionary	*partInfo			= nil;
+
+		for(NSDictionary* categoryRecord in category)
+		{
+			partName = [categoryRecord objectForKey:PART_NUMBER_KEY];
+			partInfo = [partList objectForKey:partName];
+			
+			if(partInfo)
+				[partsInCategory addObject:partInfo];
+		}
+		
+		parts = partsInCategory;
 	}
 	
 	return parts;
 
-}//end partNamesInCategory:
+}//end partCatalogRecordsInCategory:
 
 
 #pragma mark -
@@ -210,7 +399,6 @@ static PartLibrary *SharedPartLibrary = nil;
 //				|			|
 //				|			<NSDictionary>
 //				|				|--> PART_NUMBER_KEY <NSString> (e.g., "3001.dat")
-//				|				|--> PART_NAME_KEY <NSString> (e.g., "Brick 2 x 4")
 //				|
 //				|--> PARTS_LIST_KEY <NSDictionary>
 //						|
@@ -352,12 +540,12 @@ static PartLibrary *SharedPartLibrary = nil;
 	// Scan for each part folder.
 	[self addPartsInFolder:primitivesPath
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Primitives", nil) //override all internal categories
+			 underCategory:NSLocalizedString(Category_Primitives, nil) //override all internal categories
 				namePrefix:nil ];
 	
 	[self addPartsInFolder:primitives48Path
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Primitives", nil) //override all internal categories
+			 underCategory:NSLocalizedString(Category_Primitives, nil) //override all internal categories
 				namePrefix:[NSString stringWithFormat:@"%@\\", PRIMITIVES_48_DIRECTORY_NAME] ];
 	
 	[self addPartsInFolder:partsPath
@@ -367,19 +555,19 @@ static PartLibrary *SharedPartLibrary = nil;
 	
 	[self addPartsInFolder:subpartsPath
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Subparts", nil)
+			 underCategory:NSLocalizedString(Category_Subparts, nil)
 				namePrefix:[NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME] ]; //prefix subpart numbers with the DOS path "s\"; that's just how it is. Yuck!
 	
 	
 	//Scan unofficial part folders.
 	[self addPartsInFolder:unofficialPrimitivesPath
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Primitives", nil) //groups unofficial primitives with official primitives
+			 underCategory:NSLocalizedString(Category_Primitives, nil) //groups unofficial primitives with official primitives
 			    namePrefix:nil ]; //a directory deeper, but no DOS path separators to manage
 	
 	[self addPartsInFolder:unofficialPrimitives48Path
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Primitives", nil)
+			 underCategory:NSLocalizedString(Category_Primitives, nil)
 				namePrefix:[NSString stringWithFormat:@"%@\\", PRIMITIVES_48_DIRECTORY_NAME] ];
 	
 	[self addPartsInFolder:unofficialPartsPath
@@ -389,7 +577,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	
 	[self addPartsInFolder:unofficialSubpartsPath
 				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(@"Subparts", nil) //groups unofficial subparts with official subparts
+			 underCategory:NSLocalizedString(Category_Subparts, nil) //groups unofficial subparts with official subparts
 				namePrefix:[NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME] ];
 	
 	//Save the part catalog out for future reference.
@@ -788,27 +976,23 @@ static PartLibrary *SharedPartLibrary = nil;
 			underCategory:(NSString *)categoryOverride
 			   namePrefix:(NSString *)namePrefix
 {
-	NSFileManager       *fileManager        = [[[NSFileManager alloc] init] autorelease];
+	NSFileManager		*fileManager			= [[[NSFileManager alloc] init] autorelease];
 // Not working for some reason. Why?
-//	NSArray				*readableFileTypes = [NSDocument readableTypes];
+//	NSArray 			*readableFileTypes = [NSDocument readableTypes];
 //	NSLog(@"readable types: %@", readableFileTypes);
-	NSArray             *readableFileTypes  = [NSArray arrayWithObjects:@"dat", @"ldr", nil];
+	NSArray 			*readableFileTypes		= [NSArray arrayWithObjects:@"dat", @"ldr", nil];
 	
-	NSArray             *partNames          = [fileManager contentsOfDirectoryAtPath:folderPath error:NULL];
-	NSUInteger          numberOfParts       = [partNames count];
-	NSUInteger          counter;
+	NSArray 			*partNames				= [fileManager contentsOfDirectoryAtPath:folderPath error:NULL];
+	NSUInteger			numberOfParts			= [partNames count];
+	NSUInteger			counter;
 	
-	NSString            *currentPath        = nil;
-	NSString            *category           = nil;
-	NSString            *partDescription    = nil;
-	NSString            *partNumber         = nil;
+	NSString			*currentPath			= nil;
+	NSMutableDictionary *categoryRecord 		= nil;
 	
-	NSMutableDictionary *categoryRecord     = nil;
-	
-	//Get the subreference tables out of the main catalog (the should already exist!).
-	NSMutableDictionary *partNumberList		= [catalog objectForKey:PARTS_LIST_KEY]; //lookup parts by number
-	NSMutableDictionary	*categories			= [catalog objectForKey:PARTS_CATALOG_KEY]; //lookup parts by category
-	NSMutableArray		*currentCategory	= nil;
+	//Get the subreference tables out of the main catalog (they should already exist!).
+	NSMutableDictionary *catalog_partNumbers	= [catalog objectForKey:PARTS_LIST_KEY]; //lookup parts by number
+	NSMutableDictionary *catalog_categories 	= [catalog objectForKey:PARTS_CATALOG_KEY]; //lookup parts by category
+	NSMutableArray		*catalog_category		= nil;
 	
 	
 	
@@ -820,47 +1004,51 @@ static PartLibrary *SharedPartLibrary = nil;
 		
 		if([readableFileTypes containsObject:[currentPath pathExtension]] == YES)
 		{
-			partDescription		= [self descriptionForFilePath:currentPath];
+			categoryRecord		= [self catalogInfoForFileAtPath:currentPath];
 			
 			// Make sure the part file was valid!
-			if(partDescription != nil)
+			if(categoryRecord != nil && [categoryRecord count] > 0)
 			{
-				if(categoryOverride == nil)
-					category	= [self categoryForDescription:partDescription];
-				else
-					category	= categoryOverride;
+				//---------- Alter catalog info --------------------------------
 				
-				//Get the name of the part.
-				// Also, we need a standard way to reference it. So we convert the 
-				// string to lower-case. Note that parts in subfolders of LDraw/parts 
-				// must have a name prefix of their subpath, e.g., "s\partname.dat" 
-				// for a part in the LDraw/parts/s folder.
-				partNumber		= [[currentPath lastPathComponent] lowercaseString];
+				if(categoryOverride)
+					[categoryRecord setObject:categoryOverride forKey:PART_CATEGORY_KEY];
+				
+				// Parts in subfolders of LDraw/parts must have a name prefix of 
+				// their subpath, e.g., "s\partname.dat" for a part in the 
+				// LDraw/parts/s folder. 
 				if(namePrefix != nil)
-					partNumber = [namePrefix stringByAppendingString:partNumber];
+				{
+					NSString *partNumber = nil;
+					partNumber	= [categoryRecord objectForKey:PART_NUMBER_KEY];
+					partNumber	= [namePrefix stringByAppendingString:partNumber];
+					[categoryRecord setObject:partNumber forKey:PART_NUMBER_KEY];
+				}
 				
+				//---------- Catalog the part ----------------------------------
 				
-				categoryRecord = [NSDictionary dictionaryWithObjectsAndKeys:
-					partNumber,			PART_NUMBER_KEY,
-					partDescription,	PART_NAME_KEY,
-					nil ];
-				
-				//File the part by category
-				currentCategory = [categories objectForKey:category];
-				if(currentCategory == nil)
+				NSString *category = [categoryRecord objectForKey:PART_CATEGORY_KEY];
+				catalog_category = [catalog_categories objectForKey:category];
+				if(catalog_category == nil)
 				{
 					//We haven't encountered this category yet. Initialize it now.
-					currentCategory = [NSMutableArray array];
-					[categories setObject:currentCategory
-								   forKey:category ];
+					catalog_category = [NSMutableArray array];
+					[catalog_categories setObject:catalog_category forKey:category ];
 				}
-				[currentCategory addObject:categoryRecord];
+				
+				// For some reason, I made each entry in the category a 
+				// dictionary with part info. This was a database design 
+				// mistake; it should have been an array of part reference 
+				// numbers, if not just built up at runtime. 
+				NSString *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
+																	  forKey:PART_NUMBER_KEY];
+				[catalog_category addObject:categoryEntry];
 				
 				
-				//Also file this part under its number.
-				[partNumberList setObject:categoryRecord
-								   forKey:partNumber ];
-				
+				// Also file the part in a master list by reference name.
+				[catalog_partNumbers setObject:categoryRecord
+										forKey:[categoryRecord objectForKey:PART_NUMBER_KEY] ];
+										
 //				NSLog(@"processed %@", [partNames objectAtIndex:counter]);
 			}
 		}
@@ -902,7 +1090,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	// least it's a prettifying one. 
 	if([category hasPrefix:@"_"])
 	{
-		category = NSLocalizedString(@"AliasCategory", nil);
+		category = Category_Alias;
 	}
 	// Moved parts always begin with ~Moved, which is ugly. We'll strip the '~'.
 	else if([category hasPrefix:@"~"])
@@ -913,19 +1101,6 @@ static PartLibrary *SharedPartLibrary = nil;
 	return category;
 	
 }//end categoryForDescription:
-
-
-//========== categoryForPart: ==================================================
-//
-// Purpose:		Shortcut for categoryForDescription:
-//
-//==============================================================================
-- (NSString *)categoryForPart:(LDrawPart *)part
-{
-	NSString *description = [self descriptionForPart:part];
-	return [self categoryForDescription:description];
-	
-}//end categoryForPart:
 
 
 //========== descriptionForPart: ===============================================
@@ -983,10 +1158,11 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end descriptionForPartName:
 
 
-//========== descriptionForFilePath: ===========================================
+//========== catalogInfoForFileAtPath: =========================================
 //
-// Purpose:		Pulls out the first line of the given file. By convention, the 
-//				first line of an non-MPD LDraw file is the description; e.g.,
+// Purpose:		Pulls out the catalog-relevate metadata out of the given file. 
+//				By convention, the first line of an non-MPD LDraw file is the 
+//				description; e.g., 
 //
 //				0 Brick  2 x  4
 //
@@ -995,45 +1171,123 @@ static PartLibrary *SharedPartLibrary = nil;
 //
 // Returns:		nil if the file is not valid.
 //
+//				PART_NUMBER_KEY		string
+//				PART_CATEGORY_KEY	string
+//				PART_KEYWORDS_KEY	array
+//				PART_NAME_KEY		string
+//
 //==============================================================================
-- (NSString *) descriptionForFilePath:(NSString *)filepath
+- (NSMutableDictionary *) catalogInfoForFileAtPath:(NSString *)filepath
 {
-	NSString		*fileContents		= nil;
-	NSString		*partDescription	= nil;
-	NSCharacterSet	*whitespace			= [NSCharacterSet whitespaceAndNewlineCharacterSet];
+	NSAutoreleasePool	*pool				= [[NSAutoreleasePool alloc] init];
+
+	NSString			*fileContents		= [LDrawUtilities stringFromFile:filepath];
+	NSCharacterSet		*whitespace 		= [NSCharacterSet whitespaceAndNewlineCharacterSet];
 	
-	// Read the file. I believe all official library files are supposed to be 
-	// ASCII, but whatever. 
-	fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:NULL];
+	NSString            *partNumber         = nil;
+	NSString			*partDescription	= nil;
+	NSString			*category			= nil;
+	NSMutableArray		*keywords			= nil;
 	
-	if(fileContents == nil)
-		fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSISOLatin1StringEncoding error:NULL];
+	NSMutableDictionary *catalogInfo		= nil;
 	
-	if(fileContents == nil) // just use an encoding which is guaranteed defined for all codepoints.
-		fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSMacOSRomanStringEncoding error:NULL];
 	
 	// Read the first line of the file. Make sure the file is parsable.
 	if(		fileContents != nil
 	   &&	[fileContents length] > 0 )
 	{
-		NSUInteger		 newlineIndex	= 0; //index of the first newline character in the file.
-		NSString		*firstLine		= nil;
-		NSString		*lineCode		= nil;
+		NSUInteger	stringLength		= [fileContents length];
+		NSUInteger	lineStartIndex		= 0;
+		NSUInteger	nextlineStartIndex	= 0;
+		NSUInteger	newlineIndex		= 0; //index of the first newline character in the line.
+		NSInteger	lineLength			= 0;
+		NSString	*line				= nil;
+		NSString	*lineCode			= nil;
+		NSString	*lineRemainder		= nil;
 		
-		// LDraw uses DOS lineendings
-		[fileContents getLineStart: NULL //I don't care
-							   end: NULL //I don't want the terminator included.
-					   contentsEnd: &newlineIndex
-						  forRange: NSMakeRange(0,1) ];
-						  
-		firstLine	= [fileContents substringToIndex:newlineIndex];
-		lineCode	= [LDrawUtilities readNextField:firstLine
-									      remainder:&partDescription ];
-
-		//Check to see if this is a valid LDraw header.
-		if([lineCode isEqualToString:@"0"] == YES)
+		catalogInfo = [NSMutableDictionary dictionary];
+		
+		// Get the name of the part.
+		// We need a standard way to reference it; use lower-case to avoid any 
+		// case-sensitivity issues. 
+		partNumber = [[filepath lastPathComponent] lowercaseString];
+		[catalogInfo setObject:partNumber forKey:PART_NUMBER_KEY];
+		
+		while(nextlineStartIndex < stringLength)
 		{
-			partDescription = [partDescription stringByTrimmingCharactersInSet:whitespace];
+			// LDraw uses DOS lineendings
+			[fileContents getLineStart: &lineStartIndex
+								   end: &nextlineStartIndex
+						   contentsEnd: &newlineIndex
+							  forRange: NSMakeRange(nextlineStartIndex,1) ]; //that is, contains the first character.
+			
+			lineLength	= newlineIndex - lineStartIndex;
+			line		= [fileContents substringWithRange:NSMakeRange(lineStartIndex, lineLength)];
+			lineCode	= [LDrawUtilities readNextField:line remainder:&lineRemainder ];
+
+			//Check to see if this is a valid LDraw header.
+			if(lineStartIndex == 0)
+			{
+				if([lineCode isEqualToString:@"0"] == NO)
+					break;
+					
+				partDescription = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+				[catalogInfo setObject:partDescription forKey:PART_NAME_KEY];
+			}
+			else if([lineCode isEqualToString:@"0"] == YES)
+			{
+				// Try to find keywords or category
+				NSString *meta = [LDrawUtilities readNextField:lineRemainder remainder:&lineRemainder];
+				
+				if([meta isEqualToString:LDRAW_CATEGORY])
+				{
+					category = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+					
+					// Turns out !CATEGORY is not as reliable as it ought to be. 
+					// In typical LDraw fashion, the feature was not have a 
+					// simultaneous, universal deployment. Unfortunately, the 
+					// only categories I deem to be consistent and advantageous 
+					// under the current system are the two-word categories that 
+					// couldn't be represented under the old system. 
+					if([category rangeOfString:@" "].location != NSNotFound)
+					{
+						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
+					}
+				}
+				else if([meta isEqualToString:LDRAW_KEYWORDS])
+				{
+					if(keywords == nil)
+					{
+						keywords = [NSMutableArray array];
+						[catalogInfo setObject:keywords forKey:PART_KEYWORDS_KEY];
+					}
+					// Keywords can be multiline, so must add to any we've already collected! 
+					NSArray *newKeywords = [lineRemainder componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
+					for(NSString *keyword in newKeywords)
+					{
+						[keywords addObject:[keyword stringByTrimmingCharactersInSet:whitespace]];
+					}
+				}
+			}
+			else if([lineCode length] == 0)
+			{
+				// line is blank. Skip.
+			}
+			else
+			{
+				// Non-comment, non-blank line. This cannot be part of the header.
+				break;
+			}
+		}
+		
+		// If no !CATEGORY directive, the the category is to be derived from the 
+		// first word of the description. 
+		if(		[catalogInfo objectForKey:PART_NAME_KEY]
+		   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil)
+		{
+			partDescription = [catalogInfo objectForKey:PART_NAME_KEY];
+			category		= [self categoryForDescription:partDescription];
+			[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 		}
 	}
 	else
@@ -1041,9 +1295,12 @@ static PartLibrary *SharedPartLibrary = nil;
 		NSLog(@"%@ is not a valid file", filepath);
 	}
 	
-	return partDescription;
+	[catalogInfo retain];
+	[pool drain];
 	
-}//end partInfoForFile
+	return [catalogInfo autorelease];
+	
+}//end catalogInfoForFileAtPath
 
 
 //========== readModelAtPath: ==================================================

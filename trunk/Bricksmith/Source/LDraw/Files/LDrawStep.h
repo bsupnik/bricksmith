@@ -84,6 +84,8 @@ typedef enum
 - (void) setStepRotationType:(LDrawStepRotationT)newValue;
 
 //Utilities
++ (BOOL) lineIsStepTerminator:(NSString*)line;
++ (BOOL) lineIsRotationStepTerminator:(NSString*)line;
 - (BOOL) parseRotationStepFromLine:(NSString *)rotstep;
 
 @end

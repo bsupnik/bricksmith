@@ -44,8 +44,6 @@
 
 //Accessors
 - (NSString *) displayName;
-- (LDrawFile *) enclosingFile;
-- (LDrawStep *) enclosingStep;
 - (Point3) position;
 - (NSString *) referenceName;
 - (LDrawModel *) referencedMPDSubmodel;

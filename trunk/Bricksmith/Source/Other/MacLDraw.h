@@ -21,9 +21,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#define COLUMNIZE_OUTPUT_KEY						@"ColumnizeOutput"
 #define DOCUMENT_WINDOW_SIZE						@"Document Window Size"
-#define DONATION_SCREEN_SUPPRESS_THIS_VERSION		@"DonationRequestSuppressThisVersion"
 #define DONATION_SCREEN_LAST_VERSION_DISPLAYED		@"DonationRequestLastVersion"
+#define DONATION_SCREEN_SUPPRESS_THIS_VERSION		@"DonationRequestSuppressThisVersion"
 #define FAVORITE_PARTS_KEY							@"FavoriteParts"
 #define FILE_CONTENTS_DRAWER_STATE					@"File Contents Drawer State" //obsolete
 #define GRID_SPACING_COARSE							@"Grid Spacing: Coarse"
@@ -38,6 +39,7 @@
 #define PART_BROWSER_PANEL_SHOW_AT_LAUNCH			@"Part Browser Panel Show at Launch"
 #define PART_BROWSER_PREVIOUS_CATEGORY				@"Part Browser Previous Category"
 #define PART_BROWSER_PREVIOUS_SELECTED_ROW			@"Part Browser Previous Selected Row"
+#define PART_BROWSER_SEARCH_MODE					@"Part Browser Search Mode"
 #define PART_BROWSER_STYLE_KEY						@"Part Browser Style"
 #define PREFERENCES_LAST_TAB_DISPLAYED				@"Preferences Tab"
 #define SYNTAX_COLOR_COLORS_KEY						@"Syntak Color Colors"
@@ -49,7 +51,6 @@
 #define SYNTAX_COLOR_UNKNOWN_KEY					@"Syntax Color Unknown"
 #define TOOL_PALETTE_HIDDEN							@"Tool Palette Hidden"
 #define VIEWPORTS_EXPAND_TO_AVAILABLE_SIZE			@"ViewportsExpandToAvailableSize"
-#define COLUMNIZE_OUTPUT_KEY						@"ColumnizeOutput"
 
 #define MINIFIGURE_HAS_HAT							@"Minifigure Has Hat"
 #define MINIFIGURE_HAS_HEAD							@"Minifigure Has Head"
@@ -262,6 +263,14 @@ typedef enum PartBrowserStyle
 	PartBrowserShowAsPanel	= 1
 
 } PartBrowserStyleT;
+
+
+typedef enum SearchMode
+{
+	SearchModeAllCategories	= 0,
+	SearchModeSelectedCategory = 1
+
+} SearchModeT;
 
 
 ////////////////////////////////////////////////////////////////////////////////

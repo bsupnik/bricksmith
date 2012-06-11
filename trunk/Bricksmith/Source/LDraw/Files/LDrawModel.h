@@ -15,12 +15,6 @@
 @class LDrawStep;
 @class LDrawVertexes;
 
-typedef enum {
-	LDrawOfficialModel = 1,
-	LDrawUnofficialModel = 2
-} LDrawDotOrgModelStatusT;
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // class LDrawModel
@@ -31,7 +25,6 @@ typedef enum {
 	NSString				*modelDescription;
 	NSString				*fileName;
 	NSString				*author;
-	LDrawDotOrgModelStatusT	 ldrawDotOrgStatus;
 	
 	LDrawVertexes			*vertexes;
 	Box3					*cachedBounds;			// used only for optimized parts
@@ -56,7 +49,6 @@ typedef enum {
 - (NSString *)modelDescription;
 - (NSString *)fileName;
 - (NSString *)author;
-- (LDrawDotOrgModelStatusT) ldrawRepositoryStatus;
 - (NSUInteger) maximumStepIndexForStepDisplay;
 - (Tuple3) rotationAngleForStepAtIndex:(NSUInteger)stepNumber;
 - (BOOL) stepDisplay;
@@ -68,7 +60,6 @@ typedef enum {
 - (void) setModelDescription:(NSString *)newDescription;
 - (void) setFileName:(NSString *)newName;
 - (void) setAuthor:(NSString *)newAuthor;
-- (void) setLDrawRepositoryStatus:(LDrawDotOrgModelStatusT) newStatus;
 - (void) setStepDisplay:(BOOL)flag;
 - (void) setMaximumStepIndexForStepDisplay:(NSUInteger)stepIndex;
 
@@ -88,6 +79,6 @@ typedef enum {
 - (void) optimizeStructure;
 - (void) optimizeVertexes;
 - (NSUInteger) parseHeaderFromLines:(NSArray *)lines beginningAtIndex:(NSUInteger)index;
-- (BOOL) line:(NSString *)line isValidForHeader:(NSString *)headerKey;
+- (BOOL) line:(NSString *)line isValidForHeader:(NSString *)headerKey info:(NSString**)infoPtr;
 
 @end

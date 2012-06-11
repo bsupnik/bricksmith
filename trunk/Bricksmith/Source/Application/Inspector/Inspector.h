@@ -25,6 +25,7 @@
 - (void) inspectObject:(id) object;
 - (void) inspectObjects:(NSArray *) objects;
 - (BOOL) loadInspectorForObject:(id) objectToInspect;
+- (void) unloadInspector;
 - (void) show:(id) sender;
 
 @end

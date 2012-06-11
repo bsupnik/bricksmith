@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		RotationPanel.h
+// File:		RotationPanelController.h
 //
 // Purpose:		Advanced rotation controls for doing relative rotations on 
 //				groups of parts.
@@ -21,7 +21,7 @@ typedef enum {
 	
 } RotationModeT;
 
-@interface RotationPanel : DialogPanel 
+@interface RotationPanelController : NSWindowController 
 {
 	RotationModeT	rotationMode;
 	float			angleX;
@@ -31,8 +31,7 @@ typedef enum {
 	float			fixedPointY;
 	float			fixedPointZ;
 	
-	IBOutlet NSFormatter	*formatterAngles;
-	IBOutlet NSFormatter	*formatterPoints;
+	IBOutlet NSObjectController	*objectController;
 }
 
 //initialization

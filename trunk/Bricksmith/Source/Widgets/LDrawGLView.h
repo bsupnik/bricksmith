@@ -8,10 +8,10 @@
 //
 //==============================================================================
 #import <Cocoa/Cocoa.h>
-#import <OpenGL/OpenGL.h>
 
 #import "BricksmithUtilities.h"
 #import "ColorLibrary.h"
+#import "LDrawGLRenderer.h"
 #import "LDrawUtilities.h"
 #import "MatrixMath.h"
 #import "ToolPalette.h"
@@ -20,30 +20,7 @@
 @class FocusRingView;
 @class LDrawDirective;
 @class LDrawDragHandle;
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//		Types
-//
-////////////////////////////////////////////////////////////////////////////////
-
-// Projection Mode
-typedef enum
-{
-	ProjectionModePerspective	= 0,
-	ProjectionModeOrthographic	= 1
-	
-} ProjectionModeT;
-
-
-// Draw Mode
-typedef enum
-{
-	LDrawGLDrawNormal			= 0,	//full draw
-	LDrawGLDrawExtremelyFast	= 1		//bounds only
-	
-} RotationDrawModeT;
+@class LDrawGLRenderer;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,8 +28,15 @@ typedef enum
 //		LDrawGLView
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawGLView : NSOpenGLView <LDrawColorable>
+@interface LDrawGLView : NSOpenGLView <LDrawColorable, LDrawGLRendererDelegate>
 {
+@private
+	// The renderer is responsible for viewport math and OpenGL calls. Because 
+	// of the latter, there is NO PUBLIC ACCESS, since each OpenGL call must be 
+	// preceeded by activating the correct context. Thus any renderer-modifying 
+	// calls must pass through the LDrawOpenGLView first. 
+	LDrawGLRenderer			*renderer;
+	
 	FocusRingView			*focusRingView;
 	
 	IBOutlet id             delegate;
@@ -63,10 +47,6 @@ typedef enum
 	
 	BOOL                    acceptsFirstResponder;	// YES if we can become key
 	NSString                *autosaveName;
-	LDrawDirective          *fileBeingDrawn;		// Should only be an LDrawFile or LDrawModel.
-													// if you want to do anything else, you must 
-													// tweak the selection code in LDrawDrawableElement
-													// and here in -mouseUp: to handle such cases.
 	
 	// Threading
 	NSConditionLock			*canDrawLock;			// when condition is YES, render thread will wake up and draw.
@@ -74,30 +54,12 @@ typedef enum
 	NSUInteger              numberDrawRequests;		// how many threaded draws are piling up in the queue.
 	BOOL					hasThread;
 	
-	// Drawing Environment
-	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
-	NSSize					snugFrameSize;
-	LDrawColor				*color;					// default color to draw parts if none is specified
-	GLfloat                 glBackgroundColor[4];
-	gridSpacingModeT		gridMode;
-	ProjectionModeT         projectionMode;
-	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
-	ViewOrientationT        viewOrientation;		// our orientation
-	NSTimeInterval			fpsStartTime;
-	NSInteger				framesSinceStartTime;
-	
 	// Event Tracking
-	BOOL                    isGesturing;			// true if performing a multitouch trackpad gesture.
-	BOOL                    isTrackingDrag;			// true if the last mousedown was followed by a drag, and we're tracking it (drag-and-drop doesn't count)
-	BOOL					isStartingDrag;			// this is the first event in a drag
 	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
 	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
-	BOOL                    didPartSelection;		// tried part selection during this click
 	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
-	Vector3                 draggingOffset;			// displacement between part 0's position and the initial click point of the drag
-	Point3                  initialDragLocation;	// point in model where part was positioned at draggingEntered
+	NSEventType				startingGestureType;
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
-	LDrawDragHandle			*activeDragHandle;		// drag handle hit on last mouse-down (or nil)
 }
 
 - (void) internalInit;
@@ -108,9 +70,6 @@ typedef enum
 - (void) strokeInsideRect:(NSRect)rect thickness:(CGFloat)borderWidth;
 
 // Accessors
-- (NSPoint) centerPoint;
-- (Matrix4) getInverseMatrix;
-- (Matrix4) getMatrix;
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
@@ -146,50 +105,20 @@ typedef enum
 - (void) directInteractionDragged:(NSEvent *)theEvent;
 - (void) dragAndDropDragged:(NSEvent *)theEvent;
 - (void) dragHandleDragged:(NSEvent *)theEvent;
-- (void) panDragged:(NSEvent *)theEvent;
-- (void) rotationDragged:(NSEvent *)theEvent;
-- (void) zoomDragged:(NSEvent *)theEvent;
 
-- (void) mouseCenterClick:(NSEvent*)theEvent ;
 - (void) mousePartSelection:(NSEvent *)theEvent;
 - (void) mouseZoomClick:(NSEvent*)theEvent;
 
 - (void) cancelClickAndHoldTimer;
 
-// Drag and Drop
-- (BOOL) updateDirectives:(NSArray *)directives withDragPosition:(NSPoint)dragPointInWindow depthReferencePoint:(Point3)modelReferencePoint constrainAxis:(BOOL)constrainAxis;
-
 // Notifications
-- (void) displayNeedsUpdating:(NSNotification *)notification;
 
 // Utilities
-- (NSArray *) getDirectivesUnderMouse:(NSEvent *)theEvent
-					  amongDirectives:(NSArray *)directives
-							 fastDraw:(BOOL)fastDraw;
-- (NSArray *) getPartsFromHits:(NSDictionary *)hits;
-- (void) resetFrameSize;
 - (void) restoreConfiguration;
 - (void) saveConfiguration;
 - (void) saveImageToPath:(NSString *)path;
-- (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(NSPoint)viewPoint;
 - (void) scrollCenterToModelPoint:(Point3)modelPoint;
-- (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(NSPoint)viewportPoint;
-- (void) scrollCenterToPoint:(NSPoint)newCenter;
 - (void) takeBackgroundColorFromUserDefaults;
-
-// - Geometry
-- (NSPoint) convertPointFromViewport:(Point2)viewportPoint;
-- (Point2) convertPointToViewport:(NSPoint)point_view;
-- (float) fieldDepth;
-- (void) getModelAxesForViewX:(Vector3 *)outModelX Y:(Vector3 *)outModelY Z:(Vector3 *)outModelZ;
-- (void) makeProjection;
-- (Point3) modelPointForPoint:(NSPoint)viewPoint;
-- (Point3) modelPointForPoint:(NSPoint)viewPoint depthReferencePoint:(Point3)depthPoint;
-- (NSRect) nearOrthoClippingRectFromVisibleRect:(NSRect)visibleRect;
-- (NSRect) nearFrustumClippingRectFromVisibleRect:(NSRect)visibleRect;
-- (NSRect) nearOrthoClippingRectFromNearFrustumClippingRect:(NSRect)visibilityPlane;
-- (NSRect) visibleRectFromNearOrthoClippingRect:(NSRect)visibilityPlane;
-- (NSRect) visibleRectFromNearFrustumClippingRect:(NSRect)visibilityPlane;
 
 @end
 
@@ -218,6 +147,8 @@ typedef enum
    byExtendingSelection:(BOOL) shouldExtend;
 - (void) LDrawGLView:(LDrawGLView *)glView willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLView:(LDrawGLView *)glView dragHandleDidMove:(LDrawDragHandle *)dragHandle;
+- (void) LDrawGLView:(LDrawGLView *)glView mouseIsOverPoint:(Point3)modelPoint confidence:(Tuple3)confidence;
+- (void) LDrawGLViewMouseNotPositioning:(LDrawGLView *)glView;
 
 @end
 

@@ -94,13 +94,35 @@
 }//end cellSize
 
 
+//========== titleRectForBounds: ===============================================
+//
+// Purpose:		Return a vertically-centered title.
+//
+//==============================================================================
+- (NSRect) titleRectForBounds:(NSRect)theRect
+{
+	NSRect titleRect = [super titleRectForBounds:theRect];
+	NSSize titleSize = NSZeroSize;
+	
+	if(self->verticallyCentersTitle)
+	{
+		titleSize = [[self attributedStringValue] size];
+	
+		titleRect.size.height	= titleSize.height;
+		titleRect.origin.y		= NSMinY(theRect) + floor((NSHeight(theRect) - NSHeight(titleRect)) / 2);
+	}
+	
+	return titleRect;
+}
+
+
 //========== drawInteriorWithFrame:inView: =====================================
 //
 // Purpose:		Draw the image we have added, then let the superclass draw the 
 //				text.
 //
 //==============================================================================
-- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+- (void) drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
 	NSRect				textFrame	= cellFrame;
 	NSSize				imageSize	= NSZeroSize;
@@ -142,7 +164,8 @@
    }
 	
 	//Now draw the text.
-    [super drawInteriorWithFrame:textFrame inView:controlView];
+	NSRect titleRect = [self titleRectForBounds:textFrame];
+	[super drawInteriorWithFrame:titleRect inView:controlView];
 
 }//end drawInteriorWithFrame:inView:
 
@@ -225,9 +248,6 @@
 #pragma mark -
 
 //========== image ==============================================================
-//
-// Purpose:		Returns the image displayed along with the text in this cell.
-//
 //==============================================================================
 - (NSImage *)  image
 {
@@ -237,9 +257,6 @@
 
 
 //========== imagePadding ======================================================
-//
-// Purpose:		Returns the horizontal margin of the image.
-//
 //==============================================================================
 - (CGFloat) imagePadding
 {
@@ -247,6 +264,15 @@
 	
 }//end imagePadding
 
+
+//========== verticallyCentersTitle ============================================
+//==============================================================================
+- (BOOL) verticallyCentersTitle
+{
+	return self->verticallyCentersTitle;
+}
+
+#pragma mark -
 
 //========== setImage: =========================================================
 //
@@ -273,6 +299,24 @@
 	imagePadding = newAmount;
 	
 }//end setImagePadding:
+
+
+//========== setVerticallyCentersTitle: ========================================
+//
+// Purpose:		Forces the title to be drawn centered along the y-axis of the 
+//				cell.
+//
+// Notes:		This is also provided by AppKit, but only via private ivars. 
+//				Source List tables, for example, magically use the private 
+//				flag to achive the same result. However, there is a bug where it 
+//				is not applied when the list is scrolled such that a group 
+//				header is out of sight before the view appears.
+//
+//==============================================================================
+- (void) setVerticallyCentersTitle:(BOOL)flag
+{
+	self->verticallyCentersTitle = flag;
+}
 
 
 #pragma mark -

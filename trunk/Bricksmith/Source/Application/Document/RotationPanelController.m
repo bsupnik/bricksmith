@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		RotationPanel.m
+// File:		RotationPanelController.m
 //
 // Purpose:		Advanced rotation controls for doing relative rotations on 
 //				groups of parts. This is not meant to provide absolute rotations 
@@ -10,12 +10,12 @@
 //  Created by Allen Smith on 8/27/06.
 //  Copyright 2006. All rights reserved.
 //==============================================================================
-#import "RotationPanel.h"
+#import "RotationPanelController.h"
 
 
-@implementation RotationPanel
+@implementation RotationPanelController
 
-RotationPanel *sharedRotationPanel = nil;
+RotationPanelController *sharedRotationPanel = nil;
 
 #pragma mark -
 #pragma mark INITIALIZATION
@@ -29,28 +29,29 @@ RotationPanel *sharedRotationPanel = nil;
 + (id) rotationPanel
 {
 	if(sharedRotationPanel == nil)
-		sharedRotationPanel = [[RotationPanel alloc] init];
+		sharedRotationPanel = [[RotationPanelController alloc] init];
 		
 	return sharedRotationPanel;
 	
 }//end rotationPanel
 
 
+//========== init ==============================================================
+//
+// Purpose:		Initialize the object.
+//
+//==============================================================================
+- (id) init
+{
+	self = [super initWithWindowNibName:@"RotationPanel"];
+	
+	return self;
+}
+
+
 #pragma mark -
 #pragma mark ACCESSORS
 #pragma mark -
-
-//========== panelNibName ======================================================
-//
-// Purpose:		Identifies to our superclass the nib to load.
-//
-//==============================================================================
-- (NSString *) panelNibName
-{
-	return @"RotationPanel";
-
-}//end panelNibName
-
 
 //========== enableFixedPointCoordinates =======================================
 //
@@ -139,9 +140,50 @@ RotationPanel *sharedRotationPanel = nil;
 //==============================================================================
 - (IBAction) rotateButtonClicked:(id)sender
 {
-	[NSApp sendAction:@selector(panelRotateParts:) to:nil from:self];
+	// Validate, and guarantee that Undo points to the document and not some 
+	// typed-in text field. 
+	if([[self window] makeFirstResponder:nil])
+	{
+		[NSApp sendAction:@selector(panelRotateParts:) to:nil from:self];
+	}
 
 }//end rotateButtonClicked:
+
+
+#pragma mark -
+#pragma mark DELEGATES
+#pragma mark -
+
+//========== windowWillClose: ==================================================
+//
+// Purpose:		Window is closing; clean up.
+//
+//==============================================================================
+- (void) windowWillClose:(NSNotification *)notification
+{
+	//The object controller apparently retains its content. We must break that 
+	// cycle in order to fully deallocate.
+	[objectController setContent:nil];
+	
+	[self autorelease];
+	sharedRotationPanel = nil;
+}
+
+
+//========== windowWillReturnUndoManager: ======================================
+//
+// Purpose:		Defer undo to the document. This seems reasonable, as the 
+//				rotation panel affects the document so intimately it's much more 
+//				likely the user wants to undo the document than changes to 
+//				rotation text fields. 
+//
+//==============================================================================
+- (NSUndoManager *) windowWillReturnUndoManager:(NSWindow *)window
+{
+	NSDocument *currentDocument = [[NSDocumentController sharedDocumentController] currentDocument];
+	
+	return [currentDocument undoManager];
+}
 
 
 #pragma mark -
@@ -157,9 +199,6 @@ RotationPanel *sharedRotationPanel = nil;
 //==============================================================================
 - (void) dealloc
 {
-	[formatterAngles	release];
-	[formatterPoints	release];
-	
 	[super dealloc];
 
 }//end dealloc

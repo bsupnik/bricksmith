@@ -2,17 +2,17 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10J567</string>
+		<string key="IBDocument.SystemVersion">10K549</string>
 		<string key="IBDocument.InterfaceBuilderVersion">804</string>
-		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">462.00</string>
+		<string key="IBDocument.AppKitVersion">1038.36</string>
+		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			<string key="NS.object.0">804</string>
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="9"/>
+			<integer value="11"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
 			<bool key="EncodedWithXMLCoder">YES</bool>
@@ -260,7 +260,7 @@
 								<object class="NSButton" id="912367347">
 									<reference key="NSNextResponder" ref="89216931"/>
 									<int key="NSvFlags">268</int>
-									<string key="NSFrame">{{578, 12}, {84, 32}}</string>
+									<string key="NSFrame">{{578, 17}, {84, 25}}</string>
 									<reference key="NSSuperview" ref="89216931"/>
 									<bool key="NSEnabled">YES</bool>
 									<object class="NSButtonCell" key="NSCell" id="678657088">
@@ -270,7 +270,8 @@
 										<reference key="NSSupport" ref="599585664"/>
 										<reference key="NSControlView" ref="912367347"/>
 										<int key="NSButtonFlags">-2038284033</int>
-										<int key="NSButtonFlags2">129</int>
+										<int key="NSButtonFlags2">163</int>
+										<reference key="NSAlternateImage" ref="599585664"/>
 										<string key="NSAlternateContents"/>
 										<string type="base64-UTF8" key="NSKeyEquivalent">Gw</string>
 										<int key="NSPeriodicDelay">200</int>
@@ -495,8 +496,8 @@
 						<reference key="object" ref="89216931"/>
 						<object class="NSMutableArray" key="children">
 							<bool key="EncodedWithXMLCoder">YES</bool>
-							<reference ref="912367347"/>
 							<reference ref="428586759"/>
+							<reference ref="912367347"/>
 						</object>
 						<reference key="parent" ref="1006"/>
 					</object>
@@ -646,6 +647,7 @@
 					<string>31.IBPluginDependency</string>
 					<string>4.IBPluginDependency</string>
 					<string>5.IBPluginDependency</string>
+					<string>5.IBViewBoundsToFrameTransform</string>
 					<string>6.IBPluginDependency</string>
 					<string>9.IBPluginDependency</string>
 				</object>
@@ -676,6 +678,9 @@
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+					<object class="NSAffineTransform">
+						<bytes key="NSTransformStruct">P4AAAL+AAABEEIAAwigAAA</bytes>
+					</object>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 					<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
 				</object>

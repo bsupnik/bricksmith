@@ -125,7 +125,6 @@
 	// ever we enter in is added to the current angles.
  	[self setRotationAngles];
 	
-	[representedObject optimizeOpenGL];
 	[super revert:sender];
 	
 }//end revert:

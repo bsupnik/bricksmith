@@ -70,7 +70,10 @@
 	LDrawFile	*parsedFile		= nil;
 	
 	if(fileContents != nil)
+	{
 		parsedFile = [LDrawFile parseFromFileContents:fileContents];
+		[parsedFile setPath:path];
+	}
 		
 	return parsedFile;
 	

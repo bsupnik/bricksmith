@@ -2,16 +2,16 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
-		<string key="IBDocument.SystemVersion">10J567</string>
-		<string key="IBDocument.InterfaceBuilderVersion">804</string>
-		<string key="IBDocument.AppKitVersion">1038.35</string>
-		<string key="IBDocument.HIToolboxVersion">462.00</string>
+		<string key="IBDocument.SystemVersion">10K549</string>
+		<string key="IBDocument.InterfaceBuilderVersion">851</string>
+		<string key="IBDocument.AppKitVersion">1038.36</string>
+		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">804</string>
+			<string key="NS.object.0">851</string>
 		</object>
 		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-			<integer value="218"/>
+			<integer value="292"/>
 		</array>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -938,8 +938,8 @@
 								<object class="NSMenuItem" id="175157754">
 									<reference key="NSMenu" ref="544543927"/>
 									<string key="NSTitle">Show Colors</string>
-									<string key="NSKeyEquiv">c</string>
-									<int key="NSKeyEquivModMask">1572864</int>
+									<string key="NSKeyEquiv">C</string>
+									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="904676617"/>
 									<reference key="NSMixedImage" ref="1001426656"/>
@@ -974,6 +974,14 @@
 									<reference key="NSOnImage" ref="904676617"/>
 									<reference key="NSMixedImage" ref="1001426656"/>
 									<int key="NSTag">502</int>
+								</object>
+								<object class="NSMenuItem" id="985828049">
+									<reference key="NSMenu" ref="544543927"/>
+									<string key="NSTitle">Show All</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
 								</object>
 								<object class="NSMenuItem" id="54649443">
 									<reference key="NSMenu" ref="544543927"/>
@@ -1906,6 +1914,14 @@
 					</object>
 					<int key="connectionID">422</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">showAllParts:</string>
+						<reference key="source" ref="859723934"/>
+						<reference key="destination" ref="985828049"/>
+					</object>
+					<int key="connectionID">424</int>
+				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<array key="orderedObjects">
@@ -2726,6 +2742,7 @@
 							<reference ref="94212673"/>
 							<reference ref="54649443"/>
 							<reference ref="869769454"/>
+							<reference ref="985828049"/>
 						</array>
 						<reference key="parent" ref="243153681"/>
 					</object>
@@ -2802,6 +2819,11 @@
 						<int key="objectID">420</int>
 						<reference key="object" ref="199134990"/>
 						<reference key="parent" ref="556364479"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">423</int>
+						<reference key="object" ref="985828049"/>
+						<reference key="parent" ref="544543927"/>
 					</object>
 				</array>
 			</object>
@@ -2968,6 +2990,7 @@
 				<boolean value="YES" key="29.ImportedFromIB2"/>
 				<string key="290.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="290.ImportedFromIB2"/>
+				<string key="292.IBEditorWindowLastContentRect">{{362, 772}, {192, 123}}</string>
 				<string key="292.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="292.ImportedFromIB2"/>
 				<string key="293.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3054,6 +3077,7 @@
 				<boolean value="YES" key="416.ImportedFromIB2"/>
 				<string key="420.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="420.ImportedFromIB2"/>
+				<string key="423.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="5.ImportedFromIB2"/>
 				<string key="56.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3085,7 +3109,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">422</int>
+			<int key="maxID">424</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3379,6 +3403,7 @@
 						<string key="doGettingNewPartsHelp:">id</string>
 						<string key="doHelp:">id</string>
 						<string key="doKeyboardShortcutHelp:">id</string>
+						<string key="doPartBrowser:">id</string>
 						<string key="doPreferences:">id</string>
 						<string key="hideMouseTools:">id</string>
 						<string key="showColors:">id</string>
@@ -3400,6 +3425,10 @@
 						</object>
 						<object class="IBActionInfo" key="doKeyboardShortcutHelp:">
 							<string key="name">doKeyboardShortcutHelp:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="doPartBrowser:">
+							<string key="name">doPartBrowser:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="doPreferences:">
@@ -3469,6 +3498,7 @@
 						<string key="panelRotateParts:">id</string>
 						<string key="paste:">id</string>
 						<string key="quickRotateClicked:">id</string>
+						<string key="showAllParts:">id</string>
 						<string key="showDimensions:">id</string>
 						<string key="showInspector:">id</string>
 						<string key="showParts:">id</string>
@@ -3601,6 +3631,10 @@
 							<string key="name">quickRotateClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="showAllParts:">
+							<string key="name">showAllParts:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="showDimensions:">
 							<string key="name">showDimensions:</string>
 							<string key="candidateClassName">id</string>
@@ -3661,6 +3695,12 @@
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="addReferenceButton">NSPopUpButton</string>
 						<string key="bindingsController">NSObjectController</string>
+						<string key="coordinateFieldX">NSTextField</string>
+						<string key="coordinateFieldY">NSTextField</string>
+						<string key="coordinateFieldZ">NSTextField</string>
+						<string key="coordinateLabelX">NSTextField</string>
+						<string key="coordinateLabelY">NSTextField</string>
+						<string key="coordinateLabelZ">NSTextField</string>
 						<string key="fileContentsOutline">LDrawFileOutlineView</string>
 						<string key="fileContentsSplitView">ExtendedSplitView</string>
 						<string key="partBrowserDrawer">NSDrawer</string>
@@ -3682,6 +3722,30 @@
 						<object class="IBToOneOutletInfo" key="bindingsController">
 							<string key="name">bindingsController</string>
 							<string key="candidateClassName">NSObjectController</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateFieldX">
+							<string key="name">coordinateFieldX</string>
+							<string key="candidateClassName">NSTextField</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateFieldY">
+							<string key="name">coordinateFieldY</string>
+							<string key="candidateClassName">NSTextField</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateFieldZ">
+							<string key="name">coordinateFieldZ</string>
+							<string key="candidateClassName">NSTextField</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateLabelX">
+							<string key="name">coordinateLabelX</string>
+							<string key="candidateClassName">NSTextField</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateLabelY">
+							<string key="name">coordinateLabelY</string>
+							<string key="candidateClassName">NSTextField</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="coordinateLabelZ">
+							<string key="name">coordinateLabelZ</string>
+							<string key="candidateClassName">NSTextField</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="fileContentsOutline">
 							<string key="name">fileContentsOutline</string>
@@ -3798,6 +3862,47 @@
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBUserSource</string>
 						<string key="minorKey"/>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">LDrawGLRenderer</string>
+					<string key="superclassName">NSObject</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="zoomIn:">id</string>
+						<string key="zoomOut:">id</string>
+						<string key="zoomToFit:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="zoomIn:">
+							<string key="name">zoomIn:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="zoomOut:">
+							<string key="name">zoomOut:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="zoomToFit:">
+							<string key="name">zoomToFit:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="outlets">
+						<string key="delegate">id</string>
+						<string key="target">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<object class="IBToOneOutletInfo" key="delegate">
+							<string key="name">delegate</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="target">
+							<string key="name">target</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">Source/LDraw/Support/LDrawGLRenderer.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

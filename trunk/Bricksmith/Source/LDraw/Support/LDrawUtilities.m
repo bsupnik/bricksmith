@@ -18,6 +18,7 @@
 #import "LDrawMetaCommand.h"
 #import "LDrawPart.h"
 #import "LDrawQuadrilateral.h"
+#import "LDrawTexture.h"
 #import "LDrawTriangle.h"
 #import "LDrawVertexes.h"
 #import "PartLibrary.h"
@@ -109,8 +110,13 @@ static NSString				*defaultAuthor		= @"anonymous";
 	switch(lineType)
 	{
 		case 0:
-			classForType = [LDrawMetaCommand class];
-			break;
+		{
+			if([LDrawTexture lineIsTextureBeginning:line])
+				classForType = [LDrawTexture class];
+			else
+				classForType = [LDrawMetaCommand class];
+		}	break;
+			
 		case 1:
 			classForType = [LDrawPart class];
 			break;
@@ -284,6 +290,54 @@ static NSString				*defaultAuthor		= @"anonymous";
 	
 	return fieldContents;
 }//end readNextField
+
+
+//---------- scanQuotableToken: --------------------------------------[static]--
+//
+// Purpose:		Scans a field which allows embedded whitespace if the field is 
+//				wrappend in double-quotes. Otherwise, leading whitespace is 
+//				trimmed and the field ends at the first whitespace character. 
+//
+//------------------------------------------------------------------------------
++ (NSString *) scanQuotableToken:(NSScanner *)scanner
+{
+	NSCharacterSet	*doubleQuote	= [NSCharacterSet characterSetWithCharactersInString:@"\""];
+	NSMutableString *token			= [NSMutableString string];
+	NSString		*temp			= nil;
+	
+	if([scanner scanCharactersFromSet:doubleQuote intoString:NULL] == YES)
+	{
+		// String is wrapped in double quotes.
+		// Watch out for embedded " characters, escaped as \"
+		//                    and \ characters, escaped as \\        .
+		
+		[scanner scanUpToCharactersFromSet:doubleQuote intoString:&temp];
+		[scanner scanCharactersFromSet:doubleQuote intoString:NULL];
+		[token appendString:temp];
+		while([token hasSuffix:@"\\"] == YES)
+		{
+			// Un-escape the \"
+			[token deleteCharactersInRange:NSMakeRange([token length] - 1, 1)];
+			[token appendString:@"\""];
+			
+			[scanner scanUpToCharactersFromSet:doubleQuote intoString:&temp];
+			[scanner scanCharactersFromSet:doubleQuote intoString:NULL];
+			[token appendString:temp];
+		}
+		
+		// Un-escape backslashes
+		[token replaceOccurrencesOfString:@"\\\\" withString:@"\\" options:NSLiteralSearch range:NSMakeRange(0, [token length])];
+	}
+	else
+	{
+		// No leading quote mark
+		[scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&temp];
+		[token appendString:temp];
+	}
+	
+	return token;
+	
+}//end scanQuotableToken:
 
 
 //---------- stringFromFile: -----------------------------------------[static]--

@@ -53,6 +53,7 @@ typedef enum
 + (LDrawColor *) parseColorFromField:(NSString *)colorField;
 + (NSString *) readNextField:(NSString *) partialDirective
 				   remainder:(NSString **) remainder;
++ (NSString *) scanQuotableToken:(NSScanner *)scanner;
 + (NSString *) stringFromFile:(NSString *)path;
 + (NSString *) stringFromFileData:(NSData *)fileData;
 

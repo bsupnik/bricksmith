@@ -37,6 +37,7 @@
 - (NSArray *) subdirectives;
 
 - (void) setPostsNotifications:(BOOL)flag;
+- (void) setVertexesNeedRebuilding;
 
 //Actions
 - (void) addDirective:(LDrawDirective *)directive;
@@ -44,5 +45,7 @@
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index;
 - (void) removeDirective:(LDrawDirective *)doomedDirective;
 - (void) removeDirectiveAtIndex:(NSInteger)index;
+
+- (void) optimizeVertexes;
 
 @end

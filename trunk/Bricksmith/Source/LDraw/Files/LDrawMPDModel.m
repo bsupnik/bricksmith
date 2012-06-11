@@ -86,33 +86,24 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSString    *mpdFileCommand     = [lines objectAtIndex:range.location];
+	NSString	*mpdFileCommand 	= [lines objectAtIndex:range.location];
 	NSString	*lastLine			= nil;
-	NSString    *mpdSubmodelName    = @"";
-	BOOL        isMPDModel          = NO;
-	NSRange     nonMPDRange         = range;
+	NSString	*mpdSubmodelName	= @"";
+	BOOL		isMPDModel			= NO;
+	BOOL		hasSubmodelEnd		= NO;
+	NSRange 	nonMPDRange 		= range;
 
-	// The first line should be 0 FILE ...
-	if([mpdFileCommand hasPrefix:LDRAW_MPD_FILE_START_MARKER])
-		isMPDModel = YES; //it does start with 0 FILE; it is MPD.
+	// The first line should be 0 FILE modelName
+	isMPDModel = [[self class] lineIsMPDModelStart:mpdFileCommand modelName:&mpdSubmodelName];
 	
-	//Strip out the MPD commands for model parsing, and read in the model name.
+	// Strip out the MPD commands for model parsing, and read in the model name.
 	if(isMPDModel == YES)
 	{
-		//Extract MPD-specific data: the submodel name.
-		// Make sure there is actually a name after the marker. There certainly 
-		// should be, but let's be extra-special safe.
-		NSUInteger indexOfName = [LDRAW_MPD_FILE_START_MARKER length] + 1; // after "0 FILE "
-		if([mpdFileCommand length] >= indexOfName)
-		{
-			mpdSubmodelName = [mpdFileCommand substringFromIndex:indexOfName];
-			mpdSubmodelName = [mpdSubmodelName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-								//I've encountered models with extra whitespace around their names.
-		}
-		
-		//Strip out the first line and the NOFILE command, if there is one.
+		// Strip out the first line and the NOFILE command, if there is one.
 		lastLine = [lines lastObject];
-		if([lastLine isEqualToString:LDRAW_MPD_FILE_END_MARKER])
+		
+		hasSubmodelEnd = [[self class] lineIsMPDModelEnd:lastLine];
+		if(hasSubmodelEnd)
 		{
 			// strip out 0 FILE and 0 NOFILE
 			nonMPDRange = NSMakeRange(range.location + 1, range.length - 2);
@@ -128,17 +119,17 @@
 		nonMPDRange = range;
 	}
 
-	//Create a basic model.
+	// Create a basic model.
 	[super initWithLines:lines inRange:nonMPDRange parentGroup:parentGroup]; //parses model into header and steps.
 	
-	//If it wasn't MPD, we still need a model name. We can get that via the 
+	// If it wasn't MPD, we still need a model name. We can get that via the 
 	// parsed model.
 	if(isMPDModel == NO)
 	{
 		mpdSubmodelName = [self modelDescription];
 	}
 
-	//And now set the MPD-specific attributes.
+	// And now set the MPD-specific attributes.
 	[self setModelName:mpdSubmodelName];
 	
 	return self;
@@ -219,10 +210,7 @@
 	{
 		// See if we have to look for MPD syntax.
 		firstLine = [lines objectAtIndex:testRange.location];
-		if([firstLine hasPrefix:LDRAW_MPD_FILE_START_MARKER])
-		{
-			isMPDModel = YES;
-		}
+		isMPDModel = [[self class] lineIsMPDModelStart:firstLine modelName:NULL];
 		
 		// Find the end of the MPD model. MPD models can end with 0 NOFILE, or 
 		// they can just stop where the next model starts. 
@@ -236,12 +224,12 @@
 			{
 				currentLine = [lines objectAtIndex:counter];
 				
-				if([currentLine isEqualToString:LDRAW_MPD_FILE_END_MARKER])
+				if([[self class] lineIsMPDModelEnd:currentLine])
 				{
 					modelEndIndex = counter;
 					break;
 				}
-				else if([currentLine hasPrefix:LDRAW_MPD_FILE_START_MARKER])
+				else if([[self class] lineIsMPDModelStart:currentLine modelName:NULL])
 				{
 					modelEndIndex = counter - 1;
 					break;
@@ -283,9 +271,9 @@
 	//		   model text
 	//			....
 	//		0 NOFILE
-	[written appendFormat:@"%@ %@%@", LDRAW_MPD_FILE_START_MARKER, [self modelName], CRLF];
+	[written appendFormat:@"0 %@ %@%@", LDRAW_MPD_SUBMODEL_START, [self modelName], CRLF];
 	[written appendFormat:@"%@%@", [super write], CRLF];
-	[written appendString:LDRAW_MPD_FILE_END_MARKER];
+	[written appendFormat:@"0 %@", LDRAW_MPD_SUBMODEL_END];
 	
 	return written;
 	
@@ -432,6 +420,70 @@
 	return acceptableName;
 	
 }//end ldrawCompliantNameForName:
+
+
+//========== lineIsMPDModelStart:modelName: ====================================
+//
+// Purpose:		Returns if the line is a 0 FILE submodelName line.
+//
+//				If it is, optionally returns the submodelName
+//
+// Note:		Any line can have leading whitespace, which is why this is not 
+//				as simple as [line hasPrefix:@"0 FILE"] 
+//
+//==============================================================================
++ (BOOL) lineIsMPDModelStart:(NSString*)line modelName:(NSString**)modelNamePtr
+{
+	NSString	*parsedField		= nil;
+	NSString	*workingLine		= line;
+	BOOL		isMPDModel			= NO;
+	
+	parsedField = [LDrawUtilities readNextField:  workingLine
+									  remainder: &workingLine ];
+	if([parsedField isEqualToString:@"0"])
+	{
+		parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
+		
+		if([parsedField isEqualToString:LDRAW_MPD_SUBMODEL_START])
+			isMPDModel = YES;
+	}
+	
+	//Strip out the MPD commands for model parsing, and read in the model name.
+	if(isMPDModel == YES && modelNamePtr != NULL)
+	{
+		// Extract MPD-specific data: the submodel name.
+		// Leading and trailing whitespace is ignored, in keeping with the rules 
+		// for parsing file references (type 1 lines) 
+		*modelNamePtr = [workingLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	}
+	
+	return isMPDModel;
+}
+
+
+//========== lineIsMPDModelEnd: ================================================
+//
+// Purpose:		Returns if the line is a 0 NOFILE line.
+//
+//==============================================================================
++ (BOOL) lineIsMPDModelEnd:(NSString*)line
+{
+	NSString	*parsedField	= nil;
+	NSString	*workingLine	= line;
+	BOOL		isMPDModelEnd	= NO;
+	
+	parsedField = [LDrawUtilities readNextField:  workingLine
+									  remainder: &workingLine ];
+	if([parsedField isEqualToString:@"0"])
+	{
+		parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
+		
+		if([parsedField isEqualToString:LDRAW_MPD_SUBMODEL_END])
+			isMPDModelEnd = YES;
+	}
+	
+	return isMPDModelEnd;
+}
 
 
 //========== registerUndoActions ===============================================

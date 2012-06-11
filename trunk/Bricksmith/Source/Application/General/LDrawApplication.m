@@ -24,7 +24,7 @@
 #import "LDrawDocument.h"
 #import "LDrawPaths.h"
 #import "MacLDraw.h"
-#import "PartBrowserPanel.h"
+#import "PartBrowserPanelController.h"
 #import "PartLibrary.h"
 #import "PartLibraryController.h"
 #import "PreferencesDialogController.h"
@@ -261,10 +261,10 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //==============================================================================
 - (IBAction) doPartBrowser:(id)sender 
 {
-	NSUserDefaults			*userDefaults		= [NSUserDefaults standardUserDefaults];
-	PartBrowserStyleT		 newStyle			= [userDefaults integerForKey:PART_BROWSER_STYLE_KEY];
-	NSDocumentController	*documentController	= [NSDocumentController sharedDocumentController];
-	PartBrowserPanel		*partBrowser		= nil;
+	NSUserDefaults				*userDefaults		= [NSUserDefaults standardUserDefaults];
+	PartBrowserStyleT			newStyle			= [userDefaults integerForKey:PART_BROWSER_STYLE_KEY];
+	NSDocumentController		*documentController = [NSDocumentController sharedDocumentController];
+	PartBrowserPanelController	*partBrowser		= nil;
 
 	switch(newStyle)
 	{
@@ -278,8 +278,8 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		case PartBrowserShowAsPanel:
 			
 			//open the shared part browser.
-			partBrowser = [PartBrowserPanel sharedPartBrowserPanel];
-			[partBrowser makeKeyAndOrderFront:sender];
+			partBrowser = [PartBrowserPanelController sharedPartBrowserPanel];
+			[[partBrowser window] makeKeyAndOrderFront:sender];
 			
 			break;
 	} 
@@ -447,7 +447,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	if(		showPartBrowser == YES
 	   &&	[userDefaults integerForKey:PART_BROWSER_STYLE_KEY] == PartBrowserShowAsPanel)
 	{
-		[[PartBrowserPanel sharedPartBrowserPanel] makeKeyAndOrderFront:self];
+		[[[PartBrowserPanelController sharedPartBrowserPanel] window] makeKeyAndOrderFront:self];
 	}
 	
 }//end applicationDidFinishLaunching:
@@ -463,9 +463,9 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
-	PartBrowserPanel	*partBrowserPanel	= [PartBrowserPanel sharedPartBrowserPanel];
+	PartBrowserPanelController	*partBrowserPanel	= [PartBrowserPanelController sharedPartBrowserPanel];
 	
-	[userDefaults setBool:[partBrowserPanel isVisible]
+	[userDefaults setBool:[[partBrowserPanel window] isVisible]
 				   forKey:PART_BROWSER_PANEL_SHOW_AT_LAUNCH ];
 				   
 	[userDefaults synchronize];
@@ -571,7 +571,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		case PartBrowserShowAsDrawer:
 			
 			//close the shared part browser
-			[[PartBrowserPanel sharedPartBrowserPanel] close];
+			[[PartBrowserPanelController sharedPartBrowserPanel] close];
 			
 			// open the browser drawer on each document
 			for(counter = 0; counter < documentCount; counter++)
@@ -590,7 +590,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 			}
 			
 			//open the shared part browser.
-			[[PartBrowserPanel sharedPartBrowserPanel] makeKeyAndOrderFront:self];
+			[[[PartBrowserPanelController sharedPartBrowserPanel] window] makeKeyAndOrderFront:self];
 			
 			break;
 	} 

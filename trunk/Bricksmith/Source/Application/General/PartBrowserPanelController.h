@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		PartBrowserPanel.h
+// File:		PartBrowserPanelController.h
 //
 // Purpose:		Presents a PartBrower in a panel.
 //
@@ -12,15 +12,14 @@
 @class ExtendedSplitView;
 @class PartBrowserDataSource;
 
-@interface PartBrowserPanel : NSPanel
+@interface PartBrowserPanelController : NSWindowController
 {
-	IBOutlet	PartBrowserPanel		*partBrowserPanel;
-	IBOutlet	PartBrowserDataSource	*partsBrowser;
-	IBOutlet	ExtendedSplitView		*splitView;
+	IBOutlet	PartBrowserDataSource	   *partsBrowser;
+	IBOutlet	ExtendedSplitView		   *splitView;
 }
 
 //Initialization
-+ (PartBrowserPanel *) sharedPartBrowserPanel;
++ (PartBrowserPanelController *) sharedPartBrowserPanel;
 
 //Accessors
 - (PartBrowserDataSource *) partBrowser;

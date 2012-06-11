@@ -10,6 +10,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "LDrawGLView.h"
+#import "MacLDraw.h"
 
 @class PartLibrary;
 
@@ -18,10 +19,13 @@
 // class PartBrowserDataSource
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface PartBrowserDataSource : NSObject
+@interface PartBrowserDataSource : NSObject <NSOutlineViewDelegate, NSOutlineViewDataSource>
 {
-	IBOutlet NSComboBox		*categoryComboBox;
+	IBOutlet NSButton		*searchAllCategoriesButton;
+	IBOutlet NSButton		*searchSelectedCategoryButton;
 	IBOutlet NSSearchField	*searchField;
+	
+	IBOutlet NSOutlineView	*categoryTable;
 	IBOutlet NSTableView	*partsTable;
 	IBOutlet LDrawGLView	*partPreview;
 	IBOutlet NSButton		*zoomInButton;
@@ -34,6 +38,7 @@
 	NSString		*selectedCategory;
 	NSArray         *categoryList;
 	NSMutableArray  *tableDataSource;
+	SearchModeT		searchMode;
 
 }
 
@@ -47,9 +52,10 @@
 - (void) setTableDataSource:(NSMutableArray *) partsInCategory;
 
 //Actions
+- (IBAction) searchAllCategoriesButtonClicked:(id)sender;
+- (IBAction) searchSelectedCategoryButtonClicked:(id)sender;
 - (IBAction) addPartClicked:(id)sender;
 - (IBAction) addFavoriteClicked:(id)sender;
-- (IBAction) categoryComboBoxChanged:(id)sender;
 - (void) doubleClickedInPartTable:(id)sender;
 - (IBAction) removeFavoriteClicked:(id)sender;
 - (IBAction) searchFieldChanged:(id)sender;
@@ -60,7 +66,10 @@
 //Utilities
 - (NSMutableArray *) filterPartRecords:(NSArray *)partRecords bySearchString:(NSString *)searchString;
 - (NSUInteger) indexOfPartNamed:(NSString *)searchName;
+- (void) performSearch;
 - (void) setConstraints;
+- (void) scrollSelectedCategoryToCenter;
+- (void) syncSelectionAndCategoryDisplayed;
 - (void) syncSelectionAndPartDisplayed;
 - (BOOL) writeSelectedPartToPasteboard:(NSPasteboard *)pasteboard;
 
