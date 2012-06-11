@@ -1,0 +1,133 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf350
+{\fonttbl\f0\fnil\fcharset0 Georgia;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww7160\viewh13000\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li420\fi-420\ql\qnatural
+
+\f0\fs24 \cf0 Version History:\
+\
+
+\b Bricksmith 2.5.1:\
+
+\b0 Fixed bug opening files which did not terminate with 0 NOFILE
+\b \
+\
+\
+Bricksmith 2.5:\
+
+\b0 Multi-threaded parser
+\b \
+
+\b0 All primitives drawn with optimized structures (even inlined parts)\
+Direct primitive vertex interaction\
+Cursor-centric zooming\
+Fixed all-viewports-disappeared bug\
+Fixed perspective/ortho restore from prefs
+\b \
+
+\b0 \
+
+\b Bricksmith 2.4:\
+
+\b0 64-bit\
+Viewports fill their entire area (always correctly now, unlike last time I had that feature)\
+Focus rings are drawn by Cocoa, so they look much nicer. They can also be drawn independently of the frame, elimitating extra redraws when tabbing between views.\
+Eliminated extra redraws when clicking but not actually changing the selection.\
+Mind-boggling speed improvements from recursively flattening part references.\
+Fixed bounding-box transforms, which in turn fixed part selection for certain objects\
+Supports RGB color syntax\
+Traditional-style LDraw output\
+
+\b \
+Bricksmith 2.3:\
+
+\b0 Zoom to Fit\
+5% faster (by not doing four-way lighting)\
+Configurable viewport arrangements\
+Views stay scrolled to the center as they change size\
+Selecting a part in step display no longer resets the viewing angle\
+Reordering or copying steps does not clear the rotation settings\
+\
+
+\b Bricksmith 2.2:\
+
+\b0 Middle mouse button activates spin mode\
+Supports MacBook trackpad gestures\
+Pen tablet eraser deletes parts\
+Won't have problems with references to empty submodels\
+Won't add "copy X" suffix when reordering models within a file\
+Won't zoom to 0%\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li420\fi-420\ql\qnatural\pardirnatural
+\cf0 Part favorites\
+Center-click/smooth zoom in Perspective views actually centers the model\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li420\fi-420\ql\qnatural
+\cf0 \
+
+\b Bricksmith 2.1:\
+
+\b0 Supports step rotations via inspector\
+Streamlined UI for entering and navigating Step Display mode\
+Eliminated drawer UI.\
+Toolbar buttons for Part Browser, Colors, and Inspector\
+Improved appearance of lines onscreen\
+\
+LDraw/ldconfig.ldr is now read correctly\
+Renaming a submodel also renames all references to it\
+Duplicating a model adds "copy X" suffix\
+All model names are forced to end in .ldr (for MLCad and spec compliance)\
+Switching to a different submodel while in step display won't cause the previous model to get stuck on the step it was displaying.\
+\
+
+\b \
+Bricksmith 2.0:\
+
+\b0 Mouse-based part movement\
+Drag-and-drop from the Part Browser\
+Hotkeys for viewing angles\
+No more concern about inverted normals. Results: simpler code, 19% faster, no unilluminated polygons (ex. flowers.dat)\
+Anti-aliased drawing (much prettier)\
+Lines are not all the same color (much, much prettier)\
+New help pages\
+Simplified some keyboard shortcuts\
+Fixed split-view state restoration under Leopard\
+Tiger is new minimum requirement\
+\
+
+\b \
+Bricksmith 1.6:\
+
+\b0 Part Browser can be configured as a separate window\
+Export Part List feature\
+Background color\
+Always draws with perspective when not in a head-on view\
+Can insert raw meta-command\
+\
+Colors not washed out\
+Ortho and Perspective are the same size at (0,0,0)\
+Double-click in Part Browser to insert part\
+Unknown commands don't accumulate extra spaces\
+\
+Part selection slightly faster\
+Part Browser Auto-sorts to description on first launch\
+\
+
+\b Bricksmith 1.1:\
+
+\b0 Shading\
+Fast-draw mode while rotating\
+Piece Count utility\
+Dimensions utility\
+Zoom controls in the Part Browser\
+A simple way to add submodel references\
+"Customize Toolbar" menu item\
+Support for "Unofficial" parts folder\
+\
+Drawing time should be roughly on par with Bricksmith 1.0.\
+\
+Bugs fixed:\
+Canvas is never too small when opening documents.\
+\
+
+\b Bricksmith 1.0:\
+
+\b0 Initial release!}

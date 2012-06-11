@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="640"
+   height="640"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="Minifigure Picasso.svg">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <inkscape:perspective
+       id="perspective2887"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <filter
+       inkscape:collect="always"
+       id="filter3670">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.22566147"
+         id="feGaussianBlur3672" />
+    </filter>
+    <inkscape:perspective
+       id="perspective3705"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <filter
+       color-interpolation-filters="sRGB"
+       inkscape:collect="always"
+       id="filter3670-7">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.22566147"
+         id="feGaussianBlur3672-9" />
+    </filter>
+    <inkscape:perspective
+       id="perspective3733"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="263.64857"
+     inkscape:cy="336.85776"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     units="pt"
+     inkscape:window-width="1489"
+     inkscape:window-height="968"
+     inkscape:window-x="34"
+     inkscape:window-y="6"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Photo"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-412.36221)"
+     style="display:none">
+    <image
+       y="395.19476"
+       x="-55.829666"
+       id="image2889"
+       height="700.00293"
+       width="739.50153"
+       xlink:href="file:///Users/allensmith/Desktop/Minifigure%20Head.tif"
+       style="fill:#00000a;fill-opacity:1" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Face"
+     style="display:inline">
+    <path
+       sodipodi:type="arc"
+       style="fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter3670)"
+       id="path3668"
+       sodipodi:cx="258.1347"
+       sodipodi:cy="296.00388"
+       sodipodi:rx="22.566147"
+       sodipodi:ry="22.566147"
+       d="m 280.70085,296.00388 a 22.566147,22.566147 0 1 1 -45.13229,0 22.566147,22.566147 0 1 1 45.13229,0 z"
+       transform="matrix(1.0952744,0,0,1.0952744,-24.593626,-25.100801)" />
+    <path
+       transform="matrix(1.0952744,0,0,1.0952744,104.19853,-25.100801)"
+       d="m 280.70085,296.00388 a 22.566147,22.566147 0 1 1 -45.13229,0 22.566147,22.566147 0 1 1 45.13229,0 z"
+       sodipodi:ry="22.566147"
+       sodipodi:rx="22.566147"
+       sodipodi:cy="296.00388"
+       sodipodi:cx="258.1347"
+       id="path3674"
+       style="fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter3670)"
+       sodipodi:type="arc" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:5.02515888;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
+       id="rect2893"
+       width="463.37906"
+       height="395.82785"
+       x="90.694008"
+       y="134.76474"
+       ry="94.516068" />
+    <path
+       style="fill:#00000a;fill-opacity:1;stroke:none;display:inline"
+       d="m 265.05086,379.43929 c -5.57366,0.3595 -7.52404,8.08436 -4.31231,12.19852 5.38993,7.1928 14.24308,10.12645 22.28711,12.96355 13.40858,4.14438 26.34857,7.62838 41.30418,7.56156 16.78603,-0.0338 33.47899,-4.42586 49.05014,-10.95132 5.71393,-2.7229 12.44018,-5.90933 14.59446,-12.49602 1.54397,-4.6371 -2.66846,-10.8131 -7.63465,-8.94491 -7.32292,3.20093 -14.19919,7.57502 -21.97474,9.66623 -21.02851,6.14855 -43.62405,6.36062 -64.87933,1.24948 -8.80225,-2.03562 -16.91701,-6.15897 -24.89973,-10.34324 -1.12028,-0.48265 -2.30396,-0.91349 -3.53513,-0.90385 z"
+       id="path3720"
+       sodipodi:nodetypes="ccccccccccc" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:4.84438801;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
+       id="rect3732"
+       width="223.15562"
+       height="90.155609"
+       x="210.80573"
+       y="43.922184"
+       ry="0" />
+    <rect
+       ry="0"
+       y="530.46063"
+       x="172.84424"
+       height="44.078564"
+       width="299.07858"
+       id="rect3734"
+       style="fill:none;stroke:#000000;stroke-width:3.92143464;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline" />
+  </g>
+</svg>

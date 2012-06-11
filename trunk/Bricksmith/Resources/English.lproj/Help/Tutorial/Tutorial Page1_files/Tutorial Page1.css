@@ -1,0 +1,17 @@
+/*-****************************************************************************/
+/*- Stylesheet specifically for the tutorial embedded in Bricksmith.app		  */
+/*-****************************************************************************/
+
+/* Show stuff meant to be seen only in the application */
+.applicationOnlyContent
+{
+}
+
+/* Vanish content meant to be seen only online. Make it like it never was! */
+.websiteOnlyContent
+{
+	visibility: hidden;
+	height: 0;
+	width: 0;
+}
+

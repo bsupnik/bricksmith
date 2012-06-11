@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="15"
+   height="15"
+   id="svg3180"
+   sodipodi:version="0.32"
+   inkscape:version="0.47pre2 r22153"
+   sodipodi:docname="PlacardButtonClose12.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0"
+   style="display:inline">
+  <defs
+     id="defs3182">
+    <linearGradient
+       id="linearGradient3789">
+      <stop
+         style="stop-color:#f2f2f2;stop-opacity:1;"
+         offset="0"
+         id="stop3791" />
+      <stop
+         id="stop3799"
+         offset="0.25"
+         style="stop-color:#f6f6f6;stop-opacity:1;" />
+      <stop
+         id="stop3797"
+         offset="0.5"
+         style="stop-color:#fafafa;stop-opacity:1;" />
+      <stop
+         style="stop-color:#ededed;stop-opacity:1;"
+         offset="0.75"
+         id="stop3801" />
+      <stop
+         style="stop-color:#e1e1e1;stop-opacity:1;"
+         offset="1"
+         id="stop3793" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 8 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="16 : 8 : 1"
+       inkscape:persp3d-origin="8 : 5.3333333 : 1"
+       id="perspective3188" />
+    <inkscape:perspective
+       id="perspective3765"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3789"
+       id="linearGradient2833"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.9166783,0,0,0.91667838,0.16666078,5.166484)"
+       x1="0"
+       y1="8"
+       x2="16"
+       y2="8" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="35.04"
+     inkscape:cx="7.3601598"
+     inkscape:cy="9.9236375"
+     inkscape:current-layer="layer2"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="pt"
+     inkscape:window-width="1457"
+     inkscape:window-height="984"
+     inkscape:window-x="25"
+     inkscape:window-y="27"
+     units="pt"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata3185">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Border"
+     inkscape:groupmode="layer"
+     style="display:inline"
+     transform="translate(0,-5)">
+    <rect
+       style="fill:url(#linearGradient2833);fill-opacity:1;fill-rule:evenodd;stroke:#bbbbbb;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect3779"
+       width="13.750176"
+       height="13.750176"
+       x="0.625"
+       y="5.6248231" />
+    <rect
+       style="fill:#d2d2d2;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="rect3160"
+       width="1.25"
+       height="13.75"
+       x="1.25"
+       y="5" />
+    <rect
+       style="fill:#d2d2d2;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       id="rect3279"
+       width="13.75"
+       height="1.25"
+       x="1.25"
+       y="5" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="Close X (8 wide, 1.625 pt)"
+     style="display:none"
+     transform="translate(0,-5)">
+    <path
+       style="fill:#434343;fill-opacity:1;fill-rule:evenodd;stroke:none"
+       d="m 7.5,6.25 c -3.4499999,0 -6.2499999,2.8 -6.25,6.25 0,3.45 2.8000001,6.25 6.25,6.25 3.45,0 6.25,-2.8 6.25,-6.25 0,-3.45 -2.8,-6.2499999 -6.25,-6.25 z M 5.15625,8.9583338 7.5,11.302084 9.8697916,8.9583338 11.067709,10.15625 8.7239584,12.5 11.067709,14.84375 9.8697916,16.041666 7.5,13.697916 5.15625,16.041666 3.9583334,14.84375 6.3020834,12.5 3.9583334,10.15625 5.15625,8.9583338 z"
+       id="path3400" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Split"
+     style="display:inline"
+     transform="translate(0,-5)">
+    <rect
+       style="fill:#000000;fill-opacity:0.352657;fill-rule:evenodd;stroke:#434343;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2412"
+       width="8.75"
+       height="7.5"
+       x="3.125"
+       y="8.125" />
+    <rect
+       y="11.25"
+       x="2.5"
+       height="1.25"
+       width="10"
+       id="rect3186"
+       style="fill:#434343;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+  </g>
+</svg>

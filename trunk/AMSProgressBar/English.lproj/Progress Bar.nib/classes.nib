@@ -1,0 +1,17 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = ProgressBarController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                dialogWindow = NSWindow; 
+                explanatoryText = NSTextField; 
+                progressBar = NSProgressIndicator; 
+                timeRemaining = NSTextField; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}
