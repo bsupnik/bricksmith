@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		PartBrowserPanel.m
+// File:		PartBrowserPanelController.m
 //
 // Purpose:		Presents a PartBrower in a dialog. It has a larger preview, so 
 //				it isn't as cramped as the Parts drawer.
@@ -8,14 +8,14 @@
 //  Created by Allen Smith on 4/3/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
-#import "PartBrowserPanel.h"
+#import "PartBrowserPanelController.h"
 
 #import "PartBrowserDataSource.h"
 #import "ExtendedSplitView.h"
 
-@implementation PartBrowserPanel
+@implementation PartBrowserPanelController
 
-static PartBrowserPanel *sharedPartBrowserPanel = nil;
+static PartBrowserPanelController *sharedPartBrowserPanel = nil;
 
 
 //========== awakeFromNib ======================================================
@@ -31,6 +31,14 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 }//end awakeFromNib
 
 
+//========== windowDidLoad =====================================================
+//==============================================================================
+- (void)windowDidLoad
+{
+	[self->partsBrowser scrollSelectedCategoryToCenter];
+
+}
+
 #pragma mark -
 #pragma mark INITIALIZATION
 #pragma mark -
@@ -40,10 +48,10 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 // Purpose:		Returns the application-wide instance of the PartBrowserPanel.
 //
 //------------------------------------------------------------------------------
-+ (PartBrowserPanel *) sharedPartBrowserPanel
++ (PartBrowserPanelController *) sharedPartBrowserPanel
 {
 	if(sharedPartBrowserPanel == nil)
-		sharedPartBrowserPanel = [[PartBrowserPanel alloc] init];
+		sharedPartBrowserPanel = [[PartBrowserPanelController alloc] init];
 
 	return sharedPartBrowserPanel;
 	
@@ -57,16 +65,9 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 //==============================================================================
 - (id) init
 {	
-	// I don't believe we want *anything* from the old "self" of this object. 
-	// Everything is coming from the Nib file. 
-//	self = [super init];
+	self = [super initWithWindowNibName:@"PartBrowser"];
 	
-	[NSBundle loadNibNamed:@"PartBrowser" owner:self];
-	id newself = partBrowserPanel;
-
-	[self release];
-	
-	return newself;
+	return self;
 	
 }//end init
 
@@ -89,10 +90,11 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 
 
 #pragma mark -
-#pragma mark WINDOW
+#pragma mark DELEGATES
 #pragma mark -
 
-//========== close =============================================================
+//**** NSWindow ****
+//========== windowWillClose: ==================================================
 //
 // Purpose:		There is a known bug in NSOpenGLView whereby a GLView will 
 //				destroy its graphics context when its enclosing window is 
@@ -104,15 +106,29 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 //			    scratch. 
 //
 //==============================================================================
-- (void)close
+- (void)windowWillClose:(NSNotification *)notification
 {
 	//Make sure our memory is all released.
 	sharedPartBrowserPanel = nil;
 	[self autorelease];
 	
-	[super close];
-
 }//end windowWillClose:
+
+
+//**** NSWindow ****
+//========== windowWillReturnUndoManager: ======================================
+//
+// Purpose:		Allows Undo to keep working transparently through this window by 
+//				allowing the undo request to forward on to the active document.
+//
+//==============================================================================
+- (NSUndoManager *) windowWillReturnUndoManager:(NSWindow *)sender
+{
+	NSDocument *currentDocument = [[NSDocumentController sharedDocumentController] currentDocument];
+	
+	return [currentDocument undoManager];
+	
+}//end windowWillReturnUndoManager:
 
 
 //========== splitView:constrainMinCoordinate:ofSubviewAt: =====================
@@ -138,8 +154,8 @@ static PartBrowserPanel *sharedPartBrowserPanel = nil;
 //==============================================================================
 - (void) dealloc
 {
-	[partsBrowser	release];
-	
+	// no need to release top-level nib objects, as this is an NSWindowController
+
 	[super dealloc];
 	
 }//end dealloc

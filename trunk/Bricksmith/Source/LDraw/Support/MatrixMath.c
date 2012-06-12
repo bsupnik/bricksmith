@@ -181,6 +181,26 @@ Size2 V2MakeSize(float width, float height)
 }
 
 
+//========== V2EqualBoxes ======================================================
+//==============================================================================
+bool V2EqualBoxes(Box2 box1, Box2 box2)
+{
+	return (	box1.origin.x == box2.origin.y
+			&&	box1.origin.y == box2.origin.y
+			&&	box1.size.height == box2.size.height
+			&&	box1.size.width == box2.size.width );
+}
+
+
+//========== V2EqualSizes ======================================================
+//==============================================================================
+bool V2EqualSizes(Size2 size1, Size2 size2)
+{
+	return (	size1.width == size2.width
+			&&	size1.height == size2.height );
+}
+
+
 //========== V2BoxHeight =======================================================
 //==============================================================================
 float V2BoxHeight(Box2 box)
@@ -254,12 +274,12 @@ float V2BoxMinY(Box2 box)
 //==============================================================================
 Box2 V2BoxInset(Box2 box, float dX, float dY)
 {
-	Box2 insetBox;
+	Box2 insetBox = box;
 	
-	box.origin.x    += dX;
-	box.origin.y    += dY;
-	box.size.width  -= dX * 2;
-	box.size.height -= dY * 2;
+	insetBox.origin.x    += dX;
+	insetBox.origin.y    += dY;
+	insetBox.size.width  -= dX * 2;
+	insetBox.size.height -= dY * 2;
 	
 	return insetBox;
 }

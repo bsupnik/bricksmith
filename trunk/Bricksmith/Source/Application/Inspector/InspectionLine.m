@@ -79,7 +79,6 @@
 	[startPoint	setCoordinateValue:vertex1];
 	[endPoint	setCoordinateValue:vertex2];
 	
-	[[representedObject enclosingModel] optimizeVertexes];
 	[super revert:sender];
 	
 }//end revert:

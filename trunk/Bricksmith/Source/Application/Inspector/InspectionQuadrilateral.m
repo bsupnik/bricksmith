@@ -116,7 +116,6 @@
 	[vertex3Form setCoordinateValue:vertex3];
 	[vertex4Form setCoordinateValue:vertex4];
 	
-	[[representedObject enclosingModel] optimizeVertexes];
 	[super revert:sender];
 	
 }//end revert:

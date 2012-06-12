@@ -167,4 +167,13 @@
 }//end setFrameRotation:
 
 
+//========== setBoundsSize: ====================================================
+//==============================================================================
+- (void) setBoundsSize:(NSSize)newSize
+{
+	[super setBoundsSize:newSize];
+	[self centerDocumentView];
+}
+
+
 @end

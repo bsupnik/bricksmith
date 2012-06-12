@@ -553,30 +553,6 @@
 }//end displayName
 
 
-//========== enclosingFile =====================================================
-//
-// Purpose:		Returns the file of which this part is a member.
-//
-//==============================================================================
-- (LDrawFile *) enclosingFile
-{
-	return [[[self enclosingStep] enclosingModel] enclosingFile];
-	
-}//end setModel:
-
-
-//========== enclosingStep =====================================================
-//
-// Purpose:		Returns the step of which this step is a part.
-//
-//==============================================================================
-- (LDrawStep *) enclosingStep
-{
-	return (LDrawStep *)[self enclosingDirective];
-	
-}//end setModel:
-
-
 //========== position ==========================================================
 //
 // Purpose:		Returns the coordinates at which the part is drawn.
@@ -1126,6 +1102,19 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
+
+//========== containsReferenceTo: ==============================================
+//
+// Purpose:		Returns if the part references a model with the given name. This 
+//				is used by containers to detect circular references. 
+//
+//==============================================================================
+- (BOOL) containsReferenceTo:(NSString *)name
+{
+	BOOL isMatch = [referenceName isEqualToString:name];
+	return isMatch;
+}
+
 
 //========== flattenIntoLines:triangles:quadrilaterals:other:currentColor: =====
 //

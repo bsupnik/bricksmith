@@ -11,23 +11,19 @@
 
 #import "ObjectInspectionController.h"
 
-@interface InspectionMPDModel : ObjectInspectionController {
-
+@interface InspectionMPDModel : ObjectInspectionController
+{
 	IBOutlet	NSTextField		*modelNameField;
 	IBOutlet	NSTextField		*descriptionField;
 	IBOutlet	NSTextField		*authorField;
 	
-	IBOutlet	NSPopUpButton	*ldrawDotOrgPopUp;
-	
 	IBOutlet	NSTextField		*numberStepsField;
 	IBOutlet	NSTextField		*numberElementsField;
-	
 }
 
 //Actions
 - (IBAction) modelNameFieldChanged:(id)sender;
 - (IBAction) descriptionFieldChanged:(id)sender;
 - (IBAction) authorFieldChanged:(id)sender;
-- (IBAction) ldrawDotOrgPopUpClicked:(id)sender;
 
 @end

@@ -149,7 +149,7 @@ NSString    *PART_REPORT_PART_QUANTITY  = @"QuantityKey";
 				[missingParts addObject:currentElement];
 			
 			//Moved?
-			category = [partLibrary categoryForPart:currentElement];
+			category = [partLibrary categoryForPartName:[currentElement referenceName]];
 			if([category isEqualToString:LDRAW_MOVED_CATEGORY]) 
 			   [movedParts addObject:currentElement];
 		}

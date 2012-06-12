@@ -604,6 +604,8 @@
 		[[self->dragHandles objectAtIndex:0] setPosition:newVertex updateTarget:NO];
 	}
 	
+	[[self enclosingDirective] setVertexesNeedRebuilding];
+	
 }//end setVertex1:
 
 
@@ -621,6 +623,8 @@
 	{
 		[[self->dragHandles objectAtIndex:1] setPosition:newVertex updateTarget:NO];
 	}
+	
+	[[self enclosingDirective] setVertexesNeedRebuilding];
 	
 }//end setVertex2:
 
@@ -640,6 +644,8 @@
 		[[self->dragHandles objectAtIndex:2] setPosition:newVertex updateTarget:NO];
 	}
 	
+	[[self enclosingDirective] setVertexesNeedRebuilding];
+	
 }//end setVertex3:
 
 
@@ -657,6 +663,8 @@
 	{
 		[[self->dragHandles objectAtIndex:3] setPosition:newVertex updateTarget:NO];
 	}
+	
+	[[self enclosingDirective] setVertexesNeedRebuilding];
 	
 }//end setVertex4:
 

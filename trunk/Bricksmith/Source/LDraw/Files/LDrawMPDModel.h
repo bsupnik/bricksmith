@@ -33,5 +33,7 @@
 
 // Utilities
 + (NSString *) ldrawCompliantNameForName:(NSString *)newDisplayName;
++ (BOOL) lineIsMPDModelStart:(NSString*)line modelName:(NSString**)modelNamePtr;
++ (BOOL) lineIsMPDModelEnd:(NSString*)line;
 
 @end

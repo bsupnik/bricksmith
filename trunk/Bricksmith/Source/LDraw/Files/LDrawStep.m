@@ -135,12 +135,12 @@
 		// See if the line is a step delimiter. If the delimiter doesn't exist, 
 		// it's implied (such as in a 1-step model). Otherwise, it marks the end 
 		// of the step. 
-		if([currentLine hasPrefix:LDRAW_STEP])
+		if([[self class] lineIsStepTerminator:currentLine])
 		{
 			// Nothing more to parse. Stop.
 			range.length -= 1;
 		}
-		else if([currentLine hasPrefix:LDRAW_ROTATION_STEP])
+		else if([[self class] lineIsRotationStepTerminator:currentLine])
 		{
 			// Parse the rotation step.
 			if([self parseRotationStepFromLine:currentLine] == NO)
@@ -310,8 +310,8 @@
 		// See if the line is a step delimiter. If the delimiter doesn't exist, 
 		// it's implied (such as in a 1-step model). Otherwise, it marks the end 
 		// of the step. 
-		if(		[currentLine hasPrefix:LDRAW_STEP]
-		   ||	[currentLine hasPrefix:LDRAW_ROTATION_STEP])
+		if(		[[self class] lineIsStepTerminator:currentLine]
+		   ||	[[self class] lineIsRotationStepTerminator:currentLine] )
 		{
 			// Nothing more to parse. Stop.
 			break;
@@ -429,11 +429,11 @@
 		switch(self->stepRotationType)
 		{
 			case LDrawStepRotationNone:
-				[written appendString:LDRAW_STEP];
+				[written appendFormat:@"0 %@", LDRAW_STEP_TERMINATOR];
 				break;
 			
 			case LDrawStepRotationRelative:
-				[written appendFormat:@"%@ %.3f %.3f %.3f %@",	LDRAW_ROTATION_STEP,
+				[written appendFormat:@"0 %@ %.3f %.3f %.3f %@",LDRAW_ROTATION_STEP_TERMINATOR,
 																angleZYX.x, 
 																angleZYX.y, 
 																angleZYX.z, 
@@ -441,7 +441,7 @@
 				break;
 			
 			case LDrawStepRotationAbsolute:
-				[written appendFormat:@"%@ %.3f %.3f %.3f %@",	LDRAW_ROTATION_STEP,
+				[written appendFormat:@"0 %@ %.3f %.3f %.3f %@",LDRAW_ROTATION_STEP_TERMINATOR,
 																angleZYX.x, 
 																angleZYX.y, 
 																angleZYX.z, 
@@ -449,7 +449,7 @@
 				break;
 			
 			case LDrawStepRotationAdditive:
-				[written appendFormat:@"%@ %.3f %.3f %.3f %@",	LDRAW_ROTATION_STEP,
+				[written appendFormat:@"0 %@ %.3f %.3f %.3f %@",LDRAW_ROTATION_STEP_TERMINATOR,
 																angleZYX.x, 
 																angleZYX.y, 
 																angleZYX.z, 
@@ -457,7 +457,7 @@
 				break;
 			
 			case LDrawStepRotationEnd:
-				[written appendFormat:@"%@ %@", LDRAW_ROTATION_STEP, LDRAW_ROTATION_END];
+				[written appendFormat:@"0 %@ %@", LDRAW_ROTATION_STEP_TERMINATOR, LDRAW_ROTATION_END];
 				break;
 		}
 	}
@@ -773,7 +773,6 @@
 //==============================================================================
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
 {
-	//might want to do some type checking here.
 	[super insertDirective:directive atIndex:index];
 	
 	[[self enclosingModel] didAddDirective:directive];
@@ -803,6 +802,56 @@
 #pragma mark UTILITIES
 #pragma mark -
 
+//========== lineIsStepTerminator: =============================================
+//
+// Purpose:		Returns if line is a 0 STEP
+//
+//==============================================================================
++ (BOOL) lineIsStepTerminator:(NSString*)line
+{
+	NSString	*parsedField	= nil;
+	NSString	*workingLine	= line;
+	BOOL		isStep			= NO;
+	
+	parsedField = [LDrawUtilities readNextField:  workingLine
+									  remainder: &workingLine ];
+	if([parsedField isEqualToString:@"0"])
+	{
+		parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
+		
+		if([parsedField isEqualToString:LDRAW_STEP_TERMINATOR])
+			isStep = YES;
+	}
+	
+	return isStep;
+}
+
+
+//========== lineIsRotationStepTerminator: =====================================
+//
+// Purpose:		Returns if line is a 0 ROTSTEP
+//
+//==============================================================================
++ (BOOL) lineIsRotationStepTerminator:(NSString*)line
+{
+	NSString	*parsedField	= nil;
+	NSString	*workingLine	= line;
+	BOOL		isRotationStep	= NO;
+	
+	parsedField = [LDrawUtilities readNextField:  workingLine
+									  remainder: &workingLine ];
+	if([parsedField isEqualToString:@"0"])
+	{
+		parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
+		
+		if([parsedField isEqualToString:LDRAW_ROTATION_STEP_TERMINATOR])
+			isRotationStep = YES;
+	}
+	
+	return isRotationStep;
+}
+
+
 //========== parseRotationStepFromLine: ========================================
 //
 // Purpose:		Parses out the rotation step values from the given line.
@@ -829,7 +878,10 @@
 	
 	@try
 	{
-		if([scanner scanString:LDRAW_ROTATION_STEP intoString:NULL] == NO)
+		if([scanner scanString:@"0" intoString:NULL] == NO)
+			@throw [NSException exceptionWithName:@"BricksmithParseException" reason:@"Bad ROTSTEP syntax" userInfo:nil];
+
+		if([scanner scanString:LDRAW_ROTATION_STEP_TERMINATOR intoString:NULL] == NO)
 			@throw [NSException exceptionWithName:@"BricksmithParseException" reason:@"Bad ROTSTEP syntax" userInfo:nil];
 
 		// Is it an end rotation?

@@ -344,18 +344,6 @@
 
 #pragma mark -
 
-//========== setEnclosingDirective: ============================================
-//
-// Purpose:		We are being added to another directive.
-//
-//==============================================================================
-- (void) setEnclosingDirective:(LDrawContainer *)newParent
-{
-	enclosingDirective = newParent;
-	
-}//end setEnclosingDirective:
-
-
 //========== setHidden: ========================================================
 //
 // Purpose:		Sets whether this part will be drawn, or whether it will be 
@@ -367,6 +355,7 @@
 - (void) setHidden:(BOOL) flag
 {
 	self->hidden = flag;
+	[[self enclosingDirective] setVertexesNeedRebuilding];
 	
 }//end setHidden:
 

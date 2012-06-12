@@ -87,6 +87,16 @@
 	
 	success = [[PartLibrary sharedPartLibrary] reloadParts];
 	
+	// To print out a list of all categories. For debugging !CATEGORY coverage.
+//	NSArray *categories = [[[PartLibrary sharedPartLibrary] categories] sortedArrayUsingSelector:@selector(compare:)];
+//	NSMutableString* list = [NSMutableString string];
+//	for(NSString* name in categories)
+//	{
+//		[list appendString:name];
+//		[list appendString:@"\n"];
+//	}
+//	NSLog(@"%@", list);
+	
 	[self->progressPanel close];
 	
 	return success;

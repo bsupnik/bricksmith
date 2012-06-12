@@ -27,7 +27,7 @@ typedef struct Point2Struct
 {
 	float x, y;
 	
-} Point2;
+} Point2, Vector2;
 
 
 typedef struct Size2Struct
@@ -233,6 +233,8 @@ extern Point2	V2Make(float x, float y);
 
 extern Box2		V2MakeBox(float x, float y, float width, float height);
 extern Size2	V2MakeSize(float width, float height);
+extern bool		V2EqualBoxes(Box2 box1, Box2 box2);
+extern bool		V2EqualSizes(Size2 size1, Size2 size2);
 extern float	V2BoxHeight(Box2 box);
 extern float	V2BoxWidth(Box2 box);
 extern float	V2BoxMaxX(Box2 box);

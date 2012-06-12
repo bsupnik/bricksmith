@@ -12,6 +12,7 @@
 #import "LDrawContainer.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
+#import "LDrawStep.h"
 	
 @implementation LDrawDirective
 
@@ -415,6 +416,36 @@
 }//end enclosingModel
 
 
+//========== enclosingStep =====================================================
+//
+// Purpose:		Returns the highest LDrawStep which contains this directive, or 
+//				nil if the directive is not in the hierarchy of an LDrawStep.
+//
+//==============================================================================
+- (LDrawStep *) enclosingStep
+{
+	NSArray     *ancestors      = [self ancestors];
+	id          currentAncestor = nil;
+	BOOL        foundIt         = NO;
+	NSInteger   counter         = 0;
+	
+	//loop through the ancestors looking for an LDrawFile.
+	for(counter = 0; counter < [ancestors count] && foundIt == NO; counter++)
+	{
+		currentAncestor = [ancestors objectAtIndex:counter];
+		
+		if([currentAncestor isKindOfClass:[LDrawStep class]])
+			foundIt = YES;
+	}
+	
+	if(foundIt == YES)
+		return currentAncestor;
+	else
+		return nil;
+	
+}//end enclosingStep
+
+
 //========== isSelected ========================================================
 //
 // Purpose:		Returns whether this directive thinks it's selected.
@@ -485,6 +516,18 @@
 #pragma mark UTILITIES
 #pragma mark -
 //This is stuff that didn't really go anywhere else.
+
+//========== containsReferenceTo: ==============================================
+//
+// Purpose:		Overridden by subclasses to indicate if the object (or any of 
+//				its potential children) references a model with the given name. 
+//
+//==============================================================================
+- (BOOL) containsReferenceTo:(NSString *)name
+{
+	return NO;
+}
+
 
 //========== description =======================================================
 //
@@ -589,6 +632,18 @@
 	// only meaningful in a subclass
 	
 }//end optimizeOpenGL
+
+
+//========== optimizeVertexes ==================================================
+//
+// Purpose:		Optimizes raw vertex data into VBOs. The model collects raw 
+//				vertex data through use of primitives. 
+//
+//==============================================================================
+- (void) optimizeVertexes
+{
+	// only meaningful in a subclass
+}
 
 
 //========== registerUndoActions: ==============================================

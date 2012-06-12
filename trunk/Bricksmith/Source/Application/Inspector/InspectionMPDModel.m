@@ -53,7 +53,6 @@
 	NSString				*newName		= [modelNameField	stringValue];
 	NSString				*newDescription	= [descriptionField	stringValue];
 	NSString				*newAuthor		= [authorField		stringValue];
-	LDrawDotOrgModelStatusT	newModelStatus	= [[ldrawDotOrgPopUp selectedItem] tag];
 	
 	// For the sake of simplicity, we group these similar fields of the MPD and 
 	// regular model together.
@@ -61,7 +60,6 @@
 	
 	[representedObject setModelDescription:newDescription];
 	[representedObject setAuthor:newAuthor];
-	[representedObject setLDrawRepositoryStatus:newModelStatus];
 	
 	// When renaming the model, also update all references to this submodel 
 	// within the entire file (in an undo-friendly way). 
@@ -92,9 +90,6 @@
 	[modelNameField			setStringValue:[representedObject modelName]		];
 	[descriptionField		setStringValue:[representedObject modelDescription]	];
 	[authorField			setStringValue:[representedObject author]			];
-	
-	NSInteger tagIndex = [ldrawDotOrgPopUp indexOfItemWithTag:[representedObject ldrawRepositoryStatus]];
-	[ldrawDotOrgPopUp		selectItemAtIndex:tagIndex];
 	
 	[numberElementsField setIntegerValue:[representedObject numberElements]];
 	[numberStepsField setIntegerValue:[[representedObject steps] count]];
@@ -200,23 +195,6 @@
 		[self finishedEditing:sender];
 		
 }//end authorFieldChanged:
-
-
-//========== ldrawDotOrgPopUpClicked: ==========================================
-//
-// Purpose:		The user has changed the LDraw.org repository status.
-//
-//==============================================================================
-- (IBAction) ldrawDotOrgPopUpClicked:(id)sender
-{
-	LDrawDotOrgModelStatusT newStatus = [[sender selectedItem] tag];
-	LDrawDotOrgModelStatusT oldStatus = [[self object] ldrawRepositoryStatus];
-	
-	//If the values really did change, then update.
-	if(newStatus != oldStatus)
-		[self finishedEditing:sender];
-		
-}//end ldrawDotOrgPopUpClicked:
 
 
 @end

@@ -51,6 +51,7 @@ struct OptimizationTags
 	
 	NSMutableDictionary		*colorOptimizations; // key is @"%f %f %f %f", value is OptimizationTags in NSValue
 	NSMutableDictionary		*colorWireframeOptimizations; // key is @"%f %f %f %f", value is OptimizationTags in NSValue
+	BOOL					needsRebuilding;
 }
 
 // Accessors
@@ -59,6 +60,7 @@ struct OptimizationTags
 		triangles:(NSArray *)trianglesIn
    quadrilaterals:(NSArray *)quadrilateralsIn
 			other:(NSArray *)everythingElseIn;
+- (void) setVertexesNeedRebuilding;
 			
 - (void) addDirective:(LDrawDirective *)directive;
 - (void) addLine:(LDrawLine *)line;

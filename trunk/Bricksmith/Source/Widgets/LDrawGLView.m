@@ -32,8 +32,7 @@
 //==============================================================================
 #import "LDrawGLView.h"
 
-#import <GLUT/glut.h>
-#import <OpenGL/glu.h>
+#import <OpenGL/OpenGL.h>
 
 #import "FocusRingView.h"
 #import "LDrawApplication.h"
@@ -44,6 +43,7 @@
 #import "LDrawFile.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
+#import "LDrawGLRenderer.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
 #import "MacLDraw.h"
@@ -55,9 +55,34 @@
 #define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
 #define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
-#define DEBUG_DRAWING				1
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
+
+//========== NSRectToBox2 ======================================================
+//
+// Purpose:		Convert Cocoa rects to our internal format.
+//
+//==============================================================================
+static Box2 NSRectToBox2(NSRect rect)
+{
+	Box2 box = V2MakeBox(NSMinX(rect), NSMinY(rect), NSWidth(rect), NSHeight(rect));
+	
+	return box;
+}
+
+
+//========== NSSizeToSize2 =====================================================
+//
+// Purpose:		Convert Cocoa sizes to our internal format.
+//
+//==============================================================================
+static Size2 NSSizeToSize2(NSSize size)
+{
+	Size2 sizeOut = V2MakeSize(size.width, size.height);
+	
+	return sizeOut;
+}
+
 
 @implementation LDrawGLView
 
@@ -73,7 +98,6 @@
 - (void) awakeFromNib
 {
 	id		superview	= [self superview];
-	NSRect	frame		= [self frame];
 	
 	// If we are in a scroller, make sure we appear centered when smaller than 
 	// the scroll view. 
@@ -81,8 +105,6 @@
 
 	if([superview isKindOfClass:[NSClipView class]])
 	{
-		//Center the view inside its scrollers.
-		[self scrollCenterToPoint:NSMakePoint( NSWidth(frame)/2, NSHeight(frame)/2 )];
 		[superview setCopiesOnScroll:NO];
 	}
 	
@@ -152,6 +174,10 @@
 	NSOpenGLPixelFormat     *pixelFormat        = [LDrawApplication openGLPixelFormat];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
 	
+	[[self openGLContext] makeCurrentContext];
+	
+	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
+	[renderer setDelegate:self];
 	
 	//---------- Load UI -------------------------------------------------------
 	
@@ -168,15 +194,10 @@
 	//---------- Initialize instance variables ---------------------------------
 	
 	[self setAcceptsFirstResponder:YES];
-	[self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
+	[self->renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
 	canDrawLock				= [[NSConditionLock alloc] initWithCondition:NO];
 	keepDrawThreadAlive		= YES;
-	
-	cameraDistance			= -10000;
-	isTrackingDrag			= NO;
-	projectionMode			= ProjectionModePerspective;
-	rotationDrawMode		= LDrawGLDrawNormal;
 	
 	// Set up our OpenGL context. We need to base it on a shared context so that 
 	// display-list names can be shared globally throughout the application.
@@ -221,6 +242,18 @@
 							   name:LDrawViewBackgroundColorDidChangeNotification
 							 object:nil ];
 	
+	NSTrackingAreaOptions	options 		= (		NSTrackingMouseEnteredAndExited
+											   |	NSTrackingMouseMoved
+											   |	NSTrackingActiveInActiveApp
+											   |	NSTrackingInVisibleRect
+											  );
+	NSTrackingArea			*trackingArea	= [[NSTrackingArea alloc] initWithRect:NSZeroRect
+																  options:options
+																	owner:self
+																 userInfo:nil];
+	[self addTrackingArea:trackingArea];
+	[trackingArea release];
+	
 }//end internalInit
 
 
@@ -230,103 +263,11 @@
 //				state.
 //
 //==============================================================================
-- (void)prepareOpenGL
+- (void) prepareOpenGL
 {
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_MULTISAMPLE); //antialiasing
-	
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	[self->renderer prepareOpenGL];
 	
 	[self takeBackgroundColorFromUserDefaults]; //glClearColor()
-	
-	//
-	// Define the lighting.
-	//
-	
-	//Our light position is transformed by the modelview matrix. That means 
-	// we need to have a standard model matrix loaded to get our light to 
-	// land in the right place! But our modelview might have already been 
-	// affected by someone calling -setViewOrientation:. So we restore the 
-	// default here.
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glRotatef(180,1,0,0); //convert to standard, upside-down LDraw orientation.
-	
-	//---------- Material ------------------------------------------------------
-	
-//	GLfloat ambient[4]  = { 0.2, 0.2, 0.2, 1.0 };
-//	GLfloat diffuse[4]	= { 0.5, 0.5, 0.5, 1.0 };
-	GLfloat specular[4] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat shininess   = 64.0; // range [0-128]
-	
-//	glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT,	ambient );
-//	glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE,	diffuse ); //don't bother; overridden by glColorMaterial
-	glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR,	specular );
-	glMaterialf(  GL_FRONT_AND_BACK, GL_SHININESS,	shininess );
-
-	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_COLOR_MATERIAL);
-	
-
-	//---------- Light Model ---------------------------------------------------
-	
-	// The overall scene has ambient light to make the lighting less harsh. But 
-	// too much ambient light makes everything washed out. 
-	GLfloat lightModelAmbient[4]    = {0.3, 0.3, 0.3, 0.0};
-	
-	glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER,	GL_FALSE);
-	glLightModeli( GL_LIGHT_MODEL_TWO_SIDE,		GL_FALSE );
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT,		lightModelAmbient);
-	
-	
-	//---------- Lights --------------------------------------------------------
-	
-	// We are going to have two lights, one in a standard position (LIGHT0) and 
-	// another pointing opposite to it (LIGHT1). The second light will 
-	// illuminate any inverted normals or backwards polygons. 
-	GLfloat position0[] = {0, -0.0, -1.0, 0};
-	GLfloat position1[] = {0,  0.0,  1.0, 0};
-	
-	// Lessening the diffuseness also makes lighting less extreme.
-	GLfloat light0Ambient[4]     = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat light0Diffuse[4]     = { 0.8, 0.8, 0.8, 1.0 };
-	GLfloat light0Specular[4]    = { 0.0, 0.0, 0.0, 1.0 };
-	
-	//normal forward light
-	glLightfv(GL_LIGHT0, GL_POSITION, position0);
-	glLightfv(GL_LIGHT0, GL_AMBIENT,  light0Ambient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light0Diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
-	
-	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,	1.0);
-	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION,		0.0);
-	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION,	0.0);
-
-	//opposing light to illuminate backward normals.
-	glLightfv(GL_LIGHT1, GL_POSITION, position1);
-	glLightfv(GL_LIGHT1, GL_AMBIENT,  light0Ambient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE,  light0Diffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, light0Specular);
-	
-	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION,	1.0);
-	glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION,		0.0);
-	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION,	0.0);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHT1);
-	
-	
-	//Now that the light is positioned where we want it, we can restore the 
-	// correct viewing angle.
-	[self setViewOrientation:self->viewOrientation];
 	
 }//end prepareOpenGL
 
@@ -408,11 +349,6 @@
 //==============================================================================
 - (void) draw
 {
-	NSDate				*startTime			= nil;
-	NSUInteger			 options			= DRAW_NO_OPTIONS;
-	NSTimeInterval		 drawTime			= 0;
-	BOOL				 considerFastDraw	= NO;
-	
 	//mark another outstanding draw request, then get in line by requesting the 
 	// mutex.
 	@synchronized(self)
@@ -422,8 +358,6 @@
 	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
-		startTime	= [NSDate date];
-	
 		[[self openGLContext] makeCurrentContext];
 		
 		//any previous draw requests have now executed and let go of the mutex.
@@ -431,64 +365,7 @@
 		// ourselves, and defer to the last guy.
 		if(numberDrawRequests == 1)
 		{
-			// We may need to simplify large models if we are spinning the model 
-			// or doing part drag-and-drop. 
-			considerFastDraw =		self->isTrackingDrag == YES
-								||	self->isGesturing == YES
-								||	(	[self->fileBeingDrawn respondsToSelector:@selector(draggingDirectives)]
-									 &&	[(id)self->fileBeingDrawn draggingDirectives] != nil
-									);
-		#if DEBUG_DRAWING == 0
-			if(considerFastDraw == YES && self->rotationDrawMode == LDrawGLDrawExtremelyFast)
-			{
-				options |= DRAW_BOUNDS_ONLY;
-			}
-		#endif //DEBUG_DRAWING
-			
-			//Load the model matrix to make sure we are applying the right stuff.
-			glMatrixMode(GL_MODELVIEW);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-			// Make lines look a little nicer; Max width 1.0; 0.5 at 100% zoom
-			glLineWidth(MIN([self zoomPercentage]/100 * 0.5, 1.0));
-
-			// DRAW!
-			[self->fileBeingDrawn draw:options
-							 viewScale:[self zoomPercentage]/100.
-						   parentColor:color];
-			
-			//glFlush(); //implicit in -flushBuffer
-			[[self openGLContext] flushBuffer];
-		
-			
-			// If we just did a full draw, let's see if rotating needs to be 
-			// done simply. 
-			drawTime = -[startTime timeIntervalSinceNow];
-			if(considerFastDraw == NO)
-			{
-				if( drawTime > SIMPLIFICATION_THRESHOLD )
-					rotationDrawMode = LDrawGLDrawExtremelyFast;
-				else
-					rotationDrawMode = LDrawGLDrawNormal;
-			}
-
-			// Timing info
-			framesSinceStartTime++;
-		#if DEBUG_DRAWING
-			NSTimeInterval timeSinceMark = [NSDate timeIntervalSinceReferenceDate] - fpsStartTime;
-			if(timeSinceMark > 5)
-			{	// reset periodically
-				fpsStartTime = [NSDate timeIntervalSinceReferenceDate]; 
-				framesSinceStartTime = 0;
-				NSLog(@"fps = ????????, draw time: %f", drawTime);
-			}
-			else
-			{
-				CGFloat framesPerSecond = framesSinceStartTime / timeSinceMark;
-				NSLog(@"fps = %f, draw time: %f", framesPerSecond, drawTime);
-			}
-		#endif //DEBUG_DRAWING
-			
+			[self->renderer draw];
 		}
 		//else we just drop the draw.
 	}
@@ -514,50 +391,50 @@
 //==============================================================================
 - (void) drawFocusRing
 {
-	NSRect	visibleRect = [self visibleRect];
-	CGFloat	lineWidth	= 1.0;
-	
-	lineWidth /= [self zoomPercentage] / 100;
-	
-	//we just want to DRAW plain colored pixels.
-	glDisable(GL_LIGHTING);
-	
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	{
-		glLoadIdentity();
-		gluOrtho2D( NSMinX(visibleRect), NSMaxX(visibleRect),
-				    NSMinY(visibleRect), NSMaxY(visibleRect) );
-				   
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		{
-			//we indicate focus by drawing a series of framing lines.
-			
-			glLoadIdentity();
-			
-			glColor4ub(125, 151, 174, 255);
-			[self strokeInsideRect:visibleRect
-						 thickness:lineWidth];
-			
-			glColor4ub(137, 173, 204, 213);
-			[self strokeInsideRect:NSInsetRect( visibleRect, 1 * lineWidth, 1 * lineWidth )
-						 thickness:lineWidth];
-			
-			glColor4ub(161, 184, 204, 172);
-			[self strokeInsideRect:NSInsetRect( visibleRect, 2 * lineWidth, 2 * lineWidth )
-						 thickness:lineWidth];
-			
-			glColor4ub(184, 195, 204, 128);
-			[self strokeInsideRect:NSInsetRect( visibleRect, 3 * lineWidth, 3 * lineWidth )
-						 thickness:lineWidth];
-		}
-		glPopMatrix();
-	}
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	
-	glEnable(GL_LIGHTING);
+//	NSRect	visibleRect = [self visibleRect];
+//	CGFloat	lineWidth	= 1.0;
+//	
+//	lineWidth /= [self->renderer zoomPercentage] / 100;
+//	
+//	//we just want to DRAW plain colored pixels.
+//	glDisable(GL_LIGHTING);
+//	
+//	glMatrixMode(GL_PROJECTION);
+//	glPushMatrix();
+//	{
+//		glLoadIdentity();
+//		gluOrtho2D( NSMinX(visibleRect), NSMaxX(visibleRect),
+//				    NSMinY(visibleRect), NSMaxY(visibleRect) );
+//				   
+//		glMatrixMode(GL_MODELVIEW);
+//		glPushMatrix();
+//		{
+//			//we indicate focus by drawing a series of framing lines.
+//			
+//			glLoadIdentity();
+//			
+//			glColor4ub(125, 151, 174, 255);
+//			[self strokeInsideRect:visibleRect
+//						 thickness:lineWidth];
+//			
+//			glColor4ub(137, 173, 204, 213);
+//			[self strokeInsideRect:NSInsetRect( visibleRect, 1 * lineWidth, 1 * lineWidth )
+//						 thickness:lineWidth];
+//			
+//			glColor4ub(161, 184, 204, 172);
+//			[self strokeInsideRect:NSInsetRect( visibleRect, 2 * lineWidth, 2 * lineWidth )
+//						 thickness:lineWidth];
+//			
+//			glColor4ub(184, 195, 204, 128);
+//			[self strokeInsideRect:NSInsetRect( visibleRect, 3 * lineWidth, 3 * lineWidth )
+//						 thickness:lineWidth];
+//		}
+//		glPopMatrix();
+//	}
+//	glMatrixMode(GL_PROJECTION);
+//	glPopMatrix();
+//	
+//	glEnable(GL_LIGHTING);
 
 }//end drawFocusRing
 
@@ -641,83 +518,6 @@
 }//end acceptsFirstResponder
 
 
-//========== centerPoint =======================================================
-//
-// Purpose:		Returns the point (in frame coordinates) which is currently 
-//				at the center of the visible rectangle. This is useful for 
-//				determining the point being viewed in the scroll view.
-//
-//==============================================================================
-- (NSPoint) centerPoint
-{
-	NSRect visibleRect = [self visibleRect];
-	return NSMakePoint( NSMidX(visibleRect), NSMidY(visibleRect) );
-	
-}//end centerPoint
-
-
-//========== getInverseMatrix ==================================================
-//
-// Purpose:		Returns the inverse of the current modelview matrix. You can 
-//				multiply points by this matrix to convert screen locations (or 
-//				vectors) to model points.
-//
-// Note:		This function filters out the translation which is caused by 
-//				"moving" the camera with gluLookAt. That allows us to continue 
-//				working with the model as if it's positioned at the origin, 
-//				which means that points we generate with this matrix will 
-//				correspond to points in the LDraw model itself.
-//
-//==============================================================================
-- (Matrix4) getInverseMatrix
-{
-	Matrix4	transformation	= [self getMatrix];
-	Matrix4	inversed		= Matrix4Invert(transformation);
-	
-	return inversed;
-	
-}//end getInverseMatrix
-
-
-//========== getMatrix =========================================================
-//
-// Purpose:		Returns the the current modelview matrix, basically.
-//
-// Note:		This function filters out the translation which is caused by 
-//				"moving" the camera with gluLookAt. That allows us to continue 
-//				working with the model as if it's positioned at the origin, 
-//				which means that points we generate with this matrix will 
-//				correspond to points in the LDraw model itself. 
-//
-//==============================================================================
-- (Matrix4) getMatrix
-{
-	GLfloat	currentMatrix[16];
-	Matrix4	transformation	= IdentityMatrix4;
-	
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		[[self openGLContext] makeCurrentContext];
-
-		glGetFloatv(GL_MODELVIEW_MATRIX, currentMatrix);
-		transformation = Matrix4CreateFromGLMatrix4(currentMatrix); //convert to our utility library format
-		
-		// When using a perspective view, we must use gluLookAt to reposition 
-		// the camera. That basically means translating the model. But all we're 
-		// concerned about here is the *rotation*, so we'll zero out the 
-		// translation components. 
-		transformation.element[3][0] = 0;
-		transformation.element[3][1] = 0; //translation is in the bottom row of the matrix.
-		transformation.element[3][2] = 0;
-		
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-	return transformation;
-	
-}//end getMatrix
-
-
 //========== LDrawColor ========================================================
 //
 // Purpose:		Returns the LDraw color code of the receiver.
@@ -725,7 +525,8 @@
 //==============================================================================
 -(LDrawColor *) LDrawColor
 {
-	return self->color;
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer LDrawColor];
 	
 }//end color
 
@@ -737,7 +538,7 @@
 //==============================================================================
 - (LDrawDirective *) LDrawDirective
 {
-	return self->fileBeingDrawn;
+	return [self->renderer LDrawDirective];
 	
 }//end LDrawDirective
 
@@ -759,43 +560,24 @@
 
 
 //========== projectionMode ====================================================
-//
-// Purpose:		Returns the current projection mode (perspective or 
-//				orthographic) used in the view.
-//
 //==============================================================================
 - (ProjectionModeT) projectionMode
 {
-	return self->projectionMode;
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer projectionMode];
 	
 }//end projectionMode
 
 
 //========== viewingAngle ======================================================
-//
-// Purpose:		Returns the modelview rotation, in degrees.
-//
-// Notes:		These numbers do *not* include the fact that LDraw has an 
-//				upside-down coordinate system. So if this method returns 
-//				(0,0,0), that means "Front, looking right-side up." 
-//				
 //==============================================================================
 - (Tuple3) viewingAngle
 {
-	Matrix4              transformation		= IdentityMatrix4;
-	TransformComponents  components			= IdentityComponents;
-	Tuple3				 degrees			= ZeroPoint3;
+	[[self openGLContext] makeCurrentContext];
+
+	Tuple3	angle	= [self->renderer viewingAngle];
 	
-	transformation = [self getMatrix];
-	transformation = Matrix4Rotate(transformation, V3Make(180, 0, 0)); // LDraw is upside-down
-	Matrix4DecomposeTransformation(transformation, &components);
-	degrees = components.rotate;
-	
-	degrees.x = degrees(degrees.x);
-	degrees.y = degrees(degrees.y);
-	degrees.z = degrees(degrees.z);
-	
-	return degrees;
+	return angle;
 	
 }//end viewingAngle
 
@@ -807,7 +589,8 @@
 //==============================================================================
 - (ViewOrientationT) viewOrientation
 {
-	return self->viewOrientation;
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer viewOrientation];
 	
 }//end viewOrientation
 
@@ -815,34 +598,13 @@
 //========== zoomPercentage ====================================================
 //
 // Purpose:		Returns the percentage magnification being applied to the 
-//				receiver. (200 means 2x magnification.) The scaling factor is
-//				determined by the receiver's scroll view, not the GLView itself.
-//				If the receiver is not contained within a scroll view, this 
-//				method returns 100.
+//				receiver.
 //
 //==============================================================================
 - (CGFloat) zoomPercentage
 {
-	NSScrollView	*scrollview		= [self enclosingScrollView];
-	CGFloat			 zoomPercentage	= 0;
-	
-	if(scrollview != nil)
-	{
-		NSClipView	*clipview	= [scrollview contentView];
-		NSRect		 clipFrame	= [clipview frame];
-		NSRect		 clipBounds	= [clipview bounds];
-		
-		if(NSWidth(clipBounds) != 0)
-			zoomPercentage = NSWidth(clipFrame) / NSWidth(clipBounds);
-		else
-			zoomPercentage = 1; //avoid division by zero
-			
-		zoomPercentage *= 100; //convert to percent
-	}
-	else
-		zoomPercentage = 100;
-	
-	return zoomPercentage;
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer zoomPercentage];
 	
 }//end zoomPercentage
 
@@ -898,6 +660,15 @@
 		[self registerForDraggedTypes:[NSArray arrayWithObject:LDrawDraggingPboardType]];
 	else
 		[self unregisterDraggedTypes];
+		
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirective:byExtendingSelection:)])
+	{
+		[self->renderer setAllowsEditing:YES];
+	}
+	else
+	{
+		[self->renderer setAllowsEditing:NO];
+	}
 	
 }//end setDelegate:
 
@@ -954,6 +725,19 @@
 }//end setForwardAction:
 
 
+//========== setFrame: =========================================================
+//
+// Purpose:		Frame size is being changed.
+//
+//==============================================================================
+- (void)setFrame:(NSRect)frameRect
+{
+	[[self openGLContext] makeCurrentContext];
+	[super setFrame:frameRect];
+	[self->renderer setBounds:NSSizeToSize2(frameRect.size)];
+}
+
+
 //========== setGridSpacingMode: ===============================================
 //
 // Purpose:		Sets the current granularity of the positioning grid being used 
@@ -962,7 +746,8 @@
 //==============================================================================
 - (void) setGridSpacingMode:(gridSpacingModeT)newMode
 {
-	self->gridMode = newMode;
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer setGridSpacing:[BricksmithUtilities gridSpacingForMode:newMode]];
 	
 }//end setGridSpacingMode:
 
@@ -975,9 +760,8 @@
 //==============================================================================
 -(void) setLDrawColor:(LDrawColor *)newColor
 {
-	[newColor retain];
-	[self->color release];
-	self->color = newColor;
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer setLDrawColor:newColor];
 	
 }//end setColor
 
@@ -992,45 +776,15 @@
 //==============================================================================
 - (void) setLDrawDirective:(LDrawDirective *) newFile
 {
-	BOOL	firstDirective	= (self->fileBeingDrawn == nil);
-	
 	// We lock around the drawing context in case the current directive is being 
 	// drawn right now. We certainly wouldn't want to release what we're 
 	// drawing! 
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
-		NSRect frame = NSZeroRect;
-		
-		//Update our variable.
-		[newFile retain];
-		[self->fileBeingDrawn release];
-		self->fileBeingDrawn = newFile;
-		
-		[[NSNotificationCenter defaultCenter] //force redisplay with glOrtho too.
-				postNotificationName:NSViewFrameDidChangeNotification
-							  object:self ];
-		[self resetFrameSize];
-		frame = [self frame]; //now that it's been changed above.
-		if(firstDirective == YES)
-			[self scrollCenterToPoint:NSMakePoint(NSWidth(frame)/2, NSHeight(frame)/2 )];
-//		[self scrollCenterToPoint:scrollCenter];
+		[[self openGLContext] makeCurrentContext];
+		[self->renderer setLDrawDirective:newFile];
+	
 		[self setNeedsDisplay:YES];
-
-		//Register for important notifications.
-		[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawDirectiveDidChangeNotification object:nil];
-		[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawFileActiveModelDidChangeNotification object:nil];
-			
-		[[NSNotificationCenter defaultCenter]
-				addObserver:self
-				   selector:@selector(displayNeedsUpdating:)
-					   name:LDrawDirectiveDidChangeNotification
-					 object:self->fileBeingDrawn ];
-		
-		[[NSNotificationCenter defaultCenter]
-				addObserver:self
-				   selector:@selector(displayNeedsUpdating:)
-					   name:LDrawFileActiveModelDidChangeNotification
-					 object:self->fileBeingDrawn ];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -1075,13 +829,11 @@
 //==============================================================================
 - (void) setProjectionMode:(ProjectionModeT)newProjectionMode
 {
-	self->projectionMode = newProjectionMode;
-	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
 		
-		[self makeProjection];
+		[self->renderer setProjectionMode:newProjectionMode];
 		
 		[self setNeedsDisplay:YES];
 	}
@@ -1119,30 +871,14 @@
 {
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
-		Matrix4 modelview       = IdentityMatrix4;
-		GLfloat glModelview[16];
-		
 		//This method can get called from -prepareOpenGL, which is itself called 
 		// from -makeCurrentContext. That's a recipe for infinite recursion. So, 
 		// we only makeCurrentContext if we *need* to.
 		if([NSOpenGLContext currentContext] != [self openGLContext])
 			[[self openGLContext] makeCurrentContext];
 		
-		//Get the default angle.
-		glMatrixMode(GL_MODELVIEW);
+		[self->renderer setViewingAngle:newAngle];
 		
-		modelview = Matrix4RotateModelview(modelview, newAngle);
-		
-		// The camera distance was set for us by -resetFrameSize, so as to be 
-		// able to see the entire model. 
-		modelview = V3LookAt(V3Make(0, 0, self->cameraDistance),
-							 V3Make(0, 0, 0), 
-							 V3Make(0, -1, 0), 
-							 modelview);
-							 
-		Matrix4GetGLMatrix4(modelview, glModelview);
-		glLoadMatrixf(glModelview);
-
 		[self setNeedsDisplay:YES];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
@@ -1158,13 +894,9 @@
 //==============================================================================
 - (void) setViewOrientation:(ViewOrientationT)newOrientation
 {
-	Tuple3	newAngle	= [LDrawUtilities angleForViewOrientation:newOrientation];
-
-	self->viewOrientation = newOrientation;
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer setViewOrientation:newOrientation];
 		
-	// Apply the angle itself.
-	[self setViewingAngle:newAngle];
-	
 	[self saveConfiguration];
 	
 }//end setViewOrientation:
@@ -1183,54 +915,9 @@
 //==============================================================================
 - (void) setZoomPercentage:(CGFloat) newPercentage
 {
-	NSScrollView    *scrollView             = [self enclosingScrollView];
-	CGFloat         currentZoomPercentage   = [self zoomPercentage];
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer setZoomPercentage:newPercentage];
 	
-	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
-	// actually changing (to avoid unnecessary re-draw) 
-	if(scrollView != nil && currentZoomPercentage != newPercentage)
-	{
-		NSRect      frame           = [self frame];
-		NSClipView  *clipView       = [scrollView contentView];
-		NSRect      clipFrame       = [clipView frame];
-		NSRect      clipBounds      = [clipView bounds];
-		NSPoint     originalCenter  = [self centerPoint];
-		NSPoint     newCenter       = NSZeroPoint;
-		NSPoint     centerFraction  = NSZeroPoint;
-		CGFloat     scaleFactor     = 0;
-		
-		// We want to maintain the visual center as we zoom. However, if the 
-		// view is set to expand to its entire viewport, the frame may change 
-		// size after zooming. That means we can't use the scroll center 
-		// directly, but must instead calculate the proportion of the view it 
-		// represents. 
-		centerFraction.x = originalCenter.x / NSWidth(frame);
-		centerFraction.y = originalCenter.y / NSHeight(frame);
-		
-		// Don't go below a certain zoom
-		if(newPercentage >= 1)
-		{
-			scaleFactor = newPercentage / 100;
-			
-			// Change the magnification level of the clip view, which has the 
-			// effect of zooming us in and out. 
-			clipBounds.size.width	= NSWidth(clipFrame)  / scaleFactor;
-			clipBounds.size.height	= NSHeight(clipFrame) / scaleFactor;
-			// Note: must use -setBoundsSize:, not -setBounds:. The latter 
-			//		 causes bad things to happen when called on a collapsed 
-			//		 split view. 
-			[clipView setBoundsSize:clipBounds.size];
-			[self resetFrameSize];
-			
-			// Restore the original scroll center using proportions, because the 
-			// size of the frame may have changed. 
-			frame       = [self frame];
-			newCenter.x = centerFraction.x * NSWidth(frame);
-			newCenter.y = centerFraction.y * NSHeight(frame);
-			[self scrollCenterToPoint:newCenter];
-		}
-	}
-
 }//end setZoomPercentage
 
 
@@ -1248,15 +935,19 @@
 {	
 	ViewOrientationT newAngle = [sender tag];
 	
-	[self setViewOrientation:newAngle];
+	[[self openGLContext] makeCurrentContext];
+	
+	[self->renderer setViewOrientation:newAngle];
 	
 	//We treat 3D as a request for perspective, but any straight-on view can 
 	// logically be expected to be displayed orthographically.
 	if(newAngle == ViewOrientation3D)
-		[self setProjectionMode:ProjectionModePerspective];
+		[self->renderer setProjectionMode:ProjectionModePerspective];
 	else
-		[self setProjectionMode:ProjectionModeOrthographic];
+		[self->renderer setProjectionMode:ProjectionModeOrthographic];
 	
+	[self saveConfiguration];
+
 }//end viewOrientationSelected:
 
 
@@ -1267,10 +958,8 @@
 //==============================================================================
 - (IBAction) zoomIn:(id)sender
 {
-	CGFloat currentZoom	= [self zoomPercentage];
-	CGFloat newZoom		= currentZoom * 2;
-	
-	[self setZoomPercentage:newZoom];
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer zoomIn:sender];
 	
 }//end zoomIn:
 
@@ -1282,10 +971,8 @@
 //==============================================================================
 - (IBAction) zoomOut:(id)sender
 {
-	CGFloat currentZoom	= [self zoomPercentage];
-	CGFloat newZoom		= currentZoom / 2;
-	
-	[self setZoomPercentage:newZoom];
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer zoomOut:sender];
 	
 }//end zoomOut:
 
@@ -1298,83 +985,10 @@
 //==============================================================================
 - (IBAction) zoomToFit:(id)sender
 {
-	NSRect  visibleRect             = [self visibleRect];
-	NSSize  maxContentSize          = NSZeroSize;
-	Box3    bounds                  = InvalidBox;
-	Point3  center                  = ZeroPoint3;
-	Matrix4 modelView               = IdentityMatrix4;
-	Matrix4 projection              = IdentityMatrix4;
-	Box2    viewport                = ZeroBox2;
-	GLfloat modelViewGLMatrix	[16];
-	GLfloat projectionGLMatrix	[16];
-	GLint   GLViewport			[4];
-	Box3    projectedBounds         = InvalidBox;
-	NSRect  projectionRect          = NSZeroRect;
-	NSSize  zoomScale2D             = NSZeroSize;
-	CGFloat zoomScaleFactor         = 0.0;
-	
-	// How many onscreen pixels do we have to work with?
-	maxContentSize.width    = NSWidth(visibleRect)  * [self zoomPercentage]/100.;
-	maxContentSize.height   = NSHeight(visibleRect) * [self zoomPercentage]/100.;
-//	NSLog(@"windowVisibleRect = %@", NSStringFromRect(windowVisibleRect));
-//	NSLog(@"maxContentSize = %@", NSStringFromSize(maxContentSize));
-	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
-		
-		// Get bounds
-		if([self->fileBeingDrawn respondsToSelector:@selector(boundingBox3)] )
-		{
-			bounds = [(id)self->fileBeingDrawn boundingBox3];
-			if(V3EqualBoxes(bounds, InvalidBox) == NO)
-			{		
-				// Project the bounds onto the 2D "canvas"
-				glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-				glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-				glGetIntegerv(GL_VIEWPORT, GLViewport);
-				
-				modelView   = Matrix4CreateFromGLMatrix4(modelViewGLMatrix);
-				projection  = Matrix4CreateFromGLMatrix4(projectionGLMatrix);
-				viewport    = V2MakeBox(GLViewport[0], GLViewport[1], GLViewport[2], GLViewport[3]);
-
-				projectedBounds = [(id)self->fileBeingDrawn
-										   projectedBoundingBoxWithModelView:modelView
-																  projection:projection
-																		view:viewport ];
-				projectionRect  = NSMakeRect(projectedBounds.min.x, projectedBounds.min.y,   // origin
-											 projectedBounds.max.x - projectedBounds.min.x,  // width
-											 projectedBounds.max.y - projectedBounds.min.y); // height
-											
-				
-				//---------- Find zoom scale -----------------------------------
-				// Completely fill the viewport with the image
-				
-				zoomScale2D.width   = maxContentSize.width  / NSWidth(projectionRect);
-				zoomScale2D.height  = maxContentSize.height / NSHeight(projectionRect);
-				
-				zoomScaleFactor		= MIN(zoomScale2D.width, zoomScale2D.height);
-				
-				
-				//---------- Find visual center point --------------------------
-				// One might think this would be V3CenterOfBox(bounds). But it's 
-				// not. It seems perspective distortion can cause the visual 
-				// center of the model to be someplace else. 
-				
-				Point2  graphicalCenter_viewport    = V2Make( NSMidX(projectionRect), NSMidY(projectionRect) );
-				NSPoint graphicalCenter_view        = [self convertPointFromViewport:graphicalCenter_viewport];
-				Point3  graphicalCenter_model       = ZeroPoint3;
-				
-				graphicalCenter_model       = [self modelPointForPoint:graphicalCenter_view
-												   depthReferencePoint:center];
-				
-				
-				//---------- Zoom to Fit! --------------------------------------
-				
-				[self setZoomPercentage:([self zoomPercentage] * zoomScaleFactor)];
-				[self scrollCenterToModelPoint:graphicalCenter_model];
-			}
-		}
+		[self->renderer zoomToFit:sender];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -1399,7 +1013,9 @@
 	if(success == YES)
 	{
 		if(self->delegate != nil && [self->delegate respondsToSelector:@selector(LDrawGLViewBecameFirstResponder:)])
+		{
 			[self->delegate LDrawGLViewBecameFirstResponder:self];
+		}
 		
 		//need to draw the focus ring now
 		[self->focusRingView setNeedsDisplay:YES];
@@ -1476,14 +1092,15 @@
 			break;
 		
 		case PanScrollTool:
-			if(self->isTrackingDrag == YES || isClicked == YES)
+			if([self->renderer isTrackingDrag] == YES || isClicked == YES)
 				cursor = [NSCursor closedHandCursor];
 			else
 				cursor = [NSCursor openHandCursor];
 			break;
 			
 		case SmoothZoomTool:
-			if(self->isTrackingDrag == YES) {
+			if([self->renderer isTrackingDrag] == YES)
+			{
 				cursorImage = [NSImage imageNamed:@"ZoomCursor"];
 				cursor = [[[NSCursor alloc] initWithImage:cursorImage
 												  hotSpot:NSMakePoint(7, 10)] autorelease];
@@ -1667,12 +1284,6 @@
 				[self setProjectionMode:ProjectionModePerspective];
 				[self setViewOrientation:ViewOrientation3D];
 				break;
-			case '1':
-				[self spinLR:-45.0f];
-				break;
-			case '3':
-				[self spinLR: 45.0f];
-				break;
 				
 			default:
 				[super keyDown:theEvent];
@@ -1715,9 +1326,9 @@
 			{
 				// find which model-coordinate directions our screen axes are best 
 				// aligned with. 
-				[self getModelAxesForViewX:&xNudge
-										 Y:&yNudge
-										 Z:&zNudge ];
+				[self->renderer getModelAxesForViewX:&xNudge
+													Y:&yNudge
+													Z:&zNudge ];
 			} else {
 
 				/* 
@@ -1735,7 +1346,7 @@
 					other words, the depth perspective matches screen space.
 				*/
 
-				Matrix4 matrix = [self getMatrix];
+				Matrix4 matrix = [self->renderer getMatrix];
 				Vector4 x_model = { 1, 0, 0 };
 				Vector4 y_model = { 0, 1, 0 };
 				Vector4 z_model = { 0, 0, 1 };
@@ -1799,7 +1410,10 @@
 					if(isZMovement == YES)
 					{
 						//this is iffy at best
-						actualNudge = V3Negate(zNudge);
+						// -- and it made things go the wrong way in default 3D 
+						// perspective view, so I switched signs.
+//						actualNudge = V3Negate(zNudge);
+						actualNudge = zNudge;
 					}
 					else
 					{
@@ -1811,7 +1425,10 @@
 				case NSRightArrowFunctionKey:
 				
 					if(isZMovement == YES)
-						actualNudge = zNudge;
+					{
+//						actualNudge = zNudge;
+						actualNudge = V3Negate(zNudge);
+					}
 					else
 						actualNudge = xNudge;
 					isNudge = YES;
@@ -1841,36 +1458,34 @@
 #pragma mark -
 #pragma mark Mouse
 
-- (void)scrollWheel:(NSEvent *)theEvent
+//========== mouseMoved: =======================================================
+//
+// Purpose:		Mouse is hovering in the view.
+//
+//==============================================================================
+- (void) mouseMoved:(NSEvent *)theEvent
 {
-	if(USE_ZOOM_WHEEL)
-	{
-		CGFloat dist = [theEvent deltaY];
-		CGFloat currentZoom	= [self zoomPercentage];
+	NSPoint     windowClickedPoint  = [theEvent locationInWindow];
+	NSPoint     viewClickedPoint    = [self convertPoint:windowClickedPoint fromView:nil ];
+	Point2      view_point          = V2Make(viewClickedPoint.x, viewClickedPoint.y);
+	
+	[[self openGLContext] makeCurrentContext];
+	
+	[self->renderer mouseMoved:view_point];
+}
 
-		NSPoint event_location = [theEvent locationInWindow];
-		NSPoint local_point = [self convertPoint:event_location fromView:nil];	
-		
-		if(dist < 0.0)
-		{
-			while(dist < 0.0)
-			{
-				++dist;
-				currentZoom /= 1.1;
-			}
-		}
-		else 
-		{
-			while(dist > 0.0)
-			{
-				--dist;
-				currentZoom *= 1.1;
-			}	
-		}
-		[self setZoomPercentage:currentZoom preservePoint:local_point];
+
+//========== mouseExited: ======================================================
+//
+// Purpose:		Mouse left the view.
+//
+//==============================================================================
+- (void) mouseExited:(NSEvent *)theEvent
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLViewMouseNotPositioning:)])
+	{
+		[self->delegate LDrawGLViewMouseNotPositioning:self];
 	}
-	else
-	[super scrollWheel:theEvent];
 }
 
 //========== mouseDown: ========================================================
@@ -1887,19 +1502,19 @@
 	if([theEvent buttonNumber] == 1)
 		toolMode = SpinTool;
 	
+	[[self openGLContext] makeCurrentContext];
+
 	// Reset event tracking flags.
-	self->isTrackingDrag	= NO;
-	self->didPartSelection	= NO;
+	[self->renderer mouseDown];
 	
 	[self resetCursor];
 	
-	// This might be the start of a new drag; start collecting frames per second
-	fpsStartTime = [NSDate timeIntervalSinceReferenceDate];
-	framesSinceStartTime = 0;
-
 	if(toolMode == SmoothZoomTool)
 	{
-		[self mouseCenterClick:theEvent];
+		NSPoint windowClickedPoint  = [theEvent locationInWindow]; //window coordinates
+		NSPoint	viewClickedPoint	= [self convertPoint:windowClickedPoint fromView:nil ];
+
+		[self->renderer mouseCenterClick:V2Make(viewClickedPoint.x, viewClickedPoint.y)];
 	}	
 	else if( toolMode == EraserTool )
 	{
@@ -1936,7 +1551,7 @@
 				break;
 			
 			case MouseDraggingImmediatelyInOrthoNeverInPerspective:
-				if([self projectionMode] == ProjectionModeOrthographic)
+				if([self->renderer projectionMode] == ProjectionModeOrthographic)
 				{
 					[self mousePartSelection:theEvent];
 				}
@@ -1955,41 +1570,42 @@
 //==============================================================================
 - (void) mouseDragged:(NSEvent *)theEvent
 {
-	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
-	MouseDragBehaviorT	 draggingBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
-	ToolModeT			 toolMode			= [ToolPalette toolMode];
+	NSUserDefaults      *userDefaults       = [NSUserDefaults standardUserDefaults];
+	MouseDragBehaviorT  draggingBehavior    = [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
+	ToolModeT           toolMode            = [ToolPalette toolMode];
+	Vector2             dragDelta           = V2Make([theEvent deltaX], [theEvent deltaY]);
 
 	if([theEvent buttonNumber] == 1)
 		toolMode = SpinTool;
 	
-	if(self->isTrackingDrag == NO)
-	{
-		self->isStartingDrag = YES;
-	}
-	
-	self->isTrackingDrag = YES;
+	[[self openGLContext] makeCurrentContext];
+
+	[self->renderer mouseDragged];
 	[self resetCursor];
 	
 	//What to do?
 	
 	if(toolMode == PanScrollTool)
 	{
-		[self panDragged:theEvent];
+		NSPoint point_window	= [theEvent locationInWindow];
+		NSPoint point_view		= [self convertPoint:point_window fromView:nil ];
+		
+		[self->renderer panDragged:dragDelta location:V2Make(point_view.x, point_view.y)];
 	}
 	else if(toolMode == SpinTool)
 	{
-		[self rotationDragged:theEvent];
+		[self->renderer rotationDragged:dragDelta];
 	}
 	else if(toolMode == SmoothZoomTool)
 	{
-		[self zoomDragged:theEvent];
+		[self->renderer zoomDragged:dragDelta];
 	}
 	else if(toolMode == RotateSelectTool)
 	{
 		switch(draggingBehavior)
 		{
 			case MouseDraggingOff:
-				[self rotationDragged:theEvent];
+				[self->renderer rotationDragged:dragDelta];
 				break;
 				
 			case MouseDraggingBeginAfterDelay:
@@ -1998,7 +1614,7 @@
 				if(self->canBeginDragAndDrop == YES)
 					[self directInteractionDragged:theEvent];
 				else			
-					[self rotationDragged:theEvent];
+					[self->renderer rotationDragged:dragDelta];
 				break;			
 				
 			case MouseDraggingBeginImmediately:
@@ -2006,8 +1622,8 @@
 				break;
 				
 			case MouseDraggingImmediatelyInOrthoNeverInPerspective:
-				if([self projectionMode] == ProjectionModePerspective)
-					[self rotationDragged:theEvent];
+				if([self->renderer projectionMode] == ProjectionModePerspective)
+					[self->renderer rotationDragged:dragDelta];
 				else
 					[self directInteractionDragged:theEvent];
 				break;
@@ -2017,7 +1633,6 @@
 	// Don't wait for drag-and-drop anymore. We need to do this after we process 
 	// the drag, because it clears the can-drag flag. 
 	[self cancelClickAndHoldTimer];
-	self->isStartingDrag = NO;
 	
 }//end mouseDragged
 
@@ -2034,14 +1649,19 @@
 	if([theEvent buttonNumber] == 1)
 		toolMode = SpinTool;
 
+	[[self openGLContext] makeCurrentContext];
+
 	[self cancelClickAndHoldTimer];
 
 	if( toolMode == RotateSelectTool )
 	{
 		//We only want to select a part if this was NOT part of a mouseDrag event.
 		// Otherwise, the selection should remain intact.
-		if(self->isTrackingDrag == NO && self->didPartSelection == NO)
+		if(		[self->renderer isTrackingDrag] == NO
+		   &&	[self->renderer didPartSelection] == NO )
+		{
 			[self mousePartSelection:theEvent];
+		}
 	}
 	else if(	toolMode == ZoomInTool
 			||	toolMode == ZoomOutTool )
@@ -2049,11 +1669,7 @@
 		[self mouseZoomClick:theEvent];
 	}
 	
-	//Redraw from our dragging operations, if necessary.
-	if(	self->isTrackingDrag == YES && rotationDrawMode == LDrawGLDrawExtremelyFast )
-		[self setNeedsDisplay:YES];
-		
-	self->isTrackingDrag = NO; //not anymore.
+	[self->renderer mouseUp];
 	[self resetCursor];
 	
 }//end mouseUp:
@@ -2068,7 +1684,10 @@
 	if(!USE_RIGHT_SPIN)
 		[super rightMouseDragged:theEvent];
 	else
-		[self rotationDragged:theEvent];
+	{
+		Vector2             dragDelta           = V2Make([theEvent deltaX], [theEvent deltaY]);
+		[self->renderer rotationDragged:dragDelta];
+	}
 }
 - (void) rightMouseUp:(NSEvent *)theEvent
 {
@@ -2093,7 +1712,7 @@
 	// default, the system permits control+<any other modifiers> to trigger 
 	// contextual menus. We want to use control/modifier combos to activate 
 	// other mouse tools, so we filter out those events. 
-	if(		modifiers == NSControlKeyMask // and nothing eles!
+	if(		modifiers == NSControlKeyMask // and nothing else!
 	   ||	[theEvent type] == NSRightMouseDown )
 		return [self menu];
 	else
@@ -2165,6 +1784,37 @@
 }//end otherMouseUp:
 
 
+//========== scrollWheel: ======================================================
+//
+// Purpose:		Scrolling. We intercept option-scroll to zoom.
+//
+//==============================================================================
+- (void)scrollWheel:(NSEvent *)theEvent
+{
+	NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+
+	if(modifiers == NSAlternateKeyMask || USE_ZOOM_WHEEL)
+	{
+		// Zoom in
+		[[self openGLContext] makeCurrentContext];
+		
+		NSPoint windowPoint     = [theEvent locationInWindow];
+		NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
+		CGFloat magnification   = [theEvent deltaY] / 20; // 1 = increase 100%; -1 = decrease 100%
+		CGFloat zoomChange      = 1.0 + magnification;
+		CGFloat currentZoom     = [self->renderer zoomPercentage];
+		
+		// Negative means down
+		[self->renderer setZoomPercentage:(currentZoom * zoomChange)
+							preservePoint:V2Make(viewPoint.x, viewPoint.y)];
+	}
+	else
+	{
+		// Regular scrolling
+		[super scrollWheel:theEvent];
+	}
+}
+
 #pragma mark - Dragging
 
 //========== directInteractionDragged: =========================================
@@ -2175,7 +1825,7 @@
 //==============================================================================
 - (void) directInteractionDragged:(NSEvent *)theEvent
 {
-	if(self->activeDragHandle)
+	if([self->renderer activeDragHandle])
 	{
 		// move drag handle
 		[self dragHandleDragged:theEvent];
@@ -2220,6 +1870,8 @@
 	
 		okayToDrag		= [self->delegate LDrawGLView:self writeDirectivesToPasteboard:pasteboard asCopy:beginCopy];
 		
+		[[self openGLContext] makeCurrentContext];
+
 		if(okayToDrag == YES)
 		{
 			//---------- Find drag displacement --------------------------------
@@ -2241,7 +1893,7 @@
 			data				= [archivedDirectives objectAtIndex:0];
 			firstDirective		= [NSKeyedUnarchiver unarchiveObjectWithData:data];
 			firstPosition		= [firstDirective position];
-			modelPoint			= [self modelPointForPoint:viewPoint depthReferencePoint:firstPosition];
+			modelPoint			= [self->renderer modelPointForPoint:V2Make(viewPoint.x, viewPoint.y) depthReferencePoint:firstPosition];
 			displacement		= V3Sub(modelPoint, firstPosition);
 			
 			// write displacement to private pasteboard.
@@ -2252,17 +1904,20 @@
 			
 			//---------- Reset event tracking flags ----------------------------
 
+			[self->renderer setDraggingOffset:displacement];
+			
 			// reset drop destination flag.
 			[self setDragEndedInOurDocument:NO];
 			
 			// Once we give control to drag-and-drop, we no longer receive 
 			// mouseDragged events. 
-			self->isTrackingDrag = NO;
+//			self->isTrackingDrag = NO;
+			[self->renderer mouseUp]; // this is hacky. It makes sure the isTrackingDrag flag is NO.
 			
 			
 			//---------- Start drag-and-drop ----------------------------------
 
-			imageLocation	= [self convertPoint:[theEvent locationInWindow] fromView:nil];
+			imageLocation	= viewPoint;
 			dragImage		= [BricksmithUtilities dragImageWithOffset:&offset];
 			
 			// Offset the image location so that the drag image appears to the 
@@ -2293,314 +1948,35 @@
 //==============================================================================
 - (void) dragHandleDragged:(NSEvent *)theEvent
 {
-	NSPoint dragPointInWindow   = [theEvent locationInWindow];
-	Point3  modelReferencePoint = ZeroPoint3;
-	BOOL    constrainDragAxis   = NO;
-	BOOL    moved               = NO;
+	NSPoint dragPointInWindow	= [theEvent locationInWindow];
+	NSPoint viewPoint			= [self convertPoint:dragPointInWindow fromView:nil];
+	BOOL	constrainDragAxis	= NO;
 
-	modelReferencePoint = [self->activeDragHandle position];
 	constrainDragAxis   = ([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 	
-	// Give the document controller an opportunity for undo management!
-	if(self->isStartingDrag && [self->delegate respondsToSelector:@selector(LDrawGLView:willBeginDraggingHandle:)])
-	{
-		[self->delegate LDrawGLView:self willBeginDraggingHandle:self->activeDragHandle];
-	}
+	[[self openGLContext] makeCurrentContext];
 
-	// Update with new position
-	moved = [self updateDirectives:[NSArray arrayWithObject:self->activeDragHandle]
-				  withDragPosition:dragPointInWindow
-			   depthReferencePoint:modelReferencePoint
-					 constrainAxis:constrainDragAxis];
-					 
-	if(moved)
-	{
-		if([self->fileBeingDrawn respondsToSelector:@selector(optimizeVertexes)])
-		{
-			[(id)self->fileBeingDrawn optimizeVertexes];
-		}
-
-		[self->fileBeingDrawn noteNeedsDisplay];
-
-		if([self->delegate respondsToSelector:@selector(LDrawGLView:dragHandleDidMove:)])
-		{
-			[self->delegate LDrawGLView:self dragHandleDidMove:self->activeDragHandle];
-		}
-	}
+	[self->renderer dragHandleDraggedToPoint:V2Make(viewPoint.x, viewPoint.y)
+						   constrainDragAxis:constrainDragAxis];
 
 }//end dragHandleDragged:
 
 
-//========== panDrag: ==========================================================
-//
-// Purpose:		Scroll the view as the mouse is dragged across it. This is 
-//				triggered by holding down the shift key and dragging
-//				(see -mouseDragged:).
-//
-//==============================================================================
-- (void) panDragged:(NSEvent *)theEvent
-{
-	NSRect	visibleRect	= [self visibleRect];
-	CGFloat	scaleFactor	= [self zoomPercentage] / 100;
-	
-	//scroll the opposite direction of pull.
-	visibleRect.origin.x -= [theEvent deltaX] / scaleFactor;
-	visibleRect.origin.y -= [theEvent deltaY] / scaleFactor;
-	
-	[self scrollRectToVisible:visibleRect];
-
-}//end panDragged:
-
-
-//========== rotationDragged: ==================================================
-//
-// Purpose:		Tis time to rotate the object!
-//
-//				We need to translate horizontal and vertical 2-dimensional mouse 
-//				drags into 3-dimensional rotations.
-//
-//		 +---------------------------------+       ///  /- -\ \\\   (This thing is a sphere.)
-//		 |             y /|\               |      /     /   \    \				.
-//		 |                |                |    //      /   \     \\			.
-//		 |                |vertical        |    |   /--+-----+-\   |
-//		 |                |motion (around x)   |///    |     |   \\\|
-//		 |                |              x |   |       |     |      |
-//		 |<---------------+--------------->|   |       |     |      |
-//		 |                |     horizontal |   |\\\    |     |   ///|
-//		 |                |     motion     |    |   \--+-----+-/   |
-//		 |                |    (around y)  |    \\     |     |    //
-//		 |                |                |      \     \   /    /
-//		 |               \|/               |       \\\  \   / ///
-//		 +---------------------------------+          --------
-//
-//				But 2D motion is not 3D motion! We can't just say that 
-//				horizontal drag = rotation around y (up) axis. Why? Because the 
-//				y-axis may be laying horizontally due to the rotation!
-//
-//				The trick is to convert the y-axis *on the projection screen* 
-//				back to a *vector in the model*. Then we can just call glRotate 
-//				around that vector. The result that the model is rotated in the 
-//				direction we dragged, no matter what its orientation!
-//
-//				Last Note: A horizontal drag from left-to-right is a 
-//					counterclockwise rotation around the projection's y axis.
-//					This means a positive number of degrees caused by a positive 
-//					mouse displacement.
-//					But, a vertical drag from bottom-to-top is a clockwise 
-//					rotation around the projection's x-axis. That means a 
-//					negative number of degrees cause by a positive mouse 
-//					displacement. That means we must multiply our x-rotation by 
-//					-1 in order to make it go the right direction.
-//
-//==============================================================================
-- (void)rotationDragged:(NSEvent *)theEvent
-{
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		//Since there are multiple OpenGL rendering areas on the screen, we must 
-		// explicitly indicate that we are drawing into ourself. Weird yes, but 
-		// horrible things happen without this call.
-		[[self openGLContext] makeCurrentContext];
-		
-		CGFloat	deltaX			=   [theEvent deltaX];
-		CGFloat	deltaY			= - [theEvent deltaY]; //Apple's delta is backwards, for some reason.
-		CGFloat	viewWidth		= NSWidth([self frame]);
-		CGFloat	viewHeight		= NSHeight([self frame]);
-		
-		// Get the percentage of the window we have swept over. Since half the 
-		// window represents 180 degrees of rotation, we will eventually 
-		// multiply this percentage by 180 to figure out how much to rotate. 
-		CGFloat	percentDragX	= deltaX / viewWidth;
-		CGFloat	percentDragY	= deltaY / viewHeight;
-		
-		//Remember, dragging on y means rotating about x.
-		CGFloat	rotationAboutY	= + ( percentDragX * 180 );
-		CGFloat	rotationAboutX	= - ( percentDragY * 180 ); //multiply by -1,
-					// as we need to convert our drag into a proper rotation 
-					// direction. See notes in function header.
-
-		if(USE_TURNTABLE)
-		{
-			Tuple3 view_now = [self viewingAngle];
-			if(view_now.x * view_now.y * view_now.z < 0.0)
-				rotationAboutY = -rotationAboutY;
-		}
-
-		
-		//Get the current transformation matrix. By using its inverse, we can 
-		// convert projection-coordinates back to the model coordinates they 
-		// are displaying.
-		Matrix4 inversed = [self getInverseMatrix];
-		
-		// Now we will convert what appears to be the vertical and horizontal 
-		// axes into the actual model vectors they represent. 
-		Vector4 vectorX = {1,0,0,1}; //unit vector i along x-axis.
-		Vector4 vectorY = {0,1,0,1}; //unit vector j along y-axis.
-		Vector4 transformedVectorX;
-		Vector4 transformedVectorY;
-		
-		// We do this conversion from screen to model coordinates by multiplying 
-		// our screen points by the modelview matrix inverse. That has the 
-		// effect of "undoing" the model matrix on the screen point, leaving us 
-		// a model point. 
-		transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
-		transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
-
-		if(USE_TURNTABLE)
-		{
-			rotationAboutY = -rotationAboutY;
-			transformedVectorY = vectorY;
-		}
-		
-		if(self->viewOrientation != ViewOrientation3D)
-		{
-			[self setProjectionMode:ProjectionModePerspective];
-			self->viewOrientation = ViewOrientation3D;
-		}
-		
-		//Now rotate the model around the visual "up" and "down" directions.
-		glMatrixMode(GL_MODELVIEW);
-		glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
-		glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
-		
-		[self setNeedsDisplay: YES];
-		
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-}//end rotationDragged
-
-
-- (void)spinLR:(float)inDegrees
-{
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		//Since there are multiple OpenGL rendering areas on the screen, we must 
-		// explicitly indicate that we are drawing into ourself. Weird yes, but 
-		// horrible things happen without this call.
-		[[self openGLContext] makeCurrentContext];
-		
-		//Remember, dragging on y means rotating about x.
-		CGFloat	rotationAboutY	= - inDegrees;
-		CGFloat	rotationAboutX	= 0;
-					// as we need to convert our drag into a proper rotation 
-					// direction. See notes in function header.
-		
-		//Get the current transformation matrix. By using its inverse, we can 
-		// convert projection-coordinates back to the model coordinates they 
-		// are displaying.
-		Matrix4 inversed = [self getInverseMatrix];
-		
-		// Now we will convert what appears to be the vertical and horizontal 
-		// axes into the actual model vectors they represent. 
-		Vector4 vectorX = {1,0,0,1}; //unit vector i along x-axis.
-		Vector4 vectorY = {0,1,0,1}; //unit vector j along y-axis.
-		Vector4 transformedVectorX;
-		Vector4 transformedVectorY;
-		
-		// We do this conversion from screen to model coordinates by multiplying 
-		// our screen points by the modelview matrix inverse. That has the 
-		// effect of "undoing" the model matrix on the screen point, leaving us 
-		// a model point. 
-		transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
-		transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
-//		transformedVectorX = vectorX;
-		transformedVectorY = vectorY;
-		
-		if(self->viewOrientation != ViewOrientation3D)
-		{
-			[self setProjectionMode:ProjectionModePerspective];
-			self->viewOrientation = ViewOrientation3D;
-		}
-		
-		//Now rotate the model around the visual "up" and "down" directions.
-		glMatrixMode(GL_MODELVIEW);
-		glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
-		glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
-		
-		[self setNeedsDisplay: YES];
-		
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-}//end rotationDragged
-
-
-//========== zoomDragged: ======================================================
-//
-// Purpose:		Drag up means zoom in, drag down means zoom out. 1 px = 1 %.
-//
-//==============================================================================
-- (void) zoomDragged:(NSEvent *)theEvent
-{
-	CGFloat pixelChange     = -[theEvent deltaY];		// Negative means down
-	CGFloat magnification   = pixelChange/100;			// 1 px = 1%
-	CGFloat zoomChange      = 1.0 + magnification;
-	CGFloat currentZoom     = [self zoomPercentage];
-	
-	[self setZoomPercentage:(currentZoom * zoomChange)];
-	
-}//end zoomDragged:
-
-
 #pragma mark - Clicking
-
-//========== mouseCenterClick: =================================================
-//
-// Purpose:		We have received a mouseDown event which is intended to center 
-//				our view on the point clicked.
-//
-//==============================================================================
-- (void) mouseCenterClick:(NSEvent*)theEvent
-{
-	NSPoint windowClickedPoint  = [theEvent locationInWindow]; //window coordinates
-	NSPoint	viewClickedPoint	= [self convertPoint:windowClickedPoint fromView:nil ];
-
-	// In orthographic projection, each world point always ends up in the same 
-	// place on the document plane no matter where the scrollers are. So we can 
-	// take a shortcut. 
-	if(self->projectionMode == ProjectionModeOrthographic)
-	{
-		[self scrollCenterToPoint:viewClickedPoint];
-	}
-	else
-	{
-		// Perspective distortion makes this more complicated. The camera is in 
-		// a fixed position, but the frustum changes with the scrollbars. 
-		// We need to calculate the world point we just clicked on, then derive 
-		// a new frustum projection centered on that point. 
-		Point3  clickedPointInModel = ZeroPoint3;
-		
-		// Find the point we clicked on. It would be more accurate to use 
-		// -getDirectivesUnderMouse:::, but it has to actually draw parts, which 
-		// can be slow. 
-		clickedPointInModel = [self modelPointForPoint:viewClickedPoint];
-		
-		[self scrollCenterToModelPoint:clickedPointInModel];
-	}
-	
-}//end mouseCenterClick:
-
 
 //========== mousePartSelection: ===============================================
 //
-// Purpose:		Time to see if we should select something in the model.
-//				OpenGL has a selection mode in which it records the name-tag 
-//				for anything that renders within the viewing area. We utilize 
-//				this feature to find out what part was clicked on.
-//
-// Notes:		This method is optimized to do an iterative search, first with a
-//				low-resolution draw, then on a high-resolution pass. It's about 
-//				six times faster than just drawing the whole model.
+// Purpose:		Attempt to select something in the model.
 //
 //==============================================================================
 - (void) mousePartSelection:(NSEvent *)theEvent
 {
-	NSArray			*fastDrawParts		= nil;
-	NSArray			*fineDrawParts		= nil;
-	LDrawDirective	*clickedDirective	= nil;
-	BOOL			 extendSelection	= NO;
+	NSPoint windowPoint     = [theEvent locationInWindow];
+	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
+	BOOL    extendSelection = NO;
 	
+	[[self openGLContext] makeCurrentContext];
+
 	// Per the AHIG, both command and shift are used for multiple selection. In 
 	// Bricksmith, there is no difference between contiguous and non-contiguous 
 	// selection, so both keys do the same thing. 
@@ -2609,57 +1985,8 @@
 	extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 //					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
 	
-	// Only try to select if we are actually drawing something, and can actually 
-	// select it. 
-	if(		self->fileBeingDrawn != nil
-	   &&	[self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirective:byExtendingSelection:)] )
-	{
-		//first do hit-testing on nothing but the bounding boxes; that is very fast 
-		// and likely eliminates a lot of parts.
-		fastDrawParts	= [self getDirectivesUnderMouse:theEvent
-										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-											   fastDraw:YES];
-		
-		//now do a full draw for testing on the most likely candidates
-		fineDrawParts	= [self getDirectivesUnderMouse:theEvent
-										amongDirectives:fastDrawParts
-											   fastDraw:NO];
-		
-		if([fineDrawParts count] > 0)
-			clickedDirective = [fineDrawParts objectAtIndex:0];
-			
-		// Primitive manipulation?
-		if([clickedDirective isKindOfClass:[LDrawDragHandle class]])
-		{
-			self->activeDragHandle = (LDrawDragHandle*)clickedDirective;
-		}
-		else
-		{
-			// Normal selection
-			self->activeDragHandle = nil;
-			
-			// ----------------
-			// If the clicked part is already selected, calling this method will 
-			// deselect it. Generally, we want to leave the current selection intact 
-			// (so we can drag it, maybe). The exception is multiple-selection mode, 
-			// which means we actually *want* to deselect it. 
-			if(		[clickedDirective isSelected] == NO
-			   ||	(	[clickedDirective isSelected] == YES // allow deselection
-					 && extendSelection == YES
-					)
-			  )
-			{
-				//Notify our delegate about this momentous event.
-				// It's okay to send nil; that means "deselect."
-				// We want to add this to the current selection if the shift key is down.
-				[self->delegate LDrawGLView:self
-					 wantsToSelectDirective:clickedDirective
-					   byExtendingSelection:extendSelection ];
-			}
-		}
-	}
-
-	self->didPartSelection = YES;
+	[self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
+						extendSelection:extendSelection];
 	
 }//end mousePartSelection:
 
@@ -2675,17 +2002,19 @@
 	ToolModeT   toolMode            = [ToolPalette toolMode];
 	NSPoint     windowClickedPoint  = [theEvent locationInWindow];
 	NSPoint     viewClickedPoint    = [self convertPoint:windowClickedPoint fromView:nil ];
-	CGFloat     currentZoom         = [self zoomPercentage];
-	CGFloat     newZoom             = 0;
+	Point2      view_point          = V2Make(viewClickedPoint.x, viewClickedPoint.y);
 	
+	[[self openGLContext] makeCurrentContext];
+
 	// New zoom percentage
 	if(	toolMode == ZoomInTool )
-		newZoom = currentZoom * 2;
-	
+	{
+		[self->renderer mouseZoomInClick:view_point];
+	}
 	else if( toolMode == ZoomOutTool )
-		newZoom = currentZoom / 2;
-		
-	[self setZoomPercentage:newZoom preservePoint:viewClickedPoint];
+	{
+		[self->renderer mouseZoomOutClick:view_point];
+	}
 	
 }//end mouseZoomClick:
 
@@ -2747,7 +2076,9 @@
 //==============================================================================
 - (void) beginGestureWithEvent:(NSEvent *)theEvent
 {
-	self->isGesturing = YES;
+	[[self openGLContext] makeCurrentContext];
+	self->startingGestureType = [theEvent type];
+	[self->renderer beginGesture];
 	
 }//end beginGestureWithEvent:
 
@@ -2759,10 +2090,8 @@
 //==============================================================================
 - (void) endGestureWithEvent:(NSEvent *)theEvent
 {
-	self->isGesturing = NO;
-	
-	if(self->rotationDrawMode == LDrawGLDrawExtremelyFast)
-		[self setNeedsDisplay:YES];
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer endGesture];
 	
 }//end endGestureWithEvent:
 
@@ -2774,15 +2103,18 @@
 //==============================================================================
 - (void) magnifyWithEvent:(NSEvent *)theEvent
 {
+	[[self openGLContext] makeCurrentContext];
+	
 	NSPoint windowPoint     = [theEvent locationInWindow];
-	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil ];
+	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
 	CGFloat magnification   = [theEvent magnification]; // 1 = increase 100%; -1 = decrease 100%
 	CGFloat zoomChange      = 1.0 + magnification;
-	CGFloat currentZoom     = [self zoomPercentage];
+	CGFloat currentZoom     = [self->renderer zoomPercentage];
 	
 	//Negative means down
-	[self setZoomPercentage:(currentZoom * zoomChange) preservePoint:viewPoint];
-	
+	[self->renderer setZoomPercentage:(currentZoom * zoomChange)
+						preservePoint:V2Make(viewPoint.x, viewPoint.y)];
+
 }//end magnifyWithEvent:
 
 
@@ -2798,24 +2130,21 @@
 {
 	CGFloat	angle = [theEvent rotation]; // degrees counterclockwise
 	
-	CGLLockContext([[self openGLContext] CGLContextObj]);
+	// Do not allow rotating in orthographic views if we started out doing a 
+	// zoom gesture. Rotating will automatically change an orthographic view to 
+	// perspective, and we don't want to do that when unexpected. 
+	if(		[self->renderer projectionMode] == ProjectionModePerspective
+	   ||	self->startingGestureType == NSEventTypeRotate )
 	{
-		[[self openGLContext] makeCurrentContext];
-		
-		if(self->viewOrientation != ViewOrientation3D)
+		CGLLockContext([[self openGLContext] CGLContextObj]);
 		{
-			[self setProjectionMode:ProjectionModePerspective];
-			self->viewOrientation = ViewOrientation3D;
+			[[self openGLContext] makeCurrentContext];
+			
+			[self->renderer rotateByDegrees:angle];
+			[self setNeedsDisplay: YES];
 		}
-		
-		// Rotate.
-		glMatrixMode(GL_MODELVIEW);
-		glRotatef( angle, 0, -1, 0);
-		
-		[self setNeedsDisplay: YES];
-		
+		CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
 }//end rotateWithEvent:
 
@@ -2863,21 +2192,20 @@
 //==============================================================================
 - (NSDragOperation) draggingEntered:(id <NSDraggingInfo>)info
 {
-	NSPasteboard            *pasteboard         = [info draggingPasteboard];
-	id                      sourceView          = [info draggingSource];
-	NSDragOperation         dragOperation       = NSDragOperationNone;
-	NSArray                 *archivedDirectives = nil;
-	NSMutableArray          *directives         = nil;
-	LDrawDrawableElement    *firstDirective     = nil;
-	LDrawPart               *newPart            = nil;
-	NSData                  *data               = nil;
-	id                      currentObject       = nil;
-	NSUInteger              directiveCount      = 0;
-	NSUInteger              counter             = 0;
-	NSPoint                 dragPointInWindow   = [info draggingLocation];
-	TransformComponents     partTransform       = IdentityComponents;
-	Point3                  modelReferencePoint = ZeroPoint3;
-	NSData                  *vectorOffsetData   = nil;
+	[[self openGLContext] makeCurrentContext];
+
+	NSPasteboard			*pasteboard 		= [info draggingPasteboard];
+	id						sourceView			= [info draggingSource];
+	NSDragOperation 		dragOperation		= NSDragOperationNone;
+	BOOL					setTransform		= NO;
+	NSArray 				*archivedDirectives = nil;
+	NSMutableArray			*directives 		= nil;
+	NSData					*data				= nil;
+	id						currentObject		= nil;
+	NSUInteger				directiveCount		= 0;
+	NSUInteger				counter 			= 0;
+	NSPoint 				dragPointInWindow	= [info draggingLocation];
+	NSPoint 				viewPoint			= [self convertPoint:dragPointInWindow fromView:nil];
 	
 	// local drag?
 	if(sourceView == self)
@@ -2902,66 +2230,19 @@
 		
 		[directives addObject:currentObject];
 	}
-	firstDirective = [directives objectAtIndex:0];
-	
-	
-	//---------- Initialize New Part? ------------------------------------------
 	
 	if([[pasteboard propertyListForType:LDrawDraggingIsUninitializedPboardType] boolValue] == YES)
 	{
-		// Uninitialized elements are always new parts from the part browser.
-		newPart = [directives objectAtIndex:0];
-	
-		// Ask the delegate roughly where it wants us to be.
-		// We get a full transform here so that when we drag in new parts, they 
-		// will be rotated the same as whatever part we were using last. 
-		if([self->delegate respondsToSelector:@selector(LDrawGLViewPreferredPartTransform:)])
-		{
-			partTransform = [self->delegate LDrawGLViewPreferredPartTransform:self];
-			[newPart setTransformComponents:partTransform];
-		}
+		setTransform = YES;
 	}
-	
-	
+
 	//---------- Find Location -------------------------------------------------
-	// We need to map our 2-D mouse coordinate into a point in the model's 3-D 
-	// space.
 	
-	modelReferencePoint	= [firstDirective position];
-	
-	// Apply the initial offset.
-	// This is the difference between the position of part 0 and the actual 
-	// clicked point. We do this so that the point you clicked always remains 
-	// directly under the mouse.
-	//
-	// Only applicable if dragging into the source 
-	// view. Other views may have different orientations. We might be able to 
-	// remove that requirement by zeroing the inapplicable compont. 
-	if(sourceView == self)
-	{
-		vectorOffsetData = [pasteboard dataForType:LDrawDraggingInitialOffsetPboardType];
-		[vectorOffsetData getBytes:&self->draggingOffset length:sizeof(Vector3)];
-		
-		modelReferencePoint = V3Add(modelReferencePoint, self->draggingOffset);
-	}
-	// For constrained dragging, we care only about the initial, unmodified 
-	// postion. 
-	self->initialDragLocation = modelReferencePoint;
-	
-	// Move the parts
-	[self updateDirectives:directives
-		  withDragPosition:dragPointInWindow
-	   depthReferencePoint:modelReferencePoint
-			 constrainAxis:NO];
-	
-	// The drag has begun!
-	if([self->fileBeingDrawn respondsToSelector:@selector(setDraggingDirectives:)])
-	{
-		[(id)self->fileBeingDrawn setDraggingDirectives:directives];
-		
-		[self->fileBeingDrawn noteNeedsDisplay];
-	}
-	
+	[self->renderer draggingEnteredAtPoint:V2Make(viewPoint.x, viewPoint.y)
+								directives:directives
+							  setTransform:setTransform
+						 originatedLocally:(sourceView == self)];
+						 
 	return dragOperation;
 	
 }//end draggingEntered:
@@ -2975,14 +2256,13 @@
 //==============================================================================
 - (NSDragOperation) draggingUpdated:(id <NSDraggingInfo>)info
 {
-	NSArray					*directives				= nil;
-	LDrawDrawableElement	*firstDirective			= nil;
-	id						 sourceView				= [info draggingSource];
-	NSPoint					 dragPointInWindow		= [info draggingLocation];
-	Point3					 modelReferencePoint	= ZeroPoint3;
-	BOOL					 constrainDragAxis		= NO;
-	BOOL					 moved					= NO;
-	NSDragOperation			 dragOperation			= NSDragOperationNone;
+	[[self openGLContext] makeCurrentContext];
+
+	id				sourceView			= [info draggingSource];
+	NSPoint 		dragPointInWindow	= [info draggingLocation];
+	NSPoint 		viewPoint			= [self convertPoint:dragPointInWindow fromView:nil];
+	BOOL			constrainDragAxis	= NO;
+	NSDragOperation dragOperation		= NSDragOperationNone;
 	
 	// local drag?
 	if(sourceView == self)
@@ -2990,39 +2270,14 @@
 	else
 		dragOperation = NSDragOperationCopy;
 	
-	// Update the dragged parts.
-	if([self->fileBeingDrawn respondsToSelector:@selector(draggingDirectives)])
-	{
-		directives			= [(id)self->fileBeingDrawn draggingDirectives];
-		firstDirective		= [directives objectAtIndex:0];
-		modelReferencePoint	= [firstDirective position];
-		
-		// Apply the offset if appropriate
-		if(sourceView == self)
-			modelReferencePoint = V3Add(modelReferencePoint, self->draggingOffset);
-		
-		// If the shift key is down, only allow dragging along one axis as is 
-		// conventional in graphics programs. Cocoa gives us no way to get at 
-		// the event that initiated this call, so we have to hack. 
-		constrainDragAxis = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
-		
-		// Update with new position
-		moved	= [self updateDirectives:directives
-					  withDragPosition:dragPointInWindow
-				   depthReferencePoint:modelReferencePoint
-						 constrainAxis:constrainDragAxis];
-						 
-		if(moved == YES)
-		{
-			if([self->fileBeingDrawn respondsToSelector:@selector(optimizeVertexes)])
-			{
-				[(id)self->fileBeingDrawn optimizeVertexes];
-			}
-			
-			[self->fileBeingDrawn noteNeedsDisplay];
-		}
-	}
+	// If the shift key is down, only allow dragging along one axis as is 
+	// conventional in graphics programs. Cocoa gives us no way to get at 
+	// the event that initiated this call, so we have to hack. 
+	constrainDragAxis = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
 	
+	[self->renderer updateDragWithPosition:V2Make(viewPoint.x, viewPoint.y)
+							 constrainAxis:constrainDragAxis];
+
 	return dragOperation;
 	
 }//end draggingUpdated:
@@ -3053,13 +2308,16 @@
 //==============================================================================
 - (BOOL) performDragOperation:(id <NSDraggingInfo>)sender
 {
-	NSArray         *directives         = nil;
-	LDrawGLView		*senderView			= nil;
-	LDrawDirective  *senderDirective    = nil;
+	[[self openGLContext] makeCurrentContext];
 	
-	if([self->fileBeingDrawn respondsToSelector:@selector(draggingDirectives)])
+	id				file				= [self->renderer LDrawDirective];
+	NSArray 		*directives 		= nil;
+	LDrawGLView 	*senderView 		= nil;
+	LDrawDirective	*senderDirective	= nil;
+	
+	if([file respondsToSelector:@selector(draggingDirectives)])
 	{
-		directives = [(id)self->fileBeingDrawn draggingDirectives];
+		directives = [file draggingDirectives];
 		
 		if([self->delegate respondsToSelector:@selector(LDrawGLView:acceptDrop:directives:)])
 		   [self->delegate LDrawGLView:self acceptDrop:sender directives:directives];
@@ -3087,12 +2345,10 @@
 //==============================================================================
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
 {
-	if([self->fileBeingDrawn respondsToSelector:@selector(setDraggingDirectives:)])
-	{
-		[(id)self->fileBeingDrawn setDraggingDirectives:nil];
-		
-		[self->fileBeingDrawn noteNeedsDisplay];
-	}
+	[[self openGLContext] makeCurrentContext];
+	
+	[self->renderer endDragging];
+
 }//end concludeDragOperation:
 
 
@@ -3150,86 +2406,6 @@
 
 
 #pragma mark -
-
-//========== updateDirectives:withDragPosition: ================================
-//
-// Purpose:		Adjusts the directives so they align with the given drag 
-//				location, in window coordinates. 
-//
-//==============================================================================
-- (BOOL) updateDirectives:(NSArray *)directives
-		 withDragPosition:(NSPoint)dragPointInWindow
-	  depthReferencePoint:(Point3)modelReferencePoint
-			constrainAxis:(BOOL)constrainAxis
-{
-	LDrawDrawableElement    *firstDirective         = nil;
-	NSPoint                 dragPointInView         = NSZeroPoint;
-	Point3                  modelPoint              = ZeroPoint3;
-	Point3                  oldPosition             = ZeroPoint3;
-	Point3                  constrainedPosition     = ZeroPoint3;
-	Vector3                 displacement            = ZeroPoint3;
-	Vector3                 cumulativeDisplacement  = ZeroPoint3;
-	float                   gridSpacing             = [BricksmithUtilities gridSpacingForMode:self->gridMode];
-	NSUInteger              counter                 = 0;
-	BOOL                    moved                   = NO;
-	
-	firstDirective	= [directives objectAtIndex:0];
-	
-	
-	//---------- Find Location ---------------------------------------------
-	
-	// Where are we?
-	dragPointInView		= [self convertPoint:dragPointInWindow fromView:nil];
-	oldPosition			= modelReferencePoint;
-	
-	// and adjust.
-	modelPoint				= [self modelPointForPoint:dragPointInView depthReferencePoint:modelReferencePoint];
-	displacement			= V3Sub(modelPoint, oldPosition);
-	cumulativeDisplacement	= V3Sub(modelPoint, self->initialDragLocation);
-	
-	
-	//---------- Find Actual Displacement ----------------------------------
-	// When dragging, we want to move IN grid increments, not move TO grid 
-	// increments. That means we snap the displacement vector itself to the 
-	// grid, not part's location. That's because the part may not have been 
-	// grid-aligned to begin with. 
-	
-	// As is conventional in graphics programs, we allow dragging to be 
-	// constrained to a single axis. We will pick that axis that is furthest 
-	// from the initial drag location. 
-	if(constrainAxis == YES)
-	{
-		// Find the part's position along the constrained axis.
-		cumulativeDisplacement	= V3IsolateGreatestComponent(cumulativeDisplacement);
-		constrainedPosition		= V3Add(self->initialDragLocation, cumulativeDisplacement);
-		
-		// Get the displacement from the part's current position to the 
-		// constrained one. 
-		displacement = V3Sub(constrainedPosition, oldPosition);
-	}
-	
-	// Snap the displacement to the grid.
-	displacement			= [firstDirective position:displacement snappedToGrid:gridSpacing];
-	
-	//---------- Update the parts' positions  ------------------------------
-	
-	if(V3EqualPoints(displacement, ZeroPoint3) == NO)
-	{
-		// Move all the parts by that amount.
-		for(counter = 0; counter < [directives count]; counter++)
-		{
-			[[directives objectAtIndex:counter] moveBy:displacement];
-		}
-		
-		moved = YES;
-	}
-	
-	return moved;
-	
-}//end updateDirectives:withDragPosition:
-
-
-#pragma mark -
 #pragma mark MENUS
 #pragma mark -
 
@@ -3241,12 +2417,14 @@
 //==============================================================================
 - (BOOL) validateMenuItem:(NSMenuItem *)menuItem
 {
+	[[self openGLContext] makeCurrentContext];
+	
 	// Check the appropriate item for the viewing angle. We have to check the 
 	// action selector here so as not to start checking other items like zoomIn: 
 	// that happen to have a tag which matches one of the viewing angles.) 
 	if([menuItem action] == @selector(viewOrientationSelected:))
 	{
-		if([menuItem tag] == self->viewOrientation)
+		if([menuItem tag] == [self->renderer viewOrientation])
 			[menuItem setState:NSOnState];
 		else
 			[menuItem setState:NSOffState];
@@ -3254,6 +2432,213 @@
 	
 	return YES;
 }//end validateMenuItem:
+
+
+#pragma mark -
+#pragma mark RENDERER DELEGATE
+#pragma mark -
+
+//========== LDrawGLRenderer:scrollToRect: =====================================
+//
+// Purpose:		Update the scrollbars to reflect the new visible rect computed 
+//				by the renderer. 
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer scrollToRect:(Box2)scrollRect
+{
+	BOOL	success = NO;
+	NSRect	nsRect	= NSMakeRect(scrollRect.origin.x, scrollRect.origin.y,
+								 scrollRect.size.width, scrollRect.size.height);
+	
+	success = [self scrollRectToVisible:nsRect];
+//	NSLog(@"%d", success);
+}
+
+
+//========== LDrawGLRenderer:didSetBoundsToSize: ===============================
+//
+// Purpose:		Update the full size of the NSOpenGLView.
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetBoundsToSize:(Size2)newBoundsSize
+{
+	[self setFrameSize:NSMakeSize(newBoundsSize.width, newBoundsSize.height)];
+}
+
+
+//========== LDrawGLRenderer:didSetZoomPercentage: =============================
+//
+// Purpose:		Update the scrollview to match the new rendering size.
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetZoomPercentage:(CGFloat)newPercentage
+{
+	NSScrollView    *scrollView             = [self enclosingScrollView];
+	
+	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
+	// actually changing (to avoid unnecessary re-draw) 
+	if(scrollView != nil)
+	{
+		NSClipView  *clipView       = [scrollView contentView];
+		NSRect      clipFrame       = [clipView frame];
+		NSRect      clipBounds      = [clipView bounds];
+		CGFloat     scaleFactor     = newPercentage / 100;
+		
+		// Change the magnification level of the clip view, which has the 
+		// effect of zooming us in and out. 
+		clipBounds.size.width	= NSWidth(clipFrame)  / scaleFactor;
+		clipBounds.size.height	= NSHeight(clipFrame) / scaleFactor;
+		// Note: must use -setBoundsSize:, not -setBounds:. The latter 
+		//		 causes bad things to happen when called on a collapsed 
+		//		 split view. 
+		[clipView setBoundsSize:clipBounds.size];
+		
+		// update KVO
+		[self willChangeValueForKey:@"zoomPercentage"];
+		[self didChangeValueForKey:@"zoomPercentage"];
+	}
+}
+
+
+//========== LDrawGLRendererNeedsCurrentContext: ===============================
+//
+// Purpose:		While almost all calls to the renderer are initiated from this 
+//				class, there is unfortunately one entry point in the renderer 
+//				itself: directive-change notifications. When the renderer 
+//				receives one, it will issue OpenGL calls which must be directed 
+//				toward the renderer's context--which it knows nothing about. 
+//
+//==============================================================================
+- (void) LDrawGLRendererNeedsCurrentContext:(LDrawGLRenderer *)renderer
+{
+	[[self openGLContext] makeCurrentContext];
+}
+
+
+//========== LDrawGLRendererNeedsFlush: ========================================
+//
+// Purpose:		Drawing is complete; do a flush.
+//
+// Notes:		This is implemented as a callback because flushing might be a 
+//				time-sensitive operation, and we want to do the framerate 
+//				calculation (in the renderer) after drawing is done. Otherwise, 
+//				we'd just do it in -[LDrawOpenGLView draw]. 
+//
+//==============================================================================
+- (void) LDrawGLRendererNeedsFlush:(LDrawGLRenderer*)renderer
+{
+	[[self openGLContext] flushBuffer];
+}
+
+
+//========== LDrawGLRendererNeedsRedisplay: ====================================
+//
+// Purpose:		Request a redraw.
+//
+//==============================================================================
+- (void) LDrawGLRendererNeedsRedisplay:(LDrawGLRenderer*)renderer
+{
+	[self setNeedsDisplay:YES];
+}
+
+
+//========== LDrawGLRenderer:mouseIsOverPoint:confidence: ======================
+//
+// Purpose:		Reflect the mouse coordinates in the UI.
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer mouseIsOverPoint:(Point3)modelPoint confidence:(Tuple3)confidence
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:mouseIsOverPoint:confidence:)])
+	{
+		[self->delegate LDrawGLView:self mouseIsOverPoint:modelPoint confidence:confidence];
+	}
+}
+
+
+//========== LDrawGLRendererMouseNotPositioning: ===============================
+//
+// Purpose:		The mouse is no longer reflecting coordinates.
+//
+//==============================================================================
+- (void) LDrawGLRendererMouseNotPositioning:(LDrawGLRenderer *)renderer
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLViewMouseNotPositioning:)])
+	{
+		[self->delegate LDrawGLViewMouseNotPositioning:self];
+	}
+}
+
+
+//========== LDrawGLRendererPreferredPartTransform: ============================
+//
+// Purpose:		Returns a preferred transform for new parts.
+//
+// Notes:		Returns the identity if we don't have a supporting delegate. Our 
+//				renderer won't be aware if our delegate doesn't support this 
+//				message. Double-delegate indirection is not a directly-supported 
+//				feature! 
+//
+//==============================================================================
+- (TransformComponents) LDrawGLRendererPreferredPartTransform:(LDrawGLRenderer*)renderer
+{
+	TransformComponents components = IdentityComponents;
+	
+	if([self->delegate respondsToSelector:@selector(LDrawGLViewPreferredPartTransform:)])
+	{
+		components = [self->delegate LDrawGLViewPreferredPartTransform:self];
+	}
+	
+	return components;
+}
+
+
+//========== LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection: ======
+//
+// Purpose:		Pass a selection notification on to our delegate.
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer
+  wantsToSelectDirective:(LDrawDirective *)directiveToSelect
+	byExtendingSelection:(BOOL)shouldExtend
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirective:byExtendingSelection:)])
+	{
+		[self->delegate LDrawGLView:self wantsToSelectDirective:directiveToSelect byExtendingSelection:shouldExtend];
+	}
+}
+
+
+//========== LDrawGLRenderer:willBeginDraggingHandle: ==========================
+//
+// Purpose:		Pass the drag-begin notification on to the operating system 
+//				interface that can do something with it. 
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer
+ willBeginDraggingHandle:(LDrawDragHandle *)dragHandle
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:willBeginDraggingHandle:)])
+	{
+		[self->delegate LDrawGLView:self willBeginDraggingHandle:dragHandle];
+	}
+}
+
+
+//========== LDrawGLRenderer:dragHandleDidMove: ================================
+//
+// Purpose:		Pass the drag notification on to the operating system interface 
+//				that can do something with it. 
+//
+//==============================================================================
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer
+	   dragHandleDidMove:(LDrawDragHandle *)dragHandle
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:dragHandleDidMove:)])
+	{
+		[self->delegate LDrawGLView:self dragHandleDidMove:dragHandle];
+	}
+}
 
 
 #pragma mark -
@@ -3272,21 +2657,6 @@
 	[self takeBackgroundColorFromUserDefaults];
 	
 }//end backgroundColorDidChange:
-
-
-//========== displayNeedsUpdating: =============================================
-//
-// Purpose:		Someone (likely our file) has notified us that it has changed, 
-//				and thus we need to redraw.
-//
-//				We also use this opportunity to grow the canvas if necessary.
-//
-//==============================================================================
-- (void) displayNeedsUpdating:(NSNotification *)notification
-{
-	[self resetFrameSize]; //calls setNeedsDisplay
-	
-}//end displayNeedsUpdating
 
 
 //========== mouseToolDidChange: ===============================================
@@ -3316,7 +2686,13 @@
 //==============================================================================
 - (void) scrollViewFrameDidChange:(NSNotification *)notification
 {
-	[self resetFrameSize];
+	[[self openGLContext] makeCurrentContext];
+	
+	NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
+	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
+	
+	[self->renderer resetFrameSize];
+	[self->renderer scrollRectToVisible:NSRectToBox2([self visibleRect])];
 	
 }//end scrollViewFrameDidChange:
 
@@ -3359,16 +2735,14 @@
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
+				
+		NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
+		[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 		
-		NSRect	visibleRect	= [self visibleRect];
-		CGFloat	scaleFactor	= [self zoomPercentage] / 100;
+		NSRect visibleRect = [self visibleRect];
+		[self->renderer scrollRectToVisible:NSRectToBox2(visibleRect)];
 		
-//		NSLog(@"GL view(%p) reshaping; frame %@", self, NSStringFromRect([self frame]));
-		
-		//Make a new view based on the current viewable area
-		[self makeProjection];
-
-		glViewport(0,0, NSWidth(visibleRect) * scaleFactor, NSHeight(visibleRect) * scaleFactor );
+		[self->renderer reshape];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -3463,271 +2837,6 @@
 #pragma mark UTILITIES
 #pragma mark -
 
-//========== getDirectivesUnderMouse:amongDirectives:fastDraw: =================
-//
-// Purpose:		Finds the directives under a given mouse-click. This method is 
-//				written so that the caller can optimize its hit-detection by 
-//				doing a preliminary test on just the bounding boxes.
-//
-// Parameters:	theEvent	= mouse-click event
-//				directives	= the directives under consideration for being 
-//								clicked. This may be the whole File directive, 
-//								or a smaller subset we have already determined 
-//								(by a previous call) is in the area.
-//				fastDraw	= consider only bounding boxes for hit-detection.
-//
-// Returns:		Array of clicked parts; the closest one -- and the only one we 
-//				ultimately care about -- is always the 0th element.
-//
-//==============================================================================
-- (NSArray *) getDirectivesUnderMouse:(NSEvent *)theEvent
-					  amongDirectives:(NSArray *)directives
-							 fastDraw:(BOOL)fastDraw
-{
-	NSArray	*clickedDirectives	= nil;
-	
-	if([directives count] == 0)
-	{
-		// If there's nothing to test in, there's no work to do!
-		clickedDirectives = [NSArray array];
-	}
-	else
-	{
-		NSPoint             point_window            = [theEvent locationInWindow]; //window coordinates
-		NSPoint             point_view              = [self convertPoint:point_window fromView:nil];
-		Point2              point_viewport          = [self convertPointToViewport:point_view];
-		Point3              contextNear             = ZeroPoint3;
-		Point3              contextFar              = ZeroPoint3;
-		Ray3                pickRay                 = {{0}};
-		Point3              pickRay_end             = ZeroPoint3;
-		GLint               viewport[4]             = {0};
-		GLfloat             projectionGLMatrix[16]  = {0.0};
-		GLfloat             modelViewGLMatrix[16]   = {0.0};
-		NSMutableDictionary *hits                   = [NSMutableDictionary dictionary];
-		NSUInteger          counter                 = 0;
-		
-		// Get view and projection
-		CGLLockContext([[self openGLContext] CGLContextObj]);
-		{
-			[[self openGLContext] makeCurrentContext];
-			
-			glGetIntegerv(GL_VIEWPORT, viewport);
-			glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-			glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-		}
-		CGLUnlockContext([[self openGLContext] CGLContextObj]);
-		
-		// convert to 3D viewport coordinates
-		contextNear		= V3Make(point_viewport.x, point_viewport.y, 0.0);
-		contextFar		= V3Make(point_viewport.x, point_viewport.y, 1.0);
-		
-		// Pick Ray
-		pickRay.origin      = V3Unproject(contextNear,
-										  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-										  V2MakeBox(viewport[0], viewport[1], viewport[2], viewport[3]));
-		pickRay_end         = V3Unproject(contextFar,
-										  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-										  V2MakeBox(viewport[0], viewport[1], viewport[2], viewport[3]));
-		pickRay.direction   = V3Sub(pickRay_end, pickRay.origin);
-		pickRay.direction	= V3Normalize(pickRay.direction);
-		
-		// Do hit test
-		for(counter = 0; counter < [directives count]; counter++)
-		{
-			[[directives objectAtIndex:counter] hitTest:pickRay
-											  transform:IdentityMatrix4
-											  viewScale:[self zoomPercentage]/100.
-											 boundsOnly:fastDraw
-										   creditObject:nil
-												   hits:hits];
-		}
-						   
-		clickedDirectives = [self getPartsFromHits:hits];
-	}
-
-	return clickedDirectives;
-	
-}//end getDirectivesUnderMouse:amongDirectives:fastDraw:
-
-
-//========== getPartFromHits:hitCount: =========================================
-//
-// Purpose:		Deduce the parts that were clicked on, given the selection data 
-//				returned from -[LDrawDirective hitTest:...]
-//
-//				Each time something's geometry intersects our pick ray under the 
-//				mouse (and it has a different name), it generates a hit record. 
-//				So we have to investigate our hits and figure out which hit was 
-//				the nearest to the front (smallest minimum depth); that is the 
-//				one we clicked on. 
-//
-// Returns:		Array of all the parts under the click. The nearest part is 
-//				guaranteed to be the first entry in the array. There is no 
-//				defined order for the rest of the parts.
-//
-//==============================================================================
-- (NSArray *) getPartsFromHits:(NSDictionary *)hits
-{
-	NSMutableArray  *clickedDirectives  = [NSMutableArray arrayWithCapacity:[hits count]];
-	LDrawDirective  *currentDirective   = nil;
-	float           minimumDepth        = INFINITY;
-	float           currentDepth        = 0;
-	
-	// The hit record depths are mapped as depths along the pick ray. We are 
-	// looking for the shallowest point, because that's what we clicked on. 
-	
-	for(NSValue *key in hits)
-	{
-		currentDirective    = [key pointerValue];
-		currentDepth        = [[hits objectForKey:key] floatValue];
-		
-//		NSLog(@"Hit depth %f %@", currentDepth, currentDirective);
-		
-		if(currentDepth < minimumDepth)
-		{
-			// guarantee shallowest object is first in array
-			[clickedDirectives insertObject:currentDirective atIndex:0];
-			minimumDepth = currentDepth;
-		}
-		else
-		{
-			[clickedDirectives addObject:currentDirective];
-		}
-	}
-//	NSLog(@"===============================================");
-	
-	return clickedDirectives;
-	
-}//end getPartFromHits:hitCount:
-
-
-//========== resetFrameSize: ===================================================
-//
-// Purpose:		We resize the canvas to accomodate the model. It automatically 
-//				shrinks for small models and expands for large ones. Neat-o!
-//
-//==============================================================================
-- (void) resetFrameSize
-{
-	// We do not want to apply this resizing to a raw GL view.
-	// It only makes sense for those in a scroll view. (The Part Browsers have 
-	// been moved to scrollviews now too in order to allow zooming.) 
-	if(		[self->fileBeingDrawn respondsToSelector:@selector(boundingBox3)] 
-	   &&	[self enclosingScrollView] != nil )
-	{
-		CGLLockContext([[self openGLContext] CGLContextObj]);
-		{
-			// Determine whether the canvas size needs to change.
-			Point3	origin			= {0,0,0};
-			NSPoint	centerPoint		= [self centerPoint];
-			Box3	newBounds		= InvalidBox;
-			
-			if([self->fileBeingDrawn respondsToSelector:@selector(boundingBox3)])
-			{
-				newBounds = [(id)fileBeingDrawn boundingBox3]; //cast to silence warning.
-			}
-
-			if(V3EqualBoxes(newBounds, InvalidBox) == YES)
-			{
-				newBounds = V3BoundsFromPoints(V3Make(-1, -1, -1), V3Make(1, 1, 1));
-			}
-			
-			//
-			// Find bounds size, based on model dimensions.
-			//
-			
-			float	distance1		= V3DistanceBetween2Points(origin, newBounds.min );
-			float	distance2		= V3DistanceBetween2Points(origin, newBounds.max );
-			float	newSize			= MAX(distance1, distance2) + 40; //40 is just to provide a margin.
-			NSSize	contentSize		= [[self enclosingScrollView] contentSize];
-			GLfloat	currentMatrix[16];
-			
-			contentSize = [self convertSize:contentSize fromView:[self enclosingScrollView]];
-			
-			// The canvas resizing is set to a fairly large granularity so 
-			// it doesn't constantly change on people. 
-			newSize = ceil(newSize / 384) * 384;
-			
-			//
-			// Reposition the Camera
-			//
-			
-			[[self openGLContext] makeCurrentContext];
-			
-			// As the size of the model changes, we must move the camera in 
-			// and out so as to view the entire model in the right 
-			// perspective. Moving the camera is equivalent to translating 
-			// the modelview matrix. (That's what gluLookAt does.) 
-			// Note:	glTranslatef() doesn't work here. If M is the current matrix, 
-			//			and T is the translation, it performs M = M x T. But we need 
-			//			M = T x M, because OpenGL uses transposed matrices.
-			//			Solution: set matrix manually. Is there a better one?
-			glMatrixMode(GL_MODELVIEW);
-			glGetFloatv(GL_MODELVIEW_MATRIX, currentMatrix);
-
-			// As cameraDistance approaches infinity, the view approximates 
-			// an orthographic projection. We want a fairly large number 
-			// here to produce a small, only slightly-noticable perspective. 
-			self->cameraDistance = - (newSize) * CAMERA_DISTANCE_FACTOR;
-			currentMatrix[12] = 0; //reset the camera location. Positions 12-14 of 
-			currentMatrix[13] = 0; // the matrix hold the translation values.
-			currentMatrix[14] = cameraDistance;
-			glLoadMatrixf(currentMatrix); // It's easiest to set them directly.
-
-			//
-			// Resize the Frame
-			//
-			
-			NSSize	oldFrameSize	= [self frame].size;
-			NSSize	newFrameSize	= NSZeroSize;
-			
-			self->snugFrameSize	= NSMakeSize( newSize*2, newSize*2 );
-			
-			if([[NSUserDefaults standardUserDefaults] boolForKey:VIEWPORTS_EXPAND_TO_AVAILABLE_SIZE] == YES)
-			{
-				// Make the frame either just a little bit bigger than the 
-				// size of the model, or the same as the scroll view, 
-				// whichever is larger. 
-				newFrameSize	= NSMakeSize( MAX(snugFrameSize.width,  contentSize.width),
-											  MAX(snugFrameSize.height, contentSize.height) );
-			}
-			else
-			{
-				newFrameSize	= snugFrameSize;
-			}
-
-			
-			// The canvas size changes will effectively be distributed equally 
-			// on all sides, because the model is always drawn in the center of 
-			// the canvas. So, our effective viewing center will only change by 
-			// half the size difference. 
-			centerPoint.x += (newFrameSize.width  - oldFrameSize.width)/2;
-			centerPoint.y += (newFrameSize.height - oldFrameSize.height)/2;
-			
-//			NSLog(@"frame %f %f; camera %f", newFrameSize.width, newFrameSize.height, cameraDistance);
-			[self setFrameSize:newFrameSize];
-			[self scrollCenterToPoint:centerPoint]; //must preserve this; otherwise, viewing is funky.
-			
-			// Make *sure* the projection matches the frame. Ordinarily, this 
-			// happens automatically in -reshape. But when the view is set to 
-			// fill its entire scroll view, the frame *may not actualy change*, 
-			// even though the camera distance DOES! If we didn't force the 
-			// projection to be remade here, the model would just vanish in that 
-			// case. 
-			[self makeProjection];
-			
-			//NSLog(@"minimum (%f, %f, %f); maximum (%f, %f, %f)", newBounds.min.x, newBounds.min.y, newBounds.min.z, newBounds.max.x, newBounds.max.y, newBounds.max.z);
-		}
-		CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	}
-	
-	[self setNeedsDisplay:YES];
-	
-}//end resetFrameSize
-
-
 //========== restoreConfiguration ==============================================
 //
 // Purpose:		Restores the viewing configuration (such as camera location and 
@@ -3764,14 +2873,16 @@
 //==============================================================================
 - (void) saveConfiguration
 {
+	[[self openGLContext] makeCurrentContext];
+	
 	if(self->autosaveName != nil)
 	{
 		NSUserDefaults	*userDefaults		= [NSUserDefaults standardUserDefaults];
 		NSString		*viewingAngleKey	= [NSString stringWithFormat:@"%@ %@", LDRAW_GL_VIEW_ANGLE, self->autosaveName];
 		NSString		*projectionModeKey	= [NSString stringWithFormat:@"%@ %@", LDRAW_GL_VIEW_PROJECTION, self->autosaveName];
 		
-		[userDefaults setInteger:[self viewOrientation]	forKey:viewingAngleKey];
-		[userDefaults setInteger:[self projectionMode]	forKey:projectionModeKey];
+		[userDefaults setInteger:[self->renderer viewOrientation]	forKey:viewingAngleKey];
+		[userDefaults setInteger:[self->renderer projectionMode]	forKey:projectionModeKey];
 		
 		[userDefaults synchronize]; //because we may be quitting, we have to force this here.
 	}
@@ -3851,39 +2962,6 @@
 }//end saveImageToPath:
 
 
-//========== setZoomPercentage:preservePoint: ==================================
-//
-// Purpose:		Performs cursor-centric zooming on the given point, in view 
-//				coordinates. After the new zoom is applied, the 3D point 
-//				projected at viewPoint will still be in the same projected 
-//				location. 
-//
-//==============================================================================
-- (void) setZoomPercentage:(CGFloat)newPercentage
-			 preservePoint:(NSPoint)viewPoint
-{
-	NSPoint viewportProportion  = NSZeroPoint;
-	NSRect  visibleRect         = [self visibleRect];
-	Point3  modelPoint          = ZeroPoint3;
-	
-	// Cursor-centric zooming: when the new zoom factor is applied, the point in 
-	// the model we clicked on should still be directly under the mouse. 
-	modelPoint = [self modelPointForPoint:viewPoint];
-	
-	viewportProportion.x = (viewPoint.x - NSMinX(visibleRect)) / NSWidth(visibleRect);
-	viewportProportion.y = (viewPoint.y - NSMinY(visibleRect)) / NSHeight(visibleRect);
-	
-	if([self isFlipped] == YES)
-	{
-		viewportProportion.y = 1.0 - viewportProportion.y;
-	}
-	
-	[self setZoomPercentage:newPercentage];
-	[self scrollModelPoint:modelPoint toViewportProportionalPoint:viewportProportion];
-
-}//end setZoomPercentage:preservePoint:
-
-
 //========== scrollCenterToModelPoint: =========================================
 //
 // Purpose:		Scrolls the receiver (if it is inside a scroll view) so that 
@@ -3893,106 +2971,9 @@
 //==============================================================================
 - (void) scrollCenterToModelPoint:(Point3)modelPoint
 {
-	[self scrollModelPoint:modelPoint toViewportProportionalPoint:NSMakePoint(0.5, 0.5)];
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer scrollCenterToModelPoint:modelPoint];
 }
-
-
-//========== scrollModelPoint:toViewportProportionalPoint: =====================
-//
-// Purpose:		Scrolls viewport so the projection of the given 3D point appears 
-//				at the given fraction of the viewport. (0,0) means the 
-//				bottom-right corner of the viewport; (0.5, 0.5) means the 
-//				center; (1.0, 1.0) means the top-right. 
-//
-//==============================================================================
-- (void)     scrollModelPoint:(Point3)modelPoint
-  toViewportProportionalPoint:(NSPoint)viewportPoint
-{
-	Point3  cameraPoint         = V3Make(0, 0, self->cameraDistance);
-	NSPoint newCenter           = NSZeroPoint;
-	float   nearClippingZ       = 0;
-	float   zEval               = 0;
-	Matrix4 modelViewMatrix     = [self getMatrix];
-	Point4  transformedPoint    = ZeroPoint4;
-	NSRect  newVisibleRect      = NSZeroRect;
-	NSRect  currentClippingRect = NSZeroRect;
-	NSRect  newClippingRect     = NSZeroRect;
-	
-	// For the camera calculation, we need effective world coordinates, not 
-	// model coordinates. 
-	transformedPoint = V4MulPointByMatrix(V4FromPoint3(modelPoint), modelViewMatrix);
-	
-	// Perspective distortion makes this more complicated. The camera is in a 
-	// fixed position, but the frustum changes with the scrollbars. We need to 
-	// calculate the world point we just clicked on, then derive a new frustum 
-	// projection centered on that point. 
-	if(self->projectionMode == ProjectionModePerspective)
-	{
-		currentClippingRect = [self nearFrustumClippingRectFromVisibleRect:[self visibleRect]];
-		
-		// Transforming causes an undesired shift on z. I'm not mathematically 
-		// sure why yet, but it is lethal and must be undone. I think it has 
-		// something to do with LDraw's flipped coordinate system and the camera 
-		// location therein... 
-		transformedPoint.z *= -1;
-		
-		// Intersect the 3D line between the camera and the clicked point with 
-		// the near clipping plane. 
-		nearClippingZ   = - [self fieldDepth] / 2;
-		zEval           = (nearClippingZ - cameraPoint.z) / (transformedPoint.z - cameraPoint.z);
-		newCenter.x     = zEval * (transformedPoint.x - cameraPoint.x) + cameraPoint.x;
-		newCenter.y     = zEval * (transformedPoint.y - cameraPoint.y) + cameraPoint.y;
-		
-		// Calculate a NEW frustum clipping rect centered on the clicked point's 
-		// projection onto the near clipping plane. 
-		newClippingRect.size        = currentClippingRect.size;
-		newClippingRect.origin.x    = newCenter.x - NSWidth(currentClippingRect) * viewportPoint.x;
-		newClippingRect.origin.y    = newCenter.y - NSHeight(currentClippingRect) * viewportPoint.y;
-		
-		// Reverse-derive the correct Cocoa view visible rect which will result 
-		// in the desired clipping rect to be used. 
-		newVisibleRect = [self visibleRectFromNearFrustumClippingRect:newClippingRect];
-	}
-	else
-	{
-		currentClippingRect = [self nearOrthoClippingRectFromVisibleRect:[self visibleRect]];
-		
-		// Ortho centers are trivial.
-		newCenter.x = transformedPoint.x;
-		newCenter.y = transformedPoint.y;
-		
-		// Calculate a clipping rect centered on the clicked point's projection. 
-		newClippingRect.size        = currentClippingRect.size;
-		newClippingRect.origin.x    = newCenter.x - NSWidth(currentClippingRect) * viewportPoint.x;
-		newClippingRect.origin.y    = newCenter.y - NSHeight(currentClippingRect) * viewportPoint.y;
-		
-		// Reverse-derive the correct Cocoa view visible rect which will result 
-		// in the desired clipping rect to be used. 
-		newVisibleRect = [self visibleRectFromNearOrthoClippingRect:newClippingRect];
-	}
-
-	// Scroll to it. -makeProjection will now derive the exact frustum or ortho 
-	// projection which will make the clicked point appear in the center. 
-	[self scrollRectToVisible:newVisibleRect];
-	
-}//end scrollCenterToModelPoint:
-
-
-//========== scrollCenterToPoint ===============================================
-//
-// Purpose:		Scrolls the receiver (if it is inside a scroll view) so that 
-//				newCenter is at the center of the viewing area. newCenter is 
-//				given in frame coordinates.
-//
-//==============================================================================
-- (void) scrollCenterToPoint:(NSPoint)newCenter
-{
-	NSRect	visibleRect		= [self visibleRect];
-	NSPoint	scrollOrigin	= NSMakePoint( newCenter.x - NSWidth(visibleRect)/2,
-										   newCenter.y - NSHeight(visibleRect)/2);
-	[self scrollPoint:scrollOrigin];
-	
-}//end scrollCenterToPoint:
 
 
 //========== takeBackgroundColorFromUserDefaults ===============================
@@ -4013,11 +2994,6 @@
 	// the new color may not be in the RGB colorspace, so we need to convert.
 	rgbColor = [newColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
 	
-	glBackgroundColor[0] = [rgbColor redComponent];
-	glBackgroundColor[1] = [rgbColor greenComponent];
-	glBackgroundColor[2] = [rgbColor blueComponent];
-	glBackgroundColor[3] = 1.0;
-	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		//This method can get called from -prepareOpenGL, which is itself called 
@@ -4025,11 +3001,10 @@
 		// we only makeCurrentContext if we *need* to.
 		if([NSOpenGLContext currentContext] != [self openGLContext])
 			[[self openGLContext] makeCurrentContext];
-		
-		glClearColor( glBackgroundColor[0],
-					  glBackgroundColor[1],
-					  glBackgroundColor[2],
-					  glBackgroundColor[3] );
+			
+		[self->renderer setBackgroundColorRed:[rgbColor redComponent]
+										green:[rgbColor greenComponent]
+										 blue:[rgbColor blueComponent] ];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -4039,576 +3014,6 @@
 	[self setNeedsDisplay:YES];
 	
 }//end takeBackgroundColorFromUserDefaults
-
-
-#pragma mark -
-#pragma mark Geometry
-
-//========== convertPointFromViewport: =========================================
-//
-// Purpose:		Converts the point from the viewport coordinate system to the 
-//				view bounds' coordinate system. 
-//
-//==============================================================================
-- (NSPoint) convertPointFromViewport:(Point2)point_viewport
-{
-	NSRect  visibleRect         = [self visibleRect];
-	NSPoint point_visibleRect	= NSZeroPoint;
-	NSPoint point_view          = NSZeroPoint;
-	
-	// Rescale to visible rect
-	point_visibleRect.x = point_viewport.x / ([self zoomPercentage]/100.);
-	point_visibleRect.y = point_viewport.y / ([self zoomPercentage]/100.);
-	
-	// The viewport origin is always at (0,0), so wo only need to translate if 
-	// the coordinate system is flipped. 
-	
-	// Flip the coordinates
-	if([self isFlipped])
-	{
-		// The origin of the viewport is in the lower-left corner.
-		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = NSHeight(visibleRect) - point_visibleRect.y;
-	}
-	
-	// Translate to full bounds coordinates
-	point_view.x = point_visibleRect.x + visibleRect.origin.x;
-	point_view.y = point_visibleRect.y + visibleRect.origin.y;
-	
-	return point_view;
-	
-}//end convertPointFromViewport:
-
-
-//========== convertPointToViewport: ===========================================
-//
-// Purpose:		Converts the point from the view bounds' coordinate system into 
-//				the viewport's coordinate system. 
-//
-//==============================================================================
-- (Point2) convertPointToViewport:(NSPoint)point_view
-{
-	NSRect  visibleRect         = [self visibleRect];
-	NSPoint point_visibleRect   = NSZeroPoint;
-	Point2  point_viewport      = ZeroPoint2;
-	
-	// Translate from full bounds coordinates to the visible rect
-	point_visibleRect.x = point_view.x - visibleRect.origin.x;
-	point_visibleRect.y = point_view.y - visibleRect.origin.y;
-	
-	// Flip the coordinates
-	if([self isFlipped])
-	{
-		// The origin of the viewport is in the lower-left corner.
-		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = NSHeight(visibleRect) - point_visibleRect.y;
-	}
-	
-	// Rescale to viewport pixels
-	point_viewport.x = point_visibleRect.x * ([self zoomPercentage]/100.);
-	point_viewport.y = point_visibleRect.y * ([self zoomPercentage]/100.);
-	
-	return point_viewport;
-	
-}//end convertPointToViewport:
-
-
-//========== fieldDepth ========================================================
-//
-// Purpose:		Returns the distance between the near and far clipping planes.
-//
-// Notes:		Once upon a time, I had a feature called "infinite field depth," 
-//				as opposed to a depth that would clip the model. Eventually I 
-//				concluded this was a bad idea. But for future reference, the 
-//				maximum fieldDepth is about 1e6 (50,000 studs, >1300 ft; 
-//				probably enough!); viewing goes haywire with bigger numbers. 
-//
-//==============================================================================
-- (float) fieldDepth
-{
-	float	fieldDepth		= 0;
-	
-	// This is effectively equivalent to infinite field depth
-	fieldDepth = MAX(snugFrameSize.height, snugFrameSize.width);
-	fieldDepth *= 2;
-	
-	return fieldDepth;
-	
-}//end fieldDepth
-
-
-//========== getModelAxesForViewX:Y:Z: =========================================
-//
-// Purpose:		Finds the axes in the model coordinate system which most closely 
-//			    project onto the X, Y, Z axes of the view. 
-//
-// Notes:		The screen coordinate system is right-handed:
-//
-//					 +y
-//					|
-//					|
-//					*-- +x
-//				   /
-//				  +z
-//
-//				The choice between what is the "closest" axis in the model is 
-//			    often arbitrary, but it will always be a unique and 
-//			    sensible-looking choice. 
-//
-//==============================================================================
-- (void) getModelAxesForViewX:(Vector3 *)outModelX
-							Y:(Vector3 *)outModelY
-							Z:(Vector3 *)outModelZ
-{
-	Vector4 screenX		= {1,0,0,1};
-	Vector4 screenY		= {0,1,0,1};
-	Vector4 unprojectedX, unprojectedY; //the vectors in the model which are projected onto x,y on screen
-	Vector3 modelX, modelY, modelZ; //the closest model axes to which the screen's x,y,z align
-	
-	// Translate the x, y, and z vectors on the surface of the screen into the 
-	// axes to which they most closely align in the model itself. 
-	// This requires the inverse of the current transformation matrix, so we can 
-	// convert projection-coordinates back to the model coordinates they are 
-	// displaying. 
-	Matrix4 inversed = [self getInverseMatrix];
-	
-	//find the vectors in the model which project onto the screen's axes
-	// (We only care about x and y because this is a two-dimensional 
-	// projection, and the third axis is consquently ambiguous. See below.) 
-	unprojectedX = V4MulPointByMatrix(screenX, inversed);
-	unprojectedY = V4MulPointByMatrix(screenY, inversed);
-	
-	//find the actual axes closest to those model vectors
-	modelX	= V3FromV4(unprojectedX);
-	modelY	= V3FromV4(unprojectedY);
-	
-	modelX	= V3IsolateGreatestComponent(modelX);
-	modelY	= V3IsolateGreatestComponent(modelY);
-	
-	modelX	= V3Normalize(modelX);
-	modelY	= V3Normalize(modelY);
-	
-	// The z-axis is often ambiguous because we are working backwards from a 
-	// two-dimensional screen. Thankfully, while the process used for deriving 
-	// the x and y vectors is perhaps somewhat arbitrary, it always yields 
-	// sensible and unique results. Thus we can simply derive the z-vector, 
-	// which will be whatever axis x and y *didn't* land on. 
-	modelZ = V3Cross(modelX, modelY);
-	
-	if(outModelX != NULL)
-		*outModelX = modelX;
-	if(outModelY != NULL)
-		*outModelY = modelY;
-	if(outModelZ != NULL)
-		*outModelZ = modelZ;
-	
-}//end getModelAxesForViewX:Y:Z:
-
-
-//========== modelPointForPoint: ===============================================
-//
-// Purpose:		Unprojects the given point (in view coordinates) back into a 
-//			    point in the model which projects there, using existing data in 
-//				the depth buffer to infer the location on the z axis. 
-//
-// Notes:		The depth buffer is not super-accurate, but it's passably 
-//				close. But most importantly, it could be faster to read the 
-//				depth buffer than to redraw parts of the model under a pick 
-//				matrix. 
-//
-//==============================================================================
-- (Point3) modelPointForPoint:(NSPoint)viewPoint
-{
-	NSPoint             windowPoint             = [self convertPoint:viewPoint toView:nil];
-	NSRect              windowVisibleRect       = [self convertRect:[self visibleRect] toView:nil]; //window coordinates.
-	
-	GLfloat             depth                   = 0.0; 
-	TransformComponents partTransform           = IdentityComponents;
-	Point3              contextPoint            = ZeroPoint3;
-	GLfloat             modelViewGLMatrix	[16];
-	GLfloat             projectionGLMatrix	[16];
-	GLint               viewport			[4];
-	Point3              modelPoint              = ZeroPoint3;
-	
-	// convert to viewport coordinates
-	contextPoint.x  = windowPoint.x - NSMinX(windowVisibleRect);
-	contextPoint.y  = windowPoint.y - NSMinY(windowVisibleRect);
-
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		[[self openGLContext] makeCurrentContext];
-		
-		// Find the location in the depth buffer. This tells us the percentage of 
-		// depth of the nearest pixel to the viewer.
-		glReadPixels(contextPoint.x, contextPoint.y,
-					 1, 1,  	// width, height
-					 GL_DEPTH_COMPONENT,
-					 GL_FLOAT, &depth);
-		
-		if(depth == 1.0)
-		{
-			// Error!
-			// Maximum depth readings essentially tell us that no pixels were drawn 
-			// at this point. So we have to make up a best guess now. This guess 
-			// will very likely be wrong, but there is little else which can be 
-			// done. 
-			
-			if([self->delegate respondsToSelector:@selector(LDrawGLViewPreferredPartTransform:)])
-			{
-				partTransform = [self->delegate LDrawGLViewPreferredPartTransform:self];
-			}
-
-			modelPoint = [self modelPointForPoint:viewPoint
-							  depthReferencePoint:partTransform.translate];
-		}
-		else
-		{
-			contextPoint.z = depth;
-		
-			// Convert back to a point in the model.
-			glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-			glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-			glGetIntegerv(GL_VIEWPORT, viewport);
-			
-			modelPoint = V3Unproject(contextPoint,
-									 Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									 Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-									 V2MakeBox(viewport[0], viewport[1], viewport[2], viewport[3]));
-		}
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-	return modelPoint;
-	
-}//end modelPointForPoint:
-
-
-//========== modelPointForPoint:depthReferencePoint: ===========================
-//
-// Purpose:		Unprojects the given point (in view coordinates) back into a 
-//			    point in the model which projects there, calculating the 
-//				location on the z axis using the given depth reference point. 
-//
-// Notes:		Any point on the screen represents the projected location of an 
-//			    infinite number of model points, extending on a line from the 
-//			    near to the far clipping plane. 
-//
-//				It's impossible to boil that down to a single point without 
-//			    being given some known point in the model to determine the 
-//			    desired depth. (Hence the depthPoint parameter.) The returned 
-//			    point will lie on a plane which contains depthPoint and is 
-//			    perpendicular to the model axis most closely aligned to the 
-//			    computer screen's z-axis. 
-//
-//										* * * *
-//
-//				When viewing the model with an orthographic projection and the 
-//			    camera pointing parallel to one of the model's coordinate axes, 
-//				this method is useful for determining two of the three 
-//			    coordinates over which the mouse is hovering. To find which 
-//			    coordinate is bogus, we call -getModelAxesForViewX:Y:Z:. The 
-//			    returned z-axis indicates the unreliable point. 
-//
-//==============================================================================
-- (Point3) modelPointForPoint:(NSPoint)viewPoint
-		  depthReferencePoint:(Point3)depthPoint
-{
-	NSRect  windowVisibleRect       = [self convertRect:[self visibleRect] toView:nil];
-	NSPoint windowPoint             = [self convertPoint:viewPoint toView:nil];
-	
-	GLfloat modelViewGLMatrix	[16];
-	GLfloat projectionGLMatrix	[16];
-	GLint   viewport			[4];
-	
-	Point3  nearModelPoint          = ZeroPoint3;
-	Point3  farModelPoint           = ZeroPoint3;
-	Point3  modelPoint              = ZeroPoint3;
-	Point2  contextPoint            = ZeroPoint2;
-	Vector3 modelZ;
-	float   t                       = 0; //parametric variable
-	
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		[[self openGLContext] makeCurrentContext];
-	
-		// To map the 2D view point back into a 3D model coordinate, we'll use 
-		// the gluUnProject convenience function. It takes values in "window 
-		// coordinates," which are really coordinates relative to the OpenGL 
-		// context's drawing area. The context is always as big as the visible 
-		// area of the NSOpenGLView, and is basically splattered up on the 
-		// window. So the easiest way to get coordinates is to express both the 
-		// view point and context area in window coordinates. That frees us from 
-		// worrying about view scaling. 
-		
-		// need to get viewPoint in terms of the viewport!
-		contextPoint.x = windowPoint.x - NSMinX(windowVisibleRect);
-		contextPoint.y = windowPoint.y - NSMinY(windowVisibleRect);
-		
-		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-		glGetIntegerv(GL_VIEWPORT, viewport);
-		
-		// gluUnProject takes a window "z" coordinate. These values range from 
-		// 0.0 (on the near clipping plane) to 1.0 (the far clipping plane). 
-		
-		// - Near clipping plane unprojection
-		nearModelPoint = V3Unproject(V3Make(contextPoint.x, contextPoint.y, 0.0),
-									 Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									 Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-									 V2MakeBox(viewport[0], viewport[1], viewport[2], viewport[3]));
-		
-		// - Far clipping plane unprojection
-		farModelPoint = V3Unproject(V3Make(contextPoint.x, contextPoint.y, 1.0),
-									Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-									V2MakeBox(viewport[0], viewport[1], viewport[2], viewport[3]));
-		
-		//---------- Derive the actual point from the depth point --------------
-		//
-		// We now have two accurate unprojected coordinates: the near (P1) and 
-		// far (P2) points of the line through 3-D space which projects onto the 
-		// single screen point. 
-		//
-		// The parametric equation for a line given two points is:
-		//
-		//		 /      \														/
-		//	 L = | 1 - t | P  + t P        (see? at t=0, L = P1 and at t=1, L = P2.
-		//		 \      /   1      2
-		//
-		// So for example,	z = (1-t)*z1 + t*z2
-		//					z = z1 - t*z1 + t*z2
-		//
-		//								/       \								/
-		//					 z = z  - t | z - z  |
-		//						  1     \  1   2/
-		//
-		//
-		//						  z  - z
-		//						   1			No need to worry about dividing 
-		//					 t = ---------		by 0 because the axis we are 
-		//						  z  - z		inspecting will never be 
-		//						   1    2		perpendicular to the screen.
-
-		// Which axis are we going to use from the reference point?
-		[self getModelAxesForViewX:NULL Y:NULL Z:&modelZ];
-		
-		// Find the value of the parameter at the depth point.
-		if(modelZ.x != 0)
-		{
-			t = (nearModelPoint.x - depthPoint.x) / (nearModelPoint.x - farModelPoint.x);
-		}
-		else if(modelZ.y != 0)
-		{
-			t = (nearModelPoint.y - depthPoint.y) / (nearModelPoint.y - farModelPoint.y);
-		}
-		else if(modelZ.z != 0)
-		{
-			t = (nearModelPoint.z - depthPoint.z) / (nearModelPoint.z - farModelPoint.z);
-		}
-		// Evaluate the equation of the near-to-far line at the parameter for 
-		// the depth point. 
-		modelPoint.x = LERP(t, nearModelPoint.x, farModelPoint.x);
-		modelPoint.y = LERP(t, nearModelPoint.y, farModelPoint.y);
-		modelPoint.z = LERP(t, nearModelPoint.z, farModelPoint.z);
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-
-	return modelPoint;
-	
-}//end modelPointForPoint:depthReferencePoint:
-
-
-//========== makeProjection ====================================================
-//
-// Purpose:		Loads the viewing projection appropriate for our canvas size.
-//
-//==============================================================================
-- (void) makeProjection
-{
-	NSRect	visibleRect		= [self visibleRect];
-	float	fieldDepth		= [self fieldDepth];
-	NSRect	visibilityPlane	= NSZeroRect;
-	
-	//ULTRA-IMPORTANT NOTE: this method assumes that you have already made our 
-	// openGLContext the current context
-	
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		// Start from scratch
-		glMatrixMode(GL_PROJECTION); //we are changing the projection, NOT the model!
-		glLoadIdentity();
-		
-		if(self->projectionMode == ProjectionModePerspective)
-		{
-			visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:visibleRect];
-			
-			glFrustum(NSMinX(visibilityPlane),	// left
-					  NSMaxX(visibilityPlane),	// right
-					  NSMinY(visibilityPlane),	// bottom
-					  NSMaxY(visibilityPlane),	// top
-					  fabs(cameraDistance) - fieldDepth/2,	// near (closer points are clipped); distance from CAMERA LOCATION
-					  fabs(cameraDistance) + fieldDepth/2	// far (points beyond this are clipped); distance from CAMERA LOCATION
-					 );
-		}
-		else
-		{
-			visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:visibleRect];
-			
-			glOrtho(NSMinX(visibilityPlane),	// left
-					NSMaxX(visibilityPlane),	// right
-					NSMinY(visibilityPlane),	// bottom
-					NSMaxY(visibilityPlane),	// top
-					fabs(cameraDistance) - fieldDepth/2,	// near (points beyond these are clipped)
-					fabs(cameraDistance) + fieldDepth/2 );	// far
-		}
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-}//end makeProjection
-
-
-//========== nearOrthoClippingRectFromVisibleRect: ============================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an orthographic projection. The coordinates are in model 
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
-//==============================================================================
-- (NSRect) nearOrthoClippingRectFromVisibleRect:(NSRect)visibleRect
-{
-	NSRect	frame			= [self frame];
-	NSRect	visibilityPlane	= NSZeroRect;
-
-	CGFloat y = NSMinY(visibleRect);
-	if([self isFlipped] == YES)
-		y = NSHeight(frame) - y - NSHeight(visibleRect);
-	
-	//The projection plane is stated in model coordinates.
-	visibilityPlane.origin.x	= NSMinX(visibleRect) - NSWidth(frame)/2;
-	visibilityPlane.origin.y	= y - NSHeight(frame)/2;
-	visibilityPlane.size.width	= NSWidth(visibleRect);
-	visibilityPlane.size.height	= NSHeight(visibleRect);
-	
-	return visibilityPlane;
-	
-}//end nearOrthoClippingRectFromVisibleRect:
-
-
-//========== nearFrustumClippingRectFromVisibleRect: ==========================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an perspective projection. The coordinates are in model 
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
-// Notes:		We want perspective and ortho views to show objects at the 
-//				 origin as the same size. Since perspective viewing is defined 
-//				 by a frustum (truncated pyramid), we have to shrink the 
-//				 visibily plane--which is located on the near clipping plane--in 
-//				 such a way that the slice of the frustum at the origin will 
-//				 have the dimensions of the desired visibility plane. (Remember, 
-//				 slices grow *bigger* as they go deeper into the view. Since the 
-//				 origin is deeper, that means we need a near visibility plane 
-//				 that is *smaller* than the desired size at the origin.) 
-//
-//==============================================================================
-- (NSRect) nearFrustumClippingRectFromVisibleRect:(NSRect)visibleRect
-{
-	NSRect  orthoVisibilityPlane    = [self nearOrthoClippingRectFromVisibleRect:visibleRect];
-	NSRect  visibilityPlane         = orthoVisibilityPlane;
-	float   fieldDepth              = [self fieldDepth];
-	
-	// Find the scaling percentage betwen the frustum slice through 
-	// (0,0,0) and the slice that defines the near clipping plane. 
-	float visibleProportion = (fabs(self->cameraDistance) - fieldDepth/2)
-												/
-									fabs(self->cameraDistance);
-	
-	//scale down the visibility plane, centering it in the full-size one.
-	visibilityPlane.origin.x    = NSMinX(orthoVisibilityPlane) + NSWidth(orthoVisibilityPlane)  * (1 - visibleProportion) / 2;
-	visibilityPlane.origin.y    = NSMinY(orthoVisibilityPlane) + NSHeight(orthoVisibilityPlane) * (1 - visibleProportion) / 2;
-	visibilityPlane.size.width  = NSWidth(orthoVisibilityPlane)  * visibleProportion;
-	visibilityPlane.size.height = NSHeight(orthoVisibilityPlane) * visibleProportion;
-	
-	return visibilityPlane;
-	
-}//end nearFrustumClippingRectFromVisibleRect:
-
-
-//========== nearOrthoClippingRectFromNearFrustumClippingRect: =================
-//
-// Purpose:		Returns the near clipping rectangle which would be used if the 
-//				given perspective view were converted to an orthographic 
-//				projection. 
-//
-//==============================================================================
-- (NSRect) nearOrthoClippingRectFromNearFrustumClippingRect:(NSRect)visibilityPlane
-{
-	NSRect  orthoVisibilityPlane    = NSZeroRect;
-	float   fieldDepth              = [self fieldDepth];
-	
-	// Find the scaling percentage betwen the frustum slice through 
-	// (0,0,0) and the slice that defines the near clipping plane. 
-	float visibleProportion = (fabs(self->cameraDistance) - fieldDepth/2)
-												/
-									fabs(self->cameraDistance);
-	
-	// Enlarge the ortho plane 
-	orthoVisibilityPlane.size.width     = visibilityPlane.size.width  / visibleProportion;
-	orthoVisibilityPlane.size.height    = visibilityPlane.size.height / visibleProportion;
-	
-	// Move origin according to enlargement
-	orthoVisibilityPlane.origin.x       = NSMinX(visibilityPlane) - NSWidth(orthoVisibilityPlane)  * (1 - visibleProportion) / 2;
-	orthoVisibilityPlane.origin.y       = NSMinY(visibilityPlane) - NSHeight(orthoVisibilityPlane) * (1 - visibleProportion) / 2;
-
-	return orthoVisibilityPlane;
-	
-}//end nearOrthoClippingRectFromNearFrustumClippingRect:
-
-
-//========== visibleRectFromNearOrthoClippingRect: =============================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given orthographic clipping rect. 
-//
-//==============================================================================
-- (NSRect) visibleRectFromNearOrthoClippingRect:(NSRect)visibilityPlane
-{
-	NSRect	visibleRect		= NSZeroRect;
-	NSRect	frame			= [self frame];
-	
-	// Convert from model coordinates back to Cocoa view coordinates.
-	
-	visibleRect.origin.x    = visibilityPlane.origin.x + NSWidth(frame)/2;
-	visibleRect.origin.y    = visibilityPlane.origin.y + NSHeight(frame)/2;
-	visibleRect.size        = visibilityPlane.size;
-	
-	if([self isFlipped] == YES)
-		visibleRect.origin.y = NSHeight(frame) - NSHeight(visibilityPlane) - NSMinY(visibleRect);
-	
-	return visibleRect;
-	
-}//end visibleRectFromNearOrthoClippingRect:
-
-
-//========== visibleRectFromNearFrustumClippingRect: ===========================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given frustum clipping rect. 
-//
-//==============================================================================
-- (NSRect) visibleRectFromNearFrustumClippingRect:(NSRect)visibilityPlane
-{
-	NSRect  orthoClippingRect   = NSZeroRect;
-	NSRect  visibleRect         = NSZeroRect;
-	
-	orthoClippingRect   = [self nearOrthoClippingRectFromNearFrustumClippingRect:visibilityPlane];
-	visibleRect         = [self visibleRectFromNearOrthoClippingRect:orthoClippingRect];
-	
-	return visibleRect;
-	
-}//end visibleRectFromNearFrustumClippingRect:
 
 
 #pragma mark -
@@ -4626,9 +3031,9 @@
 	
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
+	[renderer		release];
 	[canDrawLock	release];
 	[autosaveName	release];
-	[fileBeingDrawn	release];
 
 	[super dealloc];
 	

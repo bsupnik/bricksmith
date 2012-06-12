@@ -66,29 +66,32 @@
 //==============================================================================
 - (void) setObject:(id)newObject
 {
-	//De-register any possible notification observer for the previous editing 
-	// object. In normal circumstances, there never is a previous object, so 
-	// this method is pointless. It is only here as a safeguard.
-	[[NSNotificationCenter defaultCenter]
-			removeObserver:self
-					  name:LDrawDirectiveDidChangeNotification
-					object:nil ];
+	if(newObject != editingObject)
+	{
+		//De-register any possible notification observer for the previous editing 
+		// object. In normal circumstances, there never is a previous object, so 
+		// this method is pointless. It is only here as a safeguard.
+		[[NSNotificationCenter defaultCenter]
+				removeObserver:self
+						  name:LDrawDirectiveDidChangeNotification
+						object:nil ];
+		
+		//Retain-release in preparation for changing the instance variable.
+		[newObject retain];
+		[editingObject release];
+		
+		//Update the the object being edited.
+		editingObject = newObject;
+		[self revert:self]; //calling revert should set the values of the palette.
+		
+		//We want to know when our object changes out from under us.
+		[[NSNotificationCenter defaultCenter]
+				addObserver:self
+				   selector:@selector(directiveDidChange:)
+					   name:LDrawDirectiveDidChangeNotification
+					 object:newObject ];
+	}
 	
-	//Retain-release in preparation for changing the instance variable.
-	[newObject retain];
-	[editingObject release];
-	
-	//Update the the object being edited.
-	editingObject = newObject;
-	[self revert:self]; //calling revert should set the values of the palette.
-	
-	//We want to know when our object changes out from under us.
-	[[NSNotificationCenter defaultCenter]
-			addObserver:self
-			   selector:@selector(directiveDidChange:)
-				   name:LDrawDirectiveDidChangeNotification
-				 object:newObject ];
-				 
 }//end setObject:
 
 

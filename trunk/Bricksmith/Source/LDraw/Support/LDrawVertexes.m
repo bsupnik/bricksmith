@@ -47,6 +47,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 		
 		self->colorOptimizations            = [[NSMutableDictionary alloc] init];
 		self->colorWireframeOptimizations   = [[NSMutableDictionary alloc] init];
+		self->needsRebuilding				= YES;
     }
     return self;
 }
@@ -217,6 +218,18 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 }//end setLines:triangles:quadrilaterals:other:
 
 
+//========== setVertexesNeedRebuilding =========================================
+//
+// Purpose:		Marks all the optimizations of this vertex collection as needing 
+//				rebuilding. 
+//
+//==============================================================================
+- (void) setVertexesNeedRebuilding
+{
+	self->needsRebuilding = YES;
+}
+
+
 #pragma mark -
 
 //========== addDirective: =====================================================
@@ -256,6 +269,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) addLine:(LDrawLine *)line
 {
 	[self->lines addObject:line];
+	self->needsRebuilding = YES;
 }
 
 
@@ -268,6 +282,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) addTriangle:(LDrawTriangle *)triangle
 {
 	[self->triangles addObject:triangle];
+	self->needsRebuilding = YES;
 }
 
 
@@ -280,6 +295,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) addQuadrilateral:(LDrawQuadrilateral *)quadrilateral
 {
 	[self->quadrilaterals addObject:quadrilateral];
+	self->needsRebuilding = YES;
 }
 
 
@@ -334,6 +350,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) removeLine:(LDrawLine *)line
 {
 	[self->lines removeObjectIdenticalTo:line];
+	self->needsRebuilding = YES;
 }
 
 
@@ -346,6 +363,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) removeTriangle:(LDrawTriangle *)triangle
 {
 	[self->triangles removeObjectIdenticalTo:triangle];
+	self->needsRebuilding = YES;
 }
 
 
@@ -358,6 +376,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 - (void) removeQuadrilateral:(LDrawQuadrilateral *)quadrilateral
 {
 	[self->quadrilaterals removeObjectIdenticalTo:quadrilateral];
+	self->needsRebuilding = YES;
 }
 
 
@@ -710,14 +729,18 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 //==============================================================================
 - (void) rebuildAllOptimizations
 {
-	NSArray *allColors = [self->colorOptimizations allKeys];
-	
-	[self removeAllOptimizations];
-	
-	// Rebuild all optimizations
-	for(LDrawColor *color in allColors)
+	if(self->needsRebuilding)
 	{
-		[self optimizeOpenGLWithParentColor:color];
+		NSArray *allColors = [self->colorOptimizations allKeys];
+		
+		[self removeAllOptimizations];
+		
+		// Rebuild all optimizations
+		for(LDrawColor *color in allColors)
+		{
+			[self optimizeOpenGLWithParentColor:color];
+		}
+		self->needsRebuilding = NO;
 	}
 }//end rebuildAllOptimizations
 
