@@ -148,6 +148,7 @@ typedef enum
 - (void) dragHandleDragged:(NSEvent *)theEvent;
 - (void) panDragged:(NSEvent *)theEvent;
 - (void) rotationDragged:(NSEvent *)theEvent;
+- (void) spinLR:(float)inDegrees;
 - (void) zoomDragged:(NSEvent *)theEvent;
 
 - (void) mouseCenterClick:(NSEvent*)theEvent ;

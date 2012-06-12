@@ -51,6 +51,10 @@
 #import "ScrollViewCategory.h"
 #import "UserDefaultsCategory.h"
 
+#define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
+#define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
+#define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
+
 #define DEBUG_DRAWING				1
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
@@ -1663,6 +1667,12 @@
 				[self setProjectionMode:ProjectionModePerspective];
 				[self setViewOrientation:ViewOrientation3D];
 				break;
+			case '1':
+				[self spinLR:-45.0f];
+				break;
+			case '3':
+				[self spinLR: 45.0f];
+				break;
 				
 			default:
 				[super keyDown:theEvent];
@@ -1690,6 +1700,7 @@
 	Vector3		zNudge			= ZeroPoint3;
 	Vector3		actualNudge		= ZeroPoint3;
 	BOOL		isZMovement		= NO;
+	BOOL		isFastNudge		= NO;
 	BOOL		isNudge			= NO;
 	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
@@ -1700,19 +1711,62 @@
 		{
 			firstCharacter	= [characters characterAtIndex:0]; //the key pressed
 			
-			// find which model-coordinate directions our screen axes are best 
-			// aligned with. 
-			[self getModelAxesForViewX:&xNudge
-									 Y:&yNudge
-									 Z:&zNudge ];
+			if ([self projectionMode] == ProjectionModeOrthographic || !USE_TURNTABLE)
+			{
+				// find which model-coordinate directions our screen axes are best 
+				// aligned with. 
+				[self getModelAxesForViewX:&xNudge
+										 Y:&yNudge
+										 Z:&zNudge ];
+			} else {
+
+				/* 
+					This view mode matches the turntable-style editing:
+					The model "horizontal" axes x & z always match x & z nudge,
+					but which one is X and which way they go match screen space
+					for sanity.
+					Up-down is ALWAYS y, with a reverse if you (insanely) flip
+					the model's pitch by > 90 degrees.
+					Since the Y axis is always Y, there is never any question 
+					whether we'll be pulling depth or height.
+					Finally: the model's Z or X axis is aligned with screen space
+					Y so that if we are looking DOWN on a model and we pull a brick
+					toward us, it moves down, which matches what we'd expect.  In
+					other words, the depth perspective matches screen space.
+				*/
+
+				Matrix4 matrix = [self getMatrix];
+				Vector4 x_model = { 1, 0, 0 };
+				Vector4 y_model = { 0, 1, 0 };
+				Vector4 z_model = { 0, 0, 1 };
 				
+				Vector4 x_screen = V4MulPointByMatrix(x_model, matrix);
+				Vector4 y_screen = V4MulPointByMatrix(y_model, matrix);
+				Vector4 z_screen = V4MulPointByMatrix(z_model, matrix);
+				
+				if(fabsf(x_screen.x) > fabsf(z_screen.x))
+				{
+					xNudge.x = (x_screen.x > 0.0f) ? 1.0f : -1.0f;
+					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
+					zNudge.z = (z_screen.y > 0.0f) ? -1.0f : 1.0f;
+				}
+				else 
+				{
+					xNudge.z = (z_screen.x > 0.0f) ? 1.0f : -1.0f;
+					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
+					zNudge.x = (x_screen.y < 0.0f) ? 1.0f : -1.0f;
+				}
+			}
+							
 			// By holding down the option key, we transcend the two-plane 
 			// limitation presented by the arrow keys. Option-presses mean 
 			// movement along the z-axis. Note that move "in" to the screen (up 
 			// arrow, left arrow?) is a movement along the screen's negative 
 			// z-axis. 
 			isZMovement	= ([theEvent modifierFlags] & NSAlternateKeyMask) != 0;
+			isFastNudge = ([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 			isNudge		= NO;
+			
 			
 			//now we must select which axis we actually are nudging on.
 			switch(firstCharacter)
@@ -1771,6 +1825,8 @@
 			// charge of manipulating the data.
 			if(isNudge == YES)
 			{
+				if(isFastNudge)
+					actualNudge = V3Scale(actualNudge,10.0);
 				self->nudgeVector = actualNudge;
 				[NSApp sendAction:self->nudgeAction to:self->target from:self];
 				self->nudgeVector = ZeroPoint3;
@@ -1785,6 +1841,38 @@
 #pragma mark -
 #pragma mark Mouse
 
+- (void)scrollWheel:(NSEvent *)theEvent
+{
+	if(USE_ZOOM_WHEEL)
+	{
+		CGFloat dist = [theEvent deltaY];
+		CGFloat currentZoom	= [self zoomPercentage];
+
+		NSPoint event_location = [theEvent locationInWindow];
+		NSPoint local_point = [self convertPoint:event_location fromView:nil];	
+		
+		if(dist < 0.0)
+		{
+			while(dist < 0.0)
+			{
+				++dist;
+				currentZoom /= 1.1;
+			}
+		}
+		else 
+		{
+			while(dist > 0.0)
+			{
+				--dist;
+				currentZoom *= 1.1;
+			}	
+		}
+		[self setZoomPercentage:currentZoom preservePoint:local_point];
+	}
+	else
+	[super scrollWheel:theEvent];
+}
+
 //========== mouseDown: ========================================================
 //
 // Purpose:		We received a mouseDown before a mouseDragged. Handy thought.
@@ -1795,6 +1883,9 @@
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	MouseDragBehaviorT	 draggingBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
+	
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 	
 	// Reset event tracking flags.
 	self->isTrackingDrag	= NO;
@@ -1867,6 +1958,9 @@
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	MouseDragBehaviorT	 draggingBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
+
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 	
 	if(self->isTrackingDrag == NO)
 	{
@@ -1937,6 +2031,8 @@
 - (void) mouseUp:(NSEvent *)theEvent
 {
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 
 	[self cancelClickAndHoldTimer];
 
@@ -1962,6 +2058,23 @@
 	
 }//end mouseUp:
 
+- (void) rightMouseDown:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseDown:theEvent];
+}
+- (void) rightMouseDragged:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseDragged:theEvent];
+	else
+		[self rotationDragged:theEvent];
+}
+- (void) rightMouseUp:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseUp:theEvent];
+}
 
 //========== menuForEvent: =====================================================
 //
@@ -2305,6 +2418,14 @@
 		CGFloat	rotationAboutX	= - ( percentDragY * 180 ); //multiply by -1,
 					// as we need to convert our drag into a proper rotation 
 					// direction. See notes in function header.
+
+		if(USE_TURNTABLE)
+		{
+			Tuple3 view_now = [self viewingAngle];
+			if(view_now.y > 0.0)
+			rotationAboutY = -rotationAboutY;
+		}
+
 		
 		//Get the current transformation matrix. By using its inverse, we can 
 		// convert projection-coordinates back to the model coordinates they 
@@ -2324,6 +2445,12 @@
 		// a model point. 
 		transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
 		transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
+
+		if(USE_TURNTABLE)
+		{
+			rotationAboutY = -rotationAboutY;
+			transformedVectorY = vectorY;
+		}
 		
 		if(self->viewOrientation != ViewOrientation3D)
 		{
@@ -2333,8 +2460,63 @@
 		
 		//Now rotate the model around the visual "up" and "down" directions.
 		glMatrixMode(GL_MODELVIEW);
-		glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 		glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
+		glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
+		
+		[self setNeedsDisplay: YES];
+		
+	}
+	CGLUnlockContext([[self openGLContext] CGLContextObj]);
+	
+}//end rotationDragged
+
+
+- (void)spinLR:(float)inDegrees
+{
+	CGLLockContext([[self openGLContext] CGLContextObj]);
+	{
+		//Since there are multiple OpenGL rendering areas on the screen, we must 
+		// explicitly indicate that we are drawing into ourself. Weird yes, but 
+		// horrible things happen without this call.
+		[[self openGLContext] makeCurrentContext];
+		
+		//Remember, dragging on y means rotating about x.
+		CGFloat	rotationAboutY	= - inDegrees;
+		CGFloat	rotationAboutX	= 0;
+					// as we need to convert our drag into a proper rotation 
+					// direction. See notes in function header.
+		
+		//Get the current transformation matrix. By using its inverse, we can 
+		// convert projection-coordinates back to the model coordinates they 
+		// are displaying.
+		Matrix4 inversed = [self getInverseMatrix];
+		
+		// Now we will convert what appears to be the vertical and horizontal 
+		// axes into the actual model vectors they represent. 
+		Vector4 vectorX = {1,0,0,1}; //unit vector i along x-axis.
+		Vector4 vectorY = {0,1,0,1}; //unit vector j along y-axis.
+		Vector4 transformedVectorX;
+		Vector4 transformedVectorY;
+		
+		// We do this conversion from screen to model coordinates by multiplying 
+		// our screen points by the modelview matrix inverse. That has the 
+		// effect of "undoing" the model matrix on the screen point, leaving us 
+		// a model point. 
+		transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
+		transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
+//		transformedVectorX = vectorX;
+		transformedVectorY = vectorY;
+		
+		if(self->viewOrientation != ViewOrientation3D)
+		{
+			[self setProjectionMode:ProjectionModePerspective];
+			self->viewOrientation = ViewOrientation3D;
+		}
+		
+		//Now rotate the model around the visual "up" and "down" directions.
+		glMatrixMode(GL_MODELVIEW);
+		glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
+		glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 		
 		[self setNeedsDisplay: YES];
 		

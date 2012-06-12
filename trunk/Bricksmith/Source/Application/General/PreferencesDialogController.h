@@ -33,6 +33,10 @@
 	// General Tab
 	IBOutlet NSForm			*gridSpacingForm;
 	IBOutlet NSMatrix		*mouseDraggingRadioButtons;
+	
+	IBOutlet NSMatrix		*rotateModeRadioButtons;
+	IBOutlet NSMatrix		*rightButtonRadioButtons;
+	IBOutlet NSMatrix		*mouseWheelRadioButtons;
 
 	// Parts Tab
     IBOutlet NSTextField	*LDrawPathTextField;
@@ -68,6 +72,11 @@
 // - General Tab
 - (IBAction) gridSpacingChanged:(id)sender;
 - (IBAction) mouseDraggingChanged:(id)sender;
+- (IBAction) rightButtonChanged:(id)sender;
+- (IBAction) rotateModeChanged:(id)sender;
+- (IBAction) mouseWheelChanged:(id)sender;
+
+
 
 // - Styles Tab
 - (IBAction) backgroundColorWellChanged:(id)sender;

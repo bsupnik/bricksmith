@@ -149,6 +149,17 @@ PreferencesDialogController *preferencesDialog = nil;
 	MouseDragBehaviorT	mouseBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
 	[self->mouseDraggingRadioButtons selectCellWithTag:mouseBehavior];
 	
+	RightButtonBehaviorT	rbBehavior = [userDefaults integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY];
+	[self->rightButtonRadioButtons selectCellWithTag:rbBehavior];
+	
+	RotateModeT			rBehavior = [userDefaults integerForKey:ROTATE_MODE_KEY];
+	[self->rotateModeRadioButtons selectCellWithTag:rBehavior];	
+	
+	MouseWheelBeahviorT	wBehavior = [userDefaults integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY];
+	[self->mouseWheelRadioButtons selectCellWithTag:wBehavior];
+	
+	
+	
 }//end setGeneralTabValues
 
 
@@ -265,6 +276,29 @@ PreferencesDialogController *preferencesDialog = nil;
 	
 }//end mouseDraggingChanged:
 
+- (IBAction) rightButtonChanged:(id)sender
+{
+	NSUserDefaults		*userDefaults	= [NSUserDefaults standardUserDefaults];
+	RightButtonBehaviorT rbBehavior = [self->rightButtonRadioButtons selectedTag];
+	[userDefaults setInteger:rbBehavior
+						forKey:RIGHT_BUTTON_BEHAVIOR_KEY];
+}
+
+- (IBAction) rotateModeChanged:(id)sender
+{
+	NSUserDefaults		*userDefaults	= [NSUserDefaults standardUserDefaults];
+	RotateModeT			rBehavior = [self->rotateModeRadioButtons selectedTag];
+	[userDefaults setInteger:rBehavior
+						forKey:ROTATE_MODE_KEY];
+}
+
+- (IBAction) mouseWheelChanged:(id)sender
+{
+	NSUserDefaults		*userDefaults	= [NSUserDefaults standardUserDefaults];
+	MouseWheelBeahviorT		wBehavior = [self->mouseWheelRadioButtons selectedTag];
+	[userDefaults setInteger:wBehavior
+						forKey:MOUSE_WHEEL_BEHAVIOR_KEY];
+}
 
 #pragma mark -
 #pragma mark Parts Tab
@@ -656,6 +690,11 @@ PreferencesDialogController *preferencesDialog = nil;
 	//
 	[initialDefaults setObject:[NSNumber numberWithInteger:PartBrowserShowAsPanel]			forKey:PART_BROWSER_STYLE_KEY];
 	[initialDefaults setObject:[NSNumber numberWithInteger:MouseDraggingBeginImmediately]	forKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
+
+	[initialDefaults setObject:[NSNumber numberWithInteger:RightButtonContextual]			forKey:RIGHT_BUTTON_BEHAVIOR_KEY];
+	[initialDefaults setObject:[NSNumber numberWithInteger:RotateModeTrackball]				forKey:ROTATE_MODE_KEY];
+	[initialDefaults setObject:[NSNumber numberWithInteger:MouseWheelScrolls]				forKey:MOUSE_WHEEL_BEHAVIOR_KEY];
+
 
 	[initialDefaults setObject:[NSNumber numberWithInteger:NSDrawerClosedState]	forKey:PART_BROWSER_DRAWER_STATE];
 	[initialDefaults setObject:(id)kCFBooleanTrue								forKey:PART_BROWSER_PANEL_SHOW_AT_LAUNCH];
