@@ -1431,8 +1431,8 @@
 	
 	//Now rotate the model around the visual "up" and "down" directions.
 	glMatrixMode(GL_MODELVIEW);
-	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
+	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	
 	if([self->delegate respondsToSelector:@selector(LDrawGLRendererMouseNotPositioning:)])
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
