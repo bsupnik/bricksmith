@@ -2422,8 +2422,8 @@
 		if(USE_TURNTABLE)
 		{
 			Tuple3 view_now = [self viewingAngle];
-			if(view_now.y > 0.0)
-			rotationAboutY = -rotationAboutY;
+			if(view_now.x * view_now.y * view_now.z < 0.0)
+				rotationAboutY = -rotationAboutY;
 		}
 
 		
