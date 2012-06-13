@@ -225,8 +225,14 @@ typedef enum
 - (TransformComponents) LDrawGLRendererPreferredPartTransform:(LDrawGLRenderer*)renderer;
 
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer dragHandleDidMove:(LDrawDragHandle *)dragHandle;
+
+- (void) markPreviousSelection:(LDrawGLRenderer*)renderer;
+- (void) unmarkPreviousSelection:(LDrawGLRenderer*)renderer;
+
+
 
 @end
 

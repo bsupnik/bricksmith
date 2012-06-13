@@ -2578,6 +2578,25 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend
+{
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:byExtendingSelection:)])
+	{
+		[self->delegate LDrawGLView:self wantsToSelectDirectives:directivesToSelect byExtendingSelection:shouldExtend];
+	}
+}
+
+- (void) markPreviousSelection:(LDrawGLRenderer*)renderer
+{
+	if([self->delegate respondsToSelector:@selector(markPreviousSelection)])
+		[self->delegate markPreviousSelection];
+}
+
+- (void) unmarkPreviousSelection:(LDrawGLRenderer*)renderer
+{
+	if([self->delegate respondsToSelector:@selector(unmarkPreviousSelection)])
+		[self->delegate unmarkPreviousSelection];
+}
 
 //========== LDrawGLRenderer:willBeginDraggingHandle: ==========================
 //

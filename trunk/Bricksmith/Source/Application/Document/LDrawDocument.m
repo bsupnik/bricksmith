@@ -77,6 +77,7 @@
 		[self setDocumentContents:[LDrawFile file]];
 		[self setGridSpacingMode:gridModeMedium];
     }
+	markedSelection = NULL;
     return self;
 	
 }//end init
@@ -3178,6 +3179,55 @@
 
 
 //**** LDrawGLView ****
+
+- (void) markPreviousSelection
+{
+	if(self->markedSelection)
+	{
+		[self->markedSelection release];
+		markedSelection = NULL;
+	}
+	
+	markedSelection = [fileContentsOutline selectedRowIndexes];
+	[markedSelection retain];	
+}
+
+- (void) unmarkPreviousSelection
+{
+	if(markedSelection)
+	{
+		[markedSelection release];
+		markedSelection = NULL;
+	}
+}
+
+- (void)	LDrawGLView:(LDrawGLView *)glView
+ wantsToSelectDirectives:(NSArray *)directiveToSelect
+   byExtendingSelection:(BOOL) shouldExtend
+{
+	if(markedSelection)
+	{
+		[fileContentsOutline selectRowIndexes:markedSelection byExtendingSelection:NO];
+		int i;
+		
+		if([directiveToSelect count])		
+		for(i = 0; i < [directiveToSelect count]; ++i)
+		{
+			LDrawDirective * d;
+			d = [directiveToSelect objectAtIndex:i];
+			[self selectDirective:d byExtendingSelection:(i == 0 ? shouldExtend:YES)];
+		}
+		else if (!shouldExtend)
+		{
+			[self selectDirective:nil byExtendingSelection:NO];
+		}
+		
+	}
+	
+}//end LDrawGLView:wantsToSelectDirective:byExtendingSelection:
+
+
+
 //========== LDrawGLView:wantsToSelectDirective:byExtendingSelection: ==========
 //
 // Purpose:		The given LDrawView has decided some directive should be 

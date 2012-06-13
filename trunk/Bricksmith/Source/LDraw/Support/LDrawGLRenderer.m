@@ -1103,6 +1103,9 @@
 	// This might be the start of a new drag; start collecting frames per second
 	fpsStartTime = [NSDate timeIntervalSinceReferenceDate];
 	framesSinceStartTime = 0;
+	
+		[self->delegate markPreviousSelection:self];
+	
 }
 
 
@@ -1143,6 +1146,8 @@
 	
 	self->activeDragHandle = nil;
 	self->isTrackingDrag = NO; //not anymore.
+
+		[self->delegate unmarkPreviousSelection:self];
 }
 
 
@@ -1248,6 +1253,7 @@
 					 && extendSelection == YES
 					)
 			  )
+			if(clickedDirective || !extendSelection)
 			{
 				// Notify our delegate about this momentous event.
 				// It's okay to send nil; that means "deselect."
@@ -1272,7 +1278,7 @@
 {
 //	NSArray			*fastDrawParts		= nil;
 	NSArray			*fineDrawParts		= nil;
-	LDrawDirective	*clickedDirective	= nil;
+//	LDrawDirective	*clickedDirective	= nil;
 	
 	// Only try to select if we are actually drawing something, and can actually 
 	// select it. 
@@ -1288,35 +1294,11 @@
 										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 										fastDraw:NO];
 
-				
-		int i;
-		for (i = 0; i < [fineDrawParts count]; ++i)
-		{		
-			clickedDirective = [fineDrawParts objectAtIndex:i];
-			
-			// Normal selection
-			self->activeDragHandle = nil;
-			
-			// ----------------
-			// If the clicked part is already selected, calling this method will 
-			// deselect it. Generally, we want to leave the current selection 
-			// intact (so we can drag it, maybe). The exception is 
-			// multiple-selection mode, which means we actually *want* to 
-			// deselect it. 
-			if(		[clickedDirective isSelected] == NO
-			   ||	(	[clickedDirective isSelected] == YES // allow deselection
-					 && extendSelection == YES
-					)
-			  )
-			{
-				// Notify our delegate about this momentous event.
-				// It's okay to send nil; that means "deselect."
-				// We want to add this to the current selection if the shift key is down.
-				[self->delegate LDrawGLRenderer:self
-						 wantsToSelectDirective:clickedDirective
-						   byExtendingSelection:(i > 0 ? YES:extendSelection) ];
-			}
-		}
+
+		[self->delegate LDrawGLRenderer:self
+			 wantsToSelectDirectives:fineDrawParts
+			   byExtendingSelection:extendSelection ];
+		
 	}
 
 	self->didPartSelection = YES;
