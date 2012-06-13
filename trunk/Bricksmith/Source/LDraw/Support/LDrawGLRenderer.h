@@ -148,7 +148,7 @@ typedef enum
 - (void) mouseUp;
 
 - (void) mouseCenterClick:(Point2)viewClickedPoint;
-- (void) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;
+- (BOOL) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;						// Returns TRUE if we hit any parts at all.
 - (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
 
 - (void) mouseZoomInClick:(Point2)viewClickedPoint;

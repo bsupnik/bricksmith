@@ -1193,7 +1193,7 @@
 //				six times faster than just drawing the whole model.
 //
 //==============================================================================
-- (void) mouseSelectionClick:(Point2)point_view
+- (BOOL) mouseSelectionClick:(Point2)point_view
 			 extendSelection:(BOOL)extendSelection
 {
 	NSArray			*fastDrawParts		= nil;
@@ -1260,6 +1260,8 @@
 	}
 
 	self->didPartSelection = YES;
+	
+	return (clickedDirective == nil) ? NO : YES;
 	
 }//end mousePartSelection:
 

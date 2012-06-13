@@ -1457,6 +1457,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	[[self openGLContext] makeCurrentContext];
 
 	// Reset event tracking flags.
+
+	selectionIsMarquee = FALSE;
+
 	[self->renderer mouseDown];
 	
 	[self resetCursor];
@@ -1482,9 +1485,7 @@ static Size2 NSSizeToSize2(NSSize size)
 	{
 		switch(draggingBehavior)
 		{
-			case MouseDraggingOff:
-					
-				[self mousePartSelection:theEvent];
+			case MouseDraggingOff:					
 				break;
 			
 			case MouseDraggingBeginAfterDelay:
@@ -1555,9 +1556,7 @@ static Size2 NSSizeToSize2(NSSize size)
 		switch(draggingBehavior)
 		{
 			case MouseDraggingOff:
-//				[self->renderer rotationDragged:dragDelta];
-					[self mousePartSelection:theEvent];
-
+				[self->renderer rotationDragged:dragDelta];
 				break;
 				
 			case MouseDraggingBeginAfterDelay:
@@ -1570,14 +1569,21 @@ static Size2 NSSizeToSize2(NSSize size)
 				break;			
 				
 			case MouseDraggingBeginImmediately:
-				[self directInteractionDragged:theEvent];
+				if (selectionIsMarquee)
+					[self mousePartSelection:theEvent];				
+				else
+					[self directInteractionDragged:theEvent				];
 				break;
 				
 			case MouseDraggingImmediatelyInOrthoNeverInPerspective:
 				if([self->renderer projectionMode] == ProjectionModePerspective)
 					[self->renderer rotationDragged:dragDelta];
-				else
-					[self directInteractionDragged:theEvent];
+				else {
+					if (selectionIsMarquee)
+						[self mousePartSelection:theEvent];				
+					else
+						[self directInteractionDragged:theEvent				];
+				}
 				break;
 		}
 	}
@@ -1627,6 +1633,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	
 	[self->renderer mouseUp];
 	[self resetCursor];
+
+	selectionIsMarquee = FALSE;
+	
 	
 }//end mouseUp:
 
@@ -1946,8 +1955,8 @@ static Size2 NSSizeToSize2(NSSize size)
 		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
 		
-		[self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
-							extendSelection:extendSelection];
+		selectionIsMarquee = ![self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
+															extendSelection:extendSelection];
 	}
 }//end mousePartSelection:
 

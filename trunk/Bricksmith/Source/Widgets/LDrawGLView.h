@@ -56,8 +56,9 @@
 	
 	// Event Tracking
 	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
-	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
+	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.  This is based on the timeout for delayed drag mode.
 	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
+	BOOL					selectionIsMarquee;		// Remembers when a select-click misses and can thus start a marquee.  Only if we HIT an object can we start dragging.
 	NSEventType				startingGestureType;
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
 	
