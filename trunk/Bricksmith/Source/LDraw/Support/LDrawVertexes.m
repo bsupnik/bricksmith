@@ -181,18 +181,23 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 		  viewScale:(float)scaleFactor 
 		  boundsOnly:(BOOL)boundsOnly 
 		  creditObject:(id)creditObject 
-		  hits:(NSMutableDictionary *)hits
+		  hits:(NSMutableSet *)hits
 {
 	NSArray     *commands           = nil;
 	NSUInteger  commandCount        = 0;
 	LDrawStep   *currentDirective   = nil;
 	NSUInteger  counter             = 0;
+
+	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
 	
 	// Triangles
 	commands        = triangles;
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+	
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
@@ -201,6 +206,9 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
@@ -209,6 +217,9 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
@@ -217,6 +228,9 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}

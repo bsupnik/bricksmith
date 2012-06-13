@@ -1223,11 +1223,6 @@
 										amongDirectives:fastDrawParts
 											   fastDraw:NO];
 
-//		fineDrawParts = [self getDirectivesUnderRect:
-//										V2Make(0,1000) to:point_view
-//										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-//										fastDraw:NO];
-
 				
 		if([fineDrawParts count] > 0)
 			clickedDirective = [fineDrawParts objectAtIndex:0];
@@ -1289,8 +1284,17 @@
 		//first do hit-testing on nothing but the bounding boxes; that is very fast 
 		// and likely eliminates a lot of parts.
 
+		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
+		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
+
+//		fastDrawParts = [self getDirectivesUnderRect:
+//										point_start to:point_end
+//										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+//										fastDraw:YES];
+
 		fineDrawParts = [self getDirectivesUnderRect:
 										point_start to:point_end
+//										amongDirectives:fastDrawParts
 										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 										fastDraw:NO];
 
@@ -2044,7 +2048,7 @@
 		Box2				viewport	            = [self viewport];
 		GLfloat             projectionGLMatrix[16]  = {0.0};
 		GLfloat             modelViewGLMatrix[16]   = {0.0};
-		NSMutableDictionary *hits                   = [NSMutableDictionary dictionary];
+		NSMutableSet		*hits                   = [NSMutableSet set];
 		NSUInteger          counter                 = 0;
 		
 		// Get view and projection
@@ -2095,8 +2099,15 @@
 										   creditObject:nil
 												   hits:hits];
 		}
+
+		NSMutableArray * collected = [NSMutableArray arrayWithCapacity:[hits count]];
+		clickedDirectives = collected;
 		
-		clickedDirectives = [self getPartsFromHits:hits];
+		for(NSValue *key in hits)
+		{
+			LDrawDirective * currentDirective    = [key pointerValue];
+			[collected addObject:currentDirective];
+		}
 	}
 
 	return clickedDirectives;

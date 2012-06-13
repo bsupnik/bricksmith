@@ -295,7 +295,7 @@
 		viewScale:(float)scaleFactor 
 		boundsOnly:(BOOL)boundsOnly 
 		creditObject:(id)creditObject 
-		hits:(NSMutableDictionary *)hits
+		hits:(NSMutableSet *)hits
 {
 	[activeModel convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 }

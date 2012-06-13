@@ -272,16 +272,21 @@
 		viewScale:(float)scaleFactor 
 		boundsOnly:(BOOL)boundsOnly 
 		creditObject:(id)creditObject 
-		hits:(NSMutableDictionary *)hits
+		hits:(NSMutableSet *)hits
 {
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
 	LDrawStep   *currentDirective   = nil;
 	NSUInteger  counter             = 0;
+
+	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
 	
 	// Draw all the steps in the model
 	for(counter = 0; counter <= maxIndex; counter++)
 	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
 		currentDirective = [steps objectAtIndex:counter];
 		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}

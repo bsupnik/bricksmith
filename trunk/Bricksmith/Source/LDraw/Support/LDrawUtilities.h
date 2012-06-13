@@ -66,6 +66,7 @@ typedef enum
 
 // Hit Detection
 + (void) registerHitForObject:(id)hitObject depth:(float)depth creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;
++ (void) registerHitForObject:(id)hitObject creditObject:(id)creditObject hits:(NSMutableSet *)hits;
 
 // Miscellaneous
 + (Tuple3) angleForViewOrientation:(ViewOrientationT)orientation;

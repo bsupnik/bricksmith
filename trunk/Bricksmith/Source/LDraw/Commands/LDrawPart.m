@@ -404,7 +404,7 @@
 		  viewScale:(float)scaleFactor 
 		  boundsOnly:(BOOL)boundsOnly 
 		  creditObject:(id)creditObject 
-		  hits:(NSMutableDictionary *)hits
+		  hits:(NSMutableSet *)hits
 {
 	if(self->hidden == NO)
 	{
@@ -424,10 +424,15 @@
 			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
 		}
 		
-		if(boundsOnly == NO)
+//		if(boundsOnly == NO)
 		{
 			[modelToDraw convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
+		
+		// This code is WRONG and needs help!  The problem is that if we select entirely inside the bounds of our unit cube, we'll miss the cube an the rough
+		// cull fails.  We need a better hit test!
+		
+/*
 		else
 		{
 			// Hit test the bounding cube
@@ -444,6 +449,7 @@
 			
 			[unitCube convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
+*/
 	}
 }
 

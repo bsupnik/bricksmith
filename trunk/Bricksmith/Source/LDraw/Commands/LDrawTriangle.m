@@ -264,7 +264,7 @@
 		  viewScale:(float)scaleFactor 
 		  boundsOnly:(BOOL)boundsOnly 
 		  creditObject:(id)creditObject 
-		  hits:(NSMutableDictionary *)hits
+		  hits:(NSMutableSet *)hits
 {
 	if(self->hidden == NO)
 	{
@@ -283,7 +283,7 @@
 
 		if(intersects)
 		{
-			[LDrawUtilities registerHitForObject:self depth:0 creditObject:creditObject hits:hits];
+			[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
 		}
 
 	}

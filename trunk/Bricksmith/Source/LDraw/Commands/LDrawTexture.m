@@ -264,7 +264,7 @@
 		viewScale:(float)scaleFactor 
 		boundsOnly:(BOOL)boundsOnly 
 		creditObject:(id)creditObject 
-		hits:(NSMutableDictionary *)hits
+		hits:(NSMutableSet *)hits
 {
 	NSArray     *commands			= [self subdirectives];
 	NSUInteger  commandCount        = [commands count];
