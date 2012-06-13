@@ -175,6 +175,55 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	}
 }
 
+- (void) convexTest:(Plane4 *)planes 
+			  count:(int)num_planes 
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		  boundsOnly:(BOOL)boundsOnly 
+		  creditObject:(id)creditObject 
+		  hits:(NSMutableDictionary *)hits
+{
+	NSArray     *commands           = nil;
+	NSUInteger  commandCount        = 0;
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	
+	// Triangles
+	commands        = triangles;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// Quadrilaterals
+	commands        = quadrilaterals;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// Lines
+	commands        = lines;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// All else
+	commands        = everythingElse;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+
+}
+
+
 
 #pragma mark -
 #pragma mark ACCESSORS

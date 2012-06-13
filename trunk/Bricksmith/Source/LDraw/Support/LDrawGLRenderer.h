@@ -100,7 +100,7 @@ typedef enum
 - (void) prepareOpenGL;
 
 // Drawing
-- (void) draw;
+- (void) draw:(Point2) from to:(Point2) to;
 
 // Accessors
 - (LDrawDragHandle*) activeDragHandle;
@@ -149,6 +149,8 @@ typedef enum
 
 - (void) mouseCenterClick:(Point2)viewClickedPoint;
 - (void) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
+
 - (void) mouseZoomInClick:(Point2)viewClickedPoint;
 - (void) mouseZoomOutClick:(Point2)viewClickedPoint;
 
@@ -173,6 +175,7 @@ typedef enum
 
 // Utilities
 - (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
+- (NSArray *) getDirectivesUnderRect:(Point2)bottom_left to:(Point2)top_right amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
 - (void) resetFrameSize;

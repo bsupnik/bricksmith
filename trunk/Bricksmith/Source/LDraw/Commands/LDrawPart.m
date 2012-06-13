@@ -398,6 +398,56 @@
 	}
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
+- (void) convexTest:(Plane4 *)planes 
+			  count:(int)num_planes 
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		  boundsOnly:(BOOL)boundsOnly 
+		  creditObject:(id)creditObject 
+		  hits:(NSMutableDictionary *)hits
+{
+	if(self->hidden == NO)
+	{
+		Matrix4     partTransform       = [self transformationMatrix];
+		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
+		LDrawModel  *modelToDraw        = nil;
+		
+		// Credit all subgeometry to ourselves (unless we are already a child part)
+		if(creditObject == nil)
+		{
+			creditObject = self;
+		}
+		
+		modelToDraw	= [self referencedMPDSubmodel];
+		if(modelToDraw == nil)
+		{
+			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
+		}
+		
+		if(boundsOnly == NO)
+		{
+			[modelToDraw convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+		}
+		else
+		{
+			// Hit test the bounding cube
+			LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
+			Box3            bounds      = [modelToDraw boundingBox3];
+			Tuple3          extents     = V3Sub(bounds.max, bounds.min);
+			Matrix4	boxTransform = IdentityMatrix4;
+			
+			// Expand and position the unit cube to match the model
+			boxTransform = Matrix4Scale(boxTransform, extents);
+			boxTransform = Matrix4Translate(boxTransform, bounds.min);
+			
+			combinedTransform = Matrix4Multiply(boxTransform, partTransform);
+			
+			[unitCube convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+		}
+	}
+}
+
+
 
 //========== write =============================================================
 //

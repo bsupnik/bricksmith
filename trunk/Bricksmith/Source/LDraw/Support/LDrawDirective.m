@@ -239,6 +239,17 @@
 	//subclasses should override this with hit-detection code
 }
 
+- (void) convexTest:(Plane4 *)planes 
+			  count:(int)num_planes 
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		  boundsOnly:(BOOL)boundsOnly 
+		  creditObject:(id)creditObject 
+		  hits:(NSMutableDictionary *)hits
+{
+}
+
+
 
 //========== write =============================================================
 //

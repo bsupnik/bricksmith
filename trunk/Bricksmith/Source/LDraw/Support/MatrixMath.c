@@ -1409,6 +1409,14 @@ Vector4 V4MulPointByMatrix(Vector4 pin, Matrix4 m)
 	
 }//end V4MulPointByMatrix
 
+float	V4Dot(Vector4 a, Vector4 b)
+{
+	return a.x * b.x + 
+		   a.y * b.y +
+		   a.z * b.z +
+		   a.w * b.w;
+}
+
 
 #pragma mark -
 
@@ -2171,3 +2179,52 @@ void Matrix4Print(Matrix4 *matrix)
 	
 }//end Matrix4Print
 
+
+float	Plane4SignedDistance(const Plane4 pln, const Point3 pin)
+{
+	return	pln.x * pin.x + 
+			pln.y * pin.y + 
+			pln.z * pin.z + 
+			pln.w;
+}
+
+int		Plane4Side(const Plane4 pln, const Point3 pin)
+{
+	float sd = Plane4SignedDistance(pln,pin);
+	if(sd > 0.0f) return 1;
+	if(sd < 0.0f) return -1;
+	return 0;
+}
+
+Plane4	Plane4Make(const Point3 pin, const Vector3 nrm)
+{
+	Plane4 ret;
+	ret.x = nrm.x;
+	ret.y = nrm.y;
+	ret.z = nrm.z;
+	ret.w = -V3Dot(pin,nrm);
+	return ret;
+}
+
+int		Plane4InsideConvex(const Plane4 * planes, int num_planes, Point3 pin)
+{	
+	int n;
+	for(n = 0; n < num_planes; ++n)
+	if(Plane4Side(planes[n],pin) < 0)
+		return 0;
+	return 1;
+}
+
+Plane4	Plane4Normalize(const Plane4 pln)
+{
+	Plane4 ret = pln;
+	float len = sqrt(pln.x * pln.x + pln.y * pln.y + pln.z * pln.z);
+	if(len != 0.0)
+	{
+		ret.x /= len;
+		ret.y /= len;
+		ret.z /= len;
+		ret.w /= len;
+	}
+	return ret;
+}

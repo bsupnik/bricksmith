@@ -116,7 +116,7 @@ typedef struct
 {
 	float x,y,z,w;
 	
-} Point4, Vector4, Tuple4;
+} Point4, Vector4, Tuple4, Plane4;
 
 
 // Transformation components; the data encoded in a transformation matrix.
@@ -293,6 +293,7 @@ extern Matrix3	Matrix3MakeNormalTransformFromProjMatrix(Matrix4 transformationMa
 extern Vector4	V4Make(float x, float y, float z, float w);
 extern Point4	V4FromPoint3(Vector3 originalPoint);
 extern Vector4	V4MulPointByMatrix(Vector4 pin, Matrix4 m);
+extern float	V4Dot(Vector4 a, Vector4 b);
 extern Matrix4	Matrix4CreateFromGLMatrix4(const GLfloat *glMatrix);
 extern Matrix4	Matrix4CreateTransformation(TransformComponents *);
 extern int		Matrix4DecomposeTransformation( Matrix4 originalMatrix, TransformComponents *decomposed);
@@ -310,6 +311,9 @@ extern Matrix4	Matrix4Invert(Matrix4 in);
 extern void		Matrix4Adjoint( Matrix4 *, Matrix4 * );
 extern float	Matrix4x4Determinant( Matrix4 * );
 extern void		Matrix4Print(Matrix4 *matrix);
-
-
+extern float	Plane4SignedDistance(const Plane4 pln, const Point3 pin);
+extern int		Plane4Side(const Plane4 pln, const Point3 pin);
+extern int		Plane4InsideConvex(const Plane4 * planes, int num_planes, Point3 pin);
+extern Plane4	Plane4Make(const Point3 pin, const Vector3 nrm);
+extern Plane4	Plane4Normalize(const Plane4 pln);
 #endif // _MatrixMath_

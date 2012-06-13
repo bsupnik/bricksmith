@@ -289,6 +289,17 @@
 	[activeModel hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 }
 
+- (void) convexTest:(Plane4 *)planes 
+		count:(int)num_planes 
+		transform:(Matrix4)transform 
+		viewScale:(float)scaleFactor 
+		boundsOnly:(BOOL)boundsOnly 
+		creditObject:(id)creditObject 
+		hits:(NSMutableDictionary *)hits
+{
+	[activeModel convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+}
+
 
 //========== write =============================================================
 //

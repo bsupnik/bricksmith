@@ -179,7 +179,7 @@
 //				OpenGL implementation is. Which is to say, not very much.
 //
 //==============================================================================
-- (void) draw
+- (void) draw:(Point2) from to:(Point2) to
 {
 	NSDate				*startTime			= nil;
 	NSUInteger			 options			= DRAW_NO_OPTIONS;
@@ -213,6 +213,39 @@
 	[self->fileBeingDrawn draw:options
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
+
+
+	if(from.x != to.x || from.y != to.y)
+	{
+
+		Point2	p1 = [self convertPointToViewport:from];
+		Point2	p2 = [self convertPointToViewport:to];
+
+		Box2	vp = [self viewport];
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(V2BoxMinX(vp),V2BoxMaxX(vp),V2BoxMinY(vp),V2BoxMaxY(vp),-1,1);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		
+		glColor4f(0,0,0,1);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(p1.x,p1.y);
+		glVertex2f(p2.x,p1.y);
+		glVertex2f(p2.x,p2.y);
+		glVertex2f(p1.x,p2.y);
+		glEnd();
+		
+
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+
+
 	
 	[self->delegate LDrawGLRendererNeedsFlush:self];
 	
@@ -1175,6 +1208,7 @@
 	{
 		//first do hit-testing on nothing but the bounding boxes; that is very fast 
 		// and likely eliminates a lot of parts.
+
 		fastDrawParts	= [self getDirectivesUnderPoint:point_view
 										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 											   fastDraw:YES];
@@ -1183,7 +1217,13 @@
 		fineDrawParts	= [self getDirectivesUnderPoint:point_view
 										amongDirectives:fastDrawParts
 											   fastDraw:NO];
-		
+
+//		fineDrawParts = [self getDirectivesUnderRect:
+//										V2Make(0,1000) to:point_view
+//										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+//										fastDraw:NO];
+
+				
 		if([fineDrawParts count] > 0)
 			clickedDirective = [fineDrawParts objectAtIndex:0];
 			
@@ -1215,6 +1255,64 @@
 				[self->delegate LDrawGLRenderer:self
 						 wantsToSelectDirective:clickedDirective
 						   byExtendingSelection:extendSelection ];
+			}
+		}
+	}
+
+	self->didPartSelection = YES;
+	
+}//end mousePartSelection:
+
+
+
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
+			 extendSelection:(BOOL)extendSelection
+{
+//	NSArray			*fastDrawParts		= nil;
+	NSArray			*fineDrawParts		= nil;
+	LDrawDirective	*clickedDirective	= nil;
+	
+	// Only try to select if we are actually drawing something, and can actually 
+	// select it. 
+	if(		self->fileBeingDrawn != nil
+	   &&	self->allowsEditing == YES
+	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
+	{
+		//first do hit-testing on nothing but the bounding boxes; that is very fast 
+		// and likely eliminates a lot of parts.
+
+		fineDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+										fastDraw:NO];
+
+				
+		int i;
+		for (i = 0; i < [fineDrawParts count]; ++i)
+		{		
+			clickedDirective = [fineDrawParts objectAtIndex:i];
+			
+			// Normal selection
+			self->activeDragHandle = nil;
+			
+			// ----------------
+			// If the clicked part is already selected, calling this method will 
+			// deselect it. Generally, we want to leave the current selection 
+			// intact (so we can drag it, maybe). The exception is 
+			// multiple-selection mode, which means we actually *want* to 
+			// deselect it. 
+			if(		[clickedDirective isSelected] == NO
+			   ||	(	[clickedDirective isSelected] == YES // allow deselection
+					 && extendSelection == YES
+					)
+			  )
+			{
+				// Notify our delegate about this momentous event.
+				// It's okay to send nil; that means "deselect."
+				// We want to add this to the current selection if the shift key is down.
+				[self->delegate LDrawGLRenderer:self
+						 wantsToSelectDirective:clickedDirective
+						   byExtendingSelection:(i > 0 ? YES:extendSelection) ];
 			}
 		}
 	}
@@ -1935,6 +2033,95 @@
 	return clickedDirectives;
 	
 }//end getDirectivesUnderMouse:amongDirectives:fastDraw:
+
+
+
+
+- (NSArray *)  getDirectivesUnderRect:(Point2)bottom_left 
+								   to:(Point2)top_right 
+					  amongDirectives:(NSArray *)directives
+							 fastDraw:(BOOL)fastDraw
+{
+	NSArray	*clickedDirectives	= nil;
+	
+	if([directives count] == 0)
+	{
+		// If there's nothing to test in, there's no work to do!
+		clickedDirectives = [NSArray array];
+	}
+	else
+	{
+		Point2              bl						= [self convertPointToViewport:bottom_left];
+		Point2              tr						= [self convertPointToViewport:top_right];
+//		Point3              contextNear             = ZeroPoint3;
+//		Point3              contextFar              = ZeroPoint3;
+//		Ray3                pickRay                 = {{0}};
+//		Point3              pickRay_end             = ZeroPoint3;
+		Box2				viewport	            = [self viewport];
+		GLfloat             projectionGLMatrix[16]  = {0.0};
+		GLfloat             modelViewGLMatrix[16]   = {0.0};
+		NSMutableDictionary *hits                   = [NSMutableDictionary dictionary];
+		NSUInteger          counter                 = 0;
+		
+		// Get view and projection
+		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
+		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
+
+		// These are the six sides of a clipping frustum in...clip coordinates.  The bounding box of the marquee
+		// selection can be thought of as four sides of a frustum - that frustum of course is normal to the camera
+		// in CLIP space - if it wasn't, we'd see a 3-d selection and not just a thin 2-d rectangle.
+		//
+		// So the w coordiante of each plane is -dot(normal,point on plane).  We use interpolation to go back
+		// from viewport pixel coords to clip coords.
+
+		Plane4	near_clip = V4Make(0,0, -1, 1);
+		Plane4	far_clip  = V4Make(0,0,  1, 1);
+		Plane4	left_clip = V4Make(1,0,0,	-((MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0));
+		Plane4	right_clip = V4Make(-1,0,0,	  (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0 );
+		Plane4	bottom_clip = V4Make(0,1,0,	-((MIN(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0));
+		Plane4	top_clip = V4Make(0,-1,0,	  (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 );
+		
+		// Slightly weird: we transform a PLANE by M by transposing its V4 by the inverse(transpose(M)).  
+		// But since we want to apply the INVERSE of the mvp matrix, we want transpose(inverse(inverse(mpv)))
+		// and the inversions (one to go from clip to mv coords and one for planes) cancel out.  Thus we just
+		// use the transposed mvp matrix.
+		
+		Matrix4	invtranmvp =
+								Matrix4Transpose(
+									Matrix4Multiply(
+										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
+										Matrix4CreateFromGLMatrix4(projectionGLMatrix)));
+
+		Plane4 frustum[6] = {
+					Plane4Normalize(V4MulPointByMatrix(near_clip, invtranmvp)),
+					Plane4Normalize(V4MulPointByMatrix(far_clip, invtranmvp)),
+					Plane4Normalize(V4MulPointByMatrix(left_clip, invtranmvp)),
+					Plane4Normalize(V4MulPointByMatrix(right_clip, invtranmvp)),
+					Plane4Normalize(V4MulPointByMatrix(bottom_clip, invtranmvp)),
+					Plane4Normalize(V4MulPointByMatrix(top_clip, invtranmvp)) };
+
+		// Do hit test
+		for(counter = 0; counter < [directives count]; counter++)
+		{
+			[[directives objectAtIndex:counter] convexTest:frustum
+											      count:6
+											  transform:IdentityMatrix4
+											  viewScale:[self zoomPercentage]/100.
+											 boundsOnly:fastDraw
+										   creditObject:nil
+												   hits:hits];
+		}
+		
+		clickedDirectives = [self getPartsFromHits:hits];
+	}
+
+	return clickedDirectives;
+	
+}//end getDirectivesUnderMouse:amongDirectives:fastDraw:
+
+
+
+
 
 
 //========== getPartFromHits:hitCount: =========================================

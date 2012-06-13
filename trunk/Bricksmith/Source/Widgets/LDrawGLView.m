@@ -167,6 +167,8 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void) internalInit
 {
+	sel_start.x = sel_start.y = sel_end.x = sel_end.y = 0;
+	
 	NSOpenGLContext         *context            = nil;
 	NSOpenGLPixelFormat     *pixelFormat        = [LDrawApplication openGLPixelFormat];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -362,7 +364,8 @@ static Size2 NSSizeToSize2(NSSize size)
 		// ourselves, and defer to the last guy.
 		if(numberDrawRequests == 1)
 		{
-			[self->renderer draw];
+			[self->renderer draw:sel_start to:sel_end];
+			
 		}
 		//else we just drop the draw.
 	}
@@ -1480,7 +1483,8 @@ static Size2 NSSizeToSize2(NSSize size)
 		switch(draggingBehavior)
 		{
 			case MouseDraggingOff:
-				// do nothing
+					
+				[self mousePartSelection:theEvent];
 				break;
 			
 			case MouseDraggingBeginAfterDelay:
@@ -1551,7 +1555,9 @@ static Size2 NSSizeToSize2(NSSize size)
 		switch(draggingBehavior)
 		{
 			case MouseDraggingOff:
-				[self->renderer rotationDragged:dragDelta];
+//				[self->renderer rotationDragged:dragDelta];
+					[self mousePartSelection:theEvent];
+
 				break;
 				
 			case MouseDraggingBeginAfterDelay:
@@ -1591,6 +1597,12 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void) mouseUp:(NSEvent *)theEvent
 {
+	if(sel_start.x || sel_start.y || sel_end.x || sel_end.y)
+	{
+		sel_start.x = sel_start.y = sel_end.x = sel_end.y = 0;
+		[self setNeedsDisplay:TRUE];
+	}
+
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
 
 	[[self openGLContext] makeCurrentContext];
@@ -1893,25 +1905,50 @@ static Size2 NSSizeToSize2(NSSize size)
 // Purpose:		Attempt to select something in the model.
 //
 //==============================================================================
+
 - (void) mousePartSelection:(NSEvent *)theEvent
 {
 	NSPoint windowPoint     = [theEvent locationInWindow];
 	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
 	BOOL    extendSelection = NO;
 	
-	[[self openGLContext] makeCurrentContext];
+	if([theEvent type] == NSLeftMouseDown)
+		sel_start = sel_end = V2Make(viewPoint.x, viewPoint.y);
 
-	// Per the AHIG, both command and shift are used for multiple selection. In 
-	// Bricksmith, there is no difference between contiguous and non-contiguous 
-	// selection, so both keys do the same thing. 
-	// -- We desperately need simple modifiers for rotating the view. Otherwise, 
-	// I doubt people would discover it. 
-	extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
+	if([theEvent type] == NSLeftMouseDragged)
+	{
+		sel_end = V2Make(viewPoint.x, viewPoint.y);
+		[[self openGLContext] makeCurrentContext];
+
+		// Per the AHIG, both command and shift are used for multiple selection. In 
+		// Bricksmith, there is no difference between contiguous and non-contiguous 
+		// selection, so both keys do the same thing. 
+		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
+		// I doubt people would discover it. 
+		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
+	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
+		
+		[self->renderer mouseSelectionDrag:sel_start to:sel_end
+							extendSelection:extendSelection];
+							
+		[self setNeedsDisplay:TRUE];
+	}
+	else
+	{
 	
-	[self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
-						extendSelection:extendSelection];
-	
+		[[self openGLContext] makeCurrentContext];
+
+		// Per the AHIG, both command and shift are used for multiple selection. In 
+		// Bricksmith, there is no difference between contiguous and non-contiguous 
+		// selection, so both keys do the same thing. 
+		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
+		// I doubt people would discover it. 
+		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
+	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
+		
+		[self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
+							extendSelection:extendSelection];
+	}
 }//end mousePartSelection:
 
 

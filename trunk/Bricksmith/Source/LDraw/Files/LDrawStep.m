@@ -378,6 +378,28 @@
 	}
 }
 
+- (void) convexTest:(Plane4 *)planes 
+		count:(int)num_planes 
+		transform:(Matrix4)transform 
+		viewScale:(float)scaleFactor 
+		boundsOnly:(BOOL)boundsOnly 
+		creditObject:(id)creditObject 
+		hits:(NSMutableDictionary *)hits
+{
+	NSArray     *commandsInStep     = [self subdirectives];
+	NSUInteger  commandCount        = [commandsInStep count];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	
+	// Draw all the steps in the model
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commandsInStep objectAtIndex:counter];
+		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+
+}
+
 
 //========== write =============================================================
 //

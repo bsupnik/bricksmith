@@ -60,6 +60,9 @@
 	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
 	NSEventType				startingGestureType;
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
+	
+	Point2					sel_start;
+	Point2					sel_end;
 }
 
 - (void) internalInit;
