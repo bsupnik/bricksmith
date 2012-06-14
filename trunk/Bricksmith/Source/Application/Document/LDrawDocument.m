@@ -947,6 +947,50 @@
 	
 }//end selectDirective:byExtendingSelection:
 
+- (void) selectDirectives:(NSArray *) directivesToSelect
+{
+	NSInteger   indexToSelect   = 0;
+	NSInteger   counter         = 0;
+	NSInteger	d				= 0;
+	NSInteger	total			= [directivesToSelect count];
+	
+	if(total == 0)
+		[fileContentsOutline deselectAll:nil];
+	else
+	{
+		for(d = 0; d < total; ++d)
+		{
+			LDrawDirective * directive = [directivesToSelect objectAtIndex:d];			
+			NSArray     *ancestors      = [directive ancestors];
+
+			//Expand the hierarchy all the way down to the directive we are about to 
+			// select.
+			for(counter = 0; counter < [ancestors count]; counter++)
+				[fileContentsOutline expandItem:[ancestors objectAtIndex:counter]];
+		}
+
+		NSMutableIndexSet * indices = [NSMutableIndexSet indexSet];
+		
+		for(d = 0; d < total; ++d)
+		{
+			LDrawDirective * directive = [directivesToSelect objectAtIndex:d];			
+		
+			indexToSelect = [fileContentsOutline rowForItem:directive];
+		
+			if([indices containsIndex:indexToSelect])
+			{
+				[indices removeIndex:indexToSelect];			
+			}
+			else
+			{
+				[indices addIndex:indexToSelect];
+			}
+		
+		}
+		[fileContentsOutline selectRowIndexes:indices byExtendingSelection:NO];
+	}
+	
+}//end selectDirective:byExtendingSelection:
 
 //========== setSelectionToHidden: =============================================
 //
@@ -2961,6 +3005,7 @@
 			}
 		}
 	}
+
 	[[self documentContents] noteNeedsDisplay];
 	
 	//See if we just selected a new part; if so, we must remember it.
@@ -2968,7 +3013,7 @@
 		[self setLastSelectedPart:lastSelectedItem];
 	
 	[originalContext makeCurrentContext];
-	
+
 }//end outlineViewSelectionDidChange:
 
 
@@ -3188,7 +3233,7 @@
 		markedSelection = NULL;
 	}
 	
-	markedSelection = [fileContentsOutline selectedRowIndexes];
+	markedSelection = [self selectedObjects];
 	[markedSelection retain];	
 }
 
@@ -3202,21 +3247,30 @@
 }
 
 - (void)	LDrawGLView:(LDrawGLView *)glView
- wantsToSelectDirectives:(NSArray *)directiveToSelect
+ wantsToSelectDirectives:(NSArray *)directivesToSelect
    byExtendingSelection:(BOOL) shouldExtend
 {
 	if(markedSelection)
 	{
-		[fileContentsOutline selectRowIndexes:markedSelection byExtendingSelection:NO];
-		int i;
+		NSMutableArray * all = shouldExtend 
+			? [NSMutableArray arrayWithArray:markedSelection] 
+			: [NSMutableArray arrayWithArray:directivesToSelect] ;
 		
-		if([directiveToSelect count])		
-		for(i = 0; i < [directiveToSelect count]; ++i)
-		{
-			LDrawDirective * d;
-			d = [directiveToSelect objectAtIndex:i];
-			[self selectDirective:d byExtendingSelection:(i == 0 ? shouldExtend:YES)];
-		}
+		if(shouldExtend)
+		[all addObjectsFromArray:directivesToSelect];
+		
+		
+//		[fileContentsOutline selectRowIndexes:markedSelection byExtendingSelection:NO];
+		
+		if([all count])		
+			[self selectDirectives:all];
+
+//		for(i = 0; i < [all count]; ++i)
+//		{
+//			LDrawDirective * d;
+//			d = [all objectAtIndex:i];
+//			[self selectDirective:d byExtendingSelection:(i == 0 ? NO:YES)];
+//		}
 		else if (!shouldExtend)
 		{
 			[self selectDirective:nil byExtendingSelection:NO];
@@ -3563,6 +3617,7 @@
 		{
 			[[self documentContents] noteNeedsDisplay];
 		}
+
 		[fileContentsOutline reloadData];
 		
 		//Model menu needs to change if:

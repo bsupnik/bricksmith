@@ -201,7 +201,7 @@
 		options |= DRAW_BOUNDS_ONLY;
 	}
 #endif //DEBUG_DRAWING
-	
+
 	//Load the model matrix to make sure we are applying the right stuff.
 	glMatrixMode(GL_MODELVIEW);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1271,7 +1271,7 @@
 - (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
 			 extendSelection:(BOOL)extendSelection
 {
-//	NSArray			*fastDrawParts		= nil;
+	NSArray			*fastDrawParts		= nil;
 	NSArray			*fineDrawParts		= nil;
 //	LDrawDirective	*clickedDirective	= nil;
 	
@@ -1287,17 +1287,15 @@
 		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
 		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
 
-//		fastDrawParts = [self getDirectivesUnderRect:
-//										point_start to:point_end
-//										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-//										fastDraw:YES];
+		fastDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+										fastDraw:YES];
 
 		fineDrawParts = [self getDirectivesUnderRect:
 										point_start to:point_end
-//										amongDirectives:fastDrawParts
-										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+										amongDirectives:fastDrawParts
 										fastDraw:NO];
-
 
 		[self->delegate LDrawGLRenderer:self
 			 wantsToSelectDirectives:fineDrawParts
@@ -2055,45 +2053,21 @@
 		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
 		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
 
-		// These are the six sides of a clipping frustum in...clip coordinates.  The bounding box of the marquee
-		// selection can be thought of as four sides of a frustum - that frustum of course is normal to the camera
-		// in CLIP space - if it wasn't, we'd see a 3-d selection and not just a thin 2-d rectangle.
-		//
-		// So the w coordiante of each plane is -dot(normal,point on plane).  We use interpolation to go back
-		// from viewport pixel coords to clip coords.
+		float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
+		float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
 
-		Plane4	near_clip = V4Make(0,0, -1, 1);
-		Plane4	far_clip  = V4Make(0,0,  1, 1);
-		Plane4	left_clip = V4Make(1,0,0,	-((MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0));
-		Plane4	right_clip = V4Make(-1,0,0,	  (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0 );
-		Plane4	bottom_clip = V4Make(0,1,0,	-((MIN(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0));
-		Plane4	top_clip = V4Make(0,-1,0,	  (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 );
+		Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
 		
-		// Slightly weird: we transform a PLANE by M by transposing its V4 by the inverse(transpose(M)).  
-		// But since we want to apply the INVERSE of the mvp matrix, we want transpose(inverse(inverse(mpv)))
-		// and the inversions (one to go from clip to mv coords and one for planes) cancel out.  Thus we just
-		// use the transposed mvp matrix.
-		
-		Matrix4	invtranmvp =
-								Matrix4Transpose(
-									Matrix4Multiply(
+		Matrix4	mvp =			Matrix4Multiply(
 										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										Matrix4CreateFromGLMatrix4(projectionGLMatrix)));
-
-		Plane4 frustum[6] = {
-					Plane4Normalize(V4MulPointByMatrix(near_clip, invtranmvp)),
-					Plane4Normalize(V4MulPointByMatrix(far_clip, invtranmvp)),
-					Plane4Normalize(V4MulPointByMatrix(left_clip, invtranmvp)),
-					Plane4Normalize(V4MulPointByMatrix(right_clip, invtranmvp)),
-					Plane4Normalize(V4MulPointByMatrix(bottom_clip, invtranmvp)),
-					Plane4Normalize(V4MulPointByMatrix(top_clip, invtranmvp)) };
-
+										Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+										
 		// Do hit test
 		for(counter = 0; counter < [directives count]; counter++)
 		{
-			[[directives objectAtIndex:counter] convexTest:frustum
-											      count:6
-											  transform:IdentityMatrix4
+			[[directives objectAtIndex:counter] boxTest:test_box transform:mvp 
 											  viewScale:[self zoomPercentage]/100.
 											 boundsOnly:fastDraw
 										   creditObject:nil

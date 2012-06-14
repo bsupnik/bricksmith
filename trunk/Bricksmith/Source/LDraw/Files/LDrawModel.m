@@ -266,13 +266,12 @@
 	}
 }
 
-- (void) convexTest:(Plane4 *)planes 
-		count:(int)num_planes 
-		transform:(Matrix4)transform 
-		viewScale:(float)scaleFactor 
-		boundsOnly:(BOOL)boundsOnly 
-		creditObject:(id)creditObject 
-		hits:(NSMutableSet *)hits
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
 {
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
@@ -288,7 +287,7 @@
 			return;
 
 		currentDirective = [steps objectAtIndex:counter];
-		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
 }
 

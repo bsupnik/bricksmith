@@ -56,7 +56,7 @@
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
 ;
 - (void) hitTest:(Ray3)pickRay transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;
-- (void) convexTest:(Plane4 *)planes count:(int)num_planes transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableSet *)hits;
+- (void) boxTest:(Box2)bounds transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableSet *)hits;
 - (NSString *) write;
 
 // Display

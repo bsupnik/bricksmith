@@ -175,13 +175,12 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	}
 }
 
-- (void) convexTest:(Plane4 *)planes 
-			  count:(int)num_planes 
+- (void)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
 		  viewScale:(float)scaleFactor 
-		  boundsOnly:(BOOL)boundsOnly 
-		  creditObject:(id)creditObject 
-		  hits:(NSMutableSet *)hits
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
 {
 	NSArray     *commands           = nil;
 	NSUInteger  commandCount        = 0;
@@ -199,7 +198,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			return;
 	
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
 	// Quadrilaterals
 	commands        = quadrilaterals;
@@ -210,7 +209,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			return;
 
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
 	// Lines
 	commands        = lines;
@@ -221,7 +220,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			return;
 
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
 	// All else
 	commands        = everythingElse;
@@ -232,7 +231,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			return;
 
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective convexTest:planes count:num_planes transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
 
 }

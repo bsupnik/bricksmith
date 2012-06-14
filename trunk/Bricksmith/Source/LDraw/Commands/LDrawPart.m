@@ -391,20 +391,19 @@
 			boxTransform = Matrix4Scale(boxTransform, extents);
 			boxTransform = Matrix4Translate(boxTransform, bounds.min);
 			
-			combinedTransform = Matrix4Multiply(boxTransform, partTransform);
+			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
 			
 			[unitCube hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
 	}
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
-- (void) convexTest:(Plane4 *)planes 
-			  count:(int)num_planes 
+- (void)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
 		  viewScale:(float)scaleFactor 
-		  boundsOnly:(BOOL)boundsOnly 
-		  creditObject:(id)creditObject 
-		  hits:(NSMutableSet *)hits
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
 {
 	if(self->hidden == NO)
 	{
@@ -424,32 +423,26 @@
 			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
 		}
 		
-//		if(boundsOnly == NO)
+		if(boundsOnly == NO)
 		{
-			[modelToDraw convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+			[modelToDraw boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
-		
-		// This code is WRONG and needs help!  The problem is that if we select entirely inside the bounds of our unit cube, we'll miss the cube an the rough
-		// cull fails.  We need a better hit test!
-		
-/*
 		else
 		{
 			// Hit test the bounding cube
 			LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
-			Box3            bounds      = [modelToDraw boundingBox3];
-			Tuple3          extents     = V3Sub(bounds.max, bounds.min);
+			Box3            bounds_3d      = [modelToDraw boundingBox3];
+			Tuple3          extents     = V3Sub(bounds_3d.max, bounds_3d.min);
 			Matrix4	boxTransform = IdentityMatrix4;
 			
 			// Expand and position the unit cube to match the model
 			boxTransform = Matrix4Scale(boxTransform, extents);
-			boxTransform = Matrix4Translate(boxTransform, bounds.min);
+			boxTransform = Matrix4Translate(boxTransform, bounds_3d.min);
 			
-			combinedTransform = Matrix4Multiply(boxTransform, partTransform);
+			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
 			
-			[unitCube convexTest:planes count:num_planes transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+			[unitCube boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
-*/
 	}
 }
 

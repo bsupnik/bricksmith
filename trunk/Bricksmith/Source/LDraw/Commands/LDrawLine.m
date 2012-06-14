@@ -239,27 +239,23 @@
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
-- (void) convexTest:(Plane4 *)planes 
-			  count:(int)num_planes 
+- (void)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
 		  viewScale:(float)scaleFactor 
-		  boundsOnly:(BOOL)boundsOnly 
-		  creditObject:(id)creditObject 
-		  hits:(NSMutableSet *)hits
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
 {
 	if(self->hidden == NO)
 	{
 		Vector3 worldVertex1    = V3MulPointByProjMatrix(self->vertex1, transform);
 		Vector3 worldVertex2    = V3MulPointByProjMatrix(self->vertex2, transform);
 
-		bool intersects = false;
+		Point2	line[2] = { 
+			V2Make(worldVertex1.x,worldVertex1.y),
+			V2Make(worldVertex2.x,worldVertex2.y) };
 
-		if(Plane4InsideConvex(planes, num_planes, worldVertex1))
-			intersects = true;
-		else if(Plane4InsideConvex(planes, num_planes, worldVertex2))
-			intersects = true;
-
-		if(intersects)
+		if(V2BoxIntersectsPolygon(bounds, line, 2))
 		{
 			[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
 		}
@@ -267,6 +263,7 @@
 	}
 
 }
+
 
 
 //========== write =============================================================

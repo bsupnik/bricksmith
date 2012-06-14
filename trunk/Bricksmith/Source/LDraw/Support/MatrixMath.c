@@ -167,6 +167,17 @@ Box2 V2MakeBox(float x, float y, float width, float height)
 	return box;
 }
 
+Box2		V2MakeBoxCorners(Point2 p1, Point2 p2)
+{
+	Box2 box;
+	box.origin.x = MIN(p1.x,p2.x);
+	box.origin.y = MIN(p1.y,p2.y);
+	box.size.width = MAX(p1.x,p2.x) - box.origin.x;
+	box.size.height = MAX(p1.y,p2.y) - box.origin.y;
+	return box;
+}
+
+
 
 //========== V2MakeSize ========================================================
 //==============================================================================
@@ -283,6 +294,137 @@ Box2 V2BoxInset(Box2 box, float dX, float dY)
 	
 	return insetBox;
 }
+
+static float seg_y_at_x(Point2 p1, Point2 p2, float x)
+{ 	
+	if (p1.x == p2.x) 	return p1.y;
+	if (x == p1.x) 		return p1.y;
+	if (x == p2.x) 		return p2.y;
+	return p1.y + (p2.y - p1.y) * (x - p1.x) / (p2.x - p1.x); 
+}
+
+static float seg_x_at_y(Point2 p1, Point2 p2, float y)
+{
+	if (p1.y == p2.y) 	return p1.x;
+	if (y == p1.y) 		return p1.x;
+	if (y == p2.y) 		return p2.x;
+	return p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y); 
+}
+
+bool		V2BoxContains(Box2 box, Point2 pin)
+{
+	return pin.x >= V2BoxMinX(box) &&
+		   pin.x <= V2BoxMaxX(box) &&
+		   pin.y >= V2BoxMinY(box) &&
+		   pin.y <= V2BoxMaxY(box);
+}
+
+bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
+{
+	float x1 = V2BoxMinX(box);
+	float x2 = V2BoxMaxX(box);
+	float y1 = V2BoxMinY(box);
+	float y2 = V2BoxMaxY(box);
+	
+	if (!(pin1.x < x1 && pin2.x < x1) &&
+		!(pin1.x > x1 && pin2.x > x1))
+	{
+		float yp = seg_y_at_x(pin1,pin2,x1);
+		
+		if(yp >= y1 && yp <= y2)
+			return true;		
+	}
+
+	if (!(pin1.x < x2 && pin2.x < x2) &&
+		!(pin1.x > x2 && pin2.x > x2))
+	{
+		float yp = seg_y_at_x(pin1,pin2,x2);
+		
+		if(yp >= y1 && yp <= y2)
+			return true;		
+	}
+	
+	if (!(pin1.y < y1 && pin2.y < y1) &&
+		!(pin1.y > y1 && pin2.y > y1))
+	{
+		float xp = seg_x_at_y(pin1,pin2,y1);
+		
+		if(xp >= x1 && xp <= x2)
+			return true;		
+	}
+
+	if (!(pin1.y < y2 && pin2.y < y2) &&
+		!(pin1.y > y2 && pin2.y > y2))
+	{
+		float xp = seg_x_at_y(pin1,pin2,y2);
+		
+		if(xp >= x1 && xp <= x2)
+			return true;		
+	}
+
+
+
+
+
+	return false;
+
+
+}
+
+bool		V2PolygonContains(const Point2 * begin, int num_pts, Point2 pin)
+{
+	const Point2 * end = begin + num_pts;
+	int cross_counter = 0;
+	Point2		first_p = *begin;
+	Point2		s_p1;
+	Point2		s_p2;
+	
+	s_p1 = *begin;
+	++begin;
+
+	while (begin != end)
+	{
+		s_p2 = *begin;
+		if ((s_p1.x < pin.x && pin.x <= s_p2.x) ||
+			(s_p2.x < pin.x && pin.x <= s_p1.x))
+		if (pin.y > seg_y_at_x(s_p1,s_p2,pin.x))
+			++cross_counter;
+
+		s_p1 = s_p2;
+		++begin;
+	}
+	s_p2 = first_p;
+	if ((s_p1.x < pin.x && pin.x <= s_p2.x) ||
+		(s_p2.x < pin.x && pin.x <= s_p1.x))
+	if (pin.y > seg_y_at_x(s_p1, s_p2, pin.x))
+		++cross_counter;
+	return (cross_counter % 2) == 1;
+
+}
+
+bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
+{
+	int i, j;
+	
+	// Easy case: selection contains a point.  Do this first - it's fastest.
+	for(i = 0; i < num_pts; ++i)
+	if(V2BoxContains(bounds,poly[i]))
+		return true;
+	
+	for(i = 0; i < num_pts; ++i)
+	{
+		j = (i + 1) % num_pts;
+		if(V2BoxIntersectsLine(bounds,poly[i],poly[j]))
+			return true;
+	}
+	
+	if(num_pts < 3) 
+		return false;
+	else
+		// Final case: for non-degenerate case, marquee could be FULLY inside - test one point to be sure.
+		return V2PolygonContains(poly,num_pts,V2Make(V2BoxMidX(bounds),V2BoxMidY(bounds)));
+}
+
 
 
 #pragma mark -
@@ -2180,6 +2322,7 @@ void Matrix4Print(Matrix4 *matrix)
 }//end Matrix4Print
 
 
+/*
 float	Plane4SignedDistance(const Plane4 pln, const Point3 pin)
 {
 	return	pln.x * pin.x + 
@@ -2215,6 +2358,25 @@ int		Plane4InsideConvex(const Plane4 * planes, int num_planes, Point3 pin)
 	return 1;
 }
 
+int		Plane4SpansConvex(const Plane4 * planes, int num_planes, Point3 pin1, Point3 pin2)
+{
+	int n;
+	bool has_cross = false;
+	for(n = 0; n < num_planes; ++n)
+	{
+		int s1 = Plane4Side(planes[n],pin1);
+		int s2 = Plane4Side(planes[n],pin2);
+		
+		if(s1 < 0 && s2 < 0)
+			return 0;
+		
+		if(s1 == 0 || s2 == 0 || s1 != s2)
+			has_cross = true;
+	}
+	return has_cross ? 1 : 0;
+}
+
+
 Plane4	Plane4Normalize(const Plane4 pln)
 {
 	Plane4 ret = pln;
@@ -2228,3 +2390,18 @@ Plane4	Plane4Normalize(const Plane4 pln)
 	}
 	return ret;
 }
+
+void		InfPrismFromCCWPolygon(const Point3 * pts, const Vector3 nrm, int count, Plane4 * out_planes)
+{
+	int i, j;
+	for(i = 0; i < count; ++i)
+	{
+		j = (i + 1) % count;
+
+		Vector3	side = V3Sub(pts[j],pts[i]);
+		Vector3	in = V3Cross(nrm, side);
+		
+		out_planes[i] = Plane4Make(pts[i],in);
+	}
+}
+*/
