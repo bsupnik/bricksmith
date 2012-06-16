@@ -74,6 +74,7 @@ typedef enum
 	Size2					snugFrameSize;
 	LDrawColor				*color;					// default color to draw parts if none is specified
 	GLfloat                 glBackgroundColor[4];
+	Box2					selectionMarquee;		// in view coordinates. ZeroBox2 means no marquee.
 	ProjectionModeT         projectionMode;
 	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
 	ViewOrientationT        viewOrientation;		// our orientation
@@ -100,7 +101,7 @@ typedef enum
 - (void) prepareOpenGL;
 
 // Drawing
-- (void) draw:(Point2) from to:(Point2) to;
+- (void) draw;
 
 // Accessors
 - (LDrawDragHandle*) activeDragHandle;
@@ -112,6 +113,7 @@ typedef enum
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
+- (Box2) selectionMarquee;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
 - (Box2) viewport;
@@ -130,6 +132,7 @@ typedef enum
 - (void) setMaximumVisibleSize:(Size2)size;
 - (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
+- (void) setSelectionMarquee:(Box2)newBox;
 - (void) setTarget:(id)target;
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setViewOrientation:(ViewOrientationT) newAngle;
@@ -149,8 +152,6 @@ typedef enum
 
 - (void) mouseCenterClick:(Point2)viewClickedPoint;
 - (BOOL) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;						// Returns TRUE if we hit any parts at all.
-- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
-
 - (void) mouseZoomInClick:(Point2)viewClickedPoint;
 - (void) mouseZoomOutClick:(Point2)viewClickedPoint;
 
@@ -158,8 +159,7 @@ typedef enum
 - (void) panDragged:(Vector2)viewDirection location:(Point2)point_view;
 - (void) rotationDragged:(Vector2)viewDirection;
 - (void) zoomDragged:(Vector2)viewDirection;
-- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
-
+- (void) mouseSelectionDragToPoint:(Point2)point_view extendSelection:(BOOL)extendSelection;
 - (void) beginGesture;
 - (void) endGesture;
 - (void) rotateByDegrees:(float)angle;
@@ -176,7 +176,7 @@ typedef enum
 
 // Utilities
 - (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
-- (NSArray *) getDirectivesUnderRect:(Point2)bottom_left to:(Point2)top_right amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
+- (NSArray *) getDirectivesUnderRect:(Box2)rect_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
 - (void) resetFrameSize;

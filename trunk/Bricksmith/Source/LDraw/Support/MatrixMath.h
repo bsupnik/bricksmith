@@ -233,6 +233,7 @@ extern bool		FloatsApproximatelyEqual(float float1, float float2);
 extern Point2	V2Make(float x, float y);
 
 extern Box2		V2MakeBox(float x, float y, float width, float height);
+extern Box2		V2MakeBoxFromPoints(Point2 origin, Point2 maximum);
 extern Size2	V2MakeSize(float width, float height);
 extern bool		V2EqualBoxes(Box2 box1, Box2 box2);
 extern bool		V2EqualSizes(Size2 size1, Size2 size2);

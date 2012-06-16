@@ -4,6 +4,18 @@
 //
 // Purpose:		Draws an LDrawFile with OpenGL.
 //
+//				This class is responsible for all platform-independent logic, 
+//				including math and OpenGL operations. It also contains a number 
+//				of methods which would be called in response to events; it is 
+//				the responsibility of the platform layer to receive and 
+//				interpret those events and pass them to us. 
+//
+//				The "event" type methods here take high-level parameters. For 
+//				example, we don't check -- or want to know! -- if the option key 
+//				is down. The platform layer figures out stuff like that, and 
+//				more importantly, figures out what it *means*. The *meaning* is 
+//				what the renderer's methods care about. 
+//
 //  Created by Allen Smith on 4/17/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -49,6 +61,7 @@
 	zoomFactor						= 100; // percent
 	cameraDistance					= -10000;
 	isTrackingDrag					= NO;
+	selectionMarquee				= ZeroBox2;
 	projectionMode					= ProjectionModePerspective;
 	rotationDrawMode				= LDrawGLDrawNormal;
 	gridSpacing 					= 20.0;
@@ -171,21 +184,15 @@
 #pragma mark DRAWING
 #pragma mark -
 
-//========== draw:to ==============================================================
+//========== draw ==============================================================
 //
 // Purpose:		Draw the LDraw content of the view.
-//
-//				The rectangle of the marquee selection is passed in (in view space).
-//				Someday we might be able to better factor out "transient" info that
-//				the renderer needs to draw.
 //
 // Notes:		This method is, in theory at least, as thread-safe as Apple's 
 //				OpenGL implementation is. Which is to say, not very much.
 //
-//				If from == to then there is no marquee.
-//
 //==============================================================================
-- (void) draw:(Point2) from to:(Point2) to
+- (void) draw
 {
 	NSDate				*startTime			= nil;
 	NSUInteger			 options			= DRAW_NO_OPTIONS;
@@ -220,13 +227,13 @@
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
 
-	// Marquee selection box - only if non-zero.
-
-	if(from.x != to.x || from.y != to.y)
+	// Marquee selection box -- only if non-zero.
+	if( V2BoxWidth(self->selectionMarquee) != 0 && V2BoxHeight(self->selectionMarquee) != 0)
 	{
-
-		Point2	p1 = [self convertPointToViewport:from];
-		Point2	p2 = [self convertPointToViewport:to];
+		Point2	from	= self->selectionMarquee.origin;
+		Point2	to		= V2Make( V2BoxMaxX(selectionMarquee), V2BoxMaxY(selectionMarquee) );
+		Point2	p1		= [self convertPointToViewport:from];
+		Point2	p2		= [self convertPointToViewport:to];
 
 		Box2	vp = [self viewport];
 		glMatrixMode(GL_PROJECTION);
@@ -250,8 +257,6 @@
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
-
-
 	
 	[self->delegate LDrawGLRendererNeedsFlush:self];
 	
@@ -472,6 +477,14 @@
 	return self->projectionMode;
 	
 }//end projectionMode
+
+
+//========== selectionMarquee ==================================================
+//==============================================================================
+- (Box2) selectionMarquee
+{
+	return self->selectionMarquee;
+}
 
 
 //========== viewingAngle ======================================================
@@ -821,6 +834,18 @@
 } //end setProjectionMode:
 
 
+//========== setSelectionMarquee: ==============================================
+//
+// Purpose:		The box (in view coordinates) in which to draw the selection 
+//				marquee. 
+//
+//==============================================================================
+- (void) setSelectionMarquee:(Box2)newBox_view
+{
+	self->selectionMarquee = newBox_view;
+}
+
+
 //========== setTarget: ========================================================
 //
 // Purpose:		Sets the object which is the receiver of this view's action 
@@ -1144,13 +1169,15 @@
 - (void) mouseUp
 {
 	// Redraw from our dragging operations, if necessary.
-	if(	self->isTrackingDrag == YES && rotationDrawMode == LDrawGLDrawExtremelyFast )
+	if(		(self->isTrackingDrag == YES && rotationDrawMode == LDrawGLDrawExtremelyFast)
+	   ||	V2BoxWidth(self->selectionMarquee) || V2BoxHeight(self->selectionMarquee) )
 	{
 		[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	}
 	
 	self->activeDragHandle = nil;
 	self->isTrackingDrag = NO; //not anymore.
+	self->selectionMarquee = ZeroBox2;
 
 	[self->delegate unmarkPreviousSelection:self];
 }
@@ -1214,6 +1241,8 @@
 	NSArray			*fineDrawParts		= nil;
 	LDrawDirective	*clickedDirective	= nil;
 	
+	self->selectionMarquee = V2MakeBox(point_view.x, point_view.y, 0, 0);
+
 	// Only try to select if we are actually drawing something, and can actually 
 	// select it. 
 	if(		self->fileBeingDrawn != nil
@@ -1496,43 +1525,40 @@
 }//end zoomDragged:
 
 
-//========== mouseSelectionDrag:to:extendSelection: ===========================
+//========== mouseSelectionDragToPoint:extendSelection: ========================
 //
 // Purpose:		Selects objects under the dragged rectangle.  Caller code tracks
 //				the rectangle itself.
 //
 //==============================================================================
-- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
-			 extendSelection:(BOOL)extendSelection
+- (void) mouseSelectionDragToPoint:(Point2)point_view
+				   extendSelection:(BOOL)extendSelection
 {
 	NSArray			*fastDrawParts		= nil;
 	NSArray			*fineDrawParts		= nil;
 	
+	self->selectionMarquee = V2MakeBoxFromPoints(selectionMarquee.origin, point_view);
+
 	// Only try to select if we are actually drawing something, and can actually 
 	// select it. 
 	if(		self->fileBeingDrawn != nil
 	   &&	self->allowsEditing == YES
 	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
 	{
-		//first do hit-testing on nothing but the bounding boxes; that is very fast 
-		// and likely eliminates a lot of parts.
+		// First do hit-testing on nothing but the bounding boxes; that is very 
+		// fast and likely eliminates a lot of parts. 
 
-		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
-		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
+		fastDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
+									 amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+											fastDraw:YES];
 
-		fastDrawParts = [self getDirectivesUnderRect:
-										point_start to:point_end
-										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-										fastDraw:YES];
-
-		fineDrawParts = [self getDirectivesUnderRect:
-										point_start to:point_end
-										amongDirectives:fastDrawParts
-										fastDraw:NO];
+		fineDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
+									 amongDirectives:fastDrawParts
+											fastDraw:NO];
 
 		[self->delegate LDrawGLRenderer:self
-			 wantsToSelectDirectives:fineDrawParts
-			   byExtendingSelection:extendSelection ];
+				wantsToSelectDirectives:fineDrawParts
+				   byExtendingSelection:extendSelection ];
 		
 	}
 
@@ -2034,7 +2060,7 @@
 }//end getDirectivesUnderMouse:amongDirectives:fastDraw:
 
 
-//========== getDirectivesUnderMouse:amongDirectives:fastDraw: =================
+//========== getDirectivesUnderRect:amongDirectives:fastDraw: ==================
 //
 // Purpose:		Finds the directives under a given mouse-recangle.  This
 //				does a two-pass search so that clients can do a bounding box
@@ -2052,10 +2078,9 @@
 //				in screen space.
 //
 //==============================================================================
-- (NSArray *)  getDirectivesUnderRect:(Point2)bottom_left 
-								   to:(Point2)top_right 
-					  amongDirectives:(NSArray *)directives
-							 fastDraw:(BOOL)fastDraw
+- (NSArray *) getDirectivesUnderRect:(Box2)rect_view 
+					 amongDirectives:(NSArray *)directives
+							fastDraw:(BOOL)fastDraw
 {
 	NSArray	*clickedDirectives	= nil;
 	
@@ -2066,13 +2091,15 @@
 	}
 	else
 	{
-		Point2              bl						= [self convertPointToViewport:bottom_left];
-		Point2              tr						= [self convertPointToViewport:top_right];
-		Box2				viewport	            = [self viewport];
-		GLfloat             projectionGLMatrix[16]  = {0.0};
-		GLfloat             modelViewGLMatrix[16]   = {0.0};
-		NSMutableSet		*hits                   = [NSMutableSet set];
-		NSUInteger          counter                 = 0;
+		Point2			bottom_left 			= rect_view.origin;
+		Point2			top_right				= V2Make( V2BoxMaxX(rect_view), V2BoxMaxY(rect_view) );
+		Point2			bl						= [self convertPointToViewport:bottom_left];
+		Point2			tr						= [self convertPointToViewport:top_right];
+		Box2			viewport				= [self viewport];
+		GLfloat 		projectionGLMatrix[16]	= {0.0};
+		GLfloat 		modelViewGLMatrix[16]	= {0.0};
+		NSMutableSet	*hits					= [NSMutableSet set];
+		NSUInteger		counter 				= 0;
 		
 		// Get view and projection
 		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
@@ -2092,7 +2119,8 @@
 		// Do hit test
 		for(counter = 0; counter < [directives count]; counter++)
 		{
-			[[directives objectAtIndex:counter] boxTest:test_box transform:mvp 
+			[[directives objectAtIndex:counter] boxTest:test_box
+											  transform:mvp 
 											  viewScale:[self zoomPercentage]/100.
 											 boundsOnly:fastDraw
 										   creditObject:nil

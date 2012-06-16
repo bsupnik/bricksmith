@@ -168,6 +168,19 @@ Box2 V2MakeBox(float x, float y, float width, float height)
 }
 
 
+//========== V2MakeBoxFromPoints ===============================================
+//
+// Purpose:		Infer the width/height from two points
+//
+//==============================================================================
+Box2 V2MakeBoxFromPoints(Point2 origin, Point2 maximum)
+{
+	float width = maximum.x - origin.x;
+	float height = maximum.y - origin.y;
+	return V2MakeBox(origin.x, origin.y, width, height);
+}
+
+
 //========== V2MakeSize ========================================================
 //==============================================================================
 Size2 V2MakeSize(float width, float height)
@@ -284,6 +297,7 @@ Box2 V2BoxInset(Box2 box, float dX, float dY)
 	return insetBox;
 }
 
+
 //========== HELPER FUNCTIONS: horizontal/vertical line testing ================
 //
 //	Purpose:		these two helper functions can be used to find the intercept
@@ -309,12 +323,12 @@ static float seg_x_at_y(Point2 p1, Point2 p2, float y)
 	return p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y); 
 }
 
+
 //========== V2BoxContains =====================================================
 //
-//	Purpose:		simple containment test for points and boxes - on the line is in.
+// Purpose:		simple containment test for points and boxes - on the line is in.
 //
 //==============================================================================
-
 bool		V2BoxContains(Box2 box, Point2 pin)
 {
 	return pin.x >= V2BoxMinX(box) &&
@@ -323,13 +337,14 @@ bool		V2BoxContains(Box2 box, Point2 pin)
 		   pin.y <= V2BoxMaxY(box);
 }
 
-//========== V2BoxIntersectsPolygon ============================================
+
+//========== V2BoxIntersectsLine ===============================================
 //
-//	Purpose:		tests whether a given line segment intersects any of the 
-//					four edge sof an axis-aligned bounding box.
+// Purpose:		tests whether a given line segment intersects any of the four 
+//				edge sof an axis-aligned bounding box. 
 //
 //==============================================================================
-bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
+bool V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
 {
 	float x1 = V2BoxMinX(box);
 	float x2 = V2BoxMaxX(box);
@@ -375,6 +390,7 @@ bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
 	return false;
 }
 
+
 //========== V2PolygonContains =================================================
 //
 // Purpose:		test whether a point is within a polygon, as define by an array
@@ -413,6 +429,7 @@ bool		V2PolygonContains(const Point2 * begin, int num_pts, Point2 pin)
 
 }
 
+
 //========== V2BoxIntersectsPolygon ============================================
 //
 //	Purpose:		tests whether any point on or in the polygon (as defined by
@@ -445,7 +462,6 @@ bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
 		// Final case: for non-degenerate case, marquee could be FULLY inside - test one point to be sure.
 		return V2PolygonContains(poly,num_pts,V2Make(V2BoxMidX(bounds),V2BoxMidY(bounds)));
 }
-
 
 
 #pragma mark -
