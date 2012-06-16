@@ -77,6 +77,7 @@
 		[self setDocumentContents:[LDrawFile file]];
 		[self setGridSpacingMode:gridModeMedium];
     }
+	markedSelection = NULL;
     return self;
 	
 }//end init
@@ -945,6 +946,67 @@
 	
 }//end selectDirective:byExtendingSelection:
 
+//========== selectDirectives: ================================================
+//
+// Purpose:		Selects an array of directives.  This function changes the 
+//				selection to be these and only these directives, deselecting
+//				all others in the process.
+//
+//				This is used for marquee selection - when changinga lot of
+//				selection it's more CPU efficient to change them all at once. 
+//
+// Notes:		This routine will perform multiple disclosures of items in the
+//				hierarchy as needed to make the selection.  It does not attempt
+//				to scroll to the selected items, as they could be spread all 
+//				over the place.
+//
+//==============================================================================
+- (void) selectDirectives:(NSArray *) directivesToSelect
+{
+	NSInteger   indexToSelect   = 0;
+	NSInteger   counter         = 0;
+	NSInteger	d				= 0;
+	NSInteger	total			= [directivesToSelect count];
+	
+	if(total == 0)
+		[fileContentsOutline deselectAll:nil];
+	else
+	{
+		for(d = 0; d < total; ++d)
+		{
+			LDrawDirective * directive = [directivesToSelect objectAtIndex:d];			
+			NSArray     *ancestors      = [directive ancestors];
+
+			//Expand the hierarchy all the way down to the directive we are about to 
+			// select.
+			for(counter = 0; counter < [ancestors count]; counter++)
+				[fileContentsOutline expandItem:[ancestors objectAtIndex:counter]];
+		}
+
+		NSMutableIndexSet * indices = [NSMutableIndexSet indexSet];
+		
+		for(d = 0; d < total; ++d)
+		{
+			LDrawDirective * directive = [directivesToSelect objectAtIndex:d];			
+		
+			indexToSelect = [fileContentsOutline rowForItem:directive];
+		
+			if([indices containsIndex:indexToSelect])
+			{
+				// Allen says don't do "toggle" behavior with shift-marquee select.  
+				// If we did wanta toggle, we'd enable this.
+				//[indices removeIndex:indexToSelect];			
+			}
+			else
+			{
+				[indices addIndex:indexToSelect];
+			}
+		
+		}
+		[fileContentsOutline selectRowIndexes:indices byExtendingSelection:NO];
+	}
+	
+}//end selectDirectives:
 
 //========== setSelectionToHidden: =============================================
 //
@@ -3177,6 +3239,83 @@
 
 
 //**** LDrawGLView ****
+
+//============ markPreviousSelection ============================================
+//
+// Purpose:		This function marks the current selection - each time 
+//				wantsToSelectDirectives is called the new selection is calculated
+//				relative to this marked one.  This sets the baseline for when the
+//				marquee constantly rebuilds the selection.
+//
+//==============================================================================
+
+- (void) markPreviousSelection
+{
+	if(self->markedSelection)
+	{
+		[self->markedSelection release];
+		markedSelection = NULL;
+	}
+	
+	markedSelection = [self selectedObjects];
+	[markedSelection retain];	
+}//end markPreviousSelection
+
+
+//============ unmarkPreviousSelection ============================================
+//
+// Purpose:		This function purges the saved selection - it is called when the
+//				marquee drag finishes to save memory.
+//
+//==============================================================================
+- (void) unmarkPreviousSelection
+{
+	if(markedSelection)
+	{
+		[markedSelection release];
+		markedSelection = NULL;
+	}
+}//end unmarkPreviousSelection
+
+
+//========== LDrawGLView:wantsToSelectDirectives:byExtendingSelection: ========
+//
+// Purpose:		The given LDrawView has decided some directives should be 
+//				selected, probably because the user marquee selected.
+//				If the array is empty, the old selection is still preserved if
+//				"extension" is used.
+//
+//==============================================================================
+- (void)	LDrawGLView:(LDrawGLView *)glView
+ wantsToSelectDirectives:(NSArray *)directivesToSelect
+   byExtendingSelection:(BOOL) shouldExtend
+{
+	if(markedSelection)
+	{
+		// Since we are going to do a bulk selection, calculate 
+		// the union of the past selcetion and this one if we are
+		// extending.  Otherwise we only want the new selection.
+		NSMutableArray * all = shouldExtend 
+			? [NSMutableArray arrayWithArray:markedSelection] 
+			: [NSMutableArray arrayWithArray:directivesToSelect] ;
+		
+		if(shouldExtend)
+			[all addObjectsFromArray:directivesToSelect];
+		
+		if([all count])		
+		{
+			[self selectDirectives:all];
+		}
+		else if (!shouldExtend)
+		{
+			[self selectDirective:nil byExtendingSelection:NO];
+		}
+		
+	}
+	
+}//end LDrawGLView:wantsToSelectDirectives:byExtendingSelection:
+
+
 //========== LDrawGLView:wantsToSelectDirective:byExtendingSelection: ==========
 //
 // Purpose:		The given LDrawView has decided some directive should be 

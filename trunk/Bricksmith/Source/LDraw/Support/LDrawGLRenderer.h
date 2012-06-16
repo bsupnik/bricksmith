@@ -100,7 +100,7 @@ typedef enum
 - (void) prepareOpenGL;
 
 // Drawing
-- (void) draw;
+- (void) draw:(Point2) from to:(Point2) to;
 
 // Accessors
 - (LDrawDragHandle*) activeDragHandle;
@@ -148,7 +148,9 @@ typedef enum
 - (void) mouseUp;
 
 - (void) mouseCenterClick:(Point2)viewClickedPoint;
-- (void) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;
+- (BOOL) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;						// Returns TRUE if we hit any parts at all.
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
+
 - (void) mouseZoomInClick:(Point2)viewClickedPoint;
 - (void) mouseZoomOutClick:(Point2)viewClickedPoint;
 
@@ -156,6 +158,7 @@ typedef enum
 - (void) panDragged:(Vector2)viewDirection location:(Point2)point_view;
 - (void) rotationDragged:(Vector2)viewDirection;
 - (void) zoomDragged:(Vector2)viewDirection;
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
 
 - (void) beginGesture;
 - (void) endGesture;
@@ -173,6 +176,7 @@ typedef enum
 
 // Utilities
 - (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
+- (NSArray *) getDirectivesUnderRect:(Point2)bottom_left to:(Point2)top_right amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
 - (void) resetFrameSize;
@@ -222,8 +226,14 @@ typedef enum
 - (TransformComponents) LDrawGLRendererPreferredPartTransform:(LDrawGLRenderer*)renderer;
 
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer dragHandleDidMove:(LDrawDragHandle *)dragHandle;
+
+- (void) markPreviousSelection:(LDrawGLRenderer*)renderer;
+- (void) unmarkPreviousSelection:(LDrawGLRenderer*)renderer;
+
+
 
 @end
 

@@ -240,6 +240,55 @@
 }
 
 
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Tests the directive and any of its children for intersections 
+//				between the directive's drawn form and the bounding box in the
+//				XY plane, after perspective divide.
+//
+// Parameters:	bounds - the box to test against, in post-projection (clip)
+//						coordinates
+//				transform - transformation to apply to directive points to get 
+//						to clip coordinates - perspective divide is required!
+//				scaleFactor - the window zoom level (1.0 == 100%)
+//				boundsOnly - test the bounding box, rather than the 
+//						fully-detailed geometry 
+//				creditObject - object which should get credit if the 
+//						current object has been hit. (Used to credit nested 
+//						geometry to its parent.) If nil, the hit object credits 
+//						itself. 
+//				hits - a set of hit directives that we haev accumulated so far
+//						this routine adds more as found.
+//
+// Notes:		This test is used to do marquee selection - the marquee is
+//				converted back from viewport to clip coordinates, and then
+//				the primitive is forward-transformed to clip coordinates, for a
+//				simple 2-d screen-space test.
+//
+//				My original attempt to implement this used world-space clip 
+//				planes but it is surprisingly expensive to intersect two 3-d 
+//				polygons in arbitrary space.  By working in screen space we
+//				ensure that the selection box is an axis-aligned bounding box,
+//				which greatly simplifies the algorithm.
+//
+//				(To catch the case where the marquee is fully inside the interior
+//				of the primitive, in screen space, but using 3-d primitives, we 
+//				have to calculate the union of two convex polyhedra.  That's not
+//				that hard but it requires memory allocations...2-d is much 
+//				simpler.)
+//
+//==============================================================================
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
+{
+	//subclasses should override this with hit-detection code
+}
+
+
 //========== write =============================================================
 //
 // Purpose:		Returns the LDraw code for this directive, which can then be 

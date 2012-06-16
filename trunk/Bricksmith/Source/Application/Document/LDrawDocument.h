@@ -77,6 +77,7 @@
 		gridSpacingModeT gridMode;
 		LDrawGLView		*mostRecentLDrawView; //file graphic view which most recently had focus. Weak link.
 		BOOL			lockViewingAngle;		// hack to fix unexpected view changes during inserts
+		NSArray		*	markedSelection;		// if we are mid-marquee selection, this is an array of the previously selected directives before drag started
 }
 
 // Accessors
@@ -100,6 +101,7 @@
 - (void) rotateSelectionAround:(Vector3)rotationAxis;
 - (void) rotateSelection:(Tuple3)rotation mode:(RotationModeT)mode fixedCenter:(Point3 *)fixedCenter;
 - (void) selectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL)shouldExtend;
+- (void) selectDirectives:(NSArray *)directivesToSelect;
 - (void) setSelectionToHidden:(BOOL)hideFlag;
 - (void) setZoomPercentage:(CGFloat)newPercentage;
 

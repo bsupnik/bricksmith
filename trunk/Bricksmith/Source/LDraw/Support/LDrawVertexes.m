@@ -176,6 +176,74 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 }
 
 
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Check for intersections with screen-space geometry.
+//
+//==============================================================================
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
+{
+	NSArray     *commands           = nil;
+	NSUInteger  commandCount        = 0;
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+
+	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
+	
+	// Triangles
+	commands        = triangles;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+	
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// Quadrilaterals
+	commands        = quadrilaterals;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// Lines
+	commands        = lines;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+	// All else
+	commands        = everythingElse;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+
+}
+
+
+
 #pragma mark -
 #pragma mark ACCESSORS
 #pragma mark -

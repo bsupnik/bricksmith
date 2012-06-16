@@ -379,6 +379,46 @@
 }
 
 
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Check for intersections with screen-space geometry.
+//
+//==============================================================================
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
+{
+	NSArray     *commandsInStep     = [self subdirectives];
+	NSUInteger  commandCount        = [commandsInStep count];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
+	
+	
+	// Draw all the steps in the model
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		// This early exit is REALLY important for performance.  Basically once we discover that we have hit even a single stud of a large part, it's a total
+		// waste of time to (1) geometrically test the rest of the part (any in is all in) and (2) thrash the life out of our NSSet with a ton of duplicate 
+		// insertions. So...
+		//
+		/// If there is a credit object passed in (meaning we are below a directive that will be atomically all-in selected, like a part or submodel)
+		// and we have already selected it, just stop.  That means some time through our past for-loop we got our part, so we can quit testing.
+		//
+		// We do this optimization in a few places: model iteration, step sub-iteration, and the vertex buffer has this too.  
+		if(creditObject && [hits containsObject:creditValue])
+			return;
+	
+		currentDirective = [commandsInStep objectAtIndex:counter];
+		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+
+}
+
+
 //========== write =============================================================
 //
 // Purpose:		Write out all the commands in the step, prefaced by the line 

@@ -117,6 +117,7 @@ typedef struct
 	float x,y,z,w;
 	
 } Point4, Vector4, Tuple4;
+//, Plane4;
 
 
 // Transformation components; the data encoded in a transformation matrix.
@@ -244,6 +245,9 @@ extern float	V2BoxMidY(Box2 box);
 extern float	V2BoxMinX(Box2 box);
 extern float	V2BoxMinY(Box2 box);
 extern Box2		V2BoxInset(Box2 box, float dX, float dY);
+extern bool		V2BoxContains(Box2 box, Point2 pin);
+extern bool		V2PolygonContains(const Point2 * poly, int num_pts, Point2 pin);
+extern bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts);
 
 extern float	Matrix2x2Determinant( float, float, float, float);
 
@@ -310,6 +314,4 @@ extern Matrix4	Matrix4Invert(Matrix4 in);
 extern void		Matrix4Adjoint( Matrix4 *, Matrix4 * );
 extern float	Matrix4x4Determinant( Matrix4 * );
 extern void		Matrix4Print(Matrix4 *matrix);
-
-
 #endif // _MatrixMath_

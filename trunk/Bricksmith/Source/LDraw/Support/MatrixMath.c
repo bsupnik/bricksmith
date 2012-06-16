@@ -284,6 +284,169 @@ Box2 V2BoxInset(Box2 box, float dX, float dY)
 	return insetBox;
 }
 
+//========== HELPER FUNCTIONS: horizontal/vertical line testing ================
+//
+//	Purpose:		these two helper functions can be used to find the intercept
+//					of a line (going through p1/p2) with a horizontal or vertical
+//					line.  We use this to do our seg-seg intersection with the AABB.
+//
+//==============================================================================
+
+
+static float seg_y_at_x(Point2 p1, Point2 p2, float x)
+{ 	
+	if (p1.x == p2.x) 	return p1.y;
+	if (x == p1.x) 		return p1.y;
+	if (x == p2.x) 		return p2.y;
+	return p1.y + (p2.y - p1.y) * (x - p1.x) / (p2.x - p1.x); 
+}
+
+static float seg_x_at_y(Point2 p1, Point2 p2, float y)
+{
+	if (p1.y == p2.y) 	return p1.x;
+	if (y == p1.y) 		return p1.x;
+	if (y == p2.y) 		return p2.x;
+	return p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y); 
+}
+
+//========== V2BoxContains =====================================================
+//
+//	Purpose:		simple containment test for points and boxes - on the line is in.
+//
+//==============================================================================
+
+bool		V2BoxContains(Box2 box, Point2 pin)
+{
+	return pin.x >= V2BoxMinX(box) &&
+		   pin.x <= V2BoxMaxX(box) &&
+		   pin.y >= V2BoxMinY(box) &&
+		   pin.y <= V2BoxMaxY(box);
+}
+
+//========== V2BoxIntersectsPolygon ============================================
+//
+//	Purpose:		tests whether a given line segment intersects any of the 
+//					four edge sof an axis-aligned bounding box.
+//
+//==============================================================================
+bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
+{
+	float x1 = V2BoxMinX(box);
+	float x2 = V2BoxMaxX(box);
+	float y1 = V2BoxMinY(box);
+	float y2 = V2BoxMaxY(box);
+	
+	if (!(pin1.x < x1 && pin2.x < x1) &&
+		!(pin1.x > x1 && pin2.x > x1))
+	{
+		float yp = seg_y_at_x(pin1,pin2,x1);
+		
+		if(yp >= y1 && yp <= y2)
+			return true;		
+	}
+
+	if (!(pin1.x < x2 && pin2.x < x2) &&
+		!(pin1.x > x2 && pin2.x > x2))
+	{
+		float yp = seg_y_at_x(pin1,pin2,x2);
+		
+		if(yp >= y1 && yp <= y2)
+			return true;		
+	}
+	
+	if (!(pin1.y < y1 && pin2.y < y1) &&
+		!(pin1.y > y1 && pin2.y > y1))
+	{
+		float xp = seg_x_at_y(pin1,pin2,y1);
+		
+		if(xp >= x1 && xp <= x2)
+			return true;		
+	}
+
+	if (!(pin1.y < y2 && pin2.y < y2) &&
+		!(pin1.y > y2 && pin2.y > y2))
+	{
+		float xp = seg_x_at_y(pin1,pin2,y2);
+		
+		if(xp >= x1 && xp <= x2)
+			return true;		
+	}
+
+	return false;
+}
+
+//========== V2PolygonContains =================================================
+//
+// Purpose:		test whether a point is within a polygon, as define by an array
+//				of points.  "On the line" points are in if they are on a left
+//				or bottom (but not right or top) edge.
+//
+//==============================================================================
+bool		V2PolygonContains(const Point2 * begin, int num_pts, Point2 pin)
+{
+	const Point2 * end = begin + num_pts;
+	int cross_counter = 0;
+	Point2		first_p = *begin;
+	Point2		s_p1;
+	Point2		s_p2;
+	
+	s_p1 = *begin;
+	++begin;
+
+	while (begin != end)
+	{
+		s_p2 = *begin;
+		if ((s_p1.x < pin.x && pin.x <= s_p2.x) ||
+			(s_p2.x < pin.x && pin.x <= s_p1.x))
+		if (pin.y > seg_y_at_x(s_p1,s_p2,pin.x))
+			++cross_counter;
+
+		s_p1 = s_p2;
+		++begin;
+	}
+	s_p2 = first_p;
+	if ((s_p1.x < pin.x && pin.x <= s_p2.x) ||
+		(s_p2.x < pin.x && pin.x <= s_p1.x))
+	if (pin.y > seg_y_at_x(s_p1, s_p2, pin.x))
+		++cross_counter;
+	return (cross_counter % 2) == 1;
+
+}
+
+//========== V2BoxIntersectsPolygon ============================================
+//
+//	Purpose:		tests whether any point on or in the polygon (as defined by
+//					a point array) intersects the given axis-aligned bounding 
+//					box.
+//
+//==============================================================================
+bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
+{
+	int i, j;
+	
+	// Easy case: selection box contains a polygon point.  Do this first - it's fastest.
+	for(i = 0; i < num_pts; ++i)
+	if(V2BoxContains(bounds,poly[i]))
+		return true;
+	
+	// Next case: if any edge fo the polygon hits the box edge, that's a hit.
+	for(i = 0; i < num_pts; ++i)
+	{
+		j = (i + 1) % num_pts;
+		if(V2BoxIntersectsLine(bounds,poly[i],poly[j]))
+			return true;
+	}
+	
+	// Finally: for polygons (tri, quad, etc.) our selection box might be entirely INSIDE the 
+	// poylgon.  Test its centroid.
+	if(num_pts < 3) 
+		return false;
+	else
+		// Final case: for non-degenerate case, marquee could be FULLY inside - test one point to be sure.
+		return V2PolygonContains(poly,num_pts,V2Make(V2BoxMidX(bounds),V2BoxMidY(bounds)));
+}
+
+
 
 #pragma mark -
 
@@ -1409,7 +1572,6 @@ Vector4 V4MulPointByMatrix(Vector4 pin, Matrix4 m)
 	
 }//end V4MulPointByMatrix
 
-
 #pragma mark -
 
 //========== Matrix4CreateFromGLMatrix4() ======================================
@@ -2170,4 +2332,3 @@ void Matrix4Print(Matrix4 *matrix)
 	printf("\n");
 	
 }//end Matrix4Print
-

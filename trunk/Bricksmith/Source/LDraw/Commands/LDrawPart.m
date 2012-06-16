@@ -391,12 +391,67 @@
 			boxTransform = Matrix4Scale(boxTransform, extents);
 			boxTransform = Matrix4Translate(boxTransform, bounds.min);
 			
-			combinedTransform = Matrix4Multiply(boxTransform, partTransform);
+			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
 			
 			[unitCube hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
 		}
 	}
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
+
+
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Check for intersections with screen-space geometry.
+//
+//==============================================================================
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
+{
+	if(self->hidden == NO)
+	{
+		Matrix4     partTransform       = [self transformationMatrix];
+		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
+		LDrawModel  *modelToDraw        = nil;
+		
+		// Credit all subgeometry to ourselves (unless we are already a child part)
+		if(creditObject == nil)
+		{
+			creditObject = self;
+		}
+		
+		modelToDraw	= [self referencedMPDSubmodel];
+		if(modelToDraw == nil)
+		{
+			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
+		}
+		
+		if(boundsOnly == NO)
+		{
+			[modelToDraw boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+		}
+		else
+		{
+			// Hit test the bounding cube
+			LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
+			Box3            bounds_3d      = [modelToDraw boundingBox3];
+			Tuple3          extents     = V3Sub(bounds_3d.max, bounds_3d.min);
+			Matrix4	boxTransform = IdentityMatrix4;
+			
+			// Expand and position the unit cube to match the model
+			boxTransform = Matrix4Scale(boxTransform, extents);
+			boxTransform = Matrix4Translate(boxTransform, bounds_3d.min);
+			
+			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
+			
+			[unitCube boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+		}
+	}
+}
+
 
 
 //========== write =============================================================

@@ -641,6 +641,36 @@ static NSString				*defaultAuthor		= @"anonymous";
 	}
 }
 
+//---------- registerHitForObject:creditObject:hits: -----------[static]--
+//
+// Purpose:		Same as above, but it adds its objects to a mutable set, 
+//				and ignores depth.
+//
+// Parameters:	hitObject - the exact object whose geometry was hit
+//				creditObject - an object to which the hit should be attributed 
+//						(instead of the hitObject itself) 
+//				hits - the hit set
+//
+//------------------------------------------------------------------------------
++ (void) registerHitForObject:(id)hitObject creditObject:(id)creditObject hits:(NSMutableSet *)hits
+{
+	NSValue     *key            = nil;
+	
+	// NSDictionary copies its keys (which we don't want to do!), so we'll just 
+	// wrap the pointers. 
+	if(creditObject == nil)
+	{
+		key = [NSValue valueWithPointer:hitObject];
+	}
+	else
+	{
+		key = [NSValue valueWithPointer:creditObject];
+	}
+
+	[hits addObject:key];
+
+}
+
 
 #pragma mark -
 #pragma mark MISCELLANEOUS

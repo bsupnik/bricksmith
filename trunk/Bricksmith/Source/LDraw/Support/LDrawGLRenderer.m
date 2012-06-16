@@ -176,15 +176,21 @@
 #pragma mark DRAWING
 #pragma mark -
 
-//========== draw ==============================================================
+//========== draw:to ==============================================================
 //
 // Purpose:		Draw the LDraw content of the view.
+//
+//				The rectangle of the marquee selection is passed in (in view space).
+//				Someday we might be able to better factor out "transient" info that
+//				the renderer needs to draw.
 //
 // Notes:		This method is, in theory at least, as thread-safe as Apple's 
 //				OpenGL implementation is. Which is to say, not very much.
 //
+//				If from == to then there is no marquee.
+//
 //==============================================================================
-- (void) draw
+- (void) draw:(Point2) from to:(Point2) to
 {
 	NSDate				*startTime			= nil;
 	NSUInteger			 options			= DRAW_NO_OPTIONS;
@@ -206,7 +212,7 @@
 		options |= DRAW_BOUNDS_ONLY;
 	}
 #endif //DEBUG_DRAWING
-	
+
 	//Load the model matrix to make sure we are applying the right stuff.
 	glMatrixMode(GL_MODELVIEW);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -218,6 +224,39 @@
 	[self->fileBeingDrawn draw:options
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
+
+	// Marquee selection box - only if non-zero.
+
+	if(from.x != to.x || from.y != to.y)
+	{
+
+		Point2	p1 = [self convertPointToViewport:from];
+		Point2	p2 = [self convertPointToViewport:to];
+
+		Box2	vp = [self viewport];
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(V2BoxMinX(vp),V2BoxMaxX(vp),V2BoxMinY(vp),V2BoxMaxY(vp),-1,1);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		
+		glColor4f(0,0,0,1);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(p1.x,p1.y);
+		glVertex2f(p2.x,p1.y);
+		glVertex2f(p2.x,p2.y);
+		glVertex2f(p1.x,p2.y);
+		glEnd();		
+
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+
+
 	
 	[self->delegate LDrawGLRendererNeedsFlush:self];
 	
@@ -249,7 +288,7 @@
 	}
 #endif //DEBUG_DRAWING
 	
-}//end draw
+}//end draw:to
 
 
 //========== isFlipped =========================================================
@@ -1075,6 +1114,8 @@
 	// This might be the start of a new drag; start collecting frames per second
 	fpsStartTime = [NSDate timeIntervalSinceReferenceDate];
 	framesSinceStartTime = 0;
+	
+	[self->delegate markPreviousSelection:self];	
 }
 
 
@@ -1115,6 +1156,8 @@
 	
 	self->activeDragHandle = nil;
 	self->isTrackingDrag = NO; //not anymore.
+
+	[self->delegate unmarkPreviousSelection:self];
 }
 
 
@@ -1160,12 +1203,16 @@
 //				search the model geometry for intersection with the click point. 
 //				Our delegate is responsible for managing the actual selection. 
 //
+//				This function returns whether it hit something - calling code can
+//				then do a part drag or marquee based on whether the user clicked
+//				on a part or on empty space.
+//
 // Notes:		This method is optimized to do an iterative search, first with a
 //				low-resolution draw, then on a high-resolution pass. It's about 
 //				six times faster than just drawing the whole model.
 //
 //==============================================================================
-- (void) mouseSelectionClick:(Point2)point_view
+- (BOOL) mouseSelectionClick:(Point2)point_view
 			 extendSelection:(BOOL)extendSelection
 {
 	NSArray			*fastDrawParts		= nil;
@@ -1180,6 +1227,7 @@
 	{
 		//first do hit-testing on nothing but the bounding boxes; that is very fast 
 		// and likely eliminates a lot of parts.
+
 		fastDrawParts	= [self getDirectivesUnderPoint:point_view
 										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 											   fastDraw:YES];
@@ -1188,7 +1236,8 @@
 		fineDrawParts	= [self getDirectivesUnderPoint:point_view
 										amongDirectives:fastDrawParts
 											   fastDraw:NO];
-		
+
+				
 		if([fineDrawParts count] > 0)
 			clickedDirective = [fineDrawParts objectAtIndex:0];
 			
@@ -1213,6 +1262,7 @@
 					 && extendSelection == YES
 					)
 			  )
+			if(clickedDirective || !extendSelection)
 			{
 				// Notify our delegate about this momentous event.
 				// It's okay to send nil; that means "deselect."
@@ -1225,6 +1275,8 @@
 	}
 
 	self->didPartSelection = YES;
+	
+	return (clickedDirective == nil) ? NO : YES;
 	
 }//end mousePartSelection:
 
@@ -1459,6 +1511,51 @@
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
 	
 }//end zoomDragged:
+
+
+//========== mouseSelectionDrag:to:extendSelection: ===========================
+//
+// Purpose:		Selects objects under the dragged rectangle.  Caller code tracks
+//				the rectangle itself.
+//
+//==============================================================================
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
+			 extendSelection:(BOOL)extendSelection
+{
+	NSArray			*fastDrawParts		= nil;
+	NSArray			*fineDrawParts		= nil;
+	
+	// Only try to select if we are actually drawing something, and can actually 
+	// select it. 
+	if(		self->fileBeingDrawn != nil
+	   &&	self->allowsEditing == YES
+	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
+	{
+		//first do hit-testing on nothing but the bounding boxes; that is very fast 
+		// and likely eliminates a lot of parts.
+
+		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
+		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
+
+		fastDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+										fastDraw:YES];
+
+		fineDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:fastDrawParts
+										fastDraw:NO];
+
+		[self->delegate LDrawGLRenderer:self
+			 wantsToSelectDirectives:fineDrawParts
+			   byExtendingSelection:extendSelection ];
+		
+	}
+
+	self->didPartSelection = YES;
+	
+}//end mouseSelectionDrag:to:extendSelection:
 
 
 #pragma mark -
@@ -1952,6 +2049,86 @@
 	return clickedDirectives;
 	
 }//end getDirectivesUnderMouse:amongDirectives:fastDraw:
+
+
+//========== getDirectivesUnderMouse:amongDirectives:fastDraw: =================
+//
+// Purpose:		Finds the directives under a given mouse-recangle.  This
+//				does a two-pass search so that clients can do a bounding box
+//				test first.
+//
+// Parameters:	bottom_left, top_right = the rectangle (in viewport space) in 
+//										 which to test.
+//				directives	= the directives under consideration for being 
+//								clicked. This may be the whole File directive, 
+//								or a smaller subset we have already determined 
+//								(by a previous call) is in the area.
+//				fastDraw	= consider only bounding boxes for hit-detection.
+//
+// Returns:		Array of all parts that are at least partly inside the rectangle
+//				in screen space.
+//
+//==============================================================================
+- (NSArray *)  getDirectivesUnderRect:(Point2)bottom_left 
+								   to:(Point2)top_right 
+					  amongDirectives:(NSArray *)directives
+							 fastDraw:(BOOL)fastDraw
+{
+	NSArray	*clickedDirectives	= nil;
+	
+	if([directives count] == 0)
+	{
+		// If there's nothing to test in, there's no work to do!
+		clickedDirectives = [NSArray array];
+	}
+	else
+	{
+		Point2              bl						= [self convertPointToViewport:bottom_left];
+		Point2              tr						= [self convertPointToViewport:top_right];
+		Box2				viewport	            = [self viewport];
+		GLfloat             projectionGLMatrix[16]  = {0.0};
+		GLfloat             modelViewGLMatrix[16]   = {0.0};
+		NSMutableSet		*hits                   = [NSMutableSet set];
+		NSUInteger          counter                 = 0;
+		
+		// Get view and projection
+		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
+		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
+
+		float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
+		float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
+
+		Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
+		
+		Matrix4	mvp =			Matrix4Multiply(
+										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
+										Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+										
+		// Do hit test
+		for(counter = 0; counter < [directives count]; counter++)
+		{
+			[[directives objectAtIndex:counter] boxTest:test_box transform:mvp 
+											  viewScale:[self zoomPercentage]/100.
+											 boundsOnly:fastDraw
+										   creditObject:nil
+												   hits:hits];
+		}
+
+		NSMutableArray * collected = [NSMutableArray arrayWithCapacity:[hits count]];
+		clickedDirectives = collected;
+		
+		for(NSValue *key in hits)
+		{
+			LDrawDirective * currentDirective    = [key pointerValue];
+			[collected addObject:currentDirective];
+		}
+	}
+
+	return clickedDirectives;
+	
+}//end getDirectivesUnderMouse:amongDirectives:fastDraw
 
 
 //========== getPartFromHits:hitCount: =========================================

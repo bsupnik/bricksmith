@@ -56,10 +56,14 @@
 	
 	// Event Tracking
 	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
-	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
+	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.  This is based on the timeout for delayed drag mode.
 	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
+	BOOL					selectionIsMarquee;		// Remembers when a select-click misses and can thus start a marquee.  Only if we HIT an object can we start dragging.
 	NSEventType				startingGestureType;
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
+	
+	Point2					sel_start;				// This is the bounds of the marquee selection in view space
+	Point2					sel_end;
 }
 
 - (void) internalInit;
@@ -142,13 +146,15 @@
 // by clicking in the view. This does not actually do any selecting; that is 
 // left entirely to the delegate. Some may rightly question the design of this 
 // system.
-- (void)	LDrawGLView:(LDrawGLView *)glView
- wantsToSelectDirective:(LDrawDirective *)directiveToSelect
-   byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLView:(LDrawGLView *)glView wantsToSelectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLView:(LDrawGLView*)glView wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
 - (void) LDrawGLView:(LDrawGLView *)glView willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLView:(LDrawGLView *)glView dragHandleDidMove:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLView:(LDrawGLView *)glView mouseIsOverPoint:(Point3)modelPoint confidence:(Tuple3)confidence;
 - (void) LDrawGLViewMouseNotPositioning:(LDrawGLView *)glView;
+- (void) markPreviousSelection;
+- (void) unmarkPreviousSelection;
+
 
 @end
 

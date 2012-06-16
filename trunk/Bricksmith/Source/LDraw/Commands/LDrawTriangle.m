@@ -259,6 +259,39 @@
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Check for intersections with screen-space geometry.
+//
+//==============================================================================
+- (void)    boxTest:(Box2)bounds
+		  transform:(Matrix4)transform 
+		  viewScale:(float)scaleFactor 
+		 boundsOnly:(BOOL)boundsOnly 
+	   creditObject:(id)creditObject 
+	           hits:(NSMutableSet *)hits
+{
+	if(self->hidden == NO)
+	{
+		Vector3 worldVertex1    = V3MulPointByProjMatrix(self->vertex1, transform);
+		Vector3 worldVertex2    = V3MulPointByProjMatrix(self->vertex2, transform);
+		Vector3 worldVertex3    = V3MulPointByProjMatrix(self->vertex3, transform);
+
+		Point2	tri[3] = { 
+			V2Make(worldVertex1.x,worldVertex1.y),
+			V2Make(worldVertex2.x,worldVertex2.y),
+			V2Make(worldVertex3.x,worldVertex3.y) };
+
+		if(V2BoxIntersectsPolygon(bounds, tri, 3))
+		{
+			[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
+		}
+
+	}
+
+}
+
+
 //========== write =============================================================
 //
 // Purpose:		Returns a line that can be written out to a file.
