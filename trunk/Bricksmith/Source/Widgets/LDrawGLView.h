@@ -62,7 +62,7 @@
 	NSEventType				startingGestureType;
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
 	
-	Point2					sel_start;
+	Point2					sel_start;				// This is the bounds of the marquee selection in view space
 	Point2					sel_end;
 }
 
@@ -147,12 +147,11 @@
 // left entirely to the delegate. Some may rightly question the design of this 
 // system.
 - (void) LDrawGLView:(LDrawGLView *)glView wantsToSelectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL) shouldExtend;
-- (void) LDrawGLView:(LDrawGLView*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLView:(LDrawGLView*)glView wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
 - (void) LDrawGLView:(LDrawGLView *)glView willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLView:(LDrawGLView *)glView dragHandleDidMove:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLView:(LDrawGLView *)glView mouseIsOverPoint:(Point3)modelPoint confidence:(Tuple3)confidence;
 - (void) LDrawGLViewMouseNotPositioning:(LDrawGLView *)glView;
-
 - (void) markPreviousSelection;
 - (void) unmarkPreviousSelection;
 

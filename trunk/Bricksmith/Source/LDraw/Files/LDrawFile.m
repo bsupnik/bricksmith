@@ -289,6 +289,12 @@
 	[activeModel hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 }
 
+
+//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//
+// Purpose:		Check for intersections with screen-space geometry.
+//
+//==============================================================================
 - (void)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
 		  viewScale:(float)scaleFactor 

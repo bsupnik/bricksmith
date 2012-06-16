@@ -1486,6 +1486,7 @@ static Size2 NSSizeToSize2(NSSize size)
 		switch(draggingBehavior)
 		{
 			case MouseDraggingOff:					
+				// No-op.  During a drag we'll actually start the marquee
 				break;
 			
 			case MouseDraggingBeginAfterDelay:
@@ -1911,7 +1912,16 @@ static Size2 NSSizeToSize2(NSSize size)
 
 //========== mousePartSelection: ===============================================
 //
-// Purpose:		Attempt to select something in the model.
+// Purpose:		This routine handles clicks and drags for the purpose of 
+//				selection.  it is called in an odd pattern:
+//				
+//				It is _always_ called on mouse-down, whether this is a marquee
+//				drag or selection click.  This is true because we have ot click
+//				once (and hit test) to even know if we hit an obj or will marquee.
+//
+//				It is _only_ called during drag if it is a marquee drag.  If we
+//				hit a part before, client code will call directInteractionDragged
+//				instead to move the part around.
 //
 //==============================================================================
 
@@ -1955,6 +1965,9 @@ static Size2 NSSizeToSize2(NSSize size)
 		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
 		
+		
+		// This click is a click down to see what we hit - record whether we hit something so
+		// we can then marquee or drag and drop.
 		selectionIsMarquee = ![self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
 															extendSelection:extendSelection];
 	}
@@ -2578,6 +2591,11 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
+//========== LDrawGLRenderer:wantsToSelectDirectives:byExtendingSelection: ======
+//
+// Purpose:		Pass a multi-selection notification on to our delegate.
+//
+//==============================================================================
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend
 {
 	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:byExtendingSelection:)])
@@ -2586,12 +2604,22 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
+//========== markPreviousSelection ============================================
+//
+// Purpose:		Pass the start of multi-selection to our delegate.
+//
+//==============================================================================
 - (void) markPreviousSelection:(LDrawGLRenderer*)renderer
 {
 	if([self->delegate respondsToSelector:@selector(markPreviousSelection)])
 		[self->delegate markPreviousSelection];
 }
 
+//========== unmarkPreviousSelection ============================================
+//
+// Purpose:		Pass the end start of multi-selection to our delegate.
+//
+//==============================================================================
 - (void) unmarkPreviousSelection:(LDrawGLRenderer*)renderer
 {
 	if([self->delegate respondsToSelector:@selector(unmarkPreviousSelection)])

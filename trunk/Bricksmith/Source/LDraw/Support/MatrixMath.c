@@ -167,17 +167,6 @@ Box2 V2MakeBox(float x, float y, float width, float height)
 	return box;
 }
 
-Box2		V2MakeBoxCorners(Point2 p1, Point2 p2)
-{
-	Box2 box;
-	box.origin.x = MIN(p1.x,p2.x);
-	box.origin.y = MIN(p1.y,p2.y);
-	box.size.width = MAX(p1.x,p2.x) - box.origin.x;
-	box.size.height = MAX(p1.y,p2.y) - box.origin.y;
-	return box;
-}
-
-
 
 //========== V2MakeSize ========================================================
 //==============================================================================
@@ -295,6 +284,15 @@ Box2 V2BoxInset(Box2 box, float dX, float dY)
 	return insetBox;
 }
 
+//========== HELPER FUNCTIONS: horizontal/vertical line testing ================
+//
+//	Purpose:		these two helper functions can be used to find the intercept
+//					of a line (going through p1/p2) with a horizontal or vertical
+//					line.  We use this to do our seg-seg intersection with the AABB.
+//
+//==============================================================================
+
+
 static float seg_y_at_x(Point2 p1, Point2 p2, float x)
 { 	
 	if (p1.x == p2.x) 	return p1.y;
@@ -311,6 +309,12 @@ static float seg_x_at_y(Point2 p1, Point2 p2, float y)
 	return p1.x + (p2.x - p1.x) * (y - p1.y) / (p2.y - p1.y); 
 }
 
+//========== V2BoxContains =====================================================
+//
+//	Purpose:		simple containment test for points and boxes - on the line is in.
+//
+//==============================================================================
+
 bool		V2BoxContains(Box2 box, Point2 pin)
 {
 	return pin.x >= V2BoxMinX(box) &&
@@ -319,6 +323,12 @@ bool		V2BoxContains(Box2 box, Point2 pin)
 		   pin.y <= V2BoxMaxY(box);
 }
 
+//========== V2BoxIntersectsPolygon ============================================
+//
+//	Purpose:		tests whether a given line segment intersects any of the 
+//					four edge sof an axis-aligned bounding box.
+//
+//==============================================================================
 bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
 {
 	float x1 = V2BoxMinX(box);
@@ -362,15 +372,16 @@ bool		V2BoxIntersectsLine(Box2 box, Point2 pin1, Point2 pin2)
 			return true;		
 	}
 
-
-
-
-
 	return false;
-
-
 }
 
+//========== V2PolygonContains =================================================
+//
+// Purpose:		test whether a point is within a polygon, as define by an array
+//				of points.  "On the line" points are in if they are on a left
+//				or bottom (but not right or top) edge.
+//
+//==============================================================================
 bool		V2PolygonContains(const Point2 * begin, int num_pts, Point2 pin)
 {
 	const Point2 * end = begin + num_pts;
@@ -402,15 +413,23 @@ bool		V2PolygonContains(const Point2 * begin, int num_pts, Point2 pin)
 
 }
 
+//========== V2BoxIntersectsPolygon ============================================
+//
+//	Purpose:		tests whether any point on or in the polygon (as defined by
+//					a point array) intersects the given axis-aligned bounding 
+//					box.
+//
+//==============================================================================
 bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
 {
 	int i, j;
 	
-	// Easy case: selection contains a point.  Do this first - it's fastest.
+	// Easy case: selection box contains a polygon point.  Do this first - it's fastest.
 	for(i = 0; i < num_pts; ++i)
 	if(V2BoxContains(bounds,poly[i]))
 		return true;
 	
+	// Next case: if any edge fo the polygon hits the box edge, that's a hit.
 	for(i = 0; i < num_pts; ++i)
 	{
 		j = (i + 1) % num_pts;
@@ -418,6 +437,8 @@ bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
 			return true;
 	}
 	
+	// Finally: for polygons (tri, quad, etc.) our selection box might be entirely INSIDE the 
+	// poylgon.  Test its centroid.
 	if(num_pts < 3) 
 		return false;
 	else
@@ -1551,15 +1572,6 @@ Vector4 V4MulPointByMatrix(Vector4 pin, Matrix4 m)
 	
 }//end V4MulPointByMatrix
 
-float	V4Dot(Vector4 a, Vector4 b)
-{
-	return a.x * b.x + 
-		   a.y * b.y +
-		   a.z * b.z +
-		   a.w * b.w;
-}
-
-
 #pragma mark -
 
 //========== Matrix4CreateFromGLMatrix4() ======================================
@@ -2320,88 +2332,3 @@ void Matrix4Print(Matrix4 *matrix)
 	printf("\n");
 	
 }//end Matrix4Print
-
-
-/*
-float	Plane4SignedDistance(const Plane4 pln, const Point3 pin)
-{
-	return	pln.x * pin.x + 
-			pln.y * pin.y + 
-			pln.z * pin.z + 
-			pln.w;
-}
-
-int		Plane4Side(const Plane4 pln, const Point3 pin)
-{
-	float sd = Plane4SignedDistance(pln,pin);
-	if(sd > 0.0f) return 1;
-	if(sd < 0.0f) return -1;
-	return 0;
-}
-
-Plane4	Plane4Make(const Point3 pin, const Vector3 nrm)
-{
-	Plane4 ret;
-	ret.x = nrm.x;
-	ret.y = nrm.y;
-	ret.z = nrm.z;
-	ret.w = -V3Dot(pin,nrm);
-	return ret;
-}
-
-int		Plane4InsideConvex(const Plane4 * planes, int num_planes, Point3 pin)
-{	
-	int n;
-	for(n = 0; n < num_planes; ++n)
-	if(Plane4Side(planes[n],pin) < 0)
-		return 0;
-	return 1;
-}
-
-int		Plane4SpansConvex(const Plane4 * planes, int num_planes, Point3 pin1, Point3 pin2)
-{
-	int n;
-	bool has_cross = false;
-	for(n = 0; n < num_planes; ++n)
-	{
-		int s1 = Plane4Side(planes[n],pin1);
-		int s2 = Plane4Side(planes[n],pin2);
-		
-		if(s1 < 0 && s2 < 0)
-			return 0;
-		
-		if(s1 == 0 || s2 == 0 || s1 != s2)
-			has_cross = true;
-	}
-	return has_cross ? 1 : 0;
-}
-
-
-Plane4	Plane4Normalize(const Plane4 pln)
-{
-	Plane4 ret = pln;
-	float len = sqrt(pln.x * pln.x + pln.y * pln.y + pln.z * pln.z);
-	if(len != 0.0)
-	{
-		ret.x /= len;
-		ret.y /= len;
-		ret.z /= len;
-		ret.w /= len;
-	}
-	return ret;
-}
-
-void		InfPrismFromCCWPolygon(const Point3 * pts, const Vector3 nrm, int count, Plane4 * out_planes)
-{
-	int i, j;
-	for(i = 0; i < count; ++i)
-	{
-		j = (i + 1) % count;
-
-		Vector3	side = V3Sub(pts[j],pts[i]);
-		Vector3	in = V3Cross(nrm, side);
-		
-		out_planes[i] = Plane4Make(pts[i],in);
-	}
-}
-*/

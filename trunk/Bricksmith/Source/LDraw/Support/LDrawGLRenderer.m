@@ -171,12 +171,18 @@
 #pragma mark DRAWING
 #pragma mark -
 
-//========== draw ==============================================================
+//========== draw:to ==============================================================
 //
 // Purpose:		Draw the LDraw content of the view.
 //
+//				The rectangle of the marquee selection is passed in (in view space).
+//				Someday we might be able to better factor out "transient" info that
+//				the renderer needs to draw.
+//
 // Notes:		This method is, in theory at least, as thread-safe as Apple's 
 //				OpenGL implementation is. Which is to say, not very much.
+//
+//				If from == to then there is no marquee.
 //
 //==============================================================================
 - (void) draw:(Point2) from to:(Point2) to
@@ -214,6 +220,7 @@
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
 
+	// Marquee selection box - only if non-zero.
 
 	if(from.x != to.x || from.y != to.y)
 	{
@@ -236,8 +243,7 @@
 		glVertex2f(p2.x,p1.y);
 		glVertex2f(p2.x,p2.y);
 		glVertex2f(p1.x,p2.y);
-		glEnd();
-		
+		glEnd();		
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
@@ -277,7 +283,7 @@
 	}
 #endif //DEBUG_DRAWING
 	
-}//end draw
+}//end draw:to
 
 
 //========== isFlipped =========================================================
@@ -1104,8 +1110,7 @@
 	fpsStartTime = [NSDate timeIntervalSinceReferenceDate];
 	framesSinceStartTime = 0;
 	
-		[self->delegate markPreviousSelection:self];
-	
+	[self->delegate markPreviousSelection:self];	
 }
 
 
@@ -1147,7 +1152,7 @@
 	self->activeDragHandle = nil;
 	self->isTrackingDrag = NO; //not anymore.
 
-		[self->delegate unmarkPreviousSelection:self];
+	[self->delegate unmarkPreviousSelection:self];
 }
 
 
@@ -1192,6 +1197,10 @@
 // Purpose:		Time to see if we should select something in the model. We 
 //				search the model geometry for intersection with the click point. 
 //				Our delegate is responsible for managing the actual selection. 
+//
+//				This function returns whether it hit something - calling code can
+//				then do a part drag or marquee based on whether the user clicked
+//				on a part or on empty space.
 //
 // Notes:		This method is optimized to do an iterative search, first with a
 //				low-resolution draw, then on a high-resolution pass. It's about 
@@ -1263,47 +1272,6 @@
 	self->didPartSelection = YES;
 	
 	return (clickedDirective == nil) ? NO : YES;
-	
-}//end mousePartSelection:
-
-
-
-- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
-			 extendSelection:(BOOL)extendSelection
-{
-	NSArray			*fastDrawParts		= nil;
-	NSArray			*fineDrawParts		= nil;
-//	LDrawDirective	*clickedDirective	= nil;
-	
-	// Only try to select if we are actually drawing something, and can actually 
-	// select it. 
-	if(		self->fileBeingDrawn != nil
-	   &&	self->allowsEditing == YES
-	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
-	{
-		//first do hit-testing on nothing but the bounding boxes; that is very fast 
-		// and likely eliminates a lot of parts.
-
-		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
-		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
-
-		fastDrawParts = [self getDirectivesUnderRect:
-										point_start to:point_end
-										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-										fastDraw:YES];
-
-		fineDrawParts = [self getDirectivesUnderRect:
-										point_start to:point_end
-										amongDirectives:fastDrawParts
-										fastDraw:NO];
-
-		[self->delegate LDrawGLRenderer:self
-			 wantsToSelectDirectives:fineDrawParts
-			   byExtendingSelection:extendSelection ];
-		
-	}
-
-	self->didPartSelection = YES;
 	
 }//end mousePartSelection:
 
@@ -1526,6 +1494,51 @@
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
 	
 }//end zoomDragged:
+
+
+//========== mouseSelectionDrag:to:extendSelection: ===========================
+//
+// Purpose:		Selects objects under the dragged rectangle.  Caller code tracks
+//				the rectangle itself.
+//
+//==============================================================================
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end
+			 extendSelection:(BOOL)extendSelection
+{
+	NSArray			*fastDrawParts		= nil;
+	NSArray			*fineDrawParts		= nil;
+	
+	// Only try to select if we are actually drawing something, and can actually 
+	// select it. 
+	if(		self->fileBeingDrawn != nil
+	   &&	self->allowsEditing == YES
+	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
+	{
+		//first do hit-testing on nothing but the bounding boxes; that is very fast 
+		// and likely eliminates a lot of parts.
+
+		// Ben says: disable this for now until we have a better proxy geometry for the part directive.  Without parts making good
+		// bbox proxies, the cost of the fast ist the same as slow so why do it twice?
+
+		fastDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+										fastDraw:YES];
+
+		fineDrawParts = [self getDirectivesUnderRect:
+										point_start to:point_end
+										amongDirectives:fastDrawParts
+										fastDraw:NO];
+
+		[self->delegate LDrawGLRenderer:self
+			 wantsToSelectDirectives:fineDrawParts
+			   byExtendingSelection:extendSelection ];
+		
+	}
+
+	self->didPartSelection = YES;
+	
+}//end mouseSelectionDrag:to:extendSelection:
 
 
 #pragma mark -
@@ -2021,8 +2034,24 @@
 }//end getDirectivesUnderMouse:amongDirectives:fastDraw:
 
 
-
-
+//========== getDirectivesUnderMouse:amongDirectives:fastDraw: =================
+//
+// Purpose:		Finds the directives under a given mouse-recangle.  This
+//				does a two-pass search so that clients can do a bounding box
+//				test first.
+//
+// Parameters:	bottom_left, top_right = the rectangle (in viewport space) in 
+//										 which to test.
+//				directives	= the directives under consideration for being 
+//								clicked. This may be the whole File directive, 
+//								or a smaller subset we have already determined 
+//								(by a previous call) is in the area.
+//				fastDraw	= consider only bounding boxes for hit-detection.
+//
+// Returns:		Array of all parts that are at least partly inside the rectangle
+//				in screen space.
+//
+//==============================================================================
 - (NSArray *)  getDirectivesUnderRect:(Point2)bottom_left 
 								   to:(Point2)top_right 
 					  amongDirectives:(NSArray *)directives
@@ -2039,10 +2068,6 @@
 	{
 		Point2              bl						= [self convertPointToViewport:bottom_left];
 		Point2              tr						= [self convertPointToViewport:top_right];
-//		Point3              contextNear             = ZeroPoint3;
-//		Point3              contextFar              = ZeroPoint3;
-//		Ray3                pickRay                 = {{0}};
-//		Point3              pickRay_end             = ZeroPoint3;
 		Box2				viewport	            = [self viewport];
 		GLfloat             projectionGLMatrix[16]  = {0.0};
 		GLfloat             modelViewGLMatrix[16]   = {0.0};
@@ -2086,11 +2111,7 @@
 
 	return clickedDirectives;
 	
-}//end getDirectivesUnderMouse:amongDirectives:fastDraw:
-
-
-
-
+}//end getDirectivesUnderMouse:amongDirectives:fastDraw
 
 
 //========== getPartFromHits:hitCount: =========================================

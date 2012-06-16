@@ -233,7 +233,6 @@ extern bool		FloatsApproximatelyEqual(float float1, float float2);
 extern Point2	V2Make(float x, float y);
 
 extern Box2		V2MakeBox(float x, float y, float width, float height);
-//extern Box2		V2MakeBoxCorners(Point2 p1, Point2 p2);
 extern Size2	V2MakeSize(float width, float height);
 extern bool		V2EqualBoxes(Box2 box1, Box2 box2);
 extern bool		V2EqualSizes(Size2 size1, Size2 size2);
@@ -298,7 +297,6 @@ extern Matrix3	Matrix3MakeNormalTransformFromProjMatrix(Matrix4 transformationMa
 extern Vector4	V4Make(float x, float y, float z, float w);
 extern Point4	V4FromPoint3(Vector3 originalPoint);
 extern Vector4	V4MulPointByMatrix(Vector4 pin, Matrix4 m);
-extern float	V4Dot(Vector4 a, Vector4 b);
 extern Matrix4	Matrix4CreateFromGLMatrix4(const GLfloat *glMatrix);
 extern Matrix4	Matrix4CreateTransformation(TransformComponents *);
 extern int		Matrix4DecomposeTransformation( Matrix4 originalMatrix, TransformComponents *decomposed);
@@ -316,11 +314,4 @@ extern Matrix4	Matrix4Invert(Matrix4 in);
 extern void		Matrix4Adjoint( Matrix4 *, Matrix4 * );
 extern float	Matrix4x4Determinant( Matrix4 * );
 extern void		Matrix4Print(Matrix4 *matrix);
-//extern float	Plane4SignedDistance(const Plane4 pln, const Point3 pin);
-//extern int		Plane4Side(const Plane4 pln, const Point3 pin);
-//extern int		Plane4InsideConvex(const Plane4 * planes, int num_planes, Point3 pin);
-//extern int		Plane4SpansConvex(const Plane4 * planes, int num_planes, Point3 pin1, Point3 pin2);
-//extern void		InfPrismFromCCWPolygon(const Point3 * pts, const Vector3 nrm, int count, Plane4 * out_planes);
-//extern Plane4	Plane4Make(const Point3 pin, const Vector3 nrm);
-//extern Plane4	Plane4Normalize(const Plane4 pln);
 #endif // _MatrixMath_

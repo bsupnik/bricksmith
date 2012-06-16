@@ -158,6 +158,7 @@ typedef enum
 - (void) panDragged:(Vector2)viewDirection location:(Point2)point_view;
 - (void) rotationDragged:(Vector2)viewDirection;
 - (void) zoomDragged:(Vector2)viewDirection;
+- (void) mouseSelectionDrag:(Point2)point_start to:(Point2) point_end extendSelection:(BOOL)extendSelection;
 
 - (void) beginGesture;
 - (void) endGesture;
