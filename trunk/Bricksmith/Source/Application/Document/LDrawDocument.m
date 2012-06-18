@@ -4934,11 +4934,11 @@
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-				[self addModel:currentObject atIndex:insertAtIndex preventNameCollisions:renameModels];
+				[self addModel:currentObject atIndex:insertAtIndex+counter preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
-				[self addStep:currentObject atIndex:insertAtIndex];
+				[self addStep:currentObject atIndex:insertAtIndex+counter];
 			else
-				[self addStepComponent:currentObject parent:parent index:insertAtIndex];
+				[self addStepComponent:currentObject parent:parent index:insertAtIndex+counter];
 			
 			[currentObject optimizeOpenGL];
 			[addedObjects addObject:currentObject];

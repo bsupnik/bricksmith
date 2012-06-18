@@ -1291,9 +1291,9 @@
 			
 			switch(selectionMode) {
 			case SelectionReplace:				
-				// Replacement mode?  ALWAYS do a selection.  If we miss a part, this will clear the sel out.  If we hit a part,
-				// selection without extension hits it.
-				[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];				
+				// Replacement mode?  Select unless we hit an already hit one - we do not "deselect others" on a click.
+				if(!has_sel_directive)
+					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];				
 				break;
 			case SelectionExtend:
 				// Extended selection.  If we hit a part, toggle it - if we miss a part, don't do anything, nothing to do.
