@@ -641,7 +641,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 	}
 }
 
-//---------- registerHitForObject:creditObject:hits: -----------[static]--
+//---------- registerHitForObject:creditObject:hits: -----------------[static]--
 //
 // Purpose:		Same as above, but it adds its objects to a mutable set, 
 //				and ignores depth.

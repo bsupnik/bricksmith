@@ -279,6 +279,9 @@
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
+		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
+		D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -589,6 +592,9 @@
 		32DBCF750370BD2300C91783 /* Mac LDraw_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Mac LDraw_Prefix.pch"; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
+		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
+		D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairPlus.tiff; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -855,6 +861,9 @@
 		0B8EBCEE0938383000D87E0C /* Cursors */ = {
 			isa = PBXGroup;
 			children = (
+				D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */,
+				D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */,
+				D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */,
 				0B2700E6098203320058A7BE /* Arrow.tiff */,
 				0B05899B09849F5A0089FD81 /* Crosshair.tiff */,
 				0B2700E5098203320058A7BE /* Hand.tiff */,
@@ -1381,6 +1390,9 @@
 				0BF246B41355670B0043AAAF /* ZoomOut.pdf in Resources */,
 				0B70D0A7135A616800BC8B0A /* InsertModelTemplate.pdf in Resources */,
 				0B9524781585873800F3EE79 /* Texture.pdf in Resources */,
+				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
+				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
+				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

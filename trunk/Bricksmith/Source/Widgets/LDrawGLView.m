@@ -2,12 +2,12 @@
 //
 // File:		LDrawGLView.m
 //
-// Purpose:		Draws an LDrawFile with OpenGL.
+// Purpose:		This is the intermediary between the operating system (events 
+//				and view hierarchy) and the LDrawGLRenderer (responsible for all 
+//				platform-independent drawing logic). 
 //
-//				We also handle processing of user events related to the 
-//				document. Certain interactions must be handed off to an 
-//				LDrawDocument in order for them to effect the object being 
-//				drawn. 
+//				Certain interactions must be handed off to an LDrawDocument in 
+//				order for them to effect the object being drawn. 
 //
 //				This class also provides for a number of mouse-based viewing 
 //				tools triggered by hotkeys. However, we don't track them here! 
@@ -15,9 +15,10 @@
 //				there is a symbiotic relationship with ToolPalette to track 
 //				which tool mode we're in; we get notifications when it changes.
 //
-// Threading:	LDrawGLView spawns a separate thread to draw. There are two 
-//				critical pieces of shared data which must be protected by 
-//				mutual-exclusion locks:
+// Threading:	At one point, I was trying to get LDrawGLView to spawn a 
+//				separate thread to draw. It never worked right. But there are 
+//				two critical pieces of shared data protected by mutual-exclusion 
+//				locks as a result: 
 //				
 //					* the NSOpenGLContext
 //
@@ -170,8 +171,6 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void) internalInit
 {
-	sel_start.x = sel_start.y = sel_end.x = sel_end.y = 0;
-	
 	NSOpenGLContext         *context            = nil;
 	NSOpenGLPixelFormat     *pixelFormat        = [LDrawApplication openGLPixelFormat];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -180,6 +179,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	
 	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
 	[renderer setDelegate:self];
+
+	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 	
 	//---------- Load UI -------------------------------------------------------
 	
@@ -367,7 +369,7 @@ static Size2 NSSizeToSize2(NSSize size)
 		// ourselves, and defer to the last guy.
 		if(numberDrawRequests == 1)
 		{
-			[self->renderer draw:sel_start to:sel_end];
+			[self->renderer draw];
 			
 		}
 		//else we just drop the draw.
@@ -1091,7 +1093,27 @@ static Size2 NSSizeToSize2(NSSize size)
 	{
 		case RotateSelectTool:
 			//just use the standard arrow cursor.
-			cursor = [NSCursor arrowCursor];
+			if(self->selectionIsMarquee)
+			{
+				switch(self->marqueeSelectionMode) {
+				case SelectionIntersection:
+					cursorImage = [NSImage imageNamed:@"CrosshairTimes"];
+					break;
+				case SelectionExtend:
+					cursorImage = [NSImage imageNamed:@"CrosshairPlus"];
+					break;
+				case SelectionSubtract:
+					cursorImage = [NSImage imageNamed:@"CrosshairMinus"];
+					break;
+				case SelectionReplace:
+					cursorImage = [NSImage imageNamed:@"Crosshair"];
+					break;
+				}
+				cursor = [[[NSCursor alloc] initWithImage:cursorImage
+												  hotSpot:NSMakePoint(8, 8)] autorelease];
+			}
+			else			
+				cursor = [NSCursor arrowCursor];
 			break;
 		
 		case PanScrollTool:
@@ -1509,7 +1531,8 @@ static Size2 NSSizeToSize2(NSSize size)
 
 	// Reset event tracking flags.
 
-	selectionIsMarquee = FALSE;
+	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 
 	[self->renderer mouseDown];
 	
@@ -1627,7 +1650,7 @@ static Size2 NSSizeToSize2(NSSize size)
 				if (selectionIsMarquee)
 					[self mousePartSelection:theEvent];				
 				else
-					[self directInteractionDragged:theEvent				];
+					[self directInteractionDragged:theEvent];
 				break;
 				
 			case MouseDraggingImmediatelyInOrthoNeverInPerspective:
@@ -1658,18 +1681,12 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void) mouseUp:(NSEvent *)theEvent
 {
-	if(sel_start.x || sel_start.y || sel_end.x || sel_end.y)
-	{
-		sel_start.x = sel_start.y = sel_end.x = sel_end.y = 0;
-		[self setNeedsDisplay:TRUE];
-	}
-
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
 	if([theEvent buttonNumber] == 1)
 		toolMode = SpinTool;
 
 	[[self openGLContext] makeCurrentContext];
-
+	
 	[self cancelClickAndHoldTimer];
 
 	if( toolMode == RotateSelectTool )
@@ -1691,8 +1708,8 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self->renderer mouseUp];
 	[self resetCursor];
 
-	selectionIsMarquee = FALSE;
-	
+	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 	
 }//end mouseUp:
 
@@ -2000,52 +2017,53 @@ static Size2 NSSizeToSize2(NSSize size)
 //				instead to move the part around.
 //
 //==============================================================================
-
 - (void) mousePartSelection:(NSEvent *)theEvent
 {
 	NSPoint windowPoint     = [theEvent locationInWindow];
 	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
-	BOOL    extendSelection = NO;
+	SelectionModeT selectionMode;
 	
-	if([theEvent type] == NSLeftMouseDown)
-		sel_start = sel_end = V2Make(viewPoint.x, viewPoint.y);
-
+	[[self openGLContext] makeCurrentContext];
+		
 	if([theEvent type] == NSLeftMouseDragged)
 	{
-		sel_end = V2Make(viewPoint.x, viewPoint.y);
-		[[self openGLContext] makeCurrentContext];
 
-		// Per the AHIG, both command and shift are used for multiple selection. In 
-		// Bricksmith, there is no difference between contiguous and non-contiguous 
-		// selection, so both keys do the same thing. 
-		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
-		// I doubt people would discover it. 
-		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
-		
-		[self->renderer mouseSelectionDrag:sel_start to:sel_end
-							extendSelection:extendSelection];
+		[self->renderer mouseSelectionDragToPoint:V2Make(viewPoint.x, viewPoint.y)
+								  selectionMode:marqueeSelectionMode];
 							
-		[self setNeedsDisplay:TRUE];
+		[self setNeedsDisplay:YES];
 	}
 	else
 	{
 	
-		[[self openGLContext] makeCurrentContext];
+	// Per the AHIG, both command and shift are used for multiple selection. In 
+	// Bricksmith, there is no difference between contiguous and non-contiguous 
+	// selection, so both keys do the same thing. 
+	// -- We desperately need simple modifiers for rotating the view. Otherwise, 
+	// I doubt people would discover it. 
 
-		// Per the AHIG, both command and shift are used for multiple selection. In 
-		// Bricksmith, there is no difference between contiguous and non-contiguous 
-		// selection, so both keys do the same thing. 
-		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
-		// I doubt people would discover it. 
-		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
-		
-		
+	if (([theEvent modifierFlags] & NSShiftKeyMask) != 0)
+	{
+		if(([theEvent modifierFlags] & NSAlternateKeyMask) != 0)
+			selectionMode = SelectionIntersection;
+		else
+			selectionMode = SelectionExtend;			
+	}
+	else 
+	{
+		if(([theEvent modifierFlags] & NSAlternateKeyMask) != 0)
+			selectionMode = SelectionSubtract;		
+		else
+			selectionMode = SelectionReplace;
+	}
+
 		// This click is a click down to see what we hit - record whether we hit something so
 		// we can then marquee or drag and drop.
 		selectionIsMarquee = ![self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
-															extendSelection:extendSelection];
+												  selectionMode:selectionMode]
+						&& [self->delegate respondsToSelector:@selector(markPreviousSelection)];
+		if(selectionIsMarquee)
+			marqueeSelectionMode = selectionMode;
 	}
 }//end mousePartSelection:
 
@@ -2600,7 +2618,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self setNeedsDisplay:YES];
 }
 
-
 //========== LDrawGLRenderer:mouseIsOverPoint:confidence: ======================
 //
 // Purpose:		Reflect the mouse coordinates in the UI.
@@ -2667,16 +2684,16 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
-//========== LDrawGLRenderer:wantsToSelectDirectives:byExtendingSelection: ======
+//========== LDrawGLRenderer:wantsToSelectDirectives:selectMode ================
 //
 // Purpose:		Pass a multi-selection notification on to our delegate.
 //
 //==============================================================================
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect selectionMode:(SelectionModeT) selectionMode
 {
-	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:byExtendingSelection:)])
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:selectionMode:)])
 	{
-		[self->delegate LDrawGLView:self wantsToSelectDirectives:directivesToSelect byExtendingSelection:shouldExtend];
+		[self->delegate LDrawGLView:self wantsToSelectDirectives:directivesToSelect selectionMode:selectionMode];
 	}
 }
 
