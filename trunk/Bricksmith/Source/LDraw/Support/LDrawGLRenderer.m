@@ -245,12 +245,20 @@
 		glLoadIdentity();
 		
 		glColor4f(0,0,0,1);
-		glBegin(GL_LINE_LOOP);
-		glVertex2f(p1.x,p1.y);
-		glVertex2f(p2.x,p1.y);
-		glVertex2f(p2.x,p2.y);
-		glVertex2f(p1.x,p2.y);
-		glEnd();		
+
+		GLfloat	vertices[8] = {
+							p1.x,p1.y,
+							p2.x,p1.y,
+							p2.x,p2.y,
+							p1.x,p2.y };
+							
+		glVertexPointer(2, GL_FLOAT, 0, vertices);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+
+		glDrawArrays(GL_LINE_LOOP,0,4);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
@@ -1235,7 +1243,7 @@
 //
 //==============================================================================
 - (BOOL) mouseSelectionClick:(Point2)point_view
-			 extendSelection:(BOOL)extendSelection
+			 selectionMode:(SelectionModeT)selectionMode
 {
 	NSArray			*fastDrawParts		= nil;
 	NSArray			*fineDrawParts		= nil;
@@ -1275,25 +1283,36 @@
 			// Normal selection
 			self->activeDragHandle = nil;
 			
-			// ----------------
-			// If the clicked part is already selected, calling this method will 
-			// deselect it. Generally, we want to leave the current selection 
-			// intact (so we can drag it, maybe). The exception is 
-			// multiple-selection mode, which means we actually *want* to 
-			// deselect it. 
-			if(		[clickedDirective isSelected] == NO
-			   ||	(	[clickedDirective isSelected] == YES // allow deselection
-					 && extendSelection == YES
-					)
-			  )
-			if(clickedDirective || !extendSelection)
-			{
-				// Notify our delegate about this momentous event.
-				// It's okay to send nil; that means "deselect."
-				// We want to add this to the current selection if the shift key is down.
-				[self->delegate LDrawGLRenderer:self
-						 wantsToSelectDirective:clickedDirective
-						   byExtendingSelection:extendSelection ];
+			// If we end up actually selecting some single thing, the extension happens if we are intersection (option-shift) or extend (shift).
+			BOOL extendSelection = selectionMode == SelectionExtend || selectionMode == SelectionIntersection;
+			
+			BOOL has_sel_directive = clickedDirective != nil &&  [clickedDirective isSelected];
+			BOOL has_any_directive = clickedDirective != nil;
+			
+			switch(selectionMode) {
+			case SelectionReplace:				
+				// Replacement mode?  ALWAYS do a selection.  If we miss a part, this will clear the sel out.  If we hit a part,
+				// selection without extension hits it.
+				[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];				
+				break;
+			case SelectionExtend:
+				// Extended selection.  If we hit a part, toggle it - if we miss a part, don't do anything, nothing to do.
+				if(has_any_directive)
+					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+				break;
+			case SelectionIntersection:
+				// Intersection.  If we hit an unselected directive, do the select to grab it - this will grab it (via option-shift).
+				// Then we copy.  If we have no directive, the whole sel clears, which is the correct start for an intersection (since the
+				// marquee is empty).
+				if(!has_sel_directive)
+					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+				break;
+			case SelectionSubtract:
+				// Subtraction.  If we have an UNSELECTED directive, we have to grab it.  If we have a selected directive  we do nothing so
+				// we can option-drag-copy thes el.  And if we just miss everything, the subtraction hasn't nuked anything yet...again we do nothing.
+				if(has_any_directive && !has_sel_directive)
+					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+				break;
 			}
 		}
 	}
@@ -1532,7 +1551,7 @@
 //
 //==============================================================================
 - (void) mouseSelectionDragToPoint:(Point2)point_view
-				   extendSelection:(BOOL)extendSelection
+				   selectionMode:(SelectionModeT) selectionMode
 {
 	NSArray			*fastDrawParts		= nil;
 	NSArray			*fineDrawParts		= nil;
@@ -1558,7 +1577,7 @@
 
 		[self->delegate LDrawGLRenderer:self
 				wantsToSelectDirectives:fineDrawParts
-				   byExtendingSelection:extendSelection ];
+				   selectionMode:selectionMode ];
 		
 	}
 

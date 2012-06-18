@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 #import OPEN_GL_HEADER
 
+#import "MacLDraw.h"
 #import "ColorLibrary.h"
 #import "LDrawUtilities.h"
 #import "MatrixMath.h"
@@ -151,7 +152,7 @@ typedef enum
 - (void) mouseUp;
 
 - (void) mouseCenterClick:(Point2)viewClickedPoint;
-- (BOOL) mouseSelectionClick:(Point2)point_view extendSelection:(BOOL)extendSelection;						// Returns TRUE if we hit any parts at all.
+- (BOOL) mouseSelectionClick:(Point2)point_view selectionMode:(SelectionModeT)selectionMode;						// Returns TRUE if we hit any parts at all.
 - (void) mouseZoomInClick:(Point2)viewClickedPoint;
 - (void) mouseZoomOutClick:(Point2)viewClickedPoint;
 
@@ -159,7 +160,7 @@ typedef enum
 - (void) panDragged:(Vector2)viewDirection location:(Point2)point_view;
 - (void) rotationDragged:(Vector2)viewDirection;
 - (void) zoomDragged:(Vector2)viewDirection;
-- (void) mouseSelectionDragToPoint:(Point2)point_view extendSelection:(BOOL)extendSelection;
+- (void) mouseSelectionDragToPoint:(Point2)point_view selectionMode:(SelectionModeT) selectionMode;
 - (void) beginGesture;
 - (void) endGesture;
 - (void) rotateByDegrees:(float)angle;
@@ -226,7 +227,7 @@ typedef enum
 - (TransformComponents) LDrawGLRendererPreferredPartTransform:(LDrawGLRenderer*)renderer;
 
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirective:(LDrawDirective *)directiveToSelect byExtendingSelection:(BOOL) shouldExtend;
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend;
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect selectionMode:(SelectionModeT) selectionMode;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer willBeginDraggingHandle:(LDrawDragHandle *)dragHandle;
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer dragHandleDidMove:(LDrawDragHandle *)dragHandle;
 

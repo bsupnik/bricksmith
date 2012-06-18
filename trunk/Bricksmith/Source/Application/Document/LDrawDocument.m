@@ -3279,7 +3279,7 @@
 }//end unmarkPreviousSelection
 
 
-//========== LDrawGLView:wantsToSelectDirectives:byExtendingSelection: ========
+//========== LDrawGLView:wantsToSelectDirectives:selectionMode: ========
 //
 // Purpose:		The given LDrawView has decided some directives should be 
 //				selected, probably because the user marquee selected.
@@ -3288,33 +3288,41 @@
 //
 //==============================================================================
 - (void)	LDrawGLView:(LDrawGLView *)glView
- wantsToSelectDirectives:(NSArray *)directivesToSelect
-   byExtendingSelection:(BOOL) shouldExtend
-{
+ wantsToSelectDirectives:(NSArray *)directivesToSelect selectionMode:(SelectionModeT) selectionMode
+ {
 	if(markedSelection)
 	{
 		// Since we are going to do a bulk selection, calculate 
 		// the union of the past selcetion and this one if we are
 		// extending.  Otherwise we only want the new selection.
-		NSMutableArray * all = shouldExtend 
+		NSMutableArray * all;
+		NSArray * sel = (all = (selectionMode != SelectionReplace)
 			? [NSMutableArray arrayWithArray:markedSelection] 
-			: [NSMutableArray arrayWithArray:directivesToSelect] ;
+			: [NSMutableArray arrayWithArray:directivesToSelect]) ;
 		
-		if(shouldExtend)
+		if(selectionMode == SelectionExtend)
 			[all addObjectsFromArray:directivesToSelect];
-		
-		if([all count])		
+		else if(selectionMode == SelectionSubtract)
+			[all removeObjectsInArray:directivesToSelect];
+		else if(selectionMode == SelectionIntersection)
 		{
-			[self selectDirectives:all];
+			NSMutableSet *orig = [NSMutableSet setWithArray:markedSelection];
+			[orig intersectSet:[NSSet setWithArray:directivesToSelect]];
+			sel = [orig allObjects];
 		}
-		else if (!shouldExtend)
+		
+		if([sel count])		
+		{
+			[self selectDirectives:sel];
+		}
+		else 
 		{
 			[self selectDirective:nil byExtendingSelection:NO];
 		}
 		
 	}
 	
-}//end LDrawGLView:wantsToSelectDirectives:byExtendingSelection:
+}//end LDrawGLView:wantsToSelectDirectives:selectionMode:
 
 
 //========== LDrawGLView:wantsToSelectDirective:byExtendingSelection: ==========

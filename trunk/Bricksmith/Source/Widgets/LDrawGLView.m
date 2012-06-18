@@ -176,6 +176,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	
 	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
 	[renderer setDelegate:self];
+
+	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 	
 	//---------- Load UI -------------------------------------------------------
 	
@@ -1087,7 +1090,27 @@ static Size2 NSSizeToSize2(NSSize size)
 	{
 		case RotateSelectTool:
 			//just use the standard arrow cursor.
-			cursor = [NSCursor arrowCursor];
+			if(self->selectionIsMarquee)
+			{
+				switch(self->marqueeSelectionMode) {
+				case SelectionIntersection:
+					cursorImage = [NSImage imageNamed:@"CrosshairTimes"];
+					break;
+				case SelectionExtend:
+					cursorImage = [NSImage imageNamed:@"CrosshairPlus"];
+					break;
+				case SelectionSubtract:
+					cursorImage = [NSImage imageNamed:@"CrosshairMinus"];
+					break;
+				case SelectionReplace:
+					cursorImage = [NSImage imageNamed:@"Crosshair"];
+					break;
+				}
+				cursor = [[[NSCursor alloc] initWithImage:cursorImage
+												  hotSpot:NSMakePoint(8, 8)] autorelease];
+			}
+			else			
+				cursor = [NSCursor arrowCursor];
 			break;
 		
 		case PanScrollTool:
@@ -1458,6 +1481,7 @@ static Size2 NSSizeToSize2(NSSize size)
 	// Reset event tracking flags.
 
 	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 
 	[self->renderer mouseDown];
 	
@@ -1629,6 +1653,7 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self resetCursor];
 
 	selectionIsMarquee = NO;
+	marqueeSelectionMode = SelectionReplace;
 	
 }//end mouseUp:
 
@@ -1920,40 +1945,49 @@ static Size2 NSSizeToSize2(NSSize size)
 {
 	NSPoint windowPoint     = [theEvent locationInWindow];
 	NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
-	BOOL    extendSelection = NO;
+	SelectionModeT selectionMode;
 	
 	[[self openGLContext] makeCurrentContext];
-	
+		
 	if([theEvent type] == NSLeftMouseDragged)
 	{
-		// Per the AHIG, both command and shift are used for multiple selection. In 
-		// Bricksmith, there is no difference between contiguous and non-contiguous 
-		// selection, so both keys do the same thing. 
-		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
-		// I doubt people would discover it. 
-		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
-		
+
 		[self->renderer mouseSelectionDragToPoint:V2Make(viewPoint.x, viewPoint.y)
-								  extendSelection:extendSelection];
+								  selectionMode:marqueeSelectionMode];
 							
 		[self setNeedsDisplay:YES];
 	}
 	else
 	{
-		// Per the AHIG, both command and shift are used for multiple selection. In 
-		// Bricksmith, there is no difference between contiguous and non-contiguous 
-		// selection, so both keys do the same thing. 
-		// -- We desperately need simple modifiers for rotating the view. Otherwise, 
-		// I doubt people would discover it. 
-		extendSelection =	([theEvent modifierFlags] & NSShiftKeyMask) != 0;
-	//					 ||	([theEvent modifierFlags] & NSCommandKeyMask) != 0;
-		
-		
+	
+	// Per the AHIG, both command and shift are used for multiple selection. In 
+	// Bricksmith, there is no difference between contiguous and non-contiguous 
+	// selection, so both keys do the same thing. 
+	// -- We desperately need simple modifiers for rotating the view. Otherwise, 
+	// I doubt people would discover it. 
+
+	if (([theEvent modifierFlags] & NSShiftKeyMask) != 0)
+	{
+		if(([theEvent modifierFlags] & NSAlternateKeyMask) != 0)
+			selectionMode = SelectionIntersection;
+		else
+			selectionMode = SelectionExtend;			
+	}
+	else 
+	{
+		if(([theEvent modifierFlags] & NSAlternateKeyMask) != 0)
+			selectionMode = SelectionSubtract;		
+		else
+			selectionMode = SelectionReplace;
+	}
+
 		// This click is a click down to see what we hit - record whether we hit something so
 		// we can then marquee or drag and drop.
 		selectionIsMarquee = ![self->renderer mouseSelectionClick:V2Make(viewPoint.x, viewPoint.y)
-												  extendSelection:extendSelection];
+												  selectionMode:selectionMode]
+						&& [self->delegate respondsToSelector:@selector(markPreviousSelection)];
+		if(selectionIsMarquee)
+			marqueeSelectionMode = selectionMode;
 	}
 }//end mousePartSelection:
 
@@ -2508,7 +2542,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self setNeedsDisplay:YES];
 }
 
-
 //========== LDrawGLRenderer:mouseIsOverPoint:confidence: ======================
 //
 // Purpose:		Reflect the mouse coordinates in the UI.
@@ -2575,16 +2608,16 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
-//========== LDrawGLRenderer:wantsToSelectDirectives:byExtendingSelection: ======
+//========== LDrawGLRenderer:wantsToSelectDirectives:selectMode ================
 //
 // Purpose:		Pass a multi-selection notification on to our delegate.
 //
 //==============================================================================
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect byExtendingSelection:(BOOL) shouldExtend
+- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer wantsToSelectDirectives:(NSArray *)directivesToSelect selectionMode:(SelectionModeT) selectionMode
 {
-	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:byExtendingSelection:)])
+	if([self->delegate respondsToSelector:@selector(LDrawGLView:wantsToSelectDirectives:selectionMode:)])
 	{
-		[self->delegate LDrawGLView:self wantsToSelectDirectives:directivesToSelect byExtendingSelection:shouldExtend];
+		[self->delegate LDrawGLView:self wantsToSelectDirectives:directivesToSelect selectionMode:selectionMode];
 	}
 }
 
