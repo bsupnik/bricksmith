@@ -4929,16 +4929,18 @@
 		objects = [pasteboard propertyListForType:LDrawDirectivePboardType];
 		for(counter = 0; counter < [objects count]; counter++)
 		{
+			NSInteger real_index = insertAtIndex;
+			if(real_index != NSNotFound)	real_index += counter;
 			data			= [objects objectAtIndex:counter];
 			currentObject	= [NSKeyedUnarchiver unarchiveObjectWithData:data];
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-				[self addModel:currentObject atIndex:insertAtIndex+counter preventNameCollisions:renameModels];
+				[self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
-				[self addStep:currentObject atIndex:insertAtIndex+counter];
+				[self addStep:currentObject atIndex:real_index];
 			else
-				[self addStepComponent:currentObject parent:parent index:insertAtIndex+counter];
+				[self addStepComponent:currentObject parent:parent index:real_index];
 			
 			[currentObject optimizeOpenGL];
 			[addedObjects addObject:currentObject];
