@@ -17,22 +17,39 @@
 @class LDrawTriangle;
 @class LDrawQuadrilateral;
 
+#define UNIFIED_VBOS		0
+
 ////////////////////////////////////////////////////////////////////////////////
 struct OptimizationTags
 {
-	GLuint          linesVBOTag;
-	GLuint          trianglesVBOTag;
-	GLuint          quadsVBOTag;
-	
-	GLuint          linesVAOTag;
-	GLuint          trianglesVAOTag;
-	GLuint          quadsVAOTag;
-	
-	GLsizei			lineCount;
-	GLsizei			triangleCount;
-	GLsizei			quadCount;
-	
-	GLuint          displayListTag;
+	#if UNIFIED_VBOS
+		GLuint          anyVBOTag;
+		GLuint          anyVAOTag;
+
+		GLint			lineOffset;
+		GLint			triangleOffset;
+		GLint			quadOffset;
+
+		GLsizei			lineCount;
+		GLsizei			triangleCount;
+		GLsizei			quadCount;
+		
+		GLuint          displayListTag;
+	#else
+		GLuint          linesVBOTag;
+		GLuint          trianglesVBOTag;
+		GLuint          quadsVBOTag;
+		
+		GLuint          linesVAOTag;
+		GLuint          trianglesVAOTag;
+		GLuint          quadsVAOTag;
+		
+		GLsizei			lineCount;
+		GLsizei			triangleCount;
+		GLsizei			quadCount;
+		
+		GLuint          displayListTag;
+	#endif
 };
 
 
