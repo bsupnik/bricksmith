@@ -979,6 +979,20 @@
 	[vertexes removeDirective:directive];
 }
 
+//========== removeDirective: ===============================================
+//
+// Purpose:		Removes one directive from our container.  We override this
+//				to find out our directive index _before_ the removal so we can
+//				keep our current step in sync!
+//
+//==============================================================================
+- (void) removeDirective:(LDrawDirective *)doomedDirective
+{
+	NSInteger idx = [self indexOfDirective:doomedDirective];
+	if(idx != NSNotFound && idx <= currentStepDisplayed)
+		--currentStepDisplayed;
+	[super removeDirective:doomedDirective];
+}
 
 #pragma mark -
 #pragma mark UTILITIES

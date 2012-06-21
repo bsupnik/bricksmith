@@ -208,6 +208,8 @@
 	LDrawMPDModel *firstModel = [[self submodels] objectAtIndex:0];
 	[self setActiveModel:firstModel];
 	
+	[self updateModelLookupTable];
+	
 	return self;
 	
 }//end initWithCoder:
@@ -400,20 +402,6 @@
 }//end activeModel
 
 
-//========== addSubmodel: ======================================================
-//
-// Purpose:		Adds a new submodel to the file. This method only accepts MPD 
-//				models, because adding additional submodels is meaningless 
-//				outside of MPD models.
-//
-//==============================================================================
-- (void) addSubmodel:(LDrawMPDModel *)newSubmodel
-{
-	[self insertDirective:newSubmodel atIndex:[[self subdirectives] count]];
-	
-}//end addSubmodel:
-
-
 //========== draggingDirectives ================================================
 //
 // Purpose:		Returns the objects that are currently being displayed as part 
@@ -440,8 +428,8 @@
 	NSMutableArray  *modelNames     = [NSMutableArray array];
 	NSInteger       counter         = 0;
 	
-	//Look through the models and see if we find one.
-	for(counter = 0; counter < numberModels; counter++){
+	for(counter = 0; counter < numberModels; counter++)
+	{
 		currentModel = [submodels objectAtIndex:counter];
 		[modelNames addObject:[currentModel modelName]];
 	}
@@ -459,23 +447,8 @@
 //==============================================================================
 - (LDrawMPDModel *) modelWithName:(NSString *)soughtName
 {
-	NSArray         *submodels      = [self subdirectives];
-	NSInteger       numberModels    = [submodels count];
-	LDrawMPDModel   *currentModel   = nil;
-	LDrawMPDModel   *foundModel     = nil;
-	NSInteger       counter         = 0;
-	
-	//Look through the models and see if we find one.
-	for(counter = 0; counter < numberModels; counter++)
-	{
-		currentModel = [submodels objectAtIndex:counter];
-		//remember, we standardized on lower-case names for searching.
-		if([[currentModel modelName] caseInsensitiveCompare:soughtName] == NSOrderedSame)
-		{
-			foundModel = currentModel;
-			break;
-		}
-	}
+	NSString		*referenceName	= [soughtName lowercaseString]; // we standardized on lower-case names for searching.
+	LDrawMPDModel	*foundModel 	= [self->nameModelDict objectForKey:referenceName];
 	
 	return foundModel;
 	
@@ -625,6 +598,50 @@
 
 
 #pragma mark -
+#pragma mark ACTIONS
+#pragma mark -
+
+//========== addSubmodel: ======================================================
+//
+// Purpose:		Adds a new submodel to the file. This method only accepts MPD 
+//				models, because adding additional submodels is meaningless 
+//				outside of MPD models.
+//
+//==============================================================================
+- (void) addSubmodel:(LDrawMPDModel *)newSubmodel
+{
+	[self insertDirective:newSubmodel atIndex:[[self subdirectives] count]];
+	
+}//end addSubmodel:
+
+
+//========== insertDirective:atIndex: ==========================================
+//
+// Purpose:		Adds directive into the collection at position index.
+//
+//==============================================================================
+- (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
+{
+	[super insertDirective:directive atIndex:index];
+	[self updateModelLookupTable];
+	
+}//end insertDirective:atIndex:
+
+
+//========== removeDirectiveAtIndex: ===========================================
+//
+// Purpose:		Removes the LDraw directive stored at index in this collection.
+//
+//==============================================================================
+- (void) removeDirectiveAtIndex:(NSInteger)index
+{
+	[super removeDirectiveAtIndex:index];
+	[self updateModelLookupTable];
+	
+}//end removeDirectiveAtIndex:
+
+
+#pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
 
@@ -770,6 +787,27 @@
 }//end renameModel:toName:
 
 
+//========== updateModelLookupTable ============================================
+//
+// Purpose:		Rebuilds the optimized lookup table for models.
+//
+//==============================================================================
+- (void) updateModelLookupTable
+{
+	NSArray 		*submodels	= [self submodels];
+	NSMutableArray	*names		= [NSMutableArray arrayWithCapacity:[submodels count]];
+	
+	for(LDrawMPDModel *model in submodels)
+	{
+		// always use lowercase for comparison
+		[names addObject:[[model modelName] lowercaseString]];
+	}
+	
+	[self->nameModelDict release];
+	self->nameModelDict = [[NSDictionary alloc] initWithObjects:submodels forKeys:names];
+}
+
+
 #pragma mark -
 #pragma mark DESTRUCTOR
 #pragma mark -
@@ -781,6 +819,7 @@
 //==============================================================================
 - (void) dealloc
 {
+	[nameModelDict	release];
 	[activeModel	release];
 	[filePath		release];
 	[editLock		release];

@@ -2424,6 +2424,10 @@
 	self->lockViewingAngle = NO;
 	[[self documentContents] unlockEditor];
 
+	// After a directive is deleted, we need to resynchronize our step field - maybe the current step changed.
+	// There may be other places where we need this too.
+	[self->stepField setIntegerValue:[[[self documentContents] activeModel] maximumStepIndexForStepDisplay] + 1];
+
 }//end deleteDirective:
 
 

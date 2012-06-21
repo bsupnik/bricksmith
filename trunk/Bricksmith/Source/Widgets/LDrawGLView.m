@@ -1594,7 +1594,10 @@ static Size2 NSSizeToSize2(NSSize size)
 				
 			case MouseDraggingBeginImmediately:
 				if (selectionIsMarquee)
+				{
+					[self autoscroll:theEvent];
 					[self mousePartSelection:theEvent];				
+				}
 				else
 					[self directInteractionDragged:theEvent];
 				break;
@@ -1604,7 +1607,10 @@ static Size2 NSSizeToSize2(NSSize size)
 					[self->renderer rotationDragged:dragDelta];
 				else {
 					if (selectionIsMarquee)
+					{
+						[self autoscroll:theEvent];
 						[self mousePartSelection:theEvent];				
+					}
 					else
 						[self directInteractionDragged:theEvent				];
 				}
@@ -1654,7 +1660,13 @@ static Size2 NSSizeToSize2(NSSize size)
 
 	selectionIsMarquee = NO;
 	marqueeSelectionMode = SelectionReplace;
-	
+
+	if(self->autoscrollTimer)
+	{
+		[self->autoscrollTimer invalidate];
+		self->autoscrollTimer = nil;
+	}
+		
 }//end mouseUp:
 
 
@@ -1987,7 +1999,18 @@ static Size2 NSSizeToSize2(NSSize size)
 												  selectionMode:selectionMode]
 						&& [self->delegate respondsToSelector:@selector(markPreviousSelection)];
 		if(selectionIsMarquee)
-			marqueeSelectionMode = selectionMode;
+		{
+			// We are starting a marquee select.  We can do this because our part selection is known to have missed
+			// a part and thus is a click in free space.  Start a timer to fire...if the user parks the mouse in the auto
+			// scroll zone this will continuously scroll.  I do _not_ know what the correct scrolling interval should be...
+			// auto-scroll seems jerky.
+			self->marqueeSelectionMode = selectionMode;
+			self->autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
+																		target:self
+																	  selector:@selector(autoscrollTimerFired:)
+																	  userInfo:self
+																	   repeats:YES ];
+		}
 	}
 }//end mousePartSelection:
 
@@ -2038,6 +2061,25 @@ static Size2 NSSizeToSize2(NSSize size)
 	self->canBeginDragAndDrop	= NO;
 	
 }//end cancelClickAndHoldTimer
+
+
+//========== autoscrollTimerFired: ===========================================
+//
+// Purpose:		If we got here, it means the user has successfully executed a 
+//				click-and-hold, which means that the mouse button was clicked, 
+//				held down, and not moved for a certain period of time. 
+//
+//				We use this action to initiate a drag-and-drop.
+//
+//==============================================================================
+- (void) autoscrollTimerFired:(NSTimer*)theTimer
+{
+	NSView * view = self;
+	NSEvent * event = [NSApp currentEvent];
+	if ([event type] == NSLeftMouseDragged )
+		[view autoscroll:event];
+}
+
 
 
 //========== clickAndHoldTimerFired: ===========================================

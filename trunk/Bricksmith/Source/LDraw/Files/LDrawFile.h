@@ -28,10 +28,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawFile : LDrawContainer
 {
-	LDrawMPDModel		*activeModel;
-	NSString			*filePath;			//where this file came from on disk.
-	NSUInteger			 drawCount;			//number of threads currently drawing us
-	NSConditionLock		*editLock;
+	NSDictionary	*nameModelDict;
+	LDrawMPDModel	*activeModel;
+	NSString		*filePath;			//where this file came from on disk.
+	NSUInteger		drawCount;			//number of threads currently drawing us
+	NSConditionLock *editLock;
 }
 
 // Initialization
@@ -60,5 +61,6 @@
 - (void) optimizeStructure;
 - (void) optimizeVertexes;
 - (void) renameModel:(LDrawMPDModel *)submodel toName:(NSString *)newName;
+- (void) updateModelLookupTable;
 
 @end
