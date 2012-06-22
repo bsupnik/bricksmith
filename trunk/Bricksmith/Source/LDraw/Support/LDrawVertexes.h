@@ -17,8 +17,6 @@
 @class LDrawTriangle;
 @class LDrawQuadrilateral;
 
-#define UNIFIED_VBOS		0
-
 ////////////////////////////////////////////////////////////////////////////////
 struct OptimizationTags
 {
