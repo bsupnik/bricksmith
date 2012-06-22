@@ -48,8 +48,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+// This stores quads as pairs of triangles in the VBO - 50% more vertex count but fewer draw calls.
 #define TESSELATE_QUADS								0
+
+// This wraps the two or three draw calls for a mesh in a display list.
 #define TRY_DISPLAY_LIST_WRAPPER_FOR_VAO			1
+
+// This draws wire frames by setting the polygon fill mode instead of generating separate meshes.
 #define USE_AUTOMATIC_WIREFRAMES					1
 
-
+// This stores the meshes for lines, tris and quads in one big VBO to cut vertex bind count.
+#define UNIFIED_VBOS								0

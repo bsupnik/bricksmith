@@ -100,19 +100,44 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 #endif
 	{
 		// Display lists with VAOs don't work on 10.5
-	
+
+#if UNIFIED_VBOS		
+		glBindVertexArrayAPPLE(tags.anyVAOTag);
+
 		// Lines
-		glBindVertexArrayAPPLE(tags.linesVAOTag);
-		glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
+		if(tags.lineCount)
+			glDrawArrays(GL_LINES, tags.lineOffset, tags.lineCount * 2);
+		if(tags.triangleCount)
+			glDrawArrays(GL_TRIANGLES, tags.triangleOffset, tags.triangleCount * 3);
+#if (TESSELATE_QUADS == 0)
+		if(tags.quadCount)
+			glDrawArrays(GL_QUADS, tags.quadOffset, tags.quadCount * 4);
+#endif
+
+#else
+		
+		// Lines
+		if(tags.lineCount)
+		{
+			glBindVertexArrayAPPLE(tags.linesVAOTag);
+			glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
+		}
 		
 		// Triangles
-		glBindVertexArrayAPPLE(tags.trianglesVAOTag);
-		glDrawArrays(GL_TRIANGLES, 0, tags.triangleCount * 3);
+		if(tags.triangleCount)
+		{
+			glBindVertexArrayAPPLE(tags.trianglesVAOTag);
+			glDrawArrays(GL_TRIANGLES, 0, tags.triangleCount * 3);
+		}
 		
 		// Quadrilaterals
 #if (TESSELATE_QUADS == 0)
-		glBindVertexArrayAPPLE(tags.quadsVAOTag);
-		glDrawArrays(GL_QUADS, 0, tags.quadCount * 4);
+		if(tags.quadCount)
+		{
+			glBindVertexArrayAPPLE(tags.quadsVAOTag);
+			glDrawArrays(GL_QUADS, 0, tags.quadCount * 4);
+		}
+#endif
 #endif
 	}
 }
@@ -494,6 +519,93 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 {
 	VBOVertexData           *buffer                 = NULL;
 	struct OptimizationTags tags                    = {};
+
+#if UNIFIED_VBOS
+
+	//---------- Lines VBO -----------------------------------------------------
+	{
+		glGenBuffers(1, &tags.anyVBOTag);
+		glBindBuffer(GL_ARRAY_BUFFER, tags.anyVBOTag);
+		
+		size_t			maxLineCount		= [self->lines count];
+		size_t			maxTriangleCount	= [self->triangles count];
+		size_t			maxQuadCount		= [self->quadrilaterals count];
+#if TESSELATE_QUADS
+		maxTriangleCount += ([self->quadrilaterals count] * 2);
+		maxQuadCount = 0;
+#endif
+		size_t			anyBufferSize = (maxLineCount * 2 + maxTriangleCount * 3 + maxQuadCount * 4) * sizeof(VBOVertexData);
+		VBOVertexData *	anyVertexes = malloc(anyBufferSize);
+		buffer = anyVertexes;
+		GLint			offset = 0;
+		
+		tags.lineOffset = offset;
+		for(LDrawLine *currentDirective in self->lines)
+		{
+			if([currentDirective isHidden] == NO)
+			{
+				buffer = [currentDirective writeToVertexBuffer:buffer parentColor:color wireframe:NO];
+				tags.lineCount++;
+				offset += 2;
+			}
+		}
+		tags.triangleOffset = offset;
+		for(LDrawTriangle *currentDirective in self->triangles)
+		{
+			if([currentDirective isHidden] == NO)
+			{
+				buffer = [currentDirective writeToVertexBuffer:buffer parentColor:color wireframe:NO];
+				tags.triangleCount++;
+				offset += 3;
+			}
+		}
+	#if TESSELATE_QUADS
+		for(LDrawQuadrilateral *currentDirective in self->quadrilaterals)
+		{
+			if([currentDirective isHidden] == NO)
+			{
+				buffer = [currentDirective writeToVertexBuffer:buffer parentColor:color wireframe:NO];
+				tags.triangleCount += 2;
+				offset += 6;
+			}
+		}
+	#endif
+		tags.quadOffset = offset;
+	#if !TESSELATE_QUADS
+		for(LDrawQuadrilateral *currentDirective in self->quadrilaterals)
+		{
+			if([currentDirective isHidden] == NO)
+			{
+				buffer = [currentDirective writeToVertexBuffer:buffer parentColor:color wireframe:NO];
+				tags.quadCount++;
+				offset += 4;
+			}
+		}
+	
+	#endif
+			
+		glBufferData(GL_ARRAY_BUFFER, anyBufferSize, anyVertexes, GL_STATIC_DRAW);
+		free(anyVertexes);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		// Encapsulate in a VAO
+		glGenVertexArraysAPPLE(1, &tags.anyVAOTag);
+		glBindVertexArrayAPPLE(tags.anyVAOTag);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glBindBuffer(GL_ARRAY_BUFFER, tags.anyVBOTag);
+		glVertexPointer(3, GL_FLOAT, sizeof(VBOVertexData), NULL);
+		glNormalPointer(GL_FLOAT,    sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3));
+		glColorPointer(4, GL_FLOAT,  sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3 + sizeof(float)*3) );
+	}
+	
+
+
+
+
+
+#else
 	
 	//---------- Lines VBO -----------------------------------------------------
 	{
@@ -634,6 +746,8 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	}
 	
 #endif
+
+#endif
 	
 	//---------- Wrap it all in a display list ---------------------------------
 	
@@ -655,21 +769,52 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 		tags.displayListTag = glGenLists(1);
 		glNewList(tags.displayListTag, GL_COMPILE);
 		{
+#if UNIFIED_VBOS
+			glBindVertexArrayAPPLE(tags.anyVAOTag);
+
 			// Lines
-			glBindVertexArrayAPPLE(tags.linesVAOTag);
-			glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
-			
+			if(tags.lineCount)
+				glDrawArrays(GL_LINES, tags.lineOffset, tags.lineCount * 2);
+			if(tags.triangleCount)
+				glDrawArrays(GL_TRIANGLES, tags.triangleOffset, tags.triangleCount * 3);
+#if (TESSELATE_QUADS == 0)
+			if(tags.quadCount)
+				glDrawArrays(GL_QUADS, tags.quadOffset, tags.quadCount * 4);
+#endif
+
+#else
+
+			// Lines
+			if(tags.lineCount)
+			{
+				glBindVertexArrayAPPLE(tags.linesVAOTag);
+				glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
+			}
 			// Triangles
-			glBindVertexArrayAPPLE(tags.trianglesVAOTag);
-			glDrawArrays(GL_TRIANGLES, 0, tags.triangleCount * 3);
+			if(tags.triangleCount)
+			{
+				glBindVertexArrayAPPLE(tags.trianglesVAOTag);
+				glDrawArrays(GL_TRIANGLES, 0, tags.triangleCount * 3);
+			}
 			
 			// Quadrilaterals
 #if (TESSELATE_QUADS == 0)
-			glBindVertexArrayAPPLE(tags.quadsVAOTag);
-			glDrawArrays(GL_QUADS, 0, tags.quadCount * 4);
+			if(tags.quadCount)
+			{
+				glBindVertexArrayAPPLE(tags.quadsVAOTag);
+				glDrawArrays(GL_QUADS, 0, tags.quadCount * 4);
+			}
+#endif
 #endif
 		}
 		glEndList();
+		
+		/* purge stuff out */
+		GLuint my_dl = tags.displayListTag;
+		tags.displayListTag = 0;
+		DeleteOptimizationTags(tags);
+		tags.displayListTag = my_dl;
+		
 	}
 #endif
 	
@@ -694,9 +839,13 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	
 	//---------- Lines VBO -----------------------------------------------------
 	{
+#if UNIFIED_VBOS
+		glGenBuffers(1, &tags.anyVBOTag);
+		glBindBuffer(GL_ARRAY_BUFFER, tags.anyVBOTag);
+#else	
 		glGenBuffers(1, &tags.linesVBOTag);
 		glBindBuffer(GL_ARRAY_BUFFER, tags.linesVBOTag);
-		
+#endif		
 		size_t          maxVertexCount  = 0;
 		size_t          linesBufferSize = 0;
 		VBOVertexData   *lineVertexes   = 0;
@@ -741,12 +890,21 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			// Encapsulate in a VAO
+#if UNIFIED_VBOS			
+			glGenVertexArraysAPPLE(1, &tags.anyVAOTag);
+			glBindVertexArrayAPPLE(tags.anyVAOTag);
+#else
 			glGenVertexArraysAPPLE(1, &tags.linesVAOTag);
 			glBindVertexArrayAPPLE(tags.linesVAOTag);
+#endif
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
+#if UNIFIED_VBOS			
+			glBindBuffer(GL_ARRAY_BUFFER, tags.anyVBOTag);
+#else
 			glBindBuffer(GL_ARRAY_BUFFER, tags.linesVBOTag);
+#endif
 			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertexData), NULL);
 			glNormalPointer(GL_FLOAT,    sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3));
 			glColorPointer(4, GL_FLOAT,  sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3 + sizeof(float)*3) );
@@ -774,8 +932,13 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 		glNewList(tags.displayListTag, GL_COMPILE);
 		{
 			// Lines
+#if UNIFIED_VBOS			
+			glBindVertexArrayAPPLE(tags.anyVAOTag);
+#else
 			glBindVertexArrayAPPLE(tags.linesVAOTag);
-			glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
+#endif		
+			if(tags.lineCount)			
+				glDrawArrays(GL_LINES, 0, tags.lineCount * 2);
 		}
 		glEndList();
 	}
@@ -885,15 +1048,31 @@ void DeleteOptimizationTags(struct OptimizationTags tags)
 	if(tags.displayListTag != 0)
 	{
 #if TRY_DISPLAY_LIST_WRAPPER_FOR_VAO
+		if(tags.displayListTag)
 		glDeleteLists(tags.displayListTag, 1);
 #endif
+#if UNIFIED_VBOS
+		if(tags.anyVBOTag)
+		glDeleteBuffers(1, &tags.anyVBOTag);		
+		if(tags.anyVAOTag)
+		glDeleteVertexArraysAPPLE(1, &tags.anyVAOTag);
 		
+		tags.displayListTag     = 0;
+		tags.anyVBOTag        = 0;
+		tags.anyVAOTag        = 0;
+#else		
+		if(tags.linesVBOTag)
 		glDeleteBuffers(1, &tags.linesVBOTag);
+		if(tags.trianglesVBOTag)
 		glDeleteBuffers(1, &tags.trianglesVBOTag);
+		if(tags.quadsVBOTag)
 		glDeleteBuffers(1, &tags.quadsVBOTag);
 		
+		if(tags.linesVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.linesVAOTag);
+		if(tags.trianglesVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.trianglesVAOTag);
+		if(tags.quadsVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.quadsVAOTag);
 		
 		tags.displayListTag     = 0;
@@ -903,5 +1082,6 @@ void DeleteOptimizationTags(struct OptimizationTags tags)
 		tags.linesVAOTag        = 0;
 		tags.trianglesVAOTag    = 0;
 		tags.quadsVAOTag        = 0;
+#endif		
 	}
 }

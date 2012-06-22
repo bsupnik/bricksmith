@@ -287,12 +287,13 @@
 	{	// reset periodically
 		fpsStartTime = [NSDate timeIntervalSinceReferenceDate]; 
 		framesSinceStartTime = 0;
-		NSLog(@"fps = ????????, draw time: %f", drawTime);
+		NSLog(@"fps = ????????, period = ????????, draw time: %f", drawTime);
 	}
 	else
 	{
 		CGFloat framesPerSecond = framesSinceStartTime / timeSinceMark;
-		NSLog(@"fps = %f, draw time: %f", framesPerSecond, drawTime);
+		CGFloat period = timeSinceMark / framesSinceStartTime;
+		NSLog(@"fps = %f, period = %f, draw time: %f", framesPerSecond, period, drawTime);
 	}
 #endif //DEBUG_DRAWING
 	
