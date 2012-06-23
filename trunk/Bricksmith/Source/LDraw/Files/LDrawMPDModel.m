@@ -366,7 +366,7 @@
 	
 	modelName = newModelName;
 	
-	[[self enclosingFile] updateModelLookupTable];
+	[self sendMessageToObservers:MessageNameChanged];
 	
 }//end setModelName:
 

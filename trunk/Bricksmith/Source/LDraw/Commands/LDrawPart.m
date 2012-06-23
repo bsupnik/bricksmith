@@ -257,7 +257,7 @@
 	// If the part is selected, we need to give some indication. We do this 
 	// by drawing it as a wireframe instead of a filled color. This setting 
 	// also conveniently applies to all referenced parts herein. 
-	if(self->isSelected == YES)
+	if([self isSelected] == YES)
 	{
 #if (USE_AUTOMATIC_WIREFRAMES)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -307,7 +307,7 @@
 	glPopMatrix();
 
 	// Done drawing a selected part? Then switch back to normal filled drawing. 
-	if(self->isSelected == YES)
+	if([self isSelected] == YES)
 	{
 #if (USE_AUTOMATIC_WIREFRAMES)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

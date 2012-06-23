@@ -20,7 +20,7 @@
 // Class:		LDrawContainer
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawContainer : LDrawDirective <NSCoding, NSCopying>
+@interface LDrawContainer : LDrawDirective <NSCoding, NSCopying, LDrawObserver>
 {
 	@private
 	NSMutableArray		*containedObjects;
