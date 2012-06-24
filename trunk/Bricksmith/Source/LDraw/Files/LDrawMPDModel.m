@@ -366,6 +366,8 @@
 	
 	modelName = newModelName;
 	
+	[[self enclosingFile] updateModelLookupTable];
+	
 }//end setModelName:
 
 

@@ -413,22 +413,21 @@
 //==============================================================================
 - (LDrawFile *) enclosingFile
 {
-	NSArray     *ancestors      = [self ancestors];
-	id          currentAncestor = nil;
-	BOOL        foundIt         = NO;
-	NSInteger   counter         = 0;
+	LDrawDirective	*currentAncestor	= self;
+	BOOL			foundIt 			= NO;
 	
-	//loop through the ancestors looking for an LDrawFile.
-	for(counter = 0; counter < [ancestors count] && foundIt == NO; counter++)
+	while(currentAncestor != nil)
 	{
-		currentAncestor = [ancestors objectAtIndex:counter];
-		
 		if([currentAncestor isKindOfClass:[LDrawFile class]])
+		{
 			foundIt = YES;
+			break;
+		}
+		currentAncestor = [currentAncestor enclosingDirective];
 	}
 	
 	if(foundIt == YES)
-		return currentAncestor;
+		return (LDrawFile *)currentAncestor;
 	else
 		return nil;
 	
@@ -443,22 +442,21 @@
 //==============================================================================
 - (LDrawModel *) enclosingModel
 {
-	NSArray     *ancestors      = [self ancestors];
-	id          currentAncestor = nil;
-	BOOL        foundIt         = NO;
-	NSInteger   counter         = 0;
+	LDrawDirective	*currentAncestor	= self;
+	BOOL			foundIt 			= NO;
 	
-	//loop through the ancestors looking for an LDrawFile.
-	for(counter = 0; counter < [ancestors count] && foundIt == NO; counter++)
+	while(currentAncestor != nil)
 	{
-		currentAncestor = [ancestors objectAtIndex:counter];
-		
 		if([currentAncestor isKindOfClass:[LDrawModel class]])
+		{
 			foundIt = YES;
+			break;
+		}
+		currentAncestor = [currentAncestor enclosingDirective];
 	}
 	
 	if(foundIt == YES)
-		return currentAncestor;
+		return (LDrawModel *)currentAncestor;
 	else
 		return nil;
 	
@@ -473,22 +471,21 @@
 //==============================================================================
 - (LDrawStep *) enclosingStep
 {
-	NSArray     *ancestors      = [self ancestors];
-	id          currentAncestor = nil;
-	BOOL        foundIt         = NO;
-	NSInteger   counter         = 0;
+	LDrawDirective	*currentAncestor	= self;
+	BOOL			foundIt 			= NO;
 	
-	//loop through the ancestors looking for an LDrawFile.
-	for(counter = 0; counter < [ancestors count] && foundIt == NO; counter++)
+	while(currentAncestor != nil)
 	{
-		currentAncestor = [ancestors objectAtIndex:counter];
-		
 		if([currentAncestor isKindOfClass:[LDrawStep class]])
+		{
 			foundIt = YES;
+			break;
+		}
+		currentAncestor = [currentAncestor enclosingDirective];
 	}
 	
 	if(foundIt == YES)
-		return currentAncestor;
+		return (LDrawStep *)currentAncestor;
 	else
 		return nil;
 	
