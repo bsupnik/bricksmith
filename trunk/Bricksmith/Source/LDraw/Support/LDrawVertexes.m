@@ -808,13 +808,6 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 #endif
 		}
 		glEndList();
-		
-		/* purge stuff out */
-		GLuint my_dl = tags.displayListTag;
-		tags.displayListTag = 0;
-		DeleteOptimizationTags(tags);
-		tags.displayListTag = my_dl;
-		
 	}
 #endif
 	
@@ -1048,31 +1041,22 @@ void DeleteOptimizationTags(struct OptimizationTags tags)
 	if(tags.displayListTag != 0)
 	{
 #if TRY_DISPLAY_LIST_WRAPPER_FOR_VAO
-		if(tags.displayListTag)
 		glDeleteLists(tags.displayListTag, 1);
 #endif
 #if UNIFIED_VBOS
-		if(tags.anyVBOTag)
 		glDeleteBuffers(1, &tags.anyVBOTag);		
-		if(tags.anyVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.anyVAOTag);
 		
 		tags.displayListTag     = 0;
 		tags.anyVBOTag        = 0;
 		tags.anyVAOTag        = 0;
 #else		
-		if(tags.linesVBOTag)
 		glDeleteBuffers(1, &tags.linesVBOTag);
-		if(tags.trianglesVBOTag)
 		glDeleteBuffers(1, &tags.trianglesVBOTag);
-		if(tags.quadsVBOTag)
 		glDeleteBuffers(1, &tags.quadsVBOTag);
 		
-		if(tags.linesVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.linesVAOTag);
-		if(tags.trianglesVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.trianglesVAOTag);
-		if(tags.quadsVAOTag)
 		glDeleteVertexArraysAPPLE(1, &tags.quadsVAOTag);
 		
 		tags.displayListTag     = 0;
