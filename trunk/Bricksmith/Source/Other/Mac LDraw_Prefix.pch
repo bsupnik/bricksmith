@@ -52,13 +52,5 @@
 // Mixed results in perf tests.
 #define TESSELATE_QUADS								0
 
-// This wraps the two or three draw calls for a mesh in a display list.
-// Appears to be slower than using one VBO.
-#define TRY_DISPLAY_LIST_WRAPPER_FOR_VAO			0
-
 // This draws wire frames by setting the polygon fill mode instead of generating separate meshes.
 #define USE_AUTOMATIC_WIREFRAMES					1
-
-// This stores the meshes for lines, tris and quads in one big VBO to cut vertex bind count.
-// Always a win to use fewer VBOs.
-#define UNIFIED_VBOS								1
