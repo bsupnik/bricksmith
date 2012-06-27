@@ -252,6 +252,9 @@
 							p2.x,p2.y,
 							p1.x,p2.y };
 							
+		glBindVertexArrayAPPLE(0);
+		glBindBuffer(GL_ARRAY_BUFFER,0);
+							
 		glVertexPointer(2, GL_FLOAT, 0, vertices);
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
