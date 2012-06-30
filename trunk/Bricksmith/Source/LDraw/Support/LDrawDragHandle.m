@@ -339,6 +339,7 @@ static const float HandleDiameter	= 7.0;
 	glVertexPointer(3, GL_FLOAT, sizeof(VBOVertexData), NULL);
 	glNormalPointer(GL_FLOAT,    sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3));
 	glColorPointer(4, GL_FLOAT,  sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3 + sizeof(float)*3) );
+	glBindVertexArrayAPPLE(0);
 }
 
 

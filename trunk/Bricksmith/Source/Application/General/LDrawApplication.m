@@ -450,6 +450,12 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		[[[PartBrowserPanelController sharedPartBrowserPanel] window] makeKeyAndOrderFront:self];
 	}
 	
+	#if DEBUG
+	[[NSDocumentController sharedDocumentController] setAutosavingDelay:30 ];	// Debug build?  Save quick - no need to lose work when an assert() fires.
+	#else
+	[[NSDocumentController sharedDocumentController] setAutosavingDelay:300];
+	#endif
+	
 }//end applicationDidFinishLaunching:
 
 

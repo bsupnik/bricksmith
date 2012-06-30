@@ -86,6 +86,7 @@
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_MULTISAMPLE); //antialiasing
 	
+	// This represents the "default" GL state, at least until we change that policy.
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -227,6 +228,11 @@
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
 
+	// We allow primitive drawing to leave their VAO bound to avoid setting the VAO
+	// back to zero between every draw call.  Set it once here to avoid usign some
+	// poor directive to draw!
+	glBindVertexArrayAPPLE(0);
+
 	// Marquee selection box -- only if non-zero.
 	if( V2BoxWidth(self->selectionMarquee) != 0 && V2BoxHeight(self->selectionMarquee) != 0)
 	{
@@ -252,8 +258,6 @@
 							p2.x,p2.y,
 							p1.x,p2.y };
 							
-		glBindVertexArrayAPPLE(0);
-		glBindBuffer(GL_ARRAY_BUFFER,0);
 							
 		glVertexPointer(2, GL_FLOAT, 0, vertices);
 		glDisableClientState(GL_NORMAL_ARRAY);
