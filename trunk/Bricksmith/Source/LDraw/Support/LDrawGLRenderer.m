@@ -29,6 +29,7 @@
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#include "OpenGLUtilities.h"
 
 #define DEBUG_DRAWING				0
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
@@ -216,6 +217,12 @@
 	}
 #endif //DEBUG_DRAWING
 
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
+
 	//Load the model matrix to make sure we are applying the right stuff.
 	glMatrixMode(GL_MODELVIEW);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -232,6 +239,12 @@
 	// back to zero between every draw call.  Set it once here to avoid usign some
 	// poor directive to draw!
 	glBindVertexArrayAPPLE(0);
+
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
 
 	// Marquee selection box -- only if non-zero.
 	if( V2BoxWidth(self->selectionMarquee) != 0 && V2BoxHeight(self->selectionMarquee) != 0)
@@ -272,6 +285,13 @@
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
+	
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
+	
 	
 	[self->delegate LDrawGLRendererNeedsFlush:self];
 	
