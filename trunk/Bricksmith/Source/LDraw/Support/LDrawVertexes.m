@@ -564,6 +564,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 		glColorPointer(4, GL_FLOAT,  sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3 + sizeof(float)*3) );
 		
 		glBindVertexArrayAPPLE(0);		
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	
 	// Cache
@@ -645,6 +646,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			glColorPointer(4, GL_FLOAT,  sizeof(VBOVertexData), (GLvoid*)(sizeof(float)*3 + sizeof(float)*3) );
 
 			glBindVertexArrayAPPLE(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}	
 

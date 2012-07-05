@@ -64,7 +64,7 @@
 - (void) sharedPartCatalogDidChange:(NSNotification *)notification;
 
 //Utilities
-- (NSMutableArray *) filterPartRecords:(NSArray *)partRecords bySearchString:(NSString *)searchString;
+- (NSMutableArray *) filterPartRecords:(NSArray *)partRecords bySearchString:(NSString *)searchString excludeParts:(NSSet *)excludedParts;
 - (NSUInteger) indexOfPartNamed:(NSString *)searchName;
 - (void) performSearch;
 - (void) setConstraints;
