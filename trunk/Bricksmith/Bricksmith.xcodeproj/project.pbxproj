@@ -282,6 +282,8 @@
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
 		D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */; };
+		D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */; };
+		D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -595,6 +597,8 @@
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
 		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
 		D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairPlus.tiff; sourceTree = "<group>"; };
+		D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtilities.h; sourceTree = "<group>"; };
+		D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenGLUtilities.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -672,6 +676,8 @@
 				0BC75338136FC878002568B8 /* PartLibrary.m */,
 				0BE523FF1373C26200E21FBC /* PartReport.h */,
 				0BE524001373C26200E21FBC /* PartReport.m */,
+				D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */,
+				D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1227,6 +1233,7 @@
 				0B3B76AC13DB86AE007CCC5D /* LDrawGLRenderer.h in Headers */,
 				0BBCFE801529492D00728A54 /* TableViewCategory.h in Headers */,
 				0B6122ED153516600085F944 /* LDrawTexture.h in Headers */,
+				D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1488,6 +1495,7 @@
 				0B85168F1400CC34009E3776 /* LDrawGLRenderer.m in Sources */,
 				0BBCFE811529492D00728A54 /* TableViewCategory.m in Sources */,
 				0B6122EE153516600085F944 /* LDrawTexture.m in Sources */,
+				D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
