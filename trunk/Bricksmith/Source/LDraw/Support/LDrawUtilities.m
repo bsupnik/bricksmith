@@ -79,9 +79,13 @@ static NSString				*defaultAuthor		= @"anonymous";
 //------------------------------------------------------------------------------
 + (void) setDefaultAuthor:(NSString *)nameIn
 {
-	[nameIn retain];
-	[defaultAuthor release];
-	defaultAuthor = nameIn;
+    // LLW: If the incoming nameIn is nil, leave this alone.
+    if (nameIn != nil)
+    {
+        [nameIn retain];
+        [defaultAuthor release];
+        defaultAuthor = nameIn;
+    }
 }
 
 
