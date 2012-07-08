@@ -854,11 +854,27 @@
 			
 			if([excludedParts containsObject:partNumber] == NO)
 			{
-				if(		[partNumber			containsString:searchString options:NSCaseInsensitiveSearch]
-					||	[partSansWhitespace	containsString:searchSansWhitespace options:NSCaseInsensitiveSearch] )
-				{
+	            // LLW - Change to treat each word in a search string as an item in a list, and
+	            // a match happens only if each word can be found in the either the part number or
+	            // the name. This is independent of order, so a search like "2x2 plate" and "plate 2x2"
+	            // will return the same results.
+	            //
+	            // Some examples of results that are returned with this change that would _not_
+	            // be returned with the original code:
+	            //  Search          Sample result
+	            //  "2x2 plate"     "Plate 2 x 2"
+	            //  "tile clip"     "Tile 1x1 with clip"
+	            //  "four studs"    "Brick 1 x 1 with Studs on Four Sides"
+	            //  "offset plate"  "Plate 1 x 4 Offset"
+	            //  "axle pin 2x2"  "Brick 2 x 2 with Pin and Axlehole"
+     	       __block BOOL matches = TRUE;
+        	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
+    	            matches = matches && 
+                	        ([partNumber            containsString:word options:NSCaseInsensitiveSearch] ||	
+            	             [partSansWhitespace    containsString:word options:NSCaseInsensitiveSearch]);
+        	    }];            
+				if(matches)
 					[matchingParts addObject:record];
-				}
 				else
 				{
 					NSArray *keywords = [record objectForKey:PART_KEYWORDS_KEY];
