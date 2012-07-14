@@ -776,8 +776,7 @@
 	float                   nudgeMagnitude      = [BricksmithUtilities gridSpacingForMode:self->gridMode];
 	NSInteger               counter             = 0;
 	
-	//normalize just in case someone didn't get the message!
-	nudgeVector = V3Normalize(nudgeVector);
+	// We do not normalize the nudge vector - nudge might be set to a multiple of the grid on purpose.
 	
 	nudgeVector.x *= nudgeMagnitude;
 	nudgeVector.y *= nudgeMagnitude;

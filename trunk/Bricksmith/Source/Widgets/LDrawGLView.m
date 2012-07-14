@@ -52,7 +52,10 @@
 #import "ScrollViewCategory.h"
 #import "UserDefaultsCategory.h"
 
-#define DEBUG_DRAWING				0
+#define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
+#define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
+#define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
+
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
 
@@ -1333,6 +1336,7 @@ static Size2 NSSizeToSize2(NSSize size)
 	Vector3		zNudge			= ZeroPoint3;
 	Vector3		actualNudge		= ZeroPoint3;
 	BOOL		isZMovement		= NO;
+	BOOL		isFastNudge		= NO;
 	BOOL		isNudge			= NO;
 	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
@@ -1343,19 +1347,62 @@ static Size2 NSSizeToSize2(NSSize size)
 		{
 			firstCharacter	= [characters characterAtIndex:0]; //the key pressed
 			
-			// find which model-coordinate directions our screen axes are best 
-			// aligned with. 
-			[self->renderer getModelAxesForViewX:&xNudge
-											   Y:&yNudge
-											   Z:&zNudge ];
+			if ([self projectionMode] == ProjectionModeOrthographic || !USE_TURNTABLE)
+			{
+				// find which model-coordinate directions our screen axes are best 
+				// aligned with. 
+				[self->renderer getModelAxesForViewX:&xNudge
+													Y:&yNudge
+													Z:&zNudge ];
+			} else {
+
+				/* 
+					This view mode matches the turntable-style editing:
+					The model "horizontal" axes x & z always match x & z nudge,
+					but which one is X and which way they go match screen space
+					for sanity.
+					Up-down is ALWAYS y, with a reverse if you (insanely) flip
+					the model's pitch by > 90 degrees.
+					Since the Y axis is always Y, there is never any question 
+					whether we'll be pulling depth or height.
+					Finally: the model's Z or X axis is aligned with screen space
+					Y so that if we are looking DOWN on a model and we pull a brick
+					toward us, it moves down, which matches what we'd expect.  In
+					other words, the depth perspective matches screen space.
+				*/
+
+				Matrix4 matrix = [self->renderer getMatrix];
+				Vector4 x_model = { 1, 0, 0 };
+				Vector4 y_model = { 0, 1, 0 };
+				Vector4 z_model = { 0, 0, 1 };
 				
+				Vector4 x_screen = V4MulPointByMatrix(x_model, matrix);
+				Vector4 y_screen = V4MulPointByMatrix(y_model, matrix);
+				Vector4 z_screen = V4MulPointByMatrix(z_model, matrix);
+				
+				if(fabsf(x_screen.x) > fabsf(z_screen.x))
+				{
+					xNudge.x = (x_screen.x > 0.0f) ? 1.0f : -1.0f;
+					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
+					zNudge.z = (z_screen.y > 0.0f) ? -1.0f : 1.0f;
+				}
+				else 
+				{
+					xNudge.z = (z_screen.x > 0.0f) ? 1.0f : -1.0f;
+					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
+					zNudge.x = (x_screen.y < 0.0f) ? 1.0f : -1.0f;
+				}
+			}
+							
 			// By holding down the option key, we transcend the two-plane 
 			// limitation presented by the arrow keys. Option-presses mean 
 			// movement along the z-axis. Note that move "in" to the screen (up 
 			// arrow, left arrow?) is a movement along the screen's negative 
 			// z-axis. 
 			isZMovement	= ([theEvent modifierFlags] & NSAlternateKeyMask) != 0;
+			isFastNudge = ([theEvent modifierFlags] & NSShiftKeyMask) != 0;
 			isNudge		= NO;
+			
 			
 			//now we must select which axis we actually are nudging on.
 			switch(firstCharacter)
@@ -1385,7 +1432,7 @@ static Size2 NSSizeToSize2(NSSize size)
 					
 				case NSLeftArrowFunctionKey:
 				
-					if(isZMovement == YES)
+					if(isZMovement == YES && 0)
 					{
 						//this is iffy at best
 						// -- and it made things go the wrong way in default 3D 
@@ -1402,7 +1449,7 @@ static Size2 NSSizeToSize2(NSSize size)
 					
 				case NSRightArrowFunctionKey:
 				
-					if(isZMovement == YES)
+					if(isZMovement == YES && 0)
 					{
 //						actualNudge = zNudge;
 						actualNudge = V3Negate(zNudge);
@@ -1420,6 +1467,8 @@ static Size2 NSSizeToSize2(NSSize size)
 			// charge of manipulating the data.
 			if(isNudge == YES)
 			{
+				if(isFastNudge)
+					actualNudge = V3Scale(actualNudge,10.0);
 				self->nudgeVector = actualNudge;
 				[NSApp sendAction:self->nudgeAction to:self->target from:self];
 				self->nudgeVector = ZeroPoint3;
@@ -1464,7 +1513,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 }
 
-
 //========== mouseDown: ========================================================
 //
 // Purpose:		We received a mouseDown before a mouseDragged. Handy thought.
@@ -1475,6 +1523,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	MouseDragBehaviorT	 draggingBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
+	
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 	
 	[[self openGLContext] makeCurrentContext];
 
@@ -1552,6 +1603,9 @@ static Size2 NSSizeToSize2(NSSize size)
 	MouseDragBehaviorT  draggingBehavior    = [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
 	ToolModeT           toolMode            = [ToolPalette toolMode];
 	Vector2             dragDelta           = V2Make([theEvent deltaX], [theEvent deltaY]);
+
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 	
 	[[self openGLContext] makeCurrentContext];
 
@@ -1634,6 +1688,8 @@ static Size2 NSSizeToSize2(NSSize size)
 - (void) mouseUp:(NSEvent *)theEvent
 {
 	ToolModeT			 toolMode			= [ToolPalette toolMode];
+	if([theEvent buttonNumber] == 1)
+		toolMode = SpinTool;
 
 	[[self openGLContext] makeCurrentContext];
 	
@@ -1669,6 +1725,26 @@ static Size2 NSSizeToSize2(NSSize size)
 		
 }//end mouseUp:
 
+- (void) rightMouseDown:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseDown:theEvent];
+}
+- (void) rightMouseDragged:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseDragged:theEvent];
+	else
+	{
+		Vector2             dragDelta           = V2Make([theEvent deltaX], [theEvent deltaY]);
+		[self->renderer rotationDragged:dragDelta];
+	}
+}
+- (void) rightMouseUp:(NSEvent *)theEvent
+{
+	if(!USE_RIGHT_SPIN)
+		[super rightMouseUp:theEvent];
+}
 
 //========== menuForEvent: =====================================================
 //
@@ -1768,7 +1844,7 @@ static Size2 NSSizeToSize2(NSSize size)
 {
 	NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 
-	if(modifiers == NSAlternateKeyMask)
+	if(modifiers == NSAlternateKeyMask || USE_ZOOM_WHEEL)
 	{
 		// Zoom in
 		[[self openGLContext] makeCurrentContext];

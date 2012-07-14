@@ -30,6 +30,11 @@
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
 #include "OpenGLUtilities.h"
+#include "MacLDraw.h"
+
+#define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
+#define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
+#define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
 #define DEBUG_DRAWING				0
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
@@ -1513,6 +1518,13 @@
 	CGFloat	rotationAboutX	= - ( percentDragY * 180 ); //multiply by -1,
 				// as we need to convert our drag into a proper rotation 
 				// direction. See notes in function header.
+
+	if(USE_TURNTABLE)
+	{
+		Tuple3 view_now = [self viewingAngle];
+		if(view_now.x * view_now.y * view_now.z < 0.0)
+			rotationAboutY = -rotationAboutY;
+	}	
 	
 	//Get the current transformation matrix. By using its inverse, we can 
 	// convert projection-coordinates back to the model coordinates they 
@@ -1532,6 +1544,12 @@
 	// a model point. 
 	transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
 	transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
+
+	if(USE_TURNTABLE)
+	{
+		rotationAboutY = -rotationAboutY;
+		transformedVectorY = vectorY;
+	}
 	
 	if(self->viewOrientation != ViewOrientation3D)
 	{
@@ -1541,8 +1559,8 @@
 	
 	//Now rotate the model around the visual "up" and "down" directions.
 	glMatrixMode(GL_MODELVIEW);
-	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
+	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	
 	if([self->delegate respondsToSelector:@selector(LDrawGLRendererMouseNotPositioning:)])
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
@@ -1550,7 +1568,6 @@
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
 }//end rotationDragged
-
 
 //========== zoomDragged: ======================================================
 //
