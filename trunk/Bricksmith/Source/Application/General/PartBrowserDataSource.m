@@ -821,12 +821,14 @@
 //==============================================================================
 - (NSMutableArray *) filterPartRecords:(NSArray *)partRecords
 						bySearchString:(NSString *)searchString
+						  excludeParts:(NSSet *)excludedParts
 {
 	NSDictionary    *record                 = nil;
 	NSUInteger      counter                 = 0;
 	NSString        *partNumber             = nil;
 	NSString        *partDescription        = nil;
 	NSString        *partSansWhitespace     = nil;
+	NSString		*category				= nil;
 	NSMutableArray  *matchingParts          = nil;
 	NSString        *searchSansWhitespace   = [searchString stringByRemovingWhitespace];
 	
@@ -848,26 +850,45 @@
 			partNumber			= [record objectForKey:PART_NUMBER_KEY];
 			partDescription		= [record objectForKey:PART_NAME_KEY];
 			partSansWhitespace	= [partDescription stringByRemovingWhitespace];
+			category			= [record objectForKey:PART_CATEGORY_KEY];
 			
-			if(		[partNumber			containsString:searchString options:NSCaseInsensitiveSearch]
-				||	[partSansWhitespace	containsString:searchSansWhitespace options:NSCaseInsensitiveSearch] )
+			if([excludedParts containsObject:partNumber] == NO)
 			{
-				[matchingParts addObject:record];
-			}
-			else
-			{
-				NSArray *keywords = [record objectForKey:PART_KEYWORDS_KEY];
-				
-				for(NSString* keyword in keywords)
+	            // LLW - Change to treat each word in a search string as an item in a list, and
+	            // a match happens only if each word can be found in the either the part number or
+	            // the name. This is independent of order, so a search like "2x2 plate" and "plate 2x2"
+	            // will return the same results.
+	            //
+	            // Some examples of results that are returned with this change that would _not_
+	            // be returned with the original code:
+	            //  Search          Sample result
+	            //  "2x2 plate"     "Plate 2 x 2"
+	            //  "tile clip"     "Tile 1x1 with clip"
+	            //  "four studs"    "Brick 1 x 1 with Studs on Four Sides"
+	            //  "offset plate"  "Plate 1 x 4 Offset"
+	            //  "axle pin 2x2"  "Brick 2 x 2 with Pin and Axlehole"
+     	       __block BOOL matches = TRUE;
+        	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
+    	            matches = matches && 
+                	        ([partNumber            containsString:word options:NSCaseInsensitiveSearch] ||	
+            	             [partSansWhitespace    containsString:word options:NSCaseInsensitiveSearch]);
+        	    }];            
+				if(matches)
+					[matchingParts addObject:record];
+				else
 				{
-					if([[keyword stringByRemovingWhitespace] containsString:searchSansWhitespace options:NSCaseInsensitiveSearch])
+					NSArray *keywords = [record objectForKey:PART_KEYWORDS_KEY];
+					
+					for(NSString* keyword in keywords)
 					{
-						[matchingParts addObject:record];
-						break;
+						if([[keyword stringByRemovingWhitespace] containsString:searchSansWhitespace options:NSCaseInsensitiveSearch])
+						{
+							[matchingParts addObject:record];
+							break;
+						}
 					}
 				}
 			}
-
 		}
 	}//end else we have to search
 	
@@ -929,6 +950,7 @@
 	NSString		*searchString	= [self->searchField stringValue];
 	NSArray 		*allParts		= nil;
 	NSMutableArray	*filteredParts	= nil;
+	NSSet			*excludedParts	= nil;
 	
 	if(		[searchString length] == 0 // clearing the search; revert to selected category
 	   ||	self->searchMode == SearchModeSelectedCategory )
@@ -937,11 +959,12 @@
 	}
 	else
 	{
-		allParts = [self->partLibrary partCatalogRecordsInCategory:Category_All];
+		allParts		= [self->partLibrary partCatalogRecordsInCategory:Category_All];
+		excludedParts	= [NSSet setWithArray:[[self->partLibrary partCatalogRecordsInCategory:Category_Alias] valueForKey:PART_NUMBER_KEY]];
 	}
 	
 	// Re-filter the records
-	filteredParts = [self filterPartRecords:allParts bySearchString:searchString];
+	filteredParts = [self filterPartRecords:allParts bySearchString:searchString excludeParts:excludedParts];
 	[self setTableDataSource:filteredParts];
 	
 	[self syncSelectionAndPartDisplayed];

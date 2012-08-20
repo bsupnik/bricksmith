@@ -29,6 +29,12 @@
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#include "OpenGLUtilities.h"
+#include "MacLDraw.h"
+
+#define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
+#define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
+#define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
 #define DEBUG_DRAWING				0
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
@@ -86,6 +92,7 @@
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_MULTISAMPLE); //antialiasing
 	
+	// This represents the "default" GL state, at least until we change that policy.
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -215,6 +222,12 @@
 	}
 #endif //DEBUG_DRAWING
 
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
+
 	//Load the model matrix to make sure we are applying the right stuff.
 	glMatrixMode(GL_MODELVIEW);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,6 +239,17 @@
 	[self->fileBeingDrawn draw:options
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
+
+	// We allow primitive drawing to leave their VAO bound to avoid setting the VAO
+	// back to zero between every draw call.  Set it once here to avoid usign some
+	// poor directive to draw!
+	glBindVertexArrayAPPLE(0);
+
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
 
 	// Marquee selection box -- only if non-zero.
 	if( V2BoxWidth(self->selectionMarquee) != 0 && V2BoxHeight(self->selectionMarquee) != 0)
@@ -252,6 +276,7 @@
 							p2.x,p2.y,
 							p1.x,p2.y };
 							
+							
 		glVertexPointer(2, GL_FLOAT, 0, vertices);
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
@@ -265,6 +290,13 @@
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
+	
+	assert(glCheckInteger(GL_VERTEX_ARRAY_BINDING_APPLE,0));
+	assert(glCheckInteger(GL_ARRAY_BUFFER_BINDING,0));
+	assert(glIsEnabled(GL_VERTEX_ARRAY));
+	assert(glIsEnabled(GL_NORMAL_ARRAY));
+	assert(glIsEnabled(GL_COLOR_ARRAY));
+	
 	
 	[self->delegate LDrawGLRendererNeedsFlush:self];
 	
@@ -1486,6 +1518,13 @@
 	CGFloat	rotationAboutX	= - ( percentDragY * 180 ); //multiply by -1,
 				// as we need to convert our drag into a proper rotation 
 				// direction. See notes in function header.
+
+	if(USE_TURNTABLE)
+	{
+		Tuple3 view_now = [self viewingAngle];
+		if(view_now.x * view_now.y * view_now.z < 0.0)
+			rotationAboutY = -rotationAboutY;
+	}	
 	
 	//Get the current transformation matrix. By using its inverse, we can 
 	// convert projection-coordinates back to the model coordinates they 
@@ -1505,6 +1544,12 @@
 	// a model point. 
 	transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
 	transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
+
+	if(USE_TURNTABLE)
+	{
+		rotationAboutY = -rotationAboutY;
+		transformedVectorY = vectorY;
+	}
 	
 	if(self->viewOrientation != ViewOrientation3D)
 	{
@@ -1514,8 +1559,8 @@
 	
 	//Now rotate the model around the visual "up" and "down" directions.
 	glMatrixMode(GL_MODELVIEW);
-	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
+	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
 	
 	if([self->delegate respondsToSelector:@selector(LDrawGLRendererMouseNotPositioning:)])
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
@@ -1523,7 +1568,6 @@
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
 }//end rotationDragged
-
 
 //========== zoomDragged: ======================================================
 //

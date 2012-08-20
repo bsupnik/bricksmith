@@ -130,7 +130,7 @@
 	
 	// Duplicate model names are not allowed, because they cause nasty things to 
 	// happen when automatically renaming references to them. 
-	if(		[newValue isEqualToString:oldValue] == NO				// actually changed the name!
+	if(		[newValue caseInsensitiveCompare:oldValue] != NSOrderedSame				// actually changed the name!
 		&&	[[[self object] enclosingFile] modelWithName:newValue] != nil) // is a duplicate!
 	{
 		NSAlert		*alert		= [[NSAlert alloc] init];

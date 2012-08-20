@@ -52,16 +52,19 @@ NSString	*PART_KEYWORDS_KEY	= @"Keywords";
 	//PART_NUMBER_KEY							(defined above)
 	//PART_NAME_KEY								(defined above)
 
-NSString	*CategoryNameKey		= @"Name";
-NSString	*CategoryDisplayNameKey = @"DisplayName";
-NSString	*CategoryChildrenKey	= @"Children";
+NSString	*VERSION_KEY				= @"Version";
+NSString	*COMPATIBILITY_VERSION_KEY	= @"CompatibilityVersion";
 
-NSString	*Category_All			= @"AllCategories";
-NSString	*Category_Favorites		= @"Favorites";
-NSString	*Category_Alias			= @"Alias";
-NSString	*Category_Moved			= @"Moved";
-NSString	*Category_Primitives	= @"Primitives";
-NSString	*Category_Subparts		= @"Subparts";
+NSString	*CategoryNameKey			= @"Name";
+NSString	*CategoryDisplayNameKey 	= @"DisplayName";
+NSString	*CategoryChildrenKey		= @"Children";
+
+NSString	*Category_All				= @"AllCategories";
+NSString	*Category_Favorites 		= @"Favorites";
+NSString	*Category_Alias 			= @"Alias";
+NSString	*Category_Moved 			= @"Moved";
+NSString	*Category_Primitives		= @"Primitives";
+NSString	*Category_Subparts			= @"Subparts";
 
 @implementation PartLibrary
 
@@ -444,6 +447,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	NSFileManager   *fileManager    = [[[NSFileManager alloc] init] autorelease];
 	NSString        *catalogPath    = [[LDrawPaths sharedPaths] partCatalogPath];
 	BOOL            partsListExists = NO;
+	NSString		*version		= nil;
 	NSDictionary    *newCatalog     = nil;
 	
 	// Do we have an LDraw folder?
@@ -456,9 +460,19 @@ static PartLibrary *SharedPartLibrary = nil;
 	// Do we have a part list already? 
 	if(partsListExists == YES)
 	{
-		newCatalog = [NSDictionary dictionaryWithContentsOfFile:catalogPath];
+		newCatalog	= [NSDictionary dictionaryWithContentsOfFile:catalogPath];
+		version 	= [newCatalog objectForKey:VERSION_KEY];
 		
-		[self setPartCatalog:newCatalog];
+		if(version)
+		{
+			[self setPartCatalog:newCatalog];
+		}
+		else
+		{
+			// Older part catalogs don't have enough info in them
+			partsListExists = NO;
+		}
+
 	}
 	
 	return partsListExists;
@@ -579,6 +593,10 @@ static PartLibrary *SharedPartLibrary = nil;
 				 toCatalog:newPartCatalog
 			 underCategory:NSLocalizedString(Category_Subparts, nil) //groups unofficial subparts with official subparts
 				namePrefix:[NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME] ];
+	
+	NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+	[newPartCatalog setObject:version forKey:VERSION_KEY];
+	[newPartCatalog setObject:@"1.0"  forKey:COMPATIBILITY_VERSION_KEY];
 	
 	//Save the part catalog out for future reference.
 	[newPartCatalog writeToFile:partCatalogPath atomically:YES];
@@ -1249,7 +1267,11 @@ static PartLibrary *SharedPartLibrary = nil;
 					// only categories I deem to be consistent and advantageous 
 					// under the current system are the two-word categories that 
 					// couldn't be represented under the old system. 
-					if([category rangeOfString:@" "].location != NSNotFound)
+					//
+					// Also, allow the !LDRAW_ORG Part Alias to take precedence 
+					// if it has already been found. 
+					if(		[category rangeOfString:@" "].location != NSNotFound
+					   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil )
 					{
 						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 					}
@@ -1266,6 +1288,17 @@ static PartLibrary *SharedPartLibrary = nil;
 					for(NSString *keyword in newKeywords)
 					{
 						[keywords addObject:[keyword stringByTrimmingCharactersInSet:whitespace]];
+					}
+				}
+				else if([meta isEqualToString:LDRAW_ORG])
+				{
+					// Force alias parts into a ghetto category which will keep 
+					// them far away from normal building. 
+					NSString *officialStatus = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+					if([officialStatus containsString:@"Part Alias" options:kNilOptions])
+					{
+						category = Category_Alias;
+						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 					}
 				}
 			}

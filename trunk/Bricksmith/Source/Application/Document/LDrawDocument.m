@@ -566,20 +566,32 @@
 //								  bounds-checking. 
 //
 //==============================================================================
-- (void) setCurrentStep:(NSInteger)requestedStep
+- (void) setCurrentStep:(NSInteger)requestedStepIndex
 {
-	LDrawMPDModel   *activeModel    = [[self documentContents] activeModel];
-	NSInteger       currentStep     = [activeModel maximumStepIndexForStepDisplay];
+	LDrawMPDModel	*activeModel		= [[self documentContents] activeModel];
+	NSInteger		currentStepIndex	= [activeModel maximumStepIndexForStepDisplay];
+	LDrawStep		*requestedStep		= [[activeModel steps] objectAtIndex:requestedStepIndex];
 	
-	if(currentStep != requestedStep)
+	if(currentStepIndex != requestedStepIndex)
 	{
-		[activeModel setMaximumStepIndexForStepDisplay:requestedStep];
+		[activeModel setMaximumStepIndexForStepDisplay:requestedStepIndex];
 		
 		// Update UI
-		[self->stepField setIntegerValue:(requestedStep + 1)]; // make 1-relative
+		
+		[self->stepField setIntegerValue:(requestedStepIndex + 1)]; // make 1-relative
+		
 		if([activeModel stepDisplay] == YES)
 		{
-			[self updateViewingAngleToMatchStep];
+			// Set the viewer to the step's rotation
+			// Note: This is pretty annoying if you are trying to build your 
+			//		 model and flip between steps. So I'm going to try 
+			//		 restricting it to only happen when the step demands that 
+			//		 the viewing angle change. 
+			if([requestedStep stepRotationType] != LDrawStepRotationNone)
+			{
+				[self updateViewingAngleToMatchStep];
+			}
+				
 			[[self documentContents] noteNeedsDisplay];
 		}
 	}
@@ -764,8 +776,7 @@
 	float                   nudgeMagnitude      = [BricksmithUtilities gridSpacingForMode:self->gridMode];
 	NSInteger               counter             = 0;
 	
-	//normalize just in case someone didn't get the message!
-	nudgeVector = V3Normalize(nudgeVector);
+	// We do not normalize the nudge vector - nudge might be set to a multiple of the grid on purpose.
 	
 	nudgeVector.x *= nudgeMagnitude;
 	nudgeVector.y *= nudgeMagnitude;
@@ -3253,7 +3264,6 @@
 //				marquee constantly rebuilds the selection.
 //
 //==============================================================================
-
 - (void) markPreviousSelection
 {
 	if(self->markedSelection)

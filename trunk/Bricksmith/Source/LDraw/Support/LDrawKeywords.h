@@ -38,6 +38,7 @@
 #define LDRAW_HEADER_AUTHOR						@"Author:"
 #define LDRAW_CATEGORY							@"!CATEGORY"
 #define LDRAW_KEYWORDS							@"!KEYWORDS"
+#define LDRAW_ORG								@"!LDRAW_ORG"
 
 // Steps and Rotation Steps
 #define LDRAW_STEP_TERMINATOR					@"STEP"

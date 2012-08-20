@@ -844,6 +844,10 @@
 //==============================================================================
 - (void) setAuthor:(NSString *)newAuthor
 {
+    // LLW - Don't allow author to be set to nil, as this causes funky
+    // behavior in the inspector
+    if (newAuthor == nil)
+        newAuthor = @"";
 	[newAuthor retain];
 	[author release];
 	

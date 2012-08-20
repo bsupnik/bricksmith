@@ -35,6 +35,9 @@
 #define LDRAW_PATH_KEY								@"LDraw Path"
 #define LDRAW_VIEWER_BACKGROUND_COLOR_KEY			@"LDraw Viewer Background Color"
 #define MOUSE_DRAGGING_BEHAVIOR_KEY					@"Mouse Dragging Behavior"
+#define RIGHT_BUTTON_BEHAVIOR_KEY					@"Right Button Behavior"
+#define ROTATE_MODE_KEY								@"Rotate Mode"
+#define MOUSE_WHEEL_BEHAVIOR_KEY					@"Mouse Wheel Behavior"
 #define PART_BROWSER_DRAWER_STATE					@"Part Browser Drawer State"
 #define PART_BROWSER_PANEL_SHOW_AT_LAUNCH			@"Part Browser Panel Show at Launch"
 #define PART_BROWSER_PREVIOUS_CATEGORY				@"Part Browser Previous Category"
@@ -256,6 +259,24 @@ typedef enum MouseDragBehavior
 
 } MouseDragBehaviorT;
 
+typedef enum RightButtonBehavior
+{
+	RightButtonContextual								= 0,
+	RightButtonRotates									= 1
+
+} RightButtonBehaviorT;
+
+typedef enum RotateMode {
+	RotateModeTrackball									= 0,
+	RotateModeTurntable									= 1
+
+} RotateModeT;
+
+typedef enum MouseWheelBeahvior {
+	MouseWheelScrolls									= 0,
+	MouseWheelZooms										= 1
+
+} MouseWheelBeahviorT;
 
 typedef enum PartBrowserStyle
 {
