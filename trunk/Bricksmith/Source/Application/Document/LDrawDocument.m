@@ -3264,7 +3264,6 @@
 //				marquee constantly rebuilds the selection.
 //
 //==============================================================================
-
 - (void) markPreviousSelection
 {
 	if(self->markedSelection)

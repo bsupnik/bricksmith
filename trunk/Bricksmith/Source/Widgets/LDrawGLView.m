@@ -1725,26 +1725,68 @@ static Size2 NSSizeToSize2(NSSize size)
 		
 }//end mouseUp:
 
+
+//========== rightMouseDown: ===================================================
+//
+// Purpose:		Secondary mouse button clicked.
+//
+// Notes:		Control-click does not come through here.
+//
+//==============================================================================
 - (void) rightMouseDown:(NSEvent *)theEvent
 {
 	if(!USE_RIGHT_SPIN)
+	{
 		[super rightMouseDown:theEvent];
+	}
+	else
+	{
+		[[self openGLContext] makeCurrentContext];
+		[self->renderer mouseDown];
+	}
+
 }
+
+
+//========== rightMouseDragged: ================================================
+//
+// Purpose:		Secondary mouse button dragged.
+//
+//==============================================================================
 - (void) rightMouseDragged:(NSEvent *)theEvent
 {
 	if(!USE_RIGHT_SPIN)
 		[super rightMouseDragged:theEvent];
 	else
 	{
-		Vector2             dragDelta           = V2Make([theEvent deltaX], [theEvent deltaY]);
+		Vector2	dragDelta	= V2Make([theEvent deltaX], [theEvent deltaY]);
+		
+		[[self openGLContext] makeCurrentContext];
+		
+		[self->renderer mouseDragged];
 		[self->renderer rotationDragged:dragDelta];
 	}
 }
+
+
+//========== rightMouseUp: =====================================================
+//
+// Purpose:		Secondary mouse button released.
+//
+//==============================================================================
 - (void) rightMouseUp:(NSEvent *)theEvent
 {
 	if(!USE_RIGHT_SPIN)
+	{
 		[super rightMouseUp:theEvent];
+	}
+	else
+	{
+		[[self openGLContext] makeCurrentContext];
+		[self->renderer mouseUp];
+	}
 }
+
 
 //========== menuForEvent: =====================================================
 //
