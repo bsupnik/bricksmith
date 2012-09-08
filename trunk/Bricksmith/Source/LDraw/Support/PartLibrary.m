@@ -779,11 +779,12 @@ static PartLibrary *SharedPartLibrary = nil;
 - (LDrawModel *) modelForName:(NSString *) partName
 {
 	LDrawModel	*model		= nil;
-	NSString	*partPath	= nil;
+//	NSString	*partPath	= nil;
 	
 	// Has it already been parsed?
 	model = [self->loadedFiles objectForKey:partName];
-	
+
+/*	
 	if(model == nil)
 	{
 		//Well, this means we have to try getting it off the disk!
@@ -793,7 +794,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		if(model != nil)
 			[self->loadedFiles setObject:model forKey:partName];
 	}
-	
+*/	
 	return model;
 	
 }//end modelForName
@@ -826,11 +827,11 @@ static PartLibrary *SharedPartLibrary = nil;
 		model = [part referencedMPDSubmodel];
 	}
 	
-	if(model == nil) {
-		//we're grasping at straws. See if this is a reference to an external 
-		// file in the same folder.
-		model = [self modelFromNeighboringFileForPart:part];
-	}
+//	if(model == nil) {
+//		//we're grasping at straws. See if this is a reference to an external 
+//		// file in the same folder.
+//		model = [self modelFromNeighboringFileForPart:part];
+//	}
 	
 	return model;
 	
@@ -854,6 +855,7 @@ static PartLibrary *SharedPartLibrary = nil;
 //				under it.
 //
 //==============================================================================
+/*
 - (LDrawModel *) modelFromNeighboringFileForPart:(LDrawPart *)part
 {
 	LDrawFile		*enclosingFile	= [part enclosingFile];
@@ -884,7 +886,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	return model;
 	
 }//end modelFromNeighboringFileForPart:
-
+*/
 
 //========== optimizedDrawableForPart:color: ==================================
 //

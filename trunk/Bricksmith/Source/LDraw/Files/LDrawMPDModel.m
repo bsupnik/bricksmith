@@ -320,6 +320,12 @@
 	
 }//end inspectorClassName
 
+- (void) setEnclosingDirective:(LDrawContainer *)newParent
+{
+	[super setEnclosingDirective:newParent];
+	[self sendMessageToObservers:MessageScopeChanged];
+}
+
 
 #pragma mark -
 #pragma mark ACCESSORS

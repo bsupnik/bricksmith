@@ -33,7 +33,7 @@
 	
 	enclosingDirective = nil;
 	
-	observers = [[NSMutableSet alloc] init];
+	observers = [[NSMutableArray alloc] init];
 	
 	return self;
 	
@@ -112,6 +112,8 @@
 {
 	//The superclass doesn't support NSCoding. So we just call the default init.
 	self = [super init];
+
+	observers = [[NSMutableArray alloc] init];
 	
 	[self setEnclosingDirective:[decoder decodeObjectForKey:@"enclosingDirective"]];
 	
@@ -212,6 +214,10 @@
 	
 }//end draw:viewScale:parentColor:
 
+- (Box3) boundingBox3
+{
+	return InvalidBox;
+}
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
@@ -709,12 +715,21 @@
 
 - (void) addObserver:(id<LDrawObserver>) observer
 {
-	[observers addObject:observer];
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+	//printf("directive %p told to add observer %p.\n", self,observer);
+	[observers addObject:[NSValue valueWithPointer:observer]];
 }
 
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
-	[observers removeObject:observer];
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+	//printf("directive %p told to lose observer %p.\n", self,observer);
+	if(![observers containsObject:[NSValue valueWithPointer:observer]])
+		NSLog(@"ERROR: removing unknown observer.\n");
+
+	[observers removeObject:[NSValue valueWithPointer:observer]];
 }
 
 #pragma mark -
@@ -733,12 +748,24 @@
 //==============================================================================
 - (void) dealloc
 {
-	for (id<LDrawObserver> o in observers)
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+
+	//printf("Directive %p about to die.\n",self);
+	NSSet * orig = [NSSet setWithSet:observers];
+	for (NSValue * o in orig)
 	{
-		[o observableSaysGoodbyeCruelWorld:self];
+		if([observers containsObject:o])
+		{
+			id<LDrawObserver> oo = [o pointerValue];
+			//printf("   directive %p telling observer %p that we are going to die.\n",self,oo);		
+			[oo observableSaysGoodbyeCruelWorld:self];
+		}
 	}
 	[observers release];
+	observers = (id) 0xDEADBEEF;
 	[super dealloc];
+	//printf(" %p is clear.\n",self);
 }
 
 
@@ -751,8 +778,15 @@
 //==============================================================================
 - (void) sendMessageToObservers:(MessageT) msg
 {
-	for(id<LDrawObserver> o in observers)
-		[o receiveMessage:msg who:self];
+	NSSet * orig = [NSSet setWithSet:observers];
+	for (NSValue * o in orig)
+	{
+		if([observers containsObject:o])
+		{
+			id<LDrawObserver> oo = [o pointerValue];		
+			[oo receiveMessage:msg who:self];
+		}
+	}
 }
 
 
@@ -774,8 +808,15 @@
 	if(newFlags != 0)
 	{
 		invalFlags |= newFlags;
-		for (id<LDrawObserver> o in observers)
-			[o statusInvalidated:newFlags who:self];
+		NSSet * orig = [NSSet setWithSet:observers];
+		for (NSValue * o in orig)
+		{
+			if([observers containsObject:o])
+			{
+				id<LDrawObserver> oo = [o pointerValue];			
+				[oo statusInvalidated:newFlags who:self];
+			}
+		}
 	}
 }
 

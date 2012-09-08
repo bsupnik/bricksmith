@@ -426,6 +426,20 @@
 }//end activeModel
 
 
+//========== firstModel =======================================================
+//
+// Purpose:		Returns the first model in the file, which is the one to use
+//				when referred to from a separate peer file.
+//
+//==============================================================================
+- (LDrawMPDModel *) firstModel
+{
+	return [[self subdirectives] objectAtIndex:0];
+	
+}//end firstModel
+
+
+
 //========== draggingDirectives ================================================
 //
 // Purpose:		Returns the objects that are currently being displayed as part 
@@ -847,6 +861,7 @@
 //==============================================================================
 - (void) dealloc
 {
+	//NSLog(@"File %s going away.\n", [filePath UTF8String]);
 	[nameModelDict	release];
 	[activeModel	release];
 	[filePath		release];

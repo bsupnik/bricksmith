@@ -66,6 +66,8 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
+	self = [super init];
+
 	LDrawMetaCommand	*directive		= nil;
 	NSString			*parsedField	= nil;
 	NSString			*firstLine		= [lines objectAtIndex:range.location];

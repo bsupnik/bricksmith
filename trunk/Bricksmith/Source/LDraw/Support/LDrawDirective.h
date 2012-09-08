@@ -99,9 +99,14 @@ typedef enum CacheFlags {
 
 typedef enum Message {
 
-	// The reference name of the LDP model has changed and observers should 
+	// The reference name of the MPD model has changed and observers should 
 	// update their string references.
-	MessageNameChanged = 0
+	MessageNameChanged = 0,
+	
+	// The MPD's parent has changed, and thus its scope may have changed
+	MessageScopeChanged = 1
+	
+	// The 
 } MessageT;
 
 @protocol LDrawObserver
@@ -149,7 +154,7 @@ typedef enum Message {
 {
 	@private
 	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
-	NSMutableSet   *observers;			//Any observers watching us.
+	NSMutableSet   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
 	CacheFlagsT		invalFlags;
 	BOOL			isSelected;
 	
@@ -161,8 +166,9 @@ typedef enum Message {
 + (NSRange) rangeOfDirectiveBeginningAtIndex:(NSUInteger)index inLines:(NSArray *)lines maxIndex:(NSUInteger)maxIndex;
 
 // Directives
-- (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
-;
+- (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor;
+- (Box3) boundingBox3;
+
 - (void) hitTest:(Ray3)pickRay transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;
 - (void) boxTest:(Box2)bounds transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableSet *)hits;
 - (NSString *) write;
