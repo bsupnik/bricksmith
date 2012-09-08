@@ -779,22 +779,24 @@ static PartLibrary *SharedPartLibrary = nil;
 - (LDrawModel *) modelForName:(NSString *) partName
 {
 	LDrawModel	*model		= nil;
-//	NSString	*partPath	= nil;
+	NSString	*partPath	= nil;
 	
 	// Has it already been parsed?
 	model = [self->loadedFiles objectForKey:partName];
 
-/*	
+
 	if(model == nil)
 	{
 		//Well, this means we have to try getting it off the disk!
+		// This case is only hit when a library part uses another library part, e.g.
+		// a brick grabs a collection-of-studs part.
 		partPath	= [[LDrawPaths sharedPaths] pathForPartName:partName];
 		model		= [self readModelAtPath:partPath asynchronously:NO completionHandler:NULL];
 		
 		if(model != nil)
 			[self->loadedFiles setObject:model forKey:partName];
 	}
-*/	
+
 	return model;
 	
 }//end modelForName
