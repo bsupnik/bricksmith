@@ -2561,7 +2561,7 @@
 
 	// Scroll to it. -makeProjection will now derive the exact frustum or ortho 
 	// projection which will make the clicked point appear in the center. 
-	[self scrollRectToVisible:newVisibleRect];
+	[self scrollRectToVisible:newVisibleRect notifyDelegate:YES];
 	
 }//end scrollCenterToModelPoint:
 
@@ -2590,23 +2590,30 @@
 	
 	newVisibleRect.origin = scrollOrigin;
 	
-	[self scrollRectToVisible:newVisibleRect];
+	[self scrollRectToVisible:newVisibleRect notifyDelegate:YES];
 	
 }//end scrollCenterToPoint:
 
 
-//========== scrollRectToVisible: ==============================================
+//========== scrollRectToVisible:notifyDelegate: ===============================
 //
 // Purpose:		Sets the visible rect to aRect.
 //
+// Parameters:	notifyDelegate - pass YES when the renderer is requesting a 
+//					change in its scroll position that the delegate doesn't yet 
+//					know about. Pass NO when the delegate is telling the 
+//					renderer about a scroll it has already performed. If the 
+//					scrollview is already reflecting the "final" state, it could 
+//					be unhealthy to try and re-scroll to match it. 
+//
 //==============================================================================
-- (void) scrollRectToVisible:(Box2)aRect
+- (void) scrollRectToVisible:(Box2)aRect notifyDelegate:(BOOL)notify
 {
 	if( V2EqualBoxes(aRect, self->visibleRect) == false )
 	{
 		self->visibleRect = aRect;
 		
-		if([self->delegate respondsToSelector:@selector(LDrawGLRenderer:scrollToRect:)])
+		if(notify && [self->delegate respondsToSelector:@selector(LDrawGLRenderer:scrollToRect:)])
 		{
 			[self->delegate LDrawGLRenderer:self scrollToRect:self->visibleRect];
 		}
