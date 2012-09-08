@@ -2067,7 +2067,7 @@
 {
 	LDrawStep		*newStep		= [LDrawStep emptyStep];
 
-	[self addStep:newStep atIndex:NSNotFound];
+	[self addStep:newStep parent:[self selectedModel] index:NSNotFound];
 	
 }//end addStepClicked:
 
@@ -2773,10 +2773,20 @@
 		 writeItems:(NSArray *)items
 	   toPasteboard:(NSPasteboard *)pboard
 {
-	NSInteger       numberItems = [items count];
-	NSMutableArray  *rowIndexes = [NSMutableArray arrayWithCapacity:numberItems];
-	NSInteger       itemIndex   = 0;
-	NSInteger       counter     = 0;
+	NSInteger		numberItems = [items count];
+	NSMutableArray	*rowIndexes = [NSMutableArray arrayWithCapacity:numberItems];
+	NSInteger		itemIndex	= 0;
+	NSInteger		counter 	= 0;
+	LDrawDirective	*firstItem	= [items objectAtIndex:0];
+	BOOL disallow = NO;
+	
+	// Disallow dragging if it is the only step in the model
+	if(		[items count] == 1
+	   &&	[firstItem isKindOfClass:[LDrawStep class]]
+	   &&	[[[firstItem enclosingModel] steps] count] == 1)
+	{
+		disallow = YES;
+	}
 	
 	//Write the objects as data.
 	[self writeDirectives:items toPasteboard:pboard];
@@ -2787,9 +2797,14 @@
 		itemIndex = [outlineView rowForItem:[items objectAtIndex:counter]];
 		[rowIndexes addObject:[NSNumber numberWithInteger:itemIndex]];
 	}
-	[pboard addTypes:[NSArray arrayWithObject:LDrawDragSourceRowsPboardType]
+	[pboard addTypes:[NSArray arrayWithObjects:LDrawDragSourceRowsPboardType, LDrawDisallowDragToSourcePboardType, nil]
 			   owner:nil];
 	[pboard setPropertyList:rowIndexes forType:LDrawDragSourceRowsPboardType];
+	
+	if(disallow)
+		[pboard setPropertyList:(id)kCFBooleanTrue forType:LDrawDisallowDragToSourcePboardType];
+	else
+		[pboard setPropertyList:(id)kCFBooleanFalse forType:LDrawDisallowDragToSourcePboardType];
 	
 	return YES;
 	
@@ -2840,8 +2855,16 @@
 		currentObject	= [NSKeyedUnarchiver unarchiveObjectWithData:data];
 		
 		//Now pop the data into our file.
-		if(		[currentObject	isKindOfClass:[LDrawModel class]] == YES
-		   &&	[newParent		isKindOfClass:[LDrawFile class]] == NO)
+		if(		sourceView == outlineView
+		   &&	[[pasteboard types] containsObject:LDrawDisallowDragToSourcePboardType]
+		   &&	[[pasteboard propertyListForType:LDrawDisallowDragToSourcePboardType] boolValue])
+		{
+//			NSLog(@"killing prohibited-into-source drag");
+			dragOperation	= NSDragOperationNone;
+		}
+		
+		else if(	[currentObject	isKindOfClass:[LDrawModel class]] == YES
+				&&	[newParent		isKindOfClass:[LDrawFile class]] == NO)
 		{
 //			NSLog(@"killing model-not-in-file drag");
 			dragOperation	= NSDragOperationNone;
@@ -4335,16 +4358,15 @@
 }//end addModel:
 
 
-//========== addStep: ==========================================================
+//========== addStep:parent:index: =============================================
 //
 // Purpose:		Adds newStep to the currently-displayed model. If you specify an 
 //				index, it will be inserted there. Otherwise, the step appears at 
 //				the end of the list. 
 //
 //==============================================================================
-- (void) addStep:(LDrawStep *)newStep atIndex:(NSInteger)insertAtIndex
+- (void) addStep:(LDrawStep *)newStep parent:(LDrawMPDModel*)selectedModel index:(NSInteger)insertAtIndex
 {
-	LDrawMPDModel	*selectedModel	= [self selectedModel];
 	NSUndoManager	*undoManager	= [self undoManager];
 	
 	// Synchronize our addition with the model currently active.
@@ -4952,7 +4974,7 @@
 			if([currentObject isKindOfClass:[LDrawModel class]])
 				[self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
-				[self addStep:currentObject atIndex:real_index];
+				[self addStep:currentObject parent:(LDrawMPDModel*)parent index:real_index];
 			else
 				[self addStepComponent:currentObject parent:parent index:real_index];
 			
