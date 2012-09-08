@@ -2607,12 +2607,16 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer scrollToRect:(Box2)scrollRect
 {
-	BOOL	success = NO;
-	NSRect	nsRect	= NSMakeRect(scrollRect.origin.x, scrollRect.origin.y,
-								 scrollRect.size.width, scrollRect.size.height);
+	BOOL	success 	= NO;
+	NSRect	nsRect		= NSMakeRect(scrollRect.origin.x, scrollRect.origin.y,
+									 scrollRect.size.width, scrollRect.size.height);
+	NSRect	visibleRect = [self visibleRect];
 	
-	success = [self scrollRectToVisible:nsRect];
-//	NSLog(@"%d", success);
+	if( NSEqualRects(nsRect, visibleRect) == NO ) // don't depend on this, it's often wrong
+	{
+		success = [self scrollRectToVisible:nsRect];
+//		NSLog(@"%d", success);
+	}
 }
 
 
@@ -2886,7 +2890,7 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 	
 	[self->renderer resetFrameSize];
-	[self->renderer scrollRectToVisible:NSRectToBox2([self visibleRect])];
+	[self->renderer scrollRectToVisible:NSRectToBox2([self visibleRect]) notifyDelegate:NO];
 	
 }//end scrollViewFrameDidChange:
 
@@ -2934,7 +2938,7 @@ static Size2 NSSizeToSize2(NSSize size)
 		[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 		
 		NSRect visibleRect = [self visibleRect];
-		[self->renderer scrollRectToVisible:NSRectToBox2(visibleRect)];
+		[self->renderer scrollRectToVisible:NSRectToBox2(visibleRect) notifyDelegate:NO];
 		
 		[self->renderer reshape];
 	}

@@ -186,7 +186,7 @@ typedef enum
 - (void) scrollCenterToModelPoint:(Point3)modelPoint;
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
 - (void) scrollCenterToPoint:(Point2)newCenter;
-- (void) scrollRectToVisible:(Box2)aRect;
+- (void) scrollRectToVisible:(Box2)aRect notifyDelegate:(BOOL)notify;
 
 // - Geometry
 - (Point2) convertPointFromViewport:(Point2)viewportPoint;

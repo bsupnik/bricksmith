@@ -337,3 +337,5 @@ typedef enum SelectionMode {
 // deposited in their new destination.
 #define LDrawDragSourceRowsPboardType			@"LDrawDragSourceRowsPboardType"
 
+#define LDrawDisallowDragToSourcePboardType		@"LDrawDisallowDragToSourcePboardType"
+

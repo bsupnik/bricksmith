@@ -194,7 +194,7 @@
 
 // Utilites
 - (void) addModel:(LDrawMPDModel *)newModel atIndex:(NSInteger)insertAtIndex preventNameCollisions:(BOOL)renameModels;
-- (void) addStep:(LDrawStep *)newStep atIndex:(NSInteger)insertAtIndex;
+- (void) addStep:(LDrawStep *)newStep parent:(LDrawMPDModel*)selectedModel index:(NSInteger)insertAtIndex;
 - (void) addPartNamed:(NSString *)partName;
 - (void) addStepComponent:(LDrawDirective *)newDirective parent:(LDrawContainer*)parent index:(NSInteger)insertAtIndex;
 
