@@ -555,7 +555,7 @@
 //==============================================================================
 - (Box3) boundingBox3
 {
-	LDrawModel  *modelToDraw        = [[PartLibrary sharedPartLibrary] modelForPart:self];
+	LDrawModel  *modelToDraw        = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
 	Box3        bounds              = InvalidBox;
 	Box3        transformedBounds   = InvalidBox;
 	Matrix4     transformation      = [self transformationMatrix];
@@ -1208,7 +1208,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// glMultMatrix inside a glBegin; the only way to draw all like geometry at 
 		// once is to have a flat, transformed copy of it.) 
 		
-		modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
+		modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
 		flatCopy    = [modelToDraw copy];
 		
 		// concatenate the transform and pass it down

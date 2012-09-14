@@ -804,6 +804,8 @@ static PartLibrary *SharedPartLibrary = nil;
 // Purpose:		Returns the model to which this part refers. You can then ask
 //				the model to draw itself.
 //
+//				NOT THREAD SAFE!
+//
 // Notes:		The part is looked up by the name specified in the part command. 
 //				For regular parts and primitives, this is simply the filename 
 //				as found in LDraw/parts or LDraw/p. But for subparts found in 
@@ -835,6 +837,35 @@ static PartLibrary *SharedPartLibrary = nil;
 	return model;
 	
 }//end modelForPart:
+
+
+//========== modelForPart_threadSafe: ==========================================
+//
+// Purpose:		Returns the model to which this part refers, thread-safe.
+//
+// Notes:		This will NOT attempt to read the file off disk. This method is 
+//				only intended to be called during the multi-threaded file 
+//				loading process, so there should be no need to do lazy loading.
+//
+//==============================================================================
+- (LDrawModel *) modelForPart_threadSafe:(LDrawPart *)part
+{
+	NSString			*partName	= [part referenceName];
+	__block LDrawModel	*model		= nil;
+
+	dispatch_sync(self->catalogAccessQueue, ^{
+		model = [self->loadedFiles objectForKey:partName];
+		
+	});
+	
+	if(model == nil) {
+		//We didn't find it in the LDraw folder. Our last hope is for 
+		// this to be a reference to another model in an MPD file.
+		model = [part referencedMPDSubmodel];
+	}
+	
+	return model;
+}
 
 
 //========== modelFromNeighboringFileForPart: ==================================
