@@ -1432,7 +1432,7 @@ static Size2 NSSizeToSize2(NSSize size)
 					
 				case NSLeftArrowFunctionKey:
 				
-					if(isZMovement == YES && 0)
+					if(isZMovement == YES)
 					{
 						//this is iffy at best
 						// -- and it made things go the wrong way in default 3D 
@@ -1449,7 +1449,7 @@ static Size2 NSSizeToSize2(NSSize size)
 					
 				case NSRightArrowFunctionKey:
 				
-					if(isZMovement == YES && 0)
+					if(isZMovement == YES)
 					{
 //						actualNudge = zNudge;
 						actualNudge = V3Negate(zNudge);
