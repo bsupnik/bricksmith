@@ -802,7 +802,7 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end modelForName
 
 
-//========== modelForPart: =====================================================
+//========== modelForPartInternal: =====================================================
 //
 // Purpose:		Returns the model to which this part refers. You can then ask
 //				the model to draw itself.
@@ -816,13 +816,18 @@ static PartLibrary *SharedPartLibrary = nil;
 //				LDraw/p/48.) This icky inconsistency is handled in 
 //				-pathForFileName:.
 //
+//				This has been marked "internal" because the API is now only used
+//				_within_ the part library, not by public clients.
+//
 //==============================================================================
-- (LDrawModel *) modelForPart:(LDrawPart *) part
+- (LDrawModel *) modelForPartInternal:(LDrawPart *) part
 {
 	NSString	*partName	= [part referenceName];
 	LDrawModel	*model		= nil;
 	
 	//Try to get a live link if we have parsed this part off disk already.
+	//Ben sez: This routine is currently authorized to load on demand, but 
+	//I never see that code run and I don't think it is suppose to.
 	model = [self modelForName:partName];
 	
 	if(model == nil) {
@@ -831,29 +836,22 @@ static PartLibrary *SharedPartLibrary = nil;
 		model = [part referencedMPDSubmodel];
 	}
 	
-//	if(model == nil) {
-//		//we're grasping at straws. See if this is a reference to an external 
-//		// file in the same folder.
-//		model = [self modelFromNeighboringFileForPart:part];
-//	}
-	
 	return model;
 	
-}//end modelForPart:
+}//end modelForPartInternal:
 
 
-//========== modelForPart_threadSafe: ==========================================
+//========== modelForName_threadSafe: ==========================================
 //
-// Purpose:		Returns the model to which this part refers, thread-safe.
+// Purpose:		Returns the model to which this part name refers, thread-safe.
 //
 // Notes:		This will NOT attempt to read the file off disk. This method is 
 //				only intended to be called during the multi-threaded file 
 //				loading process, so there should be no need to do lazy loading.
 //
 //==============================================================================
-- (LDrawModel *) modelForPart_threadSafe:(LDrawPart *)part
+- (LDrawModel *) modelForName_threadSafe:(NSString *)partName
 {
-	NSString			*partName	= [part referenceName];
 	__block LDrawModel	*model		= nil;
 
 	dispatch_sync(self->catalogAccessQueue, ^{
@@ -861,65 +859,9 @@ static PartLibrary *SharedPartLibrary = nil;
 		
 	});
 	
-	if(model == nil) {
-		//We didn't find it in the LDraw folder. Our last hope is for 
-		// this to be a reference to another model in an MPD file.
-		model = [part referencedMPDSubmodel];
-	}
-	
 	return model;
 }
 
-
-//========== modelFromNeighboringFileForPart: ==================================
-//
-// Purpose:		Attempts to resolve the part's name reference against a file 
-//				located in the same parent folder as the file in which the part 
-//				is contained.
-//
-//				This should be a method of last resort, after searching the part 
-//				library and looking for an MPD reference.
-//
-// Note:		Once a model is found under this method, we READ AND CACHE IT.
-//				You must RESTART Bricksmith to see any updates made to the 
-//				referenced file. This feature is not intended to be convenient, 
-//				bug-free, or industrial-strength. It is merely here to support 
-//				the LDraw standard, and any files that may have been created 
-//				under it.
-//
-//==============================================================================
-/*
-- (LDrawModel *) modelFromNeighboringFileForPart:(LDrawPart *)part
-{
-	LDrawFile		*enclosingFile	= [part enclosingFile];
-	NSString		*filePath		= [enclosingFile path];
-	NSString		*partName		= nil;
-	NSString		*testPath		= nil;
-	LDrawModel		*model			= nil;
-	NSFileManager	*fileManager	= nil;
-	
-	if(filePath != nil)
-	{
-		fileManager		= [[[NSFileManager alloc] init] autorelease];
-		
-		//look at path = parentFolder/referenceName
-		partName		= [part referenceName];
-		testPath		= [filePath stringByDeletingLastPathComponent];
-		testPath		= [testPath stringByAppendingPathComponent:partName];
-		
-		//see if it exists!
-		if([fileManager fileExistsAtPath:testPath])
-		{
-			model = [self readModelAtPath:testPath asynchronously:NO completionHandler:NULL];
-			if(model != nil)
-				[self->loadedFiles setObject:model forKey:partName];
-		}
-	}
-	
-	return model;
-	
-}//end modelFromNeighboringFileForPart:
-*/
 
 //========== optimizedDrawableForPart:color: ==================================
 //
@@ -947,7 +889,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		
 		if(vertexObject == nil)
 		{
-			LDrawModel	*modelToDraw = [self modelForPart:part];
+			LDrawModel	*modelToDraw = [self modelForPartInternal:part];
 			
 			if(modelToDraw != nil)
 			{

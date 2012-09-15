@@ -143,10 +143,8 @@ NSString    *PART_REPORT_PART_QUANTITY  = @"QuantityKey";
 		
 		if( [currentElement isKindOfClass:[LDrawPart class]] )
 		{
-			//Missing?
+			//Missing?  Ask the part - it now knows everything about its own resolution.
 			if ([currentElement partIsMissing])
-//			partModel = [partLibrary modelForPart:currentElement];
-//			if(partModel == nil)
 				[missingParts addObject:currentElement];
 			
 			//Moved?
