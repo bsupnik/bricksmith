@@ -111,27 +111,53 @@
 	NSUInteger		contentStartIndex	= 0;
 	NSRange			stepRange			= range;
 	NSUInteger		maxLineIndex		= 0;
+	NSUInteger      insertIndex			= 0;
+	NSUInteger      counter				= 0;
+	id *			substeps			= NULL;
 	
 	//Start with a nice blank model.
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
+
+	substeps = calloc(range.length, sizeof(LDrawDirective*));
 	
 	//Try and get the header out of the file. If it's there, the lines returned 
 	// will not contain it.
 	contentStartIndex   = [self parseHeaderFromLines:lines beginningAtIndex:range.location];
 	maxLineIndex        = NSMaxRange(range) - 1;
-	
+
+	dispatch_group_t	one_step_group = NULL;
+	#if USE_BLOCKS
+	one_step_group = dispatch_group_create();
+	#endif
 	// Parse out steps. Each time we run into a new 0 STEP command, we finish 
 	// the current step. 
 	do
 	{
 		stepRange   = [LDrawStep rangeOfDirectiveBeginningAtIndex:contentStartIndex inLines:lines maxIndex:maxLineIndex];
-		newStep     = [[[LDrawStep alloc] initWithLines:lines inRange:stepRange parentGroup:parentGroup] autorelease];
+		newStep     = [[LDrawStep alloc] initWithLines:lines inRange:stepRange parentGroup:one_step_group/*parentGroup*/];
 
-		[self addStep:newStep];
+		substeps[insertIndex] = newStep;
+		++insertIndex;
+
 		contentStartIndex = NSMaxRange(stepRange);
 		
 	}
 	while(contentStartIndex < NSMaxRange(range));
+		
+	#if USE_BLOCKS
+	dispatch_group_wait(one_step_group,DISPATCH_TIME_FOREVER);
+	dispatch_release(one_step_group);
+	#endif
+
+	for(counter = 0; counter < insertIndex; counter++)
+	{
+		LDrawStep * step = substeps[counter];
+		
+		[self addStep:step];
+		[step release];
+	}
+
+	free(substeps);
 		
 	// Degenerate case: utterly empty file. Create one empty step, because it is 
 	// illegal to have a 0-step model in Bricksmith. 

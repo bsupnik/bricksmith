@@ -166,7 +166,7 @@
 		submodels = calloc(range.length, sizeof(LDrawDirective*));
 		
 	//	dispatch_queue_t    queue           = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
-	//	dispatch_group_t    dispatchGroup   = dispatch_group_create();
+		dispatch_group_t    dispatchGroup   = dispatch_group_create();
 														
 		// Search through all the lines in the file, and separate them out into 
 		// submodels.
@@ -178,7 +178,7 @@
 			// Parse
 	//		dispatch_group_async(dispatchGroup, queue,
 	//		^{
-				LDrawMPDModel *newModel    = [[LDrawMPDModel alloc] initWithLines:lines inRange:modelRange parentGroup:parentGroup];
+				LDrawMPDModel *newModel    = [[LDrawMPDModel alloc] initWithLines:lines inRange:modelRange parentGroup:dispatchGroup];
 				
 				// Store non-retaining, but *thread-safe* container 
 				// (NSMutableArray is NOT). Since it doesn't retain, we mustn't 
@@ -192,8 +192,8 @@
 		while(modelStartIndex < NSMaxRange(range));
 		
 		// Wait for all the multithreaded parsing to happen
-	//	dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
-	//	dispatch_release(dispatchGroup);
+		dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
+		dispatch_release(dispatchGroup);
 		
 		// Add all the models in order
 		for(counter = 0; counter < insertIndex; counter++)
