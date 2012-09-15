@@ -118,6 +118,30 @@
 	
 }//end init
 
+//========== updateModelLookupTable ============================================
+//
+// Purpose:		Rebuilds the optimized lookup table for models.  This is now
+//				an internal method, run when we add or remove a directive,
+//				after coder init, and any time one of our children renames 
+//				itself.
+//
+//==============================================================================
+- (void) updateModelLookupTable
+{
+	NSArray 		*submodels	= [self submodels];
+	NSMutableArray	*names		= [NSMutableArray arrayWithCapacity:[submodels count]];
+	
+	for(LDrawMPDModel *model in submodels)
+	{
+		// always use lowercase for comparison
+		[names addObject:[[model modelName] lowercaseString]];
+	}
+	
+	[self->nameModelDict release];
+	self->nameModelDict = [[NSDictionary alloc] initWithObjects:submodels forKeys:names];
+}
+
+
 
 //========== initWithLines:inRange:parentGroup: ================================
 //
@@ -400,6 +424,20 @@
 	return activeModel;
 	
 }//end activeModel
+
+
+//========== firstModel =======================================================
+//
+// Purpose:		Returns the first model in the file, which is the one to use
+//				when referred to from a separate peer file.
+//
+//==============================================================================
+- (LDrawMPDModel *) firstModel
+{
+	return [[self subdirectives] objectAtIndex:0];
+	
+}//end firstModel
+
 
 
 //========== draggingDirectives ================================================
@@ -787,24 +825,28 @@
 }//end renameModel:toName:
 
 
-//========== updateModelLookupTable ============================================
+#pragma mark -
+#pragma mark OBSERVATION
+#pragma mark -
+
+
+//========== receiveMessage:who: ===============================================
 //
-// Purpose:		Rebuilds the optimized lookup table for models.
+// Purpose:		LDrawFile overrides the message handler to get access to name
+//				change announcements from its contained MDP models.  In this
+//				way it can rebuild the lookup table.
+//
+// Notes:		Someday if we want to get clever we could rebuild only part
+//				of the lookup table based on the actual object that changed.
+//				But since renames are rare it's probably not worth it.
 //
 //==============================================================================
-- (void) updateModelLookupTable
+- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
-	NSArray 		*submodels	= [self submodels];
-	NSMutableArray	*names		= [NSMutableArray arrayWithCapacity:[submodels count]];
-	
-	for(LDrawMPDModel *model in submodels)
-	{
-		// always use lowercase for comparison
-		[names addObject:[[model modelName] lowercaseString]];
-	}
-	
-	[self->nameModelDict release];
-	self->nameModelDict = [[NSDictionary alloc] initWithObjects:submodels forKeys:names];
+	if (msg == MessageNameChanged)
+		[self updateModelLookupTable];
+		
+	[super receiveMessage:msg who:observable];
 }
 
 
@@ -819,6 +861,7 @@
 //==============================================================================
 - (void) dealloc
 {
+	//NSLog(@"File %s going away.\n", [filePath UTF8String]);
 	[nameModelDict	release];
 	[activeModel	release];
 	[filePath		release];

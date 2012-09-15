@@ -85,8 +85,8 @@ extern NSString	*Category_Subparts;
 - (void) loadModelForName:(NSString *)name inGroup:(dispatch_group_t)parentGroup;
 - (LDrawModel *) modelForName:(NSString *) partName;
 - (LDrawModel *) modelForPart:(LDrawPart *) part;
+//- (LDrawModel *) modelFromNeighboringFileForPart:(LDrawPart *)part;
 - (LDrawModel *) modelForPart_threadSafe:(LDrawPart *)part;
-- (LDrawModel *) modelFromNeighboringFileForPart:(LDrawPart *)part;
 - (LDrawDirective *) optimizedDrawableForPart:(LDrawPart *) part color:(LDrawColor *)color;
 // Utilites
 - (void) addPartsInFolder:(NSString *)folderPath

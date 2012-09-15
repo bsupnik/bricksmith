@@ -750,7 +750,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 	for(counter = 0; counter < numberOfDirectives; counter++)
 	{
 		currentDirective = [directives objectAtIndex:counter];
-		if([currentDirective respondsToSelector:@selector(boundingBox3)])
+//		if([currentDirective respondsToSelector:@selector(boundingBox3)])
 		{
 			partBounds	= [currentDirective boundingBox3];
 			bounds		= V3UnionBox(bounds, partBounds);

@@ -20,7 +20,7 @@
 // Class:		LDrawContainer
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawContainer : LDrawDirective <NSCoding, NSCopying>
+@interface LDrawContainer : LDrawDirective <NSCoding, NSCopying, LDrawObserver>
 {
 	@private
 	NSMutableArray		*containedObjects;
@@ -29,7 +29,6 @@
 
 //Accessors
 - (NSArray *) allEnclosedElements;
-- (Box3) boundingBox3;
 - (Box3) projectedBoundingBoxWithModelView:(Matrix4)modelView
 								projection:(Matrix4)projection
 									  view:(Box2)viewport;

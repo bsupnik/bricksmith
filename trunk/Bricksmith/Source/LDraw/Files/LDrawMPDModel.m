@@ -320,6 +320,12 @@
 	
 }//end inspectorClassName
 
+- (void) setEnclosingDirective:(LDrawContainer *)newParent
+{
+	[super setEnclosingDirective:newParent];
+	[self sendMessageToObservers:MessageScopeChanged];
+}
+
 
 #pragma mark -
 #pragma mark ACCESSORS
@@ -366,7 +372,7 @@
 	
 	modelName = newModelName;
 	
-	[[self enclosingFile] updateModelLookupTable];
+	[self sendMessageToObservers:MessageNameChanged];
 	
 }//end setModelName:
 

@@ -21,20 +21,31 @@
 @class LDrawStep;
 @class PartReport;
 
+typedef enum PartType {
+	PartTypeUnresolved = 0,	// We have not yet tried to figure out what we have.
+	PartTypeNotFound,		// We went looking and the part is missing.  This keeps us from retrying on every query until someone tells us to try again.
+	PartTypeLibrary,		// Part is in the library.
+	PartTypeSubmodel,		// Part is an MPD submodel from our parent LDrawFile
+	PartTypePeerFile		// Part is the first model in another file in the same directory as us.
+} PartTypeT;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Class:		LDrawPart
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawPart : LDrawDrawableElement <NSCoding>
+@interface LDrawPart : LDrawDrawableElement <NSCoding, LDrawObserver>
 {
+@private
 	NSString		*displayName;
 	NSString		*referenceName; //lower-case version of display name
 	
 	GLfloat			glTransformation[16];
 
-	LDrawDirective	*optimizedDrawable;
+	LDrawDirective	*cacheDrawable;			// The drawable is the model we link to OR a VBO that represents it from the part library -- a drawable proxy.
+	LDrawModel		*cacheModel;			// The model is the real model we link to.
+	PartTypeT		cacheType;
 	NSLock			*drawLock;
 }
 
@@ -62,7 +73,12 @@
 - (void) rotateByDegrees:(Tuple3)degreesToRotate centerPoint:(Point3)center;
 
 //Utilities
+- (BOOL) partIsMissing;
+
+- (void) resolvePart;
+- (void) unresolvePart;
+
 - (void) optimizeOpenGL;
-- (void) removeDisplayList;
+//- (void) removeDisplayList;
 
 @end

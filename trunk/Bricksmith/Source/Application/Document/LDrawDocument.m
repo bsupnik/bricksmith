@@ -53,6 +53,7 @@
 #import "PartBrowserDataSource.h"
 #import "PartBrowserPanelController.h"
 #import "PartReport.h"
+#import "ModelManager.h"
 #import "PieceCountPanel.h"
 #import "RotationPanelController.h"
 #import "ScrollViewCategory.h"
@@ -286,7 +287,10 @@
 		// Track the path. I'm not sure what a non-file URL means, and I'm basically 
 		// hoping we never encounter one. 
 		if([absoluteURL isFileURL] == YES)
+		{
 			[[self documentContents] setPath:[absoluteURL path]];
+			[[ModelManager sharedModelManager] documentSignIn:[absoluteURL path] withFile:documentContents];
+		}
 		else
 			[[self documentContents] setPath:nil];
 
@@ -425,7 +429,10 @@
 	
 	//track the path.
 	if([absoluteURL isFileURL] == YES)
+	{
 		[[self documentContents] setPath:[absoluteURL path]];
+		[[ModelManager sharedModelManager] documentSignIn:[absoluteURL path] withFile:documentContents];
+	}
 	else
 		[[self documentContents] setPath:nil];
 	
@@ -5010,6 +5017,7 @@
 //==============================================================================
 - (void) dealloc
 {
+	[[ModelManager sharedModelManager] documentSignOut:documentContents];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[documentContents	release];

@@ -32,7 +32,7 @@
 #import "LDrawVertexes.h"
 #import "PartLibrary.h"
 #import "PartReport.h"
-
+#import "ModelManager.h"
 
 @implementation LDrawPart
 
@@ -161,6 +161,9 @@
 			[self setDisplayName:[workingLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]
 						   parse:YES
 						 inGroup:parentGroup];
+			
+			// Debug check: full part resolution isn't thread-safe so make sure we haven't run it by accident here!
+			assert(cacheType == PartTypeUnresolved);
 		}
 		else
 			@throw [NSException exceptionWithName:@"BricksmithParseException" reason:@"Bad part syntax" userInfo:nil];
@@ -257,7 +260,7 @@
 	// If the part is selected, we need to give some indication. We do this 
 	// by drawing it as a wireframe instead of a filled color. This setting 
 	// also conveniently applies to all referenced parts herein. 
-	if(self->isSelected == YES)
+	if([self isSelected] == YES)
 	{
 #if (USE_AUTOMATIC_WIREFRAMES)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -274,29 +277,32 @@
 	{
 		glMultMatrixf(glTransformation);
 		
+		[self resolvePart];
+
+		drawable = cacheDrawable;
+
+		if (cacheType == PartTypeLibrary && cacheDrawable == nil)
+		{
+			// Parts assigned to LDrawCurrentColor may get drawn in many 
+			// different colors in one draw, so we can't cache their 
+			// optimized drawable. We have to retrieve their optimized 
+			// drawable on-the-fly. 
+			
+			// Parts that have a SPECIFIC color can be linked DIRECTLY to their
+			// specific colored VBO.  But we do not do that in resolve because
+			// optimizedDrawableForPart can generate a VBO (which must be on the GL-safe thread).
+			
+			drawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:drawingColor];
+
+			// So after we get our specific color, IF we are statically colored, NOW we can cache the color
+			// for later, avoiding a library lookup in the future.
+			
+			if ([self->color colorCode] != LDrawCurrentColor)
+				cacheDrawable = drawable;			
+		}
+		
 		if(drawBoundsOnly == NO)
 		{
-			if(self->optimizedDrawable != nil)
-			{
-				drawable = self->optimizedDrawable;
-			}
-			else
-			{
-				LDrawModel *referencedSubmodel	= [self referencedMPDSubmodel];
-				if(referencedSubmodel)
-				{
-					drawable = referencedSubmodel;
-				}
-				else
-				{
-					// Parts assigned to LDrawCurrentColor may get drawn in many 
-					// different colors in one draw, so we can't cache their 
-					// optimized drawable. We have to retrieve their optimized 
-					// drawable on-the-fly. 
-					drawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:drawingColor];
-				}
-			}
-			
 			[drawable draw:optionsMask viewScale:scaleFactor parentColor:drawingColor];
 		}
 		else
@@ -307,7 +313,7 @@
 	glPopMatrix();
 
 	// Done drawing a selected part? Then switch back to normal filled drawing. 
-	if(self->isSelected == YES)
+	if([self isSelected] == YES)
 	{
 #if (USE_AUTOMATIC_WIREFRAMES)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -327,7 +333,8 @@
 	//Pull the bounds directly from the model; we can't use the part's because 
 	// it mangles them based on rotation. In this case, we want to do a raw 
 	// draw and let the model matrix transform our drawing appropriately.
-	LDrawModel	*modelToDraw	= [[PartLibrary sharedPartLibrary] modelForPart:self];
+	[self resolvePart];
+	LDrawModel	*modelToDraw	= cacheModel;
 	
 	//If the model can't be found, we can't draw good bounds for it!
 	if(modelToDraw != nil)
@@ -361,40 +368,41 @@
 	{
 		Matrix4     partTransform       = [self transformationMatrix];
 		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
-		LDrawModel  *modelToDraw        = nil;
 		
 		// Credit all subgeometry to ourselves (unless we are already a child part)
 		if(creditObject == nil)
 		{
 			creditObject = self;
 		}
+
+		[self resolvePart];
+		// If we are doing a bounds test, for now get the model, not the VBO - VBO bounds test does not yet exist
+		// (which is not so good).  For parent-color parts we HAVE to get the model - there is no VBO!
+		LDrawDirective		*modelToDraw        = (cacheDrawable == nil || boundsOnly) ? cacheModel : cacheDrawable;
 		
-		modelToDraw	= [self referencedMPDSubmodel];
-		if(modelToDraw == nil)
+		if(modelToDraw)
 		{
-			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
-		}
-		
-		if(boundsOnly == NO)
-		{
-			[modelToDraw hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
-		}
-		else
-		{
-			// Hit test the bounding cube
-			LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
-			Box3            bounds      = [modelToDraw boundingBox3];
-			Tuple3          extents     = V3Sub(bounds.max, bounds.min);
-			Matrix4	boxTransform = IdentityMatrix4;
-			
-			// Expand and position the unit cube to match the model
-			boxTransform = Matrix4Scale(boxTransform, extents);
-			boxTransform = Matrix4Translate(boxTransform, bounds.min);
-			
-			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
-			
-			[unitCube hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
-		}
+			if(boundsOnly == NO)
+			{			
+				[modelToDraw hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+
+			}
+			else
+			{
+				LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
+				Box3            bounds      = [modelToDraw boundingBox3];
+				Tuple3          extents     = V3Sub(bounds.max, bounds.min);
+				Matrix4	boxTransform = IdentityMatrix4;
+				
+				// Expand and position the unit cube to match the model
+				boxTransform = Matrix4Scale(boxTransform, extents);
+				boxTransform = Matrix4Translate(boxTransform, bounds.min);
+				
+				combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
+				
+				[unitCube hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+			}
+		}		
 	}
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
@@ -415,7 +423,7 @@
 	{
 		Matrix4     partTransform       = [self transformationMatrix];
 		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
-		LDrawModel  *modelToDraw        = nil;
+		LDrawDirective  *modelToDraw        = nil;
 		
 		// Credit all subgeometry to ourselves (unless we are already a child part)
 		if(creditObject == nil)
@@ -423,11 +431,8 @@
 			creditObject = self;
 		}
 		
-		modelToDraw	= [self referencedMPDSubmodel];
-		if(modelToDraw == nil)
-		{
-			modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart:self];
-		}
+		[self resolvePart];
+		modelToDraw	= cacheModel;
 		
 		if(boundsOnly == NO)
 		{
@@ -555,7 +560,11 @@
 //==============================================================================
 - (Box3) boundingBox3
 {
-	LDrawModel  *modelToDraw        = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
+	[self resolvePart];
+	
+	[self resolvePart];
+	LDrawModel	*modelToDraw	= cacheModel;
+	
 	Box3        bounds              = InvalidBox;
 	Box3        transformedBounds   = InvalidBox;
 	Matrix4     transformation      = [self transformationMatrix];
@@ -746,7 +755,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 {
 	[super setLDrawColor:newColor];
 	
-	[self removeDisplayList];
+	[self unresolvePart];
+//	[self removeDisplayList];
 	
 }//end setLDrawColor:
 
@@ -795,10 +805,19 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	[newReferenceName retain];
 	[referenceName release];
 	referenceName = newReferenceName;
+
+	assert(parentGroup == NULL || cacheType == PartTypeUnresolved);
+	
+	[self unresolvePart];
 	
 	// Force the part library to parse the model this part will display. This 
 	// pushes all parsing into the same operation, which improves loading time 
-	// predictability and allows better potential threading optimization. 
+	// predictability and allows better potential threading optimization. 	
+	//
+	// Ben says: we _have_ to call this, even on MPD and peer models.  Since
+	// we don't know what kind of thing we are, checking the cache type will
+	// always return unresolved.  But I don't think I want to force-resolve 
+	// here - resolving later prevents thrash.
 	if(shouldParse == YES && newPartName != nil && [newPartName length] > 0)
 	{
 #if USE_BLOCKS
@@ -818,7 +837,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		}
 #endif	
 	}
-	[self removeDisplayList];
+//	[self removeDisplayList];
 	
 }//end setDisplayName:
 
@@ -859,7 +878,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 {
 	Matrix4GetGLMatrix4(*newMatrix, self->glTransformation);
 	
-	[self removeDisplayList];
+//	[self removeDisplayList];
 	
 }//end setTransformationMatrix
 
@@ -1207,8 +1226,15 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// referenced vertices. (We are forced to make copies because you can't call 
 		// glMultMatrix inside a glBegin; the only way to draw all like geometry at 
 		// once is to have a flat, transformed copy of it.) 
-		
+
+		// Ben says: "modelForPart" is on its way out as we move the smarts about
+		// sourcing parts back into the part.  (In the new design the part talks to
+		// the part library, model manager, and its parent file to resolve parts from
+		// many sources.)  But for now we need to get a real ptr to our model for
+		// flattening, it has to be thread safe, and we think that if it's going to
+		// be found, we will have found it because initWithLines queues a preload.
 		modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
+		
 		flatCopy    = [modelToDraw copy];
 		
 		// concatenate the transform and pass it down
@@ -1241,18 +1267,18 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //==============================================================================
 - (void) collectPartReport:(PartReport *)report
 {
-	LDrawModel *referencedSubmodel = [self referencedMPDSubmodel];
+	[self resolvePart];
+	if(cacheType == PartTypeSubmodel || cacheType == PartTypePeerFile)
+		[cacheModel collectPartReport:report];
+	else if(cacheType == PartTypeLibrary)
+		[report registerPart:self];
+	
 	//There's a bug here: -referencedMPDSubmodel doesn't necessarily tell you if 
 	// this actually *is* a submodel reference. It may actually resolve to 
 	// something in the part library. In this case, we would draw the library 
 	// part, but report the submodel! I'm going to let this ride, because the 
 	// specification explicitly says the behavior in such a case is undefined.
 	
-	if(referencedSubmodel == nil)
-		[report registerPart:self];
-	else {
-		[referencedSubmodel collectPartReport:report];
-	}
 }//end collectPartReport:
 
 
@@ -1267,6 +1293,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //==============================================================================
 - (void) optimizeOpenGL
 {
+	/*
 	// Only optimize explicitly colored parts.
 	// Uncolored parts need to know about the current color 
 	// as they are drawn, which is anathema to optimization. Rats.
@@ -1288,6 +1315,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	}
 	else
 		self->optimizedDrawable = nil;
+	*/	
+	[self resolvePart];
 		
 	// Make sure the bounding cube is available in our color
 	LDrawVertexes *unitCube = [LDrawUtilities boundingCube];
@@ -1323,13 +1352,115 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 // Purpose:		Delete the now-invalid associated display list.
 //
 //==============================================================================
+/*
 - (void) removeDisplayList
 {
-	if(self->optimizedDrawable)
-	{
-		self->optimizedDrawable = nil;
-	}
+//	if(self->optimizedDrawable)
+//	{
+//		self->optimizedDrawable = nil;
+//	}
+	[self unresolvePart]; 
 }//end removeDisplayList
+*/
+
+- (BOOL) partIsMissing
+{
+	[self resolvePart];
+	return cacheType == PartTypeNotFound;
+}
+
+
+- (void) resolvePart
+{
+	if(cacheType == PartTypeUnresolved)
+	{
+		LDrawModel * mdpModel = [self referencedMPDSubmodel];
+		if(mdpModel != nil)
+		{
+			cacheModel = mdpModel;
+			cacheDrawable = mdpModel;
+			cacheType = PartTypeSubmodel;
+			
+			//printf("Part %p telling cache model %p to add us.\n",self,cacheModel);
+			[cacheModel addObserver:self];
+		}
+		else 
+		{
+			cacheModel = [[ModelManager sharedModelManager] requestModel:referenceName withDocument:[self enclosingFile]];
+			if(cacheModel)
+			{
+				cacheType = PartTypePeerFile;
+				cacheDrawable = cacheModel;
+				[cacheModel addObserver:self];				
+			}
+			else
+			{
+				cacheModel = [[PartLibrary sharedPartLibrary] modelForName:referenceName];
+				if(cacheModel != nil)
+				{
+//					[cacheModel addObserver:self];
+					// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  ResolvePart MUST be thread-safe for completion blocks to work
+					// so we don't ask for a VBO here.  The first time draw calls, it'll ask and cache if we are specific-color.
+					cacheDrawable = nil;
+					
+					cacheType = PartTypeLibrary;
+				}
+				else
+				{
+					cacheType = PartTypeNotFound;
+					cacheDrawable = nil;
+					cacheModel = nil;
+				}			
+			}
+		}
+	}
+	
+}
+
+- (void) unresolvePart
+{
+	if(cacheType != PartTypeUnresolved)
+	{
+		if(cacheModel != nil && (cacheType == PartTypeSubmodel || cacheType == PartTypePeerFile))
+		{
+			printf("Part %p telling observer/cache %p to forget us.\n",self,cacheModel);
+			[cacheModel removeObserver:self];
+		}
+		
+		cacheType = PartTypeUnresolved;
+		cacheDrawable = nil;
+		cacheModel = nil;
+	}
+}
+
+- (void) setEnclosingDirective:(LDrawContainer *)newParent
+{
+	[self unresolvePart];
+	[super setEnclosingDirective:newParent];
+}
+
+- (void) observableSaysGoodbyeCruelWorld:(id<LDrawObservable>) doomedObservable
+{
+	if(cacheType == PartTypeUnresolved || cacheType == PartTypeNotFound)
+		NSLog(@"WARNING: LDraw part is receiving a notification that its observer is dying but it thinks it should have no observer.\n");
+	if(doomedObservable != cacheModel)
+		NSLog(@"WARNING: LDraw part is receiving a notification from an observer that is not its cached drawable.\n");
+		
+	[self unresolvePart];
+}
+
+- (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
+{
+}
+
+- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
+{
+	if(msg == MessageNameChanged)
+		[self unresolvePart];
+	if(msg == MessageScopeChanged)
+		[self unresolvePart];
+}
+
 
 
 #pragma mark -
@@ -1346,11 +1477,16 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //==============================================================================
 - (void) dealloc
 {
+	[self unresolvePart];
+	
 	//release instance variables.
 	[displayName	release];
 	[referenceName	release];
 	
-	[self removeDisplayList];
+//	[self removeDisplayList];
+
+	cacheDrawable = (id) 0xDEADBEEF;
+	cacheModel = (id) 0xDEADBEEF;
 	
 	[super dealloc];
 	

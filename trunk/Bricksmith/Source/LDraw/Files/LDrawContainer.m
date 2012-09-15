@@ -52,6 +52,9 @@
 	
 	containedObjects = [[decoder decodeObjectForKey:@"containedObjects"] retain];
 	
+	for(id<LDrawObservable> i in containedObjects)
+		[i addObserver:self];
+	
 	return self;
 	
 }//end initWithCoder:
@@ -321,6 +324,8 @@
 	{
 		[self noteNeedsDisplay];
 	}
+
+	[directive addObserver:self];
 	
 }//end insertDirective:atIndex:
 
@@ -336,6 +341,10 @@
 	
 	if([doomedDirective enclosingDirective] == self)
 		[doomedDirective setEnclosingDirective:nil]; //no parent anymore; it's an orphan now.
+
+	// Do this first...the actual remove may drop the directive's ref count.  In that 
+	// case we'll puke.
+	[doomedDirective removeObserver:self];
 	
 	[containedObjects removeObjectAtIndex:index]; //or disowned at least.
 	
@@ -449,6 +458,8 @@
 //==============================================================================
 - (void) dealloc
 {
+	for(id<LDrawObservable> i in self->containedObjects)
+		[i removeObserver:self];
 	//the children must not be allowed to remember us. Crashes could result otherwise.
 	[self->containedObjects makeObjectsPerformSelector:@selector(setEnclosingDirective:)
 											withObject:nil ];
@@ -460,5 +471,53 @@
 	
 }//end dealloc
 
+
+#pragma mark -
+#pragma mark OBSERVABLE/OBSERVER
+#pragma mark -
+
+//========== observableSaysGoodbyeCruelWorld====================================
+//
+// Purpose:		this is the message receiving method for observers when their
+//				observable is yanked out from under them.  Observation is a weak
+//				reference so the thing you are observing may be nuked.
+//
+//				In the case of the container, we only observe the directives
+//				we contain and we are supposed to remove all directives before
+//				they die (and containing them is a strong reference).  So...
+//				If any dying directives call out to us, it's a programming error.
+//				Just log it out for now?
+//
+//==============================================================================
+- (void) observableSaysGoodbyeCruelWorld:(id<LDrawObservable>) doomedObservable
+{
+	if([self->containedObjects indexOfObject:doomedObservable] != NSNotFound)
+	{
+		NSLog(@"Observer's observable is dying but we have no idea who it is...");
+	}
+}
+
+
+//========== statusInvalidated =================================================
+//
+// Purpose:		The things we watch call this when one of their states that we 
+//				might have cached is no longer valid.  This tells us to not rely
+//				on that data.
+//
+//==============================================================================
+- (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
+{
+}
+
+
+//========== receiveMessage ====================================================
+//
+// Purpose:		The things we observe call this when something one-time and 
+//				eventful happens - we can repsond if desired.
+//
+//==============================================================================
+- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
+{
+}
 
 @end

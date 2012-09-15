@@ -33,6 +33,8 @@
 	
 	enclosingDirective = nil;
 	
+	observers = [[NSMutableArray alloc] init];
+	
 	return self;
 	
 }//end init
@@ -110,6 +112,8 @@
 {
 	//The superclass doesn't support NSCoding. So we just call the default init.
 	self = [super init];
+
+	observers = [[NSMutableArray alloc] init];
 	
 	[self setEnclosingDirective:[decoder decodeObjectForKey:@"enclosingDirective"]];
 	
@@ -210,6 +214,10 @@
 	
 }//end draw:viewScale:parentColor:
 
+- (Box3) boundingBox3
+{
+	return InvalidBox;
+}
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
@@ -705,5 +713,143 @@
 	
 }//end registerUndoActions:
 
+- (void) addObserver:(id<LDrawObserver>) observer
+{
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+	//printf("directive %p told to add observer %p.\n", self,observer);
+	[observers addObject:[NSValue valueWithPointer:observer]];
+}
+
+- (void) removeObserver:(id<LDrawObserver>) observer
+{
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+	//printf("directive %p told to lose observer %p.\n", self,observer);
+	if(![observers containsObject:[NSValue valueWithPointer:observer]])
+		NSLog(@"ERROR: removing unknown observer.\n");
+
+	[observers removeObject:[NSValue valueWithPointer:observer]];
+}
+
+#pragma mark -
+#pragma mark OBSERVATION
+#pragma mark -
+
+
+//============ dealloc =========================================================
+//
+// Purpose:		Gone daddy gone, the love has gone awaaaaay...
+//
+// Notes:		When an observable dies, it has to notify its observers to drop
+//				their weak references.  Since directives implement the observable
+//				protocol, we have to notify.
+//
+//==============================================================================
+- (void) dealloc
+{
+	if(observers == nil)
+		printf("WARNING: OBSERVERS ARE NULL.\n");
+
+	//printf("Directive %p about to die.\n",self);
+	NSSet * orig = [NSSet setWithSet:observers];
+	for (NSValue * o in orig)
+	{
+		if([observers containsObject:o])
+		{
+			id<LDrawObserver> oo = [o pointerValue];
+			//printf("   directive %p telling observer %p that we are going to die.\n",self,oo);		
+			[oo observableSaysGoodbyeCruelWorld:self];
+		}
+	}
+	[observers release];
+	observers = (id) 0xDEADBEEF;
+	[super dealloc];
+	//printf(" %p is clear.\n",self);
+}
+
+
+//============ sendMessageToObservers ==========================================
+//
+// Purpose:		This is a utility to send a message to every observer.  
+//				Subclasses use it to reach observers since the observer
+//				set is private.
+//
+//==============================================================================
+- (void) sendMessageToObservers:(MessageT) msg
+{
+	NSSet * orig = [NSSet setWithSet:observers];
+	for (NSValue * o in orig)
+	{
+		if([observers containsObject:o])
+		{
+			id<LDrawObserver> oo = [o pointerValue];		
+			[oo receiveMessage:msg who:self];
+		}
+	}
+}
+
+
+//============ invalCache ======================================================
+//
+// Purpose:		This is a utility that marks the cache flags as invalid for a
+//				given subset of flags.  If the flags were not already dirty,
+//				observers are notified.
+//
+// Usage:		Observables should call invalCache with the flag for a bit of 
+//				data EVERY TIME that data changes.  Most of the time this will
+//				result in a no-op or a small quantity of messages.  The 
+//				internals take care of tracking cached state.
+//
+//==============================================================================
+- (void) invalCache:(CacheFlagsT) flags
+{
+	CacheFlagsT newFlags = flags & ~invalFlags;
+	if(newFlags != 0)
+	{
+		invalFlags |= newFlags;
+		NSSet * orig = [NSSet setWithSet:observers];
+		for (NSValue * o in orig)
+		{
+			if([observers containsObject:o])
+			{
+				id<LDrawObserver> oo = [o pointerValue];			
+				[oo statusInvalidated:newFlags who:self];
+			}
+		}
+	}
+}
+
+
+//============== revalCache ====================================================
+//
+// Purpose:		This is a utility that clears out cache flags.  Clients call 
+//				this when they rebuild their own cached data as it is queried
+//				by clients.
+//
+// Return:		The function returns the flags that were previously dirty from
+//				among the set specified.
+//
+// Usage 1:		For an observable that does not need to cache its internals:
+//				The observable should call this with the flag for the data when
+//				the accessor is called.  This "re-arms" inval notifications for
+//				observers.
+//
+// Usage 2:		For an observable that uses a cache with lazy rebuilding for a
+//				property:
+//				The observer should call revalCache with the flag for the 
+//				property.  Then IF the return is the flag passed in, it should
+//				rebuild the cache.  finally, it should return the cache.
+//
+//				In case 2, the cache is being lazily rebuilt when needed and
+//				notifications rearmed at the same time.
+//
+//==============================================================================
+- (CacheFlagsT) revalCache:(CacheFlagsT) flags
+{
+	CacheFlagsT were_dirty = flags & invalFlags;
+	invalFlags &= ~flags;
+	return were_dirty;
+}
 
 @end

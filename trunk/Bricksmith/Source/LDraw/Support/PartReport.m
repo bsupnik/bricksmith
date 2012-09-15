@@ -123,7 +123,7 @@ NSString    *PART_REPORT_PART_QUANTITY  = @"QuantityKey";
 	PartLibrary		*partLibrary		= [PartLibrary sharedPartLibrary];
 	NSArray			*elements			= [self->reportedObject allEnclosedElements];
 	id				 currentElement		= nil;
-	LDrawModel		*partModel			= nil;
+//	LDrawModel		*partModel			= nil;
 	NSString		*category			= nil;
 	NSUInteger		 elementCount		= [elements count];
 	NSUInteger		 counter			= 0;
@@ -144,8 +144,9 @@ NSString    *PART_REPORT_PART_QUANTITY  = @"QuantityKey";
 		if( [currentElement isKindOfClass:[LDrawPart class]] )
 		{
 			//Missing?
-			partModel = [partLibrary modelForPart:currentElement];
-			if(partModel == nil)
+			if ([currentElement partIsMissing])
+//			partModel = [partLibrary modelForPart:currentElement];
+//			if(partModel == nil)
 				[missingParts addObject:currentElement];
 			
 			//Moved?
