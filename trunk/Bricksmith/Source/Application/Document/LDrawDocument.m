@@ -1241,8 +1241,20 @@
 //==============================================================================
 - (void) doMissingPiecesCheck:(id)sender
 {
+	CFAbsoluteTime  startTime       = CFAbsoluteTimeGetCurrent();
+	CFTimeInterval  partReportTime    = 0;
+	
+	// Until we load neighbor files as part of the async-GCD-friendly file load, neighboring files show
+	// up here - the part report is the first thing that triggers the lazy load.  So until we fix this,
+	// "resolve" time contains the time to figure out what each part points to, and the dominant cost 
+	// is loading neighbor files when they are in use.
+				
 	PartReport		*partReport			= [PartReport partReportForContainer:[self documentContents]];
 	NSArray			*missingParts		= [partReport missingParts];
+
+	partReportTime = CFAbsoluteTimeGetCurrent() - startTime;
+	NSLog(@"resolve time = %f", partReportTime);
+
 	NSArray			*missingNames		= nil;
 	NSMutableString	*informativeString	= nil;
 	
