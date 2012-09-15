@@ -1227,13 +1227,14 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// glMultMatrix inside a glBegin; the only way to draw all like geometry at 
 		// once is to have a flat, transformed copy of it.) 
 
-		// Ben says: "modelForPart" is on its way out as we move the smarts about
-		// sourcing parts back into the part.  (In the new design the part talks to
-		// the part library, model manager, and its parent file to resolve parts from
-		// many sources.)  But for now we need to get a real ptr to our model for
-		// flattening, it has to be thread safe, and we think that if it's going to
-		// be found, we will have found it because initWithLines queues a preload.
-		modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
+		// Do not go through the regular part resolution scheme - it is not thread safe.
+		// Look up sub-model first, to avoid taking a lock on the shared library catalog ONLY
+		// to discover that we aren't in there.
+		
+		modelToDraw = [self referencedMPDSubmodel];
+		
+		if(modelToDraw == nil)
+			modelToDraw = [[PartLibrary sharedPartLibrary] modelForName_threadSafe:referenceName];
 		
 		flatCopy    = [modelToDraw copy];
 		
@@ -1423,7 +1424,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	{
 		if(cacheModel != nil && (cacheType == PartTypeSubmodel || cacheType == PartTypePeerFile))
 		{
-			printf("Part %p telling observer/cache %p to forget us.\n",self,cacheModel);
+			//printf("Part %p telling observer/cache %p to forget us.\n",self,cacheModel);
 			[cacheModel removeObserver:self];
 		}
 		
