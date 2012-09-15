@@ -43,8 +43,8 @@ typedef enum PartType {
 	
 	GLfloat			glTransformation[16];
 
-	LDrawDirective	*cacheDrawable;
-	LDrawModel		*cacheModel;
+	LDrawDirective	*cacheDrawable;			// The drawable is the model we link to OR a VBO that represents it from the part library -- a drawable proxy.
+	LDrawModel		*cacheModel;			// The model is the real model we link to.
 	PartTypeT		cacheType;
 	NSLock			*drawLock;
 }

@@ -155,10 +155,20 @@
 	
 	NSString * fileContents = [LDrawUtilities stringFromFile:fullPath];
 	NSArray * lines         = [fileContents separateByLine];		
+	
+	dispatch_group_t group = NULL;
+#if USE_BLOCKS
+	group           = dispatch_group_create();
+#endif
+	
 	LDrawFile * parsedFile = [[LDrawFile alloc] initWithLines:lines
 												   inRange:NSMakeRange(0, [lines count])
-											   parentGroup:NULL];
+											   parentGroup:group];
 	
+#if USE_BLOCKS
+	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+	dispatch_release(group);
+#endif	
 	if(parsedFile)
 	{
 		[trackedFiles setObject:parsedFile forKey:inFileName];

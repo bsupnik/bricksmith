@@ -161,6 +161,9 @@
 			[self setDisplayName:[workingLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]
 						   parse:YES
 						 inGroup:parentGroup];
+			
+			// Debug check: full part resolution isn't thread-safe so make sure we haven't run it by accident here!
+			assert(cacheType == PartTypeUnresolved);
 		}
 		else
 			@throw [NSException exceptionWithName:@"BricksmithParseException" reason:@"Bad part syntax" userInfo:nil];
@@ -284,8 +287,18 @@
 			// different colors in one draw, so we can't cache their 
 			// optimized drawable. We have to retrieve their optimized 
 			// drawable on-the-fly. 
-		
+			
+			// Parts that have a SPECIFIC color can be linked DIRECTLY to their
+			// specific colored VBO.  But we do not do that in resolve because
+			// optimizedDrawableForPart can generate a VBO (which must be on the GL-safe thread).
+			
 			drawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:drawingColor];
+
+			// So after we get our specific color, IF we are statically colored, NOW we can cache the color
+			// for later, avoiding a library lookup in the future.
+			
+			if ([self->color colorCode] != LDrawCurrentColor)
+				cacheDrawable = drawable;			
 		}
 		
 		if(drawBoundsOnly == NO)
@@ -792,6 +805,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	[newReferenceName retain];
 	[referenceName release];
 	referenceName = newReferenceName;
+
+	assert(parentGroup == NULL || cacheType == PartTypeUnresolved);
 	
 	[self unresolvePart];
 	
@@ -1211,10 +1226,15 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// referenced vertices. (We are forced to make copies because you can't call 
 		// glMultMatrix inside a glBegin; the only way to draw all like geometry at 
 		// once is to have a flat, transformed copy of it.) 
-		
-		[self resolvePart];
-		modelToDraw	= cacheModel;
 
+		// Ben says: "modelForPart" is on its way out as we move the smarts about
+		// sourcing parts back into the part.  (In the new design the part talks to
+		// the part library, model manager, and its parent file to resolve parts from
+		// many sources.)  But for now we need to get a real ptr to our model for
+		// flattening, it has to be thread safe, and we think that if it's going to
+		// be found, we will have found it because initWithLines queues a preload.
+		modelToDraw = [[PartLibrary sharedPartLibrary] modelForPart_threadSafe:self];
+		
 		flatCopy    = [modelToDraw copy];
 		
 		// concatenate the transform and pass it down
@@ -1375,19 +1395,13 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			}
 			else
 			{
-				cacheModel = [[PartLibrary sharedPartLibrary] modelForPart:self];
+				cacheModel = [[PartLibrary sharedPartLibrary] modelForName:referenceName];
 				if(cacheModel != nil)
 				{
-					[cacheDrawable addObserver:self];
-				
-					if ([self->color colorCode] != LDrawCurrentColor)
-					{
-						cacheDrawable = [[PartLibrary sharedPartLibrary]
-													optimizedDrawableForPart:self
-																	   color:self->color];
-					}
-					else
-						cacheDrawable = nil;
+//					[cacheModel addObserver:self];
+					// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  ResolvePart MUST be thread-safe for completion blocks to work
+					// so we don't ask for a VBO here.  The first time draw calls, it'll ask and cache if we are specific-color.
+					cacheDrawable = nil;
 					
 					cacheType = PartTypeLibrary;
 				}
