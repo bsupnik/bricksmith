@@ -11,6 +11,9 @@
 #import <Foundation/Foundation.h>
 
 #import "MatrixMath.h"
+#import "LDrawFastSet.h"
+
+#define NEW_SET 1
 
 @class LDrawColor;
 @class LDrawContainer;
@@ -154,7 +157,11 @@ typedef enum Message {
 {
 	@private
 	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
-	NSMutableSet   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
+	#if NEW_SET
+		LDrawFastSet	observers;
+	#else
+		NSMutableSet   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
+	#endif
 	CacheFlagsT		invalFlags;
 	BOOL			isSelected;
 	
