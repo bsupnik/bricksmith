@@ -827,7 +827,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		else
 			parseGroup = parentGroup;
 #endif
-		[[PartLibrary sharedPartLibrary] loadModelForName:displayName inGroup:parseGroup];
+		[[PartLibrary sharedPartLibrary] loadModelForName:referenceName inGroup:parseGroup];
 		
 #if USE_BLOCKS
 		if(parentGroup == NULL)
