@@ -7,7 +7,6 @@
 //  Created by Allen Smith on 2/19/05.
 //  Copyright (c) 2005. All rights reserved.
 //==============================================================================
-#define WANT_IMPL 1
 #import "LDrawDirective.h"
 
 #import "LDrawContainer.h"
