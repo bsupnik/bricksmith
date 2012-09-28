@@ -157,16 +157,17 @@
 	NSUInteger      modelStartIndex = range.location;
 	id              *submodels      = NULL;
 	NSUInteger      insertIndex     = 0;
-	NSUInteger      counter         = 0;
-	LDrawMPDModel   *currentModel   = nil;
 	
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	if(self)
 	{
 		submodels = calloc(range.length, sizeof(LDrawDirective*));
 		
-	//	dispatch_queue_t    queue           = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
+		dispatch_queue_t    queue           = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
 		dispatch_group_t    dispatchGroup   = dispatch_group_create();
+
+		if(parentGroup != NULL)
+			dispatch_group_enter(parentGroup);
 														
 		// Search through all the lines in the file, and separate them out into 
 		// submodels.
@@ -176,38 +177,45 @@
 																  inLines:lines
 																 maxIndex:NSMaxRange(range) - 1];
 			// Parse
-	//		dispatch_group_async(dispatchGroup, queue,
-	//		^{
+			dispatch_group_async(dispatchGroup, queue,
+			^{
 				LDrawMPDModel *newModel    = [[LDrawMPDModel alloc] initWithLines:lines inRange:modelRange parentGroup:dispatchGroup];
 				
 				// Store non-retaining, but *thread-safe* container 
 				// (NSMutableArray is NOT). Since it doesn't retain, we mustn't 
 				// autorelease newDirective. 
 				submodels[insertIndex] = newModel;
-	//		});
+			});
 			
 			modelStartIndex = NSMaxRange(modelRange);
 			insertIndex     += 1;
 		}
 		while(modelStartIndex < NSMaxRange(range));
 		
-		// Wait for all the multithreaded parsing to happen
-		dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
-		dispatch_release(dispatchGroup);
+		dispatch_group_notify(dispatchGroup,queue,
+		^{
+				NSUInteger      counter         = 0;
+				LDrawMPDModel   *currentModel   = nil;
 		
-		// Add all the models in order
-		for(counter = 0; counter < insertIndex; counter++)
-		{
-			currentModel = submodels[counter];
+			// Add all the models in order
+			for(counter = 0; counter < insertIndex; counter++)
+			{
+				currentModel = submodels[counter];
+				
+				[self addSubmodel:currentModel];
+				[currentModel release];
+			}
 			
-			[self addSubmodel:currentModel];
-			[currentModel release];
-		}
-		
-		if([[self submodels] count] > 0)
-			[self setActiveModel:[[self submodels] objectAtIndex:0]];
+			if([[self submodels] count] > 0)
+				[self setActiveModel:[[self submodels] objectAtIndex:0]];
 
-		free(submodels);
+			free(submodels);
+			
+			if(parentGroup != NULL)
+				dispatch_group_leave(parentGroup);
+			
+		});
+		dispatch_release(dispatchGroup);
 	}
 	
 	

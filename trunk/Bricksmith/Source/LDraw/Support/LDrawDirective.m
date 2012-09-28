@@ -35,7 +35,7 @@
 	enclosingDirective = nil;
 
 	#if NEW_SET
-		LDrawFastSetInit(&observers);
+		LDrawFastSetInit(observers);
 	#else
 		observers = [[NSMutableArray alloc] init];
 	#endif
@@ -118,7 +118,7 @@
 	self = [super init];
 
 	#if NEW_SET
-		LDrawFastSetInit(&observers);
+		LDrawFastSetInit(observers);
 	#else
 		observers = [[NSMutableArray alloc] init];
 	#endif
@@ -724,7 +724,7 @@
 - (void) addObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetInsert(&observers, observer);	
+		LDrawFastSetInsert(observers, observer);	
 	#else
 	if(observers == nil)
 		printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -736,7 +736,7 @@
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetRemove(&observers,observer);
+		LDrawFastSetRemove(observers,observer);
 	#else	
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -766,7 +766,7 @@
 {
 	#if NEW_SET
 		MESSAGE_FOR_SET(observers,LDrawObserver,observableSaysGoodbyeCruelWorld:self);
-		LDrawFastSetDealloc(&observers);
+		LDrawFastSetDealloc(observers);
 	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");

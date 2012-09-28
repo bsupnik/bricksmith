@@ -111,9 +111,9 @@
 		
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	
+	dispatch_group_t    stepDispatchGroup   = NULL;
 #if USE_BLOCKS
 	dispatch_queue_t    queue               = NULL;	
-	dispatch_group_t    stepDispatchGroup   = NULL;
 	
 	// Create a group for the multithreaded parsing of the step contents.
 	queue               = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
@@ -171,7 +171,7 @@
 				// objects be be deeply recursive, which means we would pile 
 				// up a lot of dispatch_group_wait calls, resulting in so 
 				// many threads we run out of stack space. 
-				LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:lines inRange:commandRange parentGroup:parentGroup];
+				LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:lines inRange:commandRange parentGroup:stepDispatchGroup];
 				
 				// Store non-retaining, but *thread-safe* container 
 				// (NSMutableArray is NOT). Since it doesn't retain, we mustn't 

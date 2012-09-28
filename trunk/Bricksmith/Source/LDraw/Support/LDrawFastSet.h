@@ -32,7 +32,7 @@ typedef struct {
 			id<ns_type> p1 = this.ptr.p1; \
 			id<ns_type> p2 = this.ptr.p2; \
 			if(p1)	[p1 __msg]; \
-			if(p2 && LDrawFastSetContains(&this, p2)) \
+			if(p2 && LDrawFastSetContains(this, p2)) \
 				[p2 __msg]; \
 		} \
 		else \
@@ -43,7 +43,7 @@ typedef struct {
 				for (NSValue * o in orig)\
 				{\
 					id<ns_type> oo = [o pointerValue];\
-					if(LDrawFastSetContains(&this,oo))\
+					if(LDrawFastSetContains(this,oo))\
 					{\
 						[oo __msg];\
 					}\
@@ -52,8 +52,101 @@ typedef struct {
 		}\
 	} while(0)
 
+#define LDrawFastSetContains(this, p) \
+	((this.obj.flag == NULL && this.obj.mutable_set != nil) ? \
+		([this.obj.mutable_set containsObject:[NSValue valueWithPointer:p]] ? 1 : 0) : \
+		((this.ptr.p1 == p || this.ptr.p2 == p) ? 1 : 0))
 
-#if WANT_IMPL
+#define LDrawFastSetInit(this) \
+	do {\
+		this.ptr.p1 = this.ptr.p2 = NULL; \
+	} while(0)
+	
+
+#define LDrawFastSetDealloc(this) \
+	do {\
+		if(this.obj.flag == NULL && this.obj.mutable_set != nil) \
+		[this.obj.mutable_set release];\
+	} while(0) 
+
+#define LDrawFastSetInsert(this,p) \
+	do {\
+		if(this.ptr.p1)																		\
+		{																					\
+			if(this.ptr.p2)																	\
+			{																				\
+				if(p != this.ptr.p1 && p != this.ptr.p2)									\
+				{																			\
+					NSMutableSet * new_set = [[NSMutableSet alloc] initWithCapacity:3];		\
+					[new_set addObject:[NSValue valueWithPointer:this.ptr.p1]];				\
+					[new_set addObject:[NSValue valueWithPointer:this.ptr.p2]];				\
+					[new_set addObject:[NSValue valueWithPointer:p]];						\
+					this.obj.flag = NULL;													\
+					this.obj.mutable_set = new_set;											\
+				}																			\
+			}																				\
+			else																			\
+			{																				\
+				if(p != this.ptr.p1)														\
+					this.ptr.p2 = p;														\
+			}																				\
+		}																					\
+		else																				\
+		{																					\
+			if(this.ptr.p2)																	\
+			{																				\
+				[this.obj.mutable_set addObject:[NSValue valueWithPointer:p]];				\
+			}																				\
+			else																			\
+			{																				\
+				this.ptr.p1 = p;															\
+			}																				\
+		}																					\
+	} while(0)
+
+
+#define LDrawFastSetRemove(this, p) \
+	do {\
+		if(this.obj.flag == NULL && this.obj.mutable_set != nil) \
+		{ \
+			NSValue * me = [NSValue valueWithPointer:p]; \
+			assert([this.obj.mutable_set containsObject:me]); \
+			[this.obj.mutable_set removeObject:me]; \
+			assert([this.obj.mutable_set count] >= 2); \
+			if([this.obj.mutable_set count] == 2) \
+			{ \
+				void ** ptr = &this.ptr.p1; \
+				NSMutableSet * dead = this.obj.mutable_set; \
+				for(NSValue * o in dead) \
+				{ \
+					*ptr = [o pointerValue]; \
+					++ptr; \
+				} \
+				[dead release]; \
+			} \
+		} \
+		else \
+		{ \
+			if(this.ptr.p1 == p) \
+			{ \
+				this.ptr.p1 = this.ptr.p2; \
+				this.ptr.p2 = NULL; \
+			}\
+			else if(this.ptr.p2 == p)\
+			{\
+				this.ptr.p2 = NULL;\
+			}\
+			else {\
+				assert(!"Removal of an unknown object.");\
+			}\
+		} \
+	} while(0)
+
+
+
+
+
+#if WANT_IMPL && 0
 
 static int LDrawFastSetContains(LDrawFastSet * this, void * p)
 {
@@ -148,36 +241,5 @@ static void LDrawFastSetRemove(LDrawFastSet * this, void * p)
 	} 
 }
 
-/*
-static NSSet * LDrawFastSetCopy(LDrawFastSet * this)
-{
-	if(this->ptr.p1)
-	{
-		if(this->ptr.p2)
-		{
-			NSMutableSet * s = [[[NSMutableSet alloc] initWithCapacity:2] autorelease];
-			[s addObject:[NSValue valueWithPointer:this->ptr.p1]];
-			[s addObject:[NSValue valueWithPointer:this->ptr.p2]];
-			return s;
-		}
-		else
-		{
-			NSMutableSet * s = [[[NSMutableSet alloc] initWithCapacity:1] autorelease];
-			[s addObject:[NSValue valueWithPointer:this->ptr.p1]];
-			return s;
-		}
-	}
-	else
-	{
-		if(this->ptr.p2)
-		{
-			return [NSSet setWithSet:this->obj.mutable_set];
-		}
-		else
-		{
-			return nil;
-		}
-	}
-}
-*/
+
 #endif
