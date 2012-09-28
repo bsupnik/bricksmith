@@ -145,6 +145,14 @@
 }//end boundingBox3
 
 
+//========== postsNotifications ================================================
+//==============================================================================
+- (BOOL) postsNotifications
+{
+	return self->postsNotifications;
+}
+
+
 //========== projectedBoundingBoxWithModelView:projection:view: ================
 //
 // Purpose:		Returns the 2D projection (you should ignore the z) of the 
@@ -317,7 +325,10 @@
 	// Apply notification policy to new children
 	if([directive respondsToSelector:@selector(setPostsNotifications:)] == YES)
 	{
-		[(id)directive setPostsNotifications:self->postsNotifications];
+		if([(LDrawContainer*)directive postsNotifications] != self->postsNotifications)
+		{
+			[(LDrawContainer*)directive setPostsNotifications:self->postsNotifications];
+		}
 	}
 
 	if(self->postsNotifications == YES)
