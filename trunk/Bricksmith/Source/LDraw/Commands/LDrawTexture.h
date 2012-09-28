@@ -16,7 +16,8 @@
 @interface LDrawTexture : LDrawContainer
 {
 	NSArray 		*fallback;
-	NSString		*imageName;
+	NSString		*imageDisplayName;
+	NSString		*imageReferenceName;
 	NSString		*glossmapName;
 	
 	Point3			planePoint1;
@@ -24,15 +25,24 @@
 	Point3			planePoint3;
 	
 	LDrawVertexes	*vertexes;
+	NSArray			*dragHandles;
+	
+	GLuint			textureTag;
 }
 
 // Accessors
-- (void) setImageName:(NSString *)newName;
+- (NSString *) glossmapName;
+- (NSString *) imageDisplayName;
+- (NSString *) imageReferenceName;
+
+- (void) setGlossmapName:(NSString *)newName;
+- (void) setImageDisplayName:(NSString *)newName;
+- (void) setImageDisplayName:(NSString *)newName parse:(BOOL)shouldParse inGroup:(dispatch_group_t)parentGroup;
 
 // Utilities
 + (BOOL) lineIsTextureBeginning:(NSString*)line;
 + (BOOL) lineIsTextureFallback:(NSString*)line;
 + (BOOL) lineIsTextureTerminator:(NSString*)line;
-- (BOOL) parsePlanarTextureFromLine:(NSString *)line;
+- (BOOL) parsePlanarTextureFromLine:(NSString *)line parentGroup:(dispatch_group_t)parentGroup;
 
 @end

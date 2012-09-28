@@ -50,6 +50,25 @@ const Point2 ZeroPoint2 = {0.0, 0.0};
 const Point3 ZeroPoint3 = {0.0, 0.0, 0.0};
 const Point4 ZeroPoint4 = {0.0, 0.0, 0.0, 0.0};
 
+//========== FloorPowerOfTwo ===================================================
+//
+// Purpose:		Returns the first power of two less than value
+//
+//==============================================================================
+size_t FloorPowerOfTwo(size_t value)
+{
+	size_t mask = 0;
+	
+	mask = 1L << (sizeof(size_t)*8 - 1);
+	
+	while( (value & mask) == 0 )
+	{
+		mask = mask >> 1;
+	}
+	
+	return mask;
+}
+
 
 //========== FloatsApproximatelyEqual ==========================================
 //
@@ -812,6 +831,23 @@ float V3DistanceBetween2Points(Point3 a, Point3 b)
 	return distance;
 	
 }//end V3DistanceBetween2Points
+
+
+//========== V3DistanceFromPointToPlane ========================================
+//
+// Purpose:		returns the distance from point to the given plane.
+//
+// Parameters:	point: a random point
+//				planeNormal: the normalized normal vector of the plane
+//				pointOnPlane: any point on the surface of the plane
+//
+//==============================================================================
+float V3DistanceFromPointToPlane(Point3 point, Vector3 planeNormal, Point3 pointOnPlane)
+{
+	float distance = V3Dot(planeNormal, V3Sub(point, pointOnPlane));
+	return distance;
+
+}//end V3DistanceFromPointToPlane
 
 
 //========== V3Cross ===========================================================

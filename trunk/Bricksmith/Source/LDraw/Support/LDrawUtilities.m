@@ -677,6 +677,33 @@ static NSString				*defaultAuthor		= @"anonymous";
 
 
 #pragma mark -
+#pragma mark IMAGES
+#pragma mark -
+
+//---------- imageAtPath: --------------------------------------------[static]--
+//
+// Purpose:		Creates an image from the file at the given path.
+//
+//------------------------------------------------------------------------------
++ (CGImageRef) imageAtPath:(NSString *)imagePath
+{
+	NSURL				*fileURL	= [NSURL fileURLWithPath:imagePath];
+	CGImageSourceRef	imageSource = NULL;
+	CGImageRef			image		= NULL;
+	
+	imageSource = CGImageSourceCreateWithURL( (CFURLRef)fileURL, NULL );
+	if(imageSource != NULL)
+	{
+		image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+	}
+	
+	if(imageSource) CFRelease(imageSource);
+	
+	return (CGImageRef)[(id)image autorelease];
+}
+
+
+#pragma mark -
 #pragma mark MISCELLANEOUS
 #pragma mark -
 //This is stuff that didn't really go anywhere else.
