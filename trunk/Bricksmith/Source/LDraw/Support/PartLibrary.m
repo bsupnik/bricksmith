@@ -23,6 +23,7 @@
 #import "LDrawPathNames.h"
 #import "LDrawPaths.h"
 #import "LDrawStep.h"
+#import "LDrawTexture.h"
 #import "LDrawUtilities.h"
 #import "LDrawVertexes.h"
 #import "StringCategory.h"
@@ -101,7 +102,9 @@ static PartLibrary *SharedPartLibrary = nil;
 	self = [super init];
 	
 	loadedFiles                 = [[NSMutableDictionary dictionaryWithCapacity:400] retain];
+	loadedImages				= [[NSMutableDictionary alloc] init];
 	optimizedRepresentations    = [[NSMutableDictionary dictionaryWithCapacity:400] retain];
+	optimizedTextures			= [[NSMutableDictionary alloc] init];
 	
 	favorites                   = [[NSMutableArray alloc] init];
 	
@@ -664,6 +667,106 @@ static PartLibrary *SharedPartLibrary = nil;
 #pragma mark FINDING PARTS
 #pragma mark -
 
+//========== loadImageForName:inGroup: =========================================
+//
+// Purpose:		This is a thread-safe method which causes the texture image of 
+//				the given name to be loaded out of the LDraw folder. 
+//
+//==============================================================================
+- (void) loadImageForName:(NSString *)imageName
+				  inGroup:(dispatch_group_t)parentGroup
+{
+	// Determine if the model needs to be parsed.
+	// Dispatch to a serial queue to effectively mutex the query
+#if USE_BLOCKS
+	dispatch_group_async(parentGroup, self->catalogAccessQueue,
+	^{
+		NSMutableArray  *requestingGroups   = nil;
+#endif
+		CGImageRef      image              = NULL;
+		BOOL            alreadyParsing      = NO;	// another thread is already parsing partName
+	
+		// Already been parsed?
+		image = (CGImageRef)[self->loadedImages objectForKey:imageName];
+		if(image == nil)
+		{
+#if USE_BLOCKS
+			// Is it being parsed? If so, all we need to do is wait for whoever 
+			// is parsing it to finish. 
+			requestingGroups    = [self->parsingGroups objectForKey:imageName];
+			alreadyParsing      = (requestingGroups != nil);
+			
+			if(alreadyParsing == NO)
+			{
+				// Start a registry for all the dispatch groups which attempt to 
+				// load the same model. When parsing is complete, they will all 
+				// be signaled. 
+				requestingGroups = [[NSMutableArray alloc] init];
+				[self->parsingGroups setObject:requestingGroups forKey:imageName];
+				[requestingGroups release];
+			}
+				
+			// Register the calling group as having also requested a parse 
+			// for this file. This ensures the calling group cannot complete 
+			// until the parse is complete on whatever thread is actually 
+			// doing it. 
+			dispatch_group_enter(parentGroup);
+			[requestingGroups addObject:[NSValue valueWithPointer:parentGroup]];
+#endif
+			
+			// Nobody has started parsing it yet, so we win! Parse from disk.
+			if(alreadyParsing == NO)
+			{
+#if USE_BLOCKS
+				dispatch_group_async(parentGroup, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+				^{
+#endif
+					NSString    *imagePath   = [[LDrawPaths sharedPaths] pathForTextureName:imageName];
+						
+#if USE_BLOCKS //------------------------------------------------------
+					[self readImageAtPath:imagePath asynchronously:YES completionHandler:^(CGImageRef image)
+					{
+						if(image) CFRetain(image);
+						
+						// Register new image in the library (serial queue "mutex" protected)
+						dispatch_group_async(parentGroup, self->catalogAccessQueue,
+						^{
+							if(image != nil)
+							{
+								[self->loadedImages setObject:(id)image forKey:imageName];
+							}
+							
+							// Notify waiting threads we are finished parsing this part.
+							for(NSValue *waitingGroupPtr in requestingGroups)
+							{
+								dispatch_group_t waitingGroup = [waitingGroupPtr pointerValue];
+								dispatch_group_leave(waitingGroup);
+							}
+							[self->parsingGroups removeObjectForKey:imageName];
+							
+							if(image) CFRelease(image);
+						});
+					}];
+#else //------------------------------------------------------------------------
+					// **** Non-multithreaded fallback code ****
+					image = (CGImageRef)[self readImageAtPath:imagePath asynchronously:NO completionHandler:NULL];
+					if(image != nil)
+					{
+						[self->loadedImages setObject:(id)image forKey:imageName];
+					}
+#endif //-----------------------------------------------------------------------
+#if USE_BLOCKS
+				});
+#endif
+			}
+		}
+#if USE_BLOCKS
+	});
+#endif
+	
+}//end loadImageForName:
+
+
 //========== loadModelForName:inGroup: =========================================
 //
 // Purpose:		This is a thread-safe method which causes the model of the given 
@@ -760,6 +863,107 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end loadModelForName:
 
 
+//========== imageForTextureName: ==============================================
+//
+// Purpose:		Returns an image from our library cache.
+//
+//==============================================================================
+- (CGImageRef) imageForTextureName:(NSString *)imageName
+{
+	CGImageRef	image		= NULL;
+	NSString	*imagePath	= nil;
+	
+	// Has it already been parsed?
+	image = (CGImageRef)[self->loadedImages objectForKey:imageName];
+	
+	if(image == nil)
+	{
+		// Well, this means we have to try getting it off the disk!
+		imagePath	= [[LDrawPaths sharedPaths] pathForTextureName:imageName];
+		image		= [self readImageAtPath:imagePath asynchronously:NO completionHandler:NULL];
+		
+		if(image != nil)
+			[self->loadedImages setObject:(id)image forKey:imageName];
+	}
+	
+	return image;
+	
+}
+
+
+//========== imageForTexture: ==================================================
+//
+// Purpose:		Returns the image specified by the texture object.
+//
+//==============================================================================
+- (CGImageRef) imageForTexture:(LDrawTexture *)texture
+{
+	NSString	*imageName	= [texture imageReferenceName];
+	CGImageRef	image		= NULL;
+	
+	// Try to get a live link if we have parsed this part off disk already.
+	image = [self imageForTextureName:imageName];
+	
+	if(image == nil) {
+		//we're grasping at straws. See if this is a reference to an external 
+		// file in the same folder.
+		image = [self imageFromNeighboringFileForTexture:texture];
+	}
+	
+	return image;
+	
+}//end imageForTexture:
+
+
+//========== imageFromNeighboringFileForTexture: ===============================
+//
+// Purpose:		Attempts to resolve the part's name reference against a file 
+//				located in the same parent folder as the file in which the part 
+//				is contained.
+//
+//				This should be a method of last resort, after searching the part 
+//				library and looking for an MPD reference.
+//
+// Note:		Once a model is found under this method, we READ AND CACHE IT.
+//				You must RESTART Bricksmith to see any updates made to the 
+//				referenced file. This feature is not intended to be convenient, 
+//				bug-free, or industrial-strength. It is merely here to support 
+//				the LDraw standard, and any files that may have been created 
+//				under it.
+//
+//==============================================================================
+- (CGImageRef) imageFromNeighboringFileForTexture:(LDrawTexture *)texture
+{
+	LDrawFile		*enclosingFile	= [texture enclosingFile];
+	NSString		*filePath		= [enclosingFile path];
+	NSString		*partName		= nil;
+	NSString		*testPath		= nil;
+	CGImageRef		image			= nil;
+	NSFileManager	*fileManager	= nil;
+	
+	if(filePath != nil)
+	{
+		fileManager		= [[[NSFileManager alloc] init] autorelease];
+		
+		//look at path = parentFolder/referenceName
+		partName		= [texture imageDisplayName]; // handle case-sensitive filesystem
+		testPath		= [filePath stringByDeletingLastPathComponent];
+		testPath		= [testPath stringByAppendingPathComponent:partName];
+		
+		//see if it exists!
+		if([fileManager fileExistsAtPath:testPath])
+		{
+			image = [self readImageAtPath:testPath asynchronously:NO completionHandler:NULL];
+			if(image != nil)
+				[self->loadedImages setObject:(id)image forKey:partName];
+		}
+	}
+	
+	return image;
+	
+}//end imageFromNeighboringFileForTexture:
+
+
 //========== modelForName: =====================================================
 //
 // Purpose:		Attempts to find the part based only on the given name.
@@ -831,8 +1035,8 @@ static PartLibrary *SharedPartLibrary = nil;
 	model = [self modelForName:partName];
 	
 	if(model == nil) {
-		//We didn't find it in the LDraw folder. Our last hope is for 
-		// this to be a reference to another model in an MPD file.
+		// We didn't find it in the LDraw folder. Hopefully this is a reference 
+		// to another model in an MPD file. 
 		model = [part referencedMPDSubmodel];
 	}
 	
@@ -862,6 +1066,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	return model;
 }
 
+#pragma mark -
 
 //========== optimizedDrawableForPart:color: ==================================
 //
@@ -941,6 +1146,90 @@ static PartLibrary *SharedPartLibrary = nil;
 	return vertexObject;
 	
 }//end optimizedDrawableForPart:color:
+
+
+//========== textureTagForTexture: =============================================
+//
+// Purpose:		Returns the OpenGL tag necessary to draw the image represented 
+//				by the high-level texture object. 
+//
+//==============================================================================
+- (GLuint) textureTagForTexture:(LDrawTexture*)texture
+{
+	NSString	*name		= [texture imageReferenceName];
+	NSNumber	*tagNumber	= [self->optimizedTextures objectForKey:name];
+	GLuint		textureTag	= 0;
+	
+	if(tagNumber)
+	{
+		textureTag = [tagNumber unsignedIntValue];
+	}
+	else
+	{
+		CGImageRef	image	= [self imageForTexture:texture];
+		
+		if(image)
+		{
+			CGRect			canvasRect		= CGRectMake( 0, 0, FloorPowerOfTwo(CGImageGetWidth(image)), FloorPowerOfTwo(CGImageGetHeight(image)) );
+			uint8_t 		*imageBuffer	= malloc( (canvasRect.size.width) * (canvasRect.size.height) * 4 );
+			CGColorSpaceRef colorSpace		= CGColorSpaceCreateDeviceRGB();
+			CGContextRef	bitmapContext	= CGBitmapContextCreate(imageBuffer,
+																	canvasRect.size.width,
+																	canvasRect.size.height,
+																	8, // bits per component
+																	canvasRect.size.width * 4, // bytes per row
+																	colorSpace,
+																	kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst
+																	);
+			
+			// Draw the image into the bitmap context. By doing so, we use the mighty 
+			// power of Quartz handle the nasty conversion details necessary to fill up 
+			// a pixel buffer in an OpenGL-friendly storage format and color space. 
+			CGContextSetBlendMode(bitmapContext, kCGBlendModeCopy);
+			CGContextDrawImage(bitmapContext, canvasRect, image);
+			
+//			CGImageRef output = CGBitmapContextCreateImage(bitmapContext);
+//			CGImageDestinationRef myImageDest = CGImageDestinationCreateWithURL((CFURLRef)[NSURL fileURLWithPath:@"/out.png"], kUTTypePNG, 1, nil);
+//			//NSDictionary* options = [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithInt:1.0], kCGImageDestinationLossyCompressionQuality, nil]; // Don't know if this is necessary
+//			CGImageDestinationAddImage(myImageDest, output, NULL);
+//			CGImageDestinationFinalize(myImageDest);
+//			CFRelease(myImageDest);
+			
+			// Generate a tag for the texture we're about to generate, then set it as 
+			// the active texture. 
+			// Note: We are using non-rectangular textures here, which started as an 
+			//		 extension (_EXT) and is now ratified by the review board (_ARB) 
+			glGenTextures(1, &textureTag);
+			glBindTexture(GL_TEXTURE_2D, textureTag);
+			
+			// Generate Texture!
+			glPixelStorei(GL_PACK_ROW_LENGTH,	canvasRect.size.width * 4);
+			glPixelStorei(GL_PACK_ALIGNMENT,	1); // byte alignment
+			
+			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8,			// texture type params
+						 canvasRect.size.width, canvasRect.size.height, 0,	// source image (w, h)
+						 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,				// source storage format
+						 imageBuffer );
+						// see function notes about the source storage format.
+			
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+			glBindTexture(GL_TEXTURE_2D, 0);
+			
+			[self->optimizedTextures setObject:[NSNumber numberWithUnsignedInt:textureTag] forKey:name];
+			
+			// free memory
+			//	free(imageBuffer);
+			CFRelease(colorSpace);
+			CFRelease(bitmapContext);
+		}
+	}
+	
+	return textureTag;
+}
 
 
 #pragma mark -
@@ -1313,7 +1602,58 @@ static PartLibrary *SharedPartLibrary = nil;
 }//end catalogInfoForFileAtPath
 
 
-//========== readModelAtPath: ==================================================
+//========== readImageAtPath: ==================================================
+//
+// Purpose:		Parses the model found at the given path, adds it to the list of 
+//				loaded parts, and returns the model.
+//
+// Notes:		The model is returned from the method if asynchronous is NO.
+//				Otherwise, returns nil and passes the completed model via the 
+//				block instead. 
+//
+//==============================================================================
+- (CGImageRef) readImageAtPath:(NSString *)imagePath
+				asynchronously:(BOOL)asynchronous
+			 completionHandler:(void (^)(CGImageRef))completionBlock
+{
+	dispatch_group_t    group           = NULL;
+#if USE_BLOCKS
+	__block
+#endif
+	CGImageRef			image          = nil;
+	
+#if USE_BLOCKS
+	group           = dispatch_group_create();
+#endif
+	
+#if USE_BLOCKS
+	if(asynchronous == NO)
+	{
+		dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+#endif
+		image = [LDrawUtilities imageAtPath:imagePath];
+#if USE_BLOCKS
+	}
+	else
+	{
+		dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+							  ^{
+								  image = [LDrawUtilities imageAtPath:imagePath];
+								  
+								  if(completionBlock)
+									  completionBlock(image);
+							  });
+	}
+	
+	dispatch_release(group);
+#endif
+	
+	return (CGImageRef)[(id)image autorelease];
+	
+}//end readImageAtPath:
+
+
+//========== readModelAtPath:asynchronously:completionHandler: =================
 //
 // Purpose:		Parses the model found at the given path, adds it to the list of 
 //				loaded parts, and returns the model.
@@ -1370,15 +1710,15 @@ static PartLibrary *SharedPartLibrary = nil;
 	else
 	{
 		dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-		^{
-			[parsedFile optimizeStructure];
-			model = [[[[parsedFile submodels] objectAtIndex:0] retain] autorelease];
-			
-			if(completionBlock)
-				completionBlock(model);
-			
-//			[parsedFile release]; // see notes above
-		});
+							  ^{
+								  [parsedFile optimizeStructure];
+								  model = [[[[parsedFile submodels] objectAtIndex:0] retain] autorelease];
+								  
+								  if(completionBlock)
+									  completionBlock(model);
+								  
+								  //			[parsedFile release]; // see notes above
+							  });
 	}
 	
 	dispatch_release(group);
@@ -1400,9 +1740,12 @@ static PartLibrary *SharedPartLibrary = nil;
 //==============================================================================
 - (void) dealloc
 {
-	[partCatalog		release];
-	[favorites			release];
-	[loadedFiles		release];
+	[partCatalog				release];
+	[favorites					release];
+	[loadedFiles				release];
+	[loadedImages				release];
+	[optimizedRepresentations	release];
+	[optimizedTextures			release];
 #if USE_BLOCKS
 	dispatch_release(catalogAccessQueue);
 #endif

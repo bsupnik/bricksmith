@@ -227,6 +227,7 @@ extern const Point4					ZeroPoint4;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+extern size_t	FloorPowerOfTwo(size_t value);
 extern bool		FloatsApproximatelyEqual(float float1, float float2);
 
 // 2-D
@@ -271,6 +272,7 @@ extern Vector3	V3Combine(Vector3 a, Vector3 b, float ascl, float bscl);
 extern Vector3	V3Mul(Vector3 a, Vector3 b);
 extern Vector3	V3MulScalar(Vector3 a, float scalar);
 extern float	V3DistanceBetween2Points(Point3 a, Point3 b);
+extern float	V3DistanceFromPointToPlane(Point3 point, Vector3 planeNormal, Point3 pointOnPlane);
 extern Vector3	V3Cross(Vector3 a, Vector3 b);
 extern Point3	V3Midpoint(Point3 point1, Point3 point2);
 extern Vector3	V3IsolateGreatestComponent(Vector3 vector);

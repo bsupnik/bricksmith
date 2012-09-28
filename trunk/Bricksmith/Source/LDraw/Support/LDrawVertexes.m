@@ -106,6 +106,13 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 			glDrawArrays(GL_QUADS, tags.quadOffset, tags.quadCount * 4);
 #endif
 	}
+	
+	// Optimized library parts accumulate complex drawables like Textures within 
+	// their vertex objects. 
+	for(LDrawDirective* directive in self->everythingElse)
+	{
+		[directive draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
+	}
 }
 
 

@@ -22,6 +22,8 @@
 
 #define PARTS_DIRECTORY_NAME					@"parts" //match case of LDraw.org complete distribution zip package.
 	#define SUBPARTS_DIRECTORY_NAME				@"s"
+	
+#define TEXTURES_DIRECTORY_NAME					@"textures"
 
 #define UNOFFICIAL_DIRECTORY_NAME				@"Unofficial"
 

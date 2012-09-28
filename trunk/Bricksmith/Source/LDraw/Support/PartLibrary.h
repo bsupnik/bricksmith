@@ -15,6 +15,7 @@
 @class LDrawDirective;
 @class LDrawModel;
 @class LDrawPart;
+@class LDrawTexture;
 @protocol PartLibraryDelegate;
 
 //The part catalog was regenerated from disk.
@@ -50,6 +51,8 @@ extern NSString	*Category_Subparts;
 	NSDictionary            *partCatalog;
 	NSMutableArray          *favorites;					// parts names in the "Favorites" pseduocategory
 	NSMutableDictionary     *loadedFiles;				// list of LDrawFiles which have been read off disk.
+	NSMutableDictionary		*loadedImages;
+	NSMutableDictionary		*optimizedTextures;			// GLuint texture tags
 	NSMutableDictionary     *optimizedRepresentations;	// access stored vertex objects by part name, then color.
 	dispatch_queue_t        catalogAccessQueue;			// serial queue to mutex changes to the part catalog
 	NSMutableDictionary     *parsingGroups;				// arrays of dispatch_group_t's which have requested each file currently being parsed
@@ -82,10 +85,17 @@ extern NSString	*Category_Subparts;
 - (void) saveFavoritesToUserDefaults;
 
 // Finding Parts
+- (void) loadImageForName:(NSString *)imageName inGroup:(dispatch_group_t)parentGroup;
 - (void) loadModelForName:(NSString *)name inGroup:(dispatch_group_t)parentGroup;
+- (CGImageRef) imageForTextureName:(NSString *)imageName;
+- (CGImageRef) imageForTexture:(LDrawTexture *)texture;
+- (CGImageRef) imageFromNeighboringFileForTexture:(LDrawTexture *)texture;
 - (LDrawModel *) modelForName:(NSString *) partName;
 - (LDrawModel *) modelForName_threadSafe:(NSString *) partName;
+
 - (LDrawDirective *) optimizedDrawableForPart:(LDrawPart *) part color:(LDrawColor *)color;
+- (GLuint) textureTagForTexture:(LDrawTexture*)texture;
+
 // Utilites
 - (void) addPartsInFolder:(NSString *)folderPath
 				toCatalog:(NSMutableDictionary *)catalog
@@ -95,6 +105,9 @@ extern NSString	*Category_Subparts;
 - (NSString *)descriptionForPart:(LDrawPart *)part;
 - (NSString *)descriptionForPartName:(NSString *)name;
 - (NSMutableDictionary *) catalogInfoForFileAtPath:(NSString *)filepath;
+- (CGImageRef) readImageAtPath:(NSString *)imagePath
+				asynchronously:(BOOL)asynchronous
+			 completionHandler:(void (^)(CGImageRef))completionBlock;
 - (LDrawModel *) readModelAtPath:(NSString *)partPath
 				  asynchronously:(BOOL)asynchronous
 			   completionHandler:(void (^)(LDrawModel *))completionBlock;

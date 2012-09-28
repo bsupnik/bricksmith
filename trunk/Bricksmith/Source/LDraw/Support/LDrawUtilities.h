@@ -68,6 +68,9 @@ typedef enum
 + (void) registerHitForObject:(id)hitObject depth:(float)depth creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;
 + (void) registerHitForObject:(id)hitObject creditObject:(id)creditObject hits:(NSMutableSet *)hits;
 
+// Images
++ (CGImageRef) imageAtPath:(NSString *)imagePath;
+
 // Miscellaneous
 + (Tuple3) angleForViewOrientation:(ViewOrientationT)orientation;
 + (Box3) boundingBox3ForDirectives:(NSArray *)directives;

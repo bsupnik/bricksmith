@@ -9,9 +9,11 @@
 //==============================================================================
 #import "LDrawTexture.h"
 
+#import "LDrawDragHandle.h"
 #import "LDrawKeywords.h"
 #import "LDrawUtilities.h"
 #import "LDrawVertexes.h"
+#import "PartLibrary.h"
 #import "StringCategory.h"
 
 
@@ -37,7 +39,7 @@
 	if(self)
 	{
 		currentLine = [lines objectAtIndex:range.location];
-		[self parsePlanarTextureFromLine:currentLine];
+		[self parsePlanarTextureFromLine:currentLine parentGroup:parentGroup];
 	
 		// Parse out the END command
 		if(range.length > 0)
@@ -120,6 +122,81 @@
 	return self;
 	
 }//end initWithLines:inRange:
+
+
+//========== initWithCoder: ====================================================
+//
+// Purpose:		Reads a representation of this object from the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to 
+//				read and write LDraw objects as NSData.
+//
+//==============================================================================
+- (id) initWithCoder:(NSCoder *)decoder
+{
+	const uint8_t *temporary = NULL; //pointer to a temporary buffer returned by the decoder.
+	
+	self = [super initWithCoder:decoder];
+	
+	[self setImageDisplayName:[decoder decodeObjectForKey:@"imageDisplayName"]];
+	[self setGlossmapName:[decoder decodeObjectForKey:@"glossmapName"]];
+	
+	temporary = [decoder decodeBytesForKey:@"planePoint1" returnedLength:NULL];
+	memcpy(&planePoint1, temporary, sizeof(Point3));
+	
+	temporary = [decoder decodeBytesForKey:@"planePoint2" returnedLength:NULL];
+	memcpy(&planePoint2, temporary, sizeof(Point3));
+	
+	temporary = [decoder decodeBytesForKey:@"planePoint3" returnedLength:NULL];
+	memcpy(&planePoint3, temporary, sizeof(Point3));
+	
+	self->fallback = [[decoder decodeObjectForKey:@"fallback"] retain];
+
+	return self;
+	
+}//end initWithCoder:
+
+
+//========== encodeWithCoder: ==================================================
+//
+// Purpose:		Writes a representation of this object to the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to 
+//				read and write LDraw objects as NSData.
+//
+//==============================================================================
+- (void)encodeWithCoder:(NSCoder *)encoder
+{
+	[super encodeWithCoder:encoder];
+	
+	[encoder encodeObject:fallback			forKey:@"fallback"];
+	[encoder encodeObject:imageDisplayName	forKey:@"imageDisplayName"];
+	[encoder encodeObject:glossmapName		forKey:@"glossmapName"];
+	
+	[encoder encodeBytes:(void*)&planePoint1 length:sizeof(Point3) forKey:@"planePoint1"];
+	[encoder encodeBytes:(void*)&planePoint2 length:sizeof(Point3) forKey:@"planePoint2"];
+	[encoder encodeBytes:(void*)&planePoint3 length:sizeof(Point3) forKey:@"planePoint3"];
+	
+}//end encodeWithCoder:
+
+
+//========== copyWithZone: =====================================================
+//
+// Purpose:		Returns a duplicate of this file.
+//
+//==============================================================================
+- (id) copyWithZone:(NSZone *)zone
+{
+	LDrawTexture	*copied			= (LDrawTexture *)[super copyWithZone:zone];
+	
+	copied->fallback = [self->fallback copy];
+	[copied setImageDisplayName:[self imageDisplayName]];
+	[copied setGlossmapName:[self glossmapName]];
+	copied->planePoint1 = self->planePoint1;
+	copied->planePoint2 = self->planePoint2;
+	copied->planePoint3 = self->planePoint3;
+	
+	return copied;
+	
+}//end copyWithZone:
 
 
 #pragma mark -
@@ -220,8 +297,44 @@
 {
 	NSArray 		*commands			= [self subdirectives];
 	LDrawDirective	*currentDirective	= nil;
+	Vector3 		normal				= ZeroPoint3;
+	float			length				= 0;
 	
 	// Need to load the texture here
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glBindTexture(GL_TEXTURE_2D, self->textureTag);
+	
+	normal = V3Sub(self->planePoint2, self->planePoint1);
+	length = V3Length(normal);//128./80;//
+	normal = V3Normalize(normal);
+	
+	float planeCoefficientsS[4];
+	planeCoefficientsS[0] = normal.x / length;
+	planeCoefficientsS[1] = normal.y / length;
+	planeCoefficientsS[2] = normal.z / length;
+	planeCoefficientsS[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) * length;
+	
+	// Auto texture vertex generation. This stuff needs to be dumped in favor 
+	// of a more modern solution, but it's here as a stopgap. 
+	
+	glEnable(GL_TEXTURE_GEN_S);
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+	glTexGenfv(GL_S, GL_OBJECT_PLANE, planeCoefficientsS);
+	
+	
+	normal = V3Sub(self->planePoint3, self->planePoint1);
+	length = V3Length(normal);//128./80;//
+	normal = V3Normalize(normal);
+	
+	float planeCoefficientsT[4];
+	planeCoefficientsT[0] = normal.x / length;
+	planeCoefficientsT[1] = normal.y / length;
+	planeCoefficientsT[2] = normal.z / length;
+	planeCoefficientsT[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) * length;
+	
+	glEnable(GL_TEXTURE_GEN_T);
+	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+	glTexGenfv(GL_T, GL_OBJECT_PLANE, planeCoefficientsT);
 	
 	// Draw each element in the step.
 	for(currentDirective in commands)
@@ -230,6 +343,16 @@
 	}
 	
 	[self->vertexes draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if(self->dragHandles)
+	{
+		for(LDrawDragHandle *handle in self->dragHandles)
+		{
+			[handle draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
+		}
+	}
 	
 }//end draw:viewScale:parentColor:
 
@@ -255,6 +378,14 @@
 	{
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+	}
+
+	if(self->dragHandles)
+	{
+		for(LDrawDragHandle *handle in self->dragHandles)
+		{
+			[handle hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:nil hits:hits];
+		}
 	}
 }
 
@@ -316,7 +447,7 @@
 							[LDrawUtilities outputStringForFloat:planePoint3.y],
 							[LDrawUtilities outputStringForFloat:planePoint3.z],
 							
-							imageName];
+							imageDisplayName];
 							
 	if(glossmapName)
 		[written appendFormat:@" %@ %@", LDRAW_TEXTURE_GLOSSMAP, glossmapName];
@@ -378,7 +509,7 @@
 //==============================================================================
 - (NSString *) browsingDescription
 {
-	return imageName;
+	return imageDisplayName;
 	
 }//end browsingDescription
 
@@ -400,6 +531,37 @@
 #pragma mark ACCESSORS
 #pragma mark -
 
+//========== glossmapName ======================================================
+//==============================================================================
+- (NSString *) glossmapName
+{
+	return glossmapName;
+}
+
+
+//========== imageDisplayName ==================================================
+//==============================================================================
+- (NSString *) imageDisplayName
+{
+	return self->imageDisplayName;
+}
+
+
+//========== imageReferenceName ================================================
+//
+// Purpose:		Returns the name of the image. This is the filename where the 
+//				part is found. Since Macintosh computers are case-insensitive, 
+//				I have adopted lower-case as the standard for names.
+//
+//==============================================================================
+- (NSString *) imageReferenceName
+{
+	return self->imageReferenceName;
+}
+
+
+#pragma mark -
+
 //========== setGlossmapName: ==================================================
 //
 // Purpose:		Sets the filename of the image to use for a specular reflection 
@@ -414,17 +576,158 @@
 }
 
 
-//========== setImageName: =====================================================
+//========== setImageDisplayName: ==============================================
 //
 // Purpose:		Sets the filename of the image to use as the texture.
 //
 //==============================================================================
-- (void) setImageName:(NSString *)newName
+- (void) setImageDisplayName:(NSString *)newName
 {
-	[newName retain];
-	[self->imageName release];
-	self->imageName = newName;
+	[self setImageDisplayName:newName parse:YES inGroup:NULL];
 }
+
+
+//========== setImageDisplayName:parse:inGroup: ================================
+//
+// Purpose:		Sets the filename of the image to use as the texture.
+//
+//				If shouldParse is YES, pre-loads the referenced image if 
+//				possible. Pre-loading is very import in initial model loading, 
+//				because it enables structual optimizations to be performed prior 
+//				to OpenGL optimizations. It also results in a more honest load 
+//				progress bar. 
+//
+//==============================================================================
+- (void) setImageDisplayName:(NSString *)newName
+					   parse:(BOOL)shouldParse
+					 inGroup:(dispatch_group_t)parentGroup
+{
+	NSString	*newReferenceName   = [newName lowercaseString];
+	dispatch_group_t    parseGroup          = NULL;
+	
+	[newName retain];
+	[self->imageDisplayName release];
+	self->imageDisplayName = newName;
+	
+	[newReferenceName retain];
+	[self->imageReferenceName release];
+	self->imageReferenceName = newReferenceName;
+	
+	// Force the part library to parse the model this part will display. This 
+	// pushes all parsing into the same operation, which improves loading time 
+	// predictability and allows better potential threading optimization. 
+	if(shouldParse == YES && newName != nil && [newName length] > 0)
+	{
+#if USE_BLOCKS
+		// Create a parsing group if needed.
+		if(parentGroup == NULL)
+			parseGroup = dispatch_group_create();
+		else
+			parseGroup = parentGroup;
+#endif
+		[[PartLibrary sharedPartLibrary] loadImageForName:self->imageDisplayName inGroup:parseGroup];
+		
+#if USE_BLOCKS
+		if(parentGroup == NULL)
+		{
+			dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
+			dispatch_release(parseGroup);
+		}
+#endif	
+	}
+	
+}//end setImageDisplayName:
+
+
+//========== setPlanePoint1: ===================================================
+//
+// Purpose:		Sets the texture's first planePoint.
+//
+//==============================================================================
+-(void) setPlanePoint1:(Point3)newPlanePoint
+{
+	self->planePoint1 = newPlanePoint;
+	
+	if(dragHandles)
+	{
+		[[self->dragHandles objectAtIndex:0] setPosition:newPlanePoint updateTarget:NO];
+	}
+	
+//	[[self enclosingDirective] setVertexesNeedRebuilding];
+	
+}//end setPlanePoint1:
+
+
+//========== setPlanePoint2: ===================================================
+//
+// Purpose:		Sets the texture's second planePoint.
+//
+//==============================================================================
+-(void) setPlanePoint2:(Point3)newPlanePoint
+{
+	self->planePoint2 = newPlanePoint;
+	
+	if(dragHandles)
+	{
+		[[self->dragHandles objectAtIndex:1] setPosition:newPlanePoint updateTarget:NO];
+	}
+	
+//	[[self enclosingDirective] setVertexesNeedRebuilding];
+	
+}//end setPlanePoint2:
+
+
+//========== setPlanePoint3: ===================================================
+//
+// Purpose:		Sets the texture's last planePoint.
+//
+//==============================================================================
+-(void) setPlanePoint3:(Point3)newPlanePoint
+{
+	self->planePoint3 = newPlanePoint;
+	
+	if(dragHandles)
+	{
+		[[self->dragHandles objectAtIndex:2] setPosition:newPlanePoint updateTarget:NO];
+	}
+	
+//	[[self enclosingDirective] setVertexesNeedRebuilding];
+	
+}//end setPlanePoint3:
+
+
+//========== setSelected: ======================================================
+//
+// Purpose:		Somebody make this a protocol method.
+//
+//==============================================================================
+- (void) setSelected:(BOOL)flag
+{
+	[super setSelected:flag];
+	
+	if(flag == YES)
+	{
+		LDrawDragHandle *handle1 = [[[LDrawDragHandle alloc] initWithTag:1 position:self->planePoint1] autorelease];
+		LDrawDragHandle *handle2 = [[[LDrawDragHandle alloc] initWithTag:2 position:self->planePoint2] autorelease];
+		LDrawDragHandle *handle3 = [[[LDrawDragHandle alloc] initWithTag:3 position:self->planePoint3] autorelease];
+		
+		[handle1 setTarget:self];
+		[handle2 setTarget:self];
+		[handle3 setTarget:self];
+		
+		[handle1 setAction:@selector(dragHandleChanged:)];
+		[handle2 setAction:@selector(dragHandleChanged:)];
+		[handle3 setAction:@selector(dragHandleChanged:)];
+		
+		self->dragHandles = [[NSArray alloc] initWithObjects:handle1, handle2, handle3, nil];
+	}
+	else
+	{
+		[self->dragHandles release];
+		self->dragHandles = nil;
+	}
+	
+}//end setSelected:
 
 
 //========== setVertexesNeedRebuilding =========================================
@@ -471,6 +774,30 @@
 	[directive release];
 	
 }//end removeDirectiveAtIndex:
+
+
+#pragma mark -
+#pragma mark ACTIONS
+#pragma mark -
+
+//========== dragHandleChanged: ================================================
+//
+// Purpose:		One of the drag handles on our vertexes has changed.
+//
+//==============================================================================
+- (void) dragHandleChanged:(id)sender
+{
+	LDrawDragHandle *handle         = (LDrawDragHandle *)sender;
+	Point3          newPosition     = [handle position];
+	NSInteger       vertexNumber    = [handle tag];
+	
+	switch(vertexNumber)
+	{
+		case 1: [self setPlanePoint1:newPosition]; break;
+		case 2: [self setPlanePoint2:newPosition]; break;
+		case 3: [self setPlanePoint3:newPosition]; break;
+	}
+}//end dragHandleChanged:
 
 
 #pragma mark -
@@ -582,6 +909,8 @@
 {
 	// Allow primitives to be visible when displaying the model itself.
 	[self optimizeVertexes];
+	
+	textureTag = [[PartLibrary sharedPartLibrary] textureTagForTexture:self];
 	
 	[super optimizeOpenGL];
 }
@@ -717,6 +1046,7 @@
 //
 //==============================================================================
 - (BOOL) parsePlanarTextureFromLine:(NSString *)line
+						parentGroup:(dispatch_group_t)parentGroup
 {
 	NSScanner	*scanner	= [NSScanner scannerWithString:line];
 	BOOL		success 	= YES;
@@ -773,7 +1103,8 @@
 		NSString *parsedName = [LDrawUtilities scanQuotableToken:scanner];
 		if([parsedName length] == 0)
 			@throw [NSException exceptionWithName:@"BricksmithParseException" reason:@"Bad Planar TEXMAP syntax" userInfo:nil];
-		[self setImageName:parsedName];
+		[self setImageDisplayName:parsedName];
+		[self setImageDisplayName:parsedName parse:YES inGroup:parentGroup];
 		
 		//---------- Glossmap --------------------------------------------------
 		// It's optional and unused. It should have been on a separate TEXMAP 
@@ -832,10 +1163,12 @@
 - (void) dealloc
 {
 	[fallback release];
-	[imageName release];
+	[imageDisplayName release];
+	[imageReferenceName release];
 	[glossmapName release];
 	
 	[vertexes release];
+	[dragHandles release];
 	
 	[super dealloc];
 }

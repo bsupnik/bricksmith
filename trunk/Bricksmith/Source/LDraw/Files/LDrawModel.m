@@ -956,6 +956,21 @@
 }//end makeStepVisible
 
 
+//========== removeDirectiveAtIndex: ===========================================
+//
+// Purpose:		Removes one directive from our container.  We override this
+//				to find out our directive index _before_ the removal so we can
+//				keep our current step in sync!
+//
+//==============================================================================
+- (void) removeDirectiveAtIndex:(NSInteger)idx
+{
+	if(idx <= currentStepDisplayed && currentStepDisplayed > 0)
+		--currentStepDisplayed;
+	
+	[super removeDirectiveAtIndex:idx];
+}
+
 #pragma mark -
 #pragma mark NOTIFICATIONS
 #pragma mark -
@@ -981,21 +996,6 @@
 - (void) didRemoveDirective:(LDrawDirective *)directive
 {
 	[vertexes removeDirective:directive];
-}
-
-//========== removeDirective: ===============================================
-//
-// Purpose:		Removes one directive from our container.  We override this
-//				to find out our directive index _before_ the removal so we can
-//				keep our current step in sync!
-//
-//==============================================================================
-- (void) removeDirective:(LDrawDirective *)doomedDirective
-{
-	NSInteger idx = [self indexOfDirective:doomedDirective];
-	if(idx != NSNotFound && idx <= currentStepDisplayed)
-		--currentStepDisplayed;
-	[super removeDirective:doomedDirective];
 }
 
 #pragma mark -
@@ -1095,17 +1095,18 @@
 		NSMutableArray  *lines              = [NSMutableArray array];
 		NSMutableArray  *triangles          = [NSMutableArray array];
 		NSMutableArray  *quadrilaterals     = [NSMutableArray array];
+		NSMutableArray	*everythingElse		= [NSMutableArray array];
 		
 		[self flattenIntoLines:lines
 					 triangles:triangles
 				quadrilaterals:quadrilaterals
-						 other:nil
+						 other:everythingElse
 				  currentColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
 			  currentTransform:IdentityMatrix4
 			   normalTransform:IdentityMatrix3
 					 recursive:NO];
 		
-		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:nil];
+		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:everythingElse];
 	}
 }//end optimizePrimitiveStructure
 
