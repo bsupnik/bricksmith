@@ -162,12 +162,14 @@
 	if(self)
 	{
 		submodels = calloc(range.length, sizeof(LDrawDirective*));
-		
+		dispatch_group_t    dispatchGroup = NULL;
+#if USE_BLOCKS		
 		dispatch_queue_t    queue           = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
-		dispatch_group_t    dispatchGroup   = dispatch_group_create();
+							dispatchGroup   = dispatch_group_create();
 
 		if(parentGroup != NULL)
 			dispatch_group_enter(parentGroup);
+#endif
 														
 		// Search through all the lines in the file, and separate them out into 
 		// submodels.
@@ -177,23 +179,29 @@
 																  inLines:lines
 																 maxIndex:NSMaxRange(range) - 1];
 			// Parse
+#if USE_BLOCKS			
 			dispatch_group_async(dispatchGroup, queue,
 			^{
+#endif			
 				LDrawMPDModel *newModel    = [[LDrawMPDModel alloc] initWithLines:lines inRange:modelRange parentGroup:dispatchGroup];
 				
 				// Store non-retaining, but *thread-safe* container 
 				// (NSMutableArray is NOT). Since it doesn't retain, we mustn't 
 				// autorelease newDirective. 
 				submodels[insertIndex] = newModel;
+#if USE_BLOCKS
 			});
+#endif			
 			
 			modelStartIndex = NSMaxRange(modelRange);
 			insertIndex     += 1;
 		}
 		while(modelStartIndex < NSMaxRange(range));
-		
+
+#if USE_BLOCKS		
 		dispatch_group_notify(dispatchGroup,queue,
 		^{
+#endif		
 				NSUInteger      counter         = 0;
 				LDrawMPDModel   *currentModel   = nil;
 		
@@ -210,12 +218,14 @@
 				[self setActiveModel:[[self submodels] objectAtIndex:0]];
 
 			free(submodels);
-			
+
+#if USE_BLOCKS			
 			if(parentGroup != NULL)
 				dispatch_group_leave(parentGroup);
 			
 		});
 		dispatch_release(dispatchGroup);
+#endif		
 	}
 	
 	
