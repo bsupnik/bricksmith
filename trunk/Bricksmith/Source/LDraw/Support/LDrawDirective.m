@@ -32,9 +32,12 @@
 	self = [super init];
 	
 	enclosingDirective = nil;
-	
-	observers = [[NSMutableArray alloc] init];
-	
+
+	#if NEW_SET
+		LDrawFastSetInit(observers);
+	#else
+		observers = [[NSMutableArray alloc] init];
+	#endif
 	return self;
 	
 }//end init
@@ -113,7 +116,11 @@
 	//The superclass doesn't support NSCoding. So we just call the default init.
 	self = [super init];
 
-	observers = [[NSMutableArray alloc] init];
+	#if NEW_SET
+		LDrawFastSetInit(observers);
+	#else
+		observers = [[NSMutableArray alloc] init];
+	#endif
 	
 	[self setEnclosingDirective:[decoder decodeObjectForKey:@"enclosingDirective"]];
 	
@@ -715,21 +722,29 @@
 
 - (void) addObserver:(id<LDrawObserver>) observer
 {
+	#if NEW_SET
+		LDrawFastSetInsert(observers, observer);	
+	#else
 	if(observers == nil)
 		printf("WARNING: OBSERVERS ARE NULL.\n");
 	//printf("directive %p told to add observer %p.\n", self,observer);
 	[observers addObject:[NSValue valueWithPointer:observer]];
+	#endif
 }
 
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
-	if(observers == nil)
-		printf("WARNING: OBSERVERS ARE NULL.\n");
-	//printf("directive %p told to lose observer %p.\n", self,observer);
-	if(![observers containsObject:[NSValue valueWithPointer:observer]])
-		NSLog(@"ERROR: removing unknown observer.\n");
+	#if NEW_SET
+		LDrawFastSetRemove(observers,observer);
+	#else	
+		if(observers == nil)
+			printf("WARNING: OBSERVERS ARE NULL.\n");
+		//printf("directive %p told to lose observer %p.\n", self,observer);
+		if(![observers containsObject:[NSValue valueWithPointer:observer]])
+			NSLog(@"ERROR: removing unknown observer.\n");
 
-	[observers removeObject:[NSValue valueWithPointer:observer]];
+		[observers removeObject:[NSValue valueWithPointer:observer]];
+	#endif
 }
 
 #pragma mark -
@@ -748,22 +763,29 @@
 //==============================================================================
 - (void) dealloc
 {
-	if(observers == nil)
-		printf("WARNING: OBSERVERS ARE NULL.\n");
-
-	//printf("Directive %p about to die.\n",self);
-	NSSet * orig = [NSSet setWithSet:observers];
-	for (NSValue * o in orig)
-	{
-		if([observers containsObject:o])
+	#if NEW_SET
+		MESSAGE_FOR_SET(observers,LDrawObserver,observableSaysGoodbyeCruelWorld:self);
+		LDrawFastSetDealloc(observers);
+	#else
+		if(observers == nil)
+			printf("WARNING: OBSERVERS ARE NULL.\n");
+		//printf("Directive %p about to die.\n",self);
+		NSSet * orig = [NSSet setWithSet:observers];	
+		for (NSValue * o in orig)
 		{
-			id<LDrawObserver> oo = [o pointerValue];
-			//printf("   directive %p telling observer %p that we are going to die.\n",self,oo);		
-			[oo observableSaysGoodbyeCruelWorld:self];
+			if([observers containsObject:o])
+			{
+				id<LDrawObserver> oo = [o pointerValue];
+				//printf("   directive %p telling observer %p that we are going to die.\n",self,oo);		
+				[oo observableSaysGoodbyeCruelWorld:self];
+			}
 		}
-	}
-	[observers release];
-	observers = (id) 0xDEADBEEF;
+		[observers release];
+		observers = (id) 0xDEADBEEF;
+	#endif
+
+
+
 	[super dealloc];
 	//printf(" %p is clear.\n",self);
 }
@@ -778,15 +800,19 @@
 //==============================================================================
 - (void) sendMessageToObservers:(MessageT) msg
 {
-	NSSet * orig = [NSSet setWithSet:observers];
-	for (NSValue * o in orig)
-	{
-		if([observers containsObject:o])
+	#if NEW_SET
+		MESSAGE_FOR_SET(observers,LDrawObserver,receiveMessage:msg who:self);
+	#else
+		NSSet * orig = [NSSet setWithSet:observers];
+		for (NSValue * o in orig)
 		{
-			id<LDrawObserver> oo = [o pointerValue];		
-			[oo receiveMessage:msg who:self];
+			if([observers containsObject:o])
+			{
+				id<LDrawObserver> oo = [o pointerValue];		
+				[oo receiveMessage:msg who:self];
+			}
 		}
-	}
+	#endif
 }
 
 
@@ -808,15 +834,20 @@
 	if(newFlags != 0)
 	{
 		invalFlags |= newFlags;
-		NSSet * orig = [NSSet setWithSet:observers];
-		for (NSValue * o in orig)
-		{
-			if([observers containsObject:o])
+		
+		#if NEW_SET
+			MESSAGE_FOR_SET(observers,LDrawObserver,statusInvalidated:newFlags who:self);
+		#else		
+			NSSet * orig = [NSSet setWithSet:observers];
+			for (NSValue * o in orig)
 			{
-				id<LDrawObserver> oo = [o pointerValue];			
-				[oo statusInvalidated:newFlags who:self];
+				if([observers containsObject:o])
+				{
+					id<LDrawObserver> oo = [o pointerValue];			
+					[oo statusInvalidated:newFlags who:self];
+				}
 			}
-		}
+		#endif			
 	}
 }
 

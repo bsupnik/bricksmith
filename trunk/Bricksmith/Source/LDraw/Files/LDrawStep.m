@@ -111,9 +111,9 @@
 		
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	
+	dispatch_group_t    stepDispatchGroup   = NULL;
 #if USE_BLOCKS
 	dispatch_queue_t    queue               = NULL;	
-	dispatch_group_t    stepDispatchGroup   = NULL;
 	
 	// Create a group for the multithreaded parsing of the step contents.
 	queue               = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	

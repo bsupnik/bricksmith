@@ -1058,10 +1058,13 @@ static PartLibrary *SharedPartLibrary = nil;
 {
 	__block LDrawModel	*model		= nil;
 
+#if USE_BLOCKS
 	dispatch_sync(self->catalogAccessQueue, ^{
+#endif	
 		model = [self->loadedFiles objectForKey:partName];
-		
+#if USE_BLOCKS		
 	});
+#endif	
 	
 	return model;
 }
