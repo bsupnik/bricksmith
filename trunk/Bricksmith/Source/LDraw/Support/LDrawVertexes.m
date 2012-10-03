@@ -85,15 +85,7 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 
 	[value getValue:&tags];
 	
-	// Feh! VBOs+VAOs are 22% slower than display lists. So I'm using display 
-	// lists even though everyone says not to. 
-	//
-	// On the bright side, the display list contains nothing but a VAO, so I 
-	// have an "upgrade" path if needed! 
-	
 	{
-		// Display lists with VAOs don't work on 10.5
-
 		glBindVertexArrayAPPLE(tags.anyVAOTag);
 
 		// Lines
@@ -480,6 +472,12 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 #if (USE_AUTOMATIC_WIREFRAMES == 0)
 	[self optimizeWireframeWithParentColor:color];
 #endif
+	
+	// Optimize directives we don't directly manage (like textures)
+	for(LDrawDirective *directive in self->everythingElse)
+	{
+		[directive optimizeOpenGL];
+	}
 }
 
 

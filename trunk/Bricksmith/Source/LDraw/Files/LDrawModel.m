@@ -1133,18 +1133,17 @@
 		NSMutableArray  *lines              = [NSMutableArray array];
 		NSMutableArray  *triangles          = [NSMutableArray array];
 		NSMutableArray  *quadrilaterals     = [NSMutableArray array];
-		NSMutableArray	*everythingElse		= [NSMutableArray array];
 		
 		[self flattenIntoLines:lines
 					 triangles:triangles
 				quadrilaterals:quadrilaterals
-						 other:everythingElse
+						 other:nil // ONLY collect primitives; all other elements will be drawn in the normal draw recursion
 				  currentColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
 			  currentTransform:IdentityMatrix4
 			   normalTransform:IdentityMatrix3
 					 recursive:NO];
 		
-		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:everythingElse];
+		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:nil];
 	}
 }//end optimizePrimitiveStructure
 

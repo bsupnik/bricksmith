@@ -288,17 +288,10 @@
 			// optimized drawable. We have to retrieve their optimized 
 			// drawable on-the-fly. 
 			
-			// Parts that have a SPECIFIC color can be linked DIRECTLY to their
-			// specific colored VBO.  But we do not do that in resolve because
-			// optimizedDrawableForPart can generate a VBO (which must be on the GL-safe thread).
+			// Parts that have a SPECIFIC color have been linked DIRECTLY to 
+			// their specific colored VBO during -optimizeOpenGL. 
 			
 			drawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:drawingColor];
-
-			// So after we get our specific color, IF we are statically colored, NOW we can cache the color
-			// for later, avoiding a library lookup in the future.
-			
-			if ([self->color colorCode] != LDrawCurrentColor)
-				cacheDrawable = drawable;			
 		}
 		
 		if(drawBoundsOnly == NO)
@@ -746,6 +739,15 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 
 #pragma mark -
 
+//========== setEnclosingDirective: ============================================
+//==============================================================================
+- (void) setEnclosingDirective:(LDrawContainer *)newParent
+{
+	[self unresolvePart];
+	[super setEnclosingDirective:newParent];
+}
+
+
 //========== setLDrawColor: ====================================================
 //
 // Purpose:		Sets the color of this element.
@@ -1174,6 +1176,51 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 
 
 #pragma mark -
+#pragma mark OBSERVER
+#pragma mark -
+
+//========== observableSaysGoodbyeCruelWorld: ==================================
+//
+// Purpose:		
+//
+//==============================================================================
+- (void) observableSaysGoodbyeCruelWorld:(id<LDrawObservable>) doomedObservable
+{
+	if(cacheType == PartTypeUnresolved || cacheType == PartTypeNotFound)
+		NSLog(@"WARNING: LDraw part is receiving a notification that its observer is dying but it thinks it should have no observer.\n");
+	if(doomedObservable != cacheModel)
+		NSLog(@"WARNING: LDraw part is receiving a notification from an observer that is not its cached drawable.\n");
+		
+	[self unresolvePart];
+}
+
+
+//========== statusInvalidated:who: ============================================
+//
+// Purpose:		
+//
+//==============================================================================
+- (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
+{
+}
+
+
+//========== receiveMessage:who: ===============================================
+//
+// Purpose:		
+//
+//==============================================================================
+- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
+{
+	if(msg == MessageNameChanged)
+		[self unresolvePart];
+	if(msg == MessageScopeChanged)
+		[self unresolvePart];
+}
+
+
+
+#pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
 
@@ -1189,6 +1236,21 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	return isMatch;
 }
 
+
+//========== partIsMissing =====================================================
+//
+// Purpose:		Identifies whether the part cannot be found in any known places 
+//				to look for it. 
+//
+//==============================================================================
+- (BOOL) partIsMissing
+{
+	[self resolvePart];
+	return cacheType == PartTypeNotFound;
+}
+
+
+#pragma mark -
 
 //========== flattenIntoLines:triangles:quadrilaterals:other:currentColor: =====
 //
@@ -1294,30 +1356,40 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //==============================================================================
 - (void) optimizeOpenGL
 {
-	/*
-	// Only optimize explicitly colored parts.
-	// Uncolored parts need to know about the current color 
-	// as they are drawn, which is anathema to optimization. Rats.
-	if(self->referenceName != nil && [self->color colorCode] != LDrawCurrentColor)
+	[self resolvePart];
+	
+	switch(self->cacheType)
 	{
-		LDrawModel *referencedSubmodel	= [self referencedMPDSubmodel];
-		
-		if(referencedSubmodel == nil)
-		{
-			self->optimizedDrawable = [[PartLibrary sharedPartLibrary]
-											optimizedDrawableForPart:self
-															   color:self->color];
-		}
-		else
+		case PartTypeSubmodel:
 		{
 			// Tell the submodel we want to draw it with our color.
-			[[referencedSubmodel vertexes] optimizeOpenGLWithParentColor:self->color];
-		}
+			if([self->color colorCode] != LDrawCurrentColor)
+			{
+				[[cacheModel vertexes] optimizeOpenGLWithParentColor:self->color];
+			}
+		}	break;
+	
+		case PartTypePeerFile:
+		{
+			[cacheModel optimizePrimitiveStructure];
+			[[cacheModel vertexes] optimizeOpenGLWithParentColor:self->color];
+			[cacheDrawable optimizeOpenGL];
+		}	break;
+		
+		case PartTypeLibrary:
+		{
+			// Only optimize explicitly colored parts.
+			// Uncolored parts need to use the color passed at draw time, which 
+			// can't be pre-optimized. 
+			if([self->color colorCode] != LDrawCurrentColor)
+			{
+				cacheDrawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:self->color];
+			}
+		}	break;
+	
+		default:
+			break;
 	}
-	else
-		self->optimizedDrawable = nil;
-	*/	
-	[self resolvePart];
 		
 	// Make sure the bounding cube is available in our color
 	LDrawVertexes *unitCube = [LDrawUtilities boundingCube];
@@ -1364,13 +1436,13 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end removeDisplayList
 */
 
-- (BOOL) partIsMissing
-{
-	[self resolvePart];
-	return cacheType == PartTypeNotFound;
-}
 
-
+//========== resolvePart =======================================================
+//
+// Purpose:		Find the object this part references and record the way in which 
+//				it was found. 
+//
+//==============================================================================
 - (void) resolvePart
 {
 	if(cacheType == PartTypeUnresolved)
@@ -1400,8 +1472,10 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 				if(cacheModel != nil)
 				{
 //					[cacheModel addObserver:self];
-					// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  ResolvePart MUST be thread-safe for completion blocks to work
-					// so we don't ask for a VBO here.  The first time draw calls, it'll ask and cache if we are specific-color.
+					// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  ResolvePart 
+					// MUST be thread-safe for completion blocks to work so we 
+					// don't ask for a VBO here. Do that in -optimizeOpenGL 
+					// instead. 
 					cacheDrawable = nil;
 					
 					cacheType = PartTypeLibrary;
@@ -1415,9 +1489,14 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			}
 		}
 	}
-	
 }
 
+
+//========== unresolvePart =====================================================
+//
+// Purpose:		
+//
+//==============================================================================
 - (void) unresolvePart
 {
 	if(cacheType != PartTypeUnresolved)
@@ -1433,36 +1512,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		cacheModel = nil;
 	}
 }
-
-- (void) setEnclosingDirective:(LDrawContainer *)newParent
-{
-	[self unresolvePart];
-	[super setEnclosingDirective:newParent];
-}
-
-- (void) observableSaysGoodbyeCruelWorld:(id<LDrawObservable>) doomedObservable
-{
-	if(cacheType == PartTypeUnresolved || cacheType == PartTypeNotFound)
-		NSLog(@"WARNING: LDraw part is receiving a notification that its observer is dying but it thinks it should have no observer.\n");
-	if(doomedObservable != cacheModel)
-		NSLog(@"WARNING: LDraw part is receiving a notification from an observer that is not its cached drawable.\n");
-		
-	[self unresolvePart];
-}
-
-- (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
-{
-}
-
-- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
-{
-	if(msg == MessageNameChanged)
-		[self unresolvePart];
-	if(msg == MessageScopeChanged)
-		[self unresolvePart];
-}
-
-
 
 #pragma mark -
 #pragma mark DESTRUCTOR

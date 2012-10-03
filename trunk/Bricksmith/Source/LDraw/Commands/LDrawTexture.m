@@ -293,7 +293,6 @@
 //
 //==============================================================================
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
-
 {
 	NSArray 		*commands			= [self subdirectives];
 	LDrawDirective	*currentDirective	= nil;
@@ -312,15 +311,14 @@
 	planeCoefficientsS[0] = normal.x / length;
 	planeCoefficientsS[1] = normal.y / length;
 	planeCoefficientsS[2] = normal.z / length;
-	planeCoefficientsS[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) * length;
+	planeCoefficientsS[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
 	
 	// Auto texture vertex generation. This stuff needs to be dumped in favor 
 	// of a more modern solution, but it's here as a stopgap. 
 	
 	glEnable(GL_TEXTURE_GEN_S);
-	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-	glTexGenfv(GL_S, GL_OBJECT_PLANE, planeCoefficientsS);
-	
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_S, GL_EYE_PLANE, planeCoefficientsS);
 	
 	normal = V3Sub(self->planePoint3, self->planePoint1);
 	length = V3Length(normal);//128./80;//
@@ -330,11 +328,11 @@
 	planeCoefficientsT[0] = normal.x / length;
 	planeCoefficientsT[1] = normal.y / length;
 	planeCoefficientsT[2] = normal.z / length;
-	planeCoefficientsT[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) * length;
+	planeCoefficientsT[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
 	
 	glEnable(GL_TEXTURE_GEN_T);
-	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-	glTexGenfv(GL_T, GL_OBJECT_PLANE, planeCoefficientsT);
+	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_T, GL_EYE_PLANE, planeCoefficientsT);
 	
 	// Draw each element in the step.
 	for(currentDirective in commands)
@@ -342,6 +340,11 @@
 		[currentDirective draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
 	}
 	
+	if([self->vertexes isOptimizedForColor:parentColor] == NO)
+	{
+		[self->vertexes optimizeOpenGLWithParentColor:parentColor];
+	}
+
 	[self->vertexes draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
