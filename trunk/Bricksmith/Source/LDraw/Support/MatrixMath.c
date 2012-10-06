@@ -2384,3 +2384,225 @@ void Matrix4Print(Matrix4 *matrix)
 	printf("\n");
 	
 }//end Matrix4Print
+
+
+//========== VolumeCanIntersectBox() ===========================================
+//
+// Purpose:		Checks whether a bounding box in model view space may intersect
+//				a 2-d screen space bounding box, given a complete GL transform.
+//
+//				This routine might return true even if there is no intersection,
+//				but if it returns false, it is guaranteed that the bounding box
+//				and screen space rect are disjoint.
+//
+//==============================================================================
+bool	VolumeCanIntersectBox(
+						Box3		bounds,
+						Matrix4		transform,
+						Box2		box)
+{
+	int     counter     = 0;
+	Box3	transformedBounds;
+	Point3  vertices[8] = {	
+							{bounds.min.x, bounds.min.y, bounds.min.z},
+							{bounds.min.x, bounds.min.y, bounds.max.z},
+							{bounds.min.x, bounds.max.y, bounds.max.z},
+							{bounds.min.x, bounds.max.y, bounds.min.z},
+							
+							{bounds.max.x, bounds.min.y, bounds.min.z},
+							{bounds.max.x, bounds.min.y, bounds.max.z},
+							{bounds.max.x, bounds.max.y, bounds.max.z},
+							{bounds.max.x, bounds.max.y, bounds.min.z},
+						  };
+	for(counter = 0; counter < 8; counter++)
+	{
+		vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transform);
+		transformedBounds = V3UnionBoxAndPoint(transformedBounds, vertices[counter]);
+	}
+
+	float x1 = V2BoxMinX(box);
+	float x2 = V2BoxMaxX(box);
+	float y1 = V2BoxMinY(box);
+	float y2 = V2BoxMaxY(box);
+	
+	if(x1 > transformedBounds.max.x ||
+	   x2 < transformedBounds.min.x ||
+	   y1 > transformedBounds.max.y ||
+	   y2 < transformedBounds.min.y)
+	{
+		return false;
+	}
+	return true;
+}//end VolumeCanIntersectBox
+
+
+//========== VolumeCanIntersectPoint() =========================================
+//
+// Purpose:		Checks whether a point in screen space might interact with a 3-d
+//				bounding box.  Since we do "fuzzy" point testing using a screen
+//				space bounds (to add thickness to infinitely thin lines) we use
+//				the point's "soft" bounds here too.
+//
+// Notes:		testDepthSoFar represents a limit that culls everything behind
+//				it.  Thus if hit testing finds a near object, farther back 
+//				objects are excluded via a fast path.
+//
+//==============================================================================
+bool		VolumeCanIntersectPoint(
+						Box3		bounds,
+						Matrix4		transform,
+						Box2		box,
+						float		testDepthSoFar)
+{
+	int     counter     = 0;
+	Box3	transformedBounds;
+	Point3  vertices[8] = {	
+							{bounds.min.x, bounds.min.y, bounds.min.z},
+							{bounds.min.x, bounds.min.y, bounds.max.z},
+							{bounds.min.x, bounds.max.y, bounds.max.z},
+							{bounds.min.x, bounds.max.y, bounds.min.z},
+							
+							{bounds.max.x, bounds.min.y, bounds.min.z},
+							{bounds.max.x, bounds.min.y, bounds.max.z},
+							{bounds.max.x, bounds.max.y, bounds.max.z},
+							{bounds.max.x, bounds.max.y, bounds.min.z},
+						  };
+	for(counter = 0; counter < 8; counter++)
+	{
+		vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transform);
+		transformedBounds = V3UnionBoxAndPoint(transformedBounds, vertices[counter]);
+	}
+
+	float x1 = V2BoxMinX(box);
+	float x2 = V2BoxMaxX(box);
+	float y1 = V2BoxMinY(box);
+	float y2 = V2BoxMaxY(box);
+	
+
+	if(x1 > transformedBounds.max.x ||
+	   x2 < transformedBounds.min.x ||
+	   y1 > transformedBounds.max.y ||
+	   y2 < transformedBounds.min.y ||
+	   testDepthSoFar < transformedBounds.min.z)
+	{
+		return false;
+	}
+	return true;
+}//end VolumeCanIntersectPoint
+
+
+static float SignedAreaOfTriXY(Point3 * v0, Point3 * v1, Point3 * v2)
+{
+	// This is the signed area of a triangle in XY space - used to calculate
+	// bathymetric coordinates.
+	return (v0->x - v2->x) * (v1->y - v2->y) - (v1->x - v2->x) * (v0->y - v2->y);	
+}
+
+
+//========== DepthOnTriangle() =================================================
+//
+// Purpose:		Returns true if test_pt is in the triangle in XY space.
+//
+// Notes:		All points are in screen-space; if true is returned, test_pt's
+//				Z is the intersection depth.
+//
+//==============================================================================
+bool		DepthOnTriangle(
+						Point3		v0,
+						Point3		v1,
+						Point3		v2,
+						Point3 *	test_pt)
+{
+	float area = SignedAreaOfTriXY(&v0, &v1, &v2);
+	if(area == 0.0)	
+		return false;
+	area = 1.0f / area;
+	float A = SignedAreaOfTriXY(&v1,&v2,test_pt) * area;
+	float B = SignedAreaOfTriXY(&v2,&v0,test_pt) * area;
+	float C = SignedAreaOfTriXY(&v0,&v1,test_pt) * area;
+	
+	if(A >= 0 && B >= 0 && C >= 0)
+	{
+		test_pt->z = v0.z * A + v1.z * B + v2.z * C;
+		return true;
+	}
+	return false;
+}//end DepthOnTriangle
+
+
+static bool PtsCloserThanT2InXY(Point3 * p1, Point3 * p2, float dist_sqr)
+{
+	// Returns true if p1 and p2 are closer than the sqrt of dist_sqr.
+	float dx = p1->x-p2->x;
+	float dy = p1->y-p2->y;
+	return(dx*dx+dy*dy) < dist_sqr;
+}
+
+
+//========== DepthOnLineSegment() ==============================================
+//
+// Purpose:		returns true if the screen-space point test_pt is on the line
+//				segment v0..v1 in screen space.  If true is returned, test_pt's
+//				Z coordinate is set to the interpolated depth.
+//			
+// Notes:		All points are in screen-space.  Tolerance^2 is the square of
+//				the proximity distance we use.
+//
+//==============================================================================
+extern bool		DepthOnLineSegment(
+						Point3		v0,
+						Point3		v1,
+						float		t2,			// tolerance^2
+						Point3 *	test_pt)
+{
+	float ldx = v1.x - v0.x;
+	float ldy = v1.y - v0.y;
+	float ldz = v1.z - v0.z;
+	float l2 = ldx*ldx+ldy*ldy;
+	if(l2 == 0.0)
+	{
+		if(PtsCloserThanT2InXY(&v0,test_pt,t2))
+		{
+			test_pt->z = v0.z;
+			return true;
+		}
+		return false;
+	}
+	
+	float dx=test_pt->x-v0.x;
+	float dy=test_pt->y-v0.y;
+	
+	float t = (dx*ldx+dy*ldy)/l2;
+	if(t<0.0f)
+	{
+		if(PtsCloserThanT2InXY(&v0,test_pt,t2))
+		{
+			test_pt->z = v0.z;
+			return true;
+		}
+		return false;
+	}
+	else if(t>1.0f)
+	{
+		if(PtsCloserThanT2InXY(&v1,test_pt,t2))
+		{
+			test_pt->z = v1.z;
+			return true;
+		}
+		return false;
+	}
+	else 
+	{
+		Point3 proj_pt = { 
+					v0.x + t * ldx,
+					v0.y + t * ldy,
+					v0.z + t * ldz };
+		
+		if(PtsCloserThanT2InXY(&proj_pt,test_pt,t2))
+		{
+			test_pt->z = proj_pt.z;
+			return true;
+		}
+		return false;
+	}
+}//end DepthOnLineSegment

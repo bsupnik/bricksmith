@@ -268,7 +268,7 @@
 		optionsMask = optionsMask | DRAW_WIREFRAME;
 #endif
 	}
-	
+
 	// Multithreading finally works with one display list per displayed part 
 	// AND mutexes around the glCallList. But the mutex contention causes a 
 	// 50% increase in drawing time. Gah! 
@@ -400,20 +400,28 @@
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
 {
 	if(self->hidden == NO)
 	{
+		if(!VolumeCanIntersectBox(
+							[self boundingBox3],
+							transform,
+							bounds))
+		{
+			return FALSE;
+		}
+	
+	
 		Matrix4     partTransform       = [self transformationMatrix];
 		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
 		LDrawDirective  *modelToDraw        = nil;
@@ -429,7 +437,9 @@
 		
 		if(boundsOnly == NO)
 		{
-			[modelToDraw boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+			if([modelToDraw boxTest:bounds transform:combinedTransform boundsOnly:NO creditObject:creditObject hits:hits])
+				if(creditObject != nil)
+					return TRUE;
 		}
 		else
 		{
@@ -445,11 +455,50 @@
 			
 			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
 			
-			[unitCube boxTest:bounds transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
+			if([unitCube boxTest:bounds transform:combinedTransform boundsOnly:NO creditObject:creditObject hits:hits])
+				if(creditObject != nil)
+					return TRUE;
 		}
 	}
-}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
 
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	if(self->hidden == NO)
+	{
+		if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) 
+			return;
+
+		Matrix4     partTransform       = [self transformationMatrix];
+		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
+		LDrawDirective  *modelToDraw        = nil;
+		
+		// Credit all subgeometry to ourselves (unless we are already a child part)
+		if(creditObject == nil)
+		{
+			creditObject = self;
+		}
+		
+		[self resolvePart];
+		modelToDraw	= cacheModel;
+		
+		[modelToDraw depthTest:pt inBox:bounds transform:combinedTransform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================
@@ -553,46 +602,47 @@
 //==============================================================================
 - (Box3) boundingBox3
 {
-	[self resolvePart];
-	
-	[self resolvePart];
-	LDrawModel	*modelToDraw	= cacheModel;
-	
-	Box3        bounds              = InvalidBox;
-	Box3        transformedBounds   = InvalidBox;
-	Matrix4     transformation      = [self transformationMatrix];
-	
-	// We need to have an actual model here. Blithely calling boundingBox3 will 
-	// result in most of our Box3 structure being garbage data!
-	if(modelToDraw != nil)
+	if([self revalCache:CacheFlagBounds] == CacheFlagBounds)
 	{
-		bounds = [modelToDraw boundingBox3];
+		[self resolvePart];
+		LDrawModel	*modelToDraw	= cacheModel;
 		
-		if(V3EqualBoxes(bounds, InvalidBox) == NO)
+		Box3        bounds              = InvalidBox;
+					cacheBounds			= InvalidBox;
+		Matrix4     transformation      = [self transformationMatrix];
+		
+		// We need to have an actual model here. Blithely calling boundingBox3 will 
+		// result in most of our Box3 structure being garbage data!
+		if(modelToDraw != nil && self->hidden == NO)
 		{
-			// Transform all the points of the bounding box to find the new 
-			// minimum and maximum. 
-			int     counter     = 0;
-			Point3  vertices[8] = {	
-									{bounds.min.x, bounds.min.y, bounds.min.z},
-									{bounds.min.x, bounds.min.y, bounds.max.z},
-									{bounds.min.x, bounds.max.y, bounds.max.z},
-									{bounds.min.x, bounds.max.y, bounds.min.z},
-									
-									{bounds.max.x, bounds.min.y, bounds.min.z},
-									{bounds.max.x, bounds.min.y, bounds.max.z},
-									{bounds.max.x, bounds.max.y, bounds.max.z},
-									{bounds.max.x, bounds.max.y, bounds.min.z},
-								  };
-			for(counter = 0; counter < 8; counter++)
+			bounds = [modelToDraw boundingBox3];
+			
+			if(V3EqualBoxes(bounds, InvalidBox) == NO)
 			{
-				vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transformation);
-				transformedBounds = V3UnionBoxAndPoint(transformedBounds, vertices[counter]);
+				// Transform all the points of the bounding box to find the new 
+				// minimum and maximum. 
+				int     counter     = 0;
+				Point3  vertices[8] = {	
+										{bounds.min.x, bounds.min.y, bounds.min.z},
+										{bounds.min.x, bounds.min.y, bounds.max.z},
+										{bounds.min.x, bounds.max.y, bounds.max.z},
+										{bounds.min.x, bounds.max.y, bounds.min.z},
+										
+										{bounds.max.x, bounds.min.y, bounds.min.z},
+										{bounds.max.x, bounds.min.y, bounds.max.z},
+										{bounds.max.x, bounds.max.y, bounds.max.z},
+										{bounds.max.x, bounds.max.y, bounds.min.z},
+									  };
+				for(counter = 0; counter < 8; counter++)
+				{
+					vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transformation);
+					cacheBounds = V3UnionBoxAndPoint(cacheBounds, vertices[counter]);
+				}
 			}
 		}
 	}
 	
-	return transformedBounds;
+	return cacheBounds;
 	
 }//end boundingBox3
 
@@ -758,7 +808,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	[super setLDrawColor:newColor];
 	
 	[self unresolvePart];
-//	[self removeDisplayList];
+	[self invalCache:CacheFlagBounds];
 	
 }//end setLDrawColor:
 
@@ -839,7 +889,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		}
 #endif	
 	}
-//	[self removeDisplayList];
 	
 }//end setDisplayName:
 
@@ -878,9 +927,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //==============================================================================
 - (void) setTransformationMatrix:(Matrix4 *)newMatrix
 {
+	[self invalCache:CacheFlagBounds];
 	Matrix4GetGLMatrix4(*newMatrix, self->glTransformation);
-	
-//	[self removeDisplayList];
 	
 }//end setTransformationMatrix
 
@@ -1420,23 +1468,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end registerUndoActions:
 
 
-//========== removeDisplayList =================================================
-//
-// Purpose:		Delete the now-invalid associated display list.
-//
-//==============================================================================
-/*
-- (void) removeDisplayList
-{
-//	if(self->optimizedDrawable)
-//	{
-//		self->optimizedDrawable = nil;
-//	}
-	[self unresolvePart]; 
-}//end removeDisplayList
-*/
-
-
 //========== resolvePart =======================================================
 //
 // Purpose:		Find the object this part references and record the way in which 
@@ -1455,6 +1486,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			cacheType = PartTypeSubmodel;
 			
 			//printf("Part %p telling cache model %p to add us.\n",self,cacheModel);
+			[self invalCache:CacheFlagBounds];
 			[cacheModel addObserver:self];
 		}
 		else 
@@ -1464,6 +1496,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			{
 				cacheType = PartTypePeerFile;
 				cacheDrawable = cacheModel;
+				[self invalCache:CacheFlagBounds];
 				[cacheModel addObserver:self];				
 			}
 			else
@@ -1477,7 +1510,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 					// don't ask for a VBO here. Do that in -optimizeOpenGL 
 					// instead. 
 					cacheDrawable = nil;
-					
+					[self invalCache:CacheFlagBounds];					
 					cacheType = PartTypeLibrary;
 				}
 				else
@@ -1485,6 +1518,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 					cacheType = PartTypeNotFound;
 					cacheDrawable = nil;
 					cacheModel = nil;
+					[self invalCache:CacheFlagBounds];
 				}			
 			}
 		}
@@ -1494,7 +1528,13 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 
 //========== unresolvePart =====================================================
 //
-// Purpose:		
+// Purpose:		This method is called when something potentially breaks the link
+//				between a part and the underlying model that represents it.
+//				Typical events include: renaming the part (new name, new model),
+//				putting the part in a new container (new container, new MPD 
+//				peers) or deallocing a directive tree in use by the observer
+//				(since parts have weak references to their models, this can in
+//				theory happen).
 //
 //==============================================================================
 - (void) unresolvePart
@@ -1533,8 +1573,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	[displayName	release];
 	[referenceName	release];
 	
-//	[self removeDisplayList];
-
 	cacheDrawable = (id) 0xDEADBEEF;
 	cacheModel = (id) 0xDEADBEEF;
 	

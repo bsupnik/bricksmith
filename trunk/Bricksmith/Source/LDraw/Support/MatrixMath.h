@@ -317,4 +317,28 @@ extern Matrix4	Matrix4Invert(Matrix4 in);
 extern void		Matrix4Adjoint( Matrix4 *, Matrix4 * );
 extern float	Matrix4x4Determinant( Matrix4 * );
 extern void		Matrix4Print(Matrix4 *matrix);
+
+extern bool		DepthOnTriangle(
+						Point3		vert0,
+						Point3		vert1,
+						Point3		vert2,
+						Point3 *	test_pt);
+extern bool		DepthOnLineSegment(
+						Point3		vert0,
+						Point3		vert1,
+						float		tolerance,
+						Point3 *	test_pt);
+
+extern bool		VolumeCanIntersectBox(
+						Box3		boundingVolume,
+						Matrix4		transform,
+						Box2		testBox);
+
+extern bool		VolumeCanIntersectPoint(
+						Box3		boundingVolume,
+						Matrix4		transform,
+						Box2		testPoint,			// We provide a RANGE that our point is inside - this is how we get 'fuzzy' hits for infinitely thin geometry like lines.
+						float		testDepthSoFar);
+
+
 #endif // _MatrixMath_

@@ -303,13 +303,12 @@
 	[editLock lock]; //lock unconditionally
 	self->drawCount += 1;
 	[editLock unlockWithCondition:(self->drawCount)]; //don't block multiple simultaneous draws!
-	
 	//
 	// Draw!
 	//	(only the active model.)
 	//
 	[activeModel draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
-	
+
 	//done drawing; decrement the lock's condition
 	[editLock lock];
 	self->drawCount -= 1;
@@ -334,20 +333,37 @@
 }
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
 {
-	[activeModel boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
-}
+	return [activeModel boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+}//end boxTest:transform:boundsOnly:creditObject:hits:
+
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	[activeModel depthTest:pt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================
@@ -709,7 +725,9 @@
 //==============================================================================
 - (Box3) boundingBox3
 {
-	return [[self activeModel] boundingBox3];
+	[self revalCache:CacheFlagBounds];
+	Box3 ret = [[self activeModel] boundingBox3];
+	return ret;
 	
 }//end boundingBox3
 

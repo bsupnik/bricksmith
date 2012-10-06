@@ -176,9 +176,9 @@ typedef enum
 - (void) reshape;
 
 // Utilities
-- (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
+//- (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getDirectivesUnderRect:(Box2)rect_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
-- (NSArray *) getPartsFromHits:(NSDictionary *)hits;
+//- (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
 - (void) resetFrameSize;
 - (void) resetVisibleRect;

@@ -138,11 +138,11 @@
 //				perfectly contains this object.
 //
 //==============================================================================
-- (Box3) boundingBox3
-{
-	return [LDrawUtilities boundingBox3ForDirectives:self->containedObjects];
-
-}//end boundingBox3
+//- (Box3) boundingBox3
+//{
+//	return [LDrawUtilities boundingBox3ForDirectives:self->containedObjects];
+//
+//}//end boundingBox3
 
 
 //========== postsNotifications ================================================
@@ -330,13 +330,16 @@
 			[(LDrawContainer*)directive setPostsNotifications:self->postsNotifications];
 		}
 	}
+	
+	// We have to do this FIRST - otherwise, our cache gets rebuilt by the notification handlers before the view hierarchy is fully wired
+	// up and things go pretty sideways from there.
+	[directive addObserver:self];
 
 	if(self->postsNotifications == YES)
 	{
 		[self noteNeedsDisplay];
 	}
 
-	[directive addObserver:self];
 	
 }//end insertDirective:atIndex:
 
@@ -518,6 +521,7 @@
 //==============================================================================
 - (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
 {
+	[self invalCache:flags];
 }
 
 

@@ -393,14 +393,13 @@
 }
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
@@ -413,9 +412,39 @@
 	for(counter = 0; counter < commandCount; counter++)
 	{
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if ([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;
 	}
-}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
+
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) testPt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	NSArray     *commands			= [self subdirectives];
+	NSUInteger  commandCount        = [commands count];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================

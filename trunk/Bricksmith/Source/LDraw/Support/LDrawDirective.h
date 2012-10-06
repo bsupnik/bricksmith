@@ -176,8 +176,11 @@ typedef enum Message {
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor;
 - (Box3) boundingBox3;
 
+// Hit testing primitives
 - (void) hitTest:(Ray3)pickRay transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;
-- (void) boxTest:(Box2)bounds transform:(Matrix4)transform viewScale:(float)scaleFactor boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableSet *)hits;
+- (BOOL) boxTest:(Box2)bounds transform:(Matrix4)transform boundsOnly:(BOOL)boundsOnly creditObject:(id)creditObject hits:(NSMutableSet *)hits;
+- (void) depthTest:(Point2)testPt inBox:(Box2)bounds transform:(Matrix4)transform creditObject:(id)creditObject bestObject:(id *)bestObject bestDepth:(float *)bestDepth;
+
 - (NSString *) write;
 
 // Display

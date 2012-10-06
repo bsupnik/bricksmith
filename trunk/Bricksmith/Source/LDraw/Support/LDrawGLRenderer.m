@@ -29,6 +29,7 @@
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#include "LDrawVertexes.h"
 #include "OpenGLUtilities.h"
 #include "MacLDraw.h"
 
@@ -36,9 +37,14 @@
 #define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
 #define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
-#define DEBUG_DRAWING				0
+#define WANT_TWOPASS_BOXTEST		0	// this enables the two-pass box-test.  It is actually faster to _not_ do this now that hit testing is optimized.
+#define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
+
+#define DEBUG_DRAWING				0	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
+
+#define HANDLE_SIZE 3
 
 @implementation LDrawGLRenderer
 
@@ -1282,8 +1288,6 @@
 - (BOOL) mouseSelectionClick:(Point2)point_view
 			 selectionMode:(SelectionModeT)selectionMode
 {
-	NSArray			*fastDrawParts		= nil;
-	NSArray			*fineDrawParts		= nil;
 	LDrawDirective	*clickedDirective	= nil;
 	
 	self->selectionMarquee = V2MakeBox(point_view.x, point_view.y, 0, 0);
@@ -1297,18 +1301,38 @@
 		//first do hit-testing on nothing but the bounding boxes; that is very fast 
 		// and likely eliminates a lot of parts.
 
-		fastDrawParts	= [self getDirectivesUnderPoint:point_view
-										amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-											   fastDraw:YES];
-		
-		//now do a full draw for testing on the most likely candidates
-		fineDrawParts	= [self getDirectivesUnderPoint:point_view
-										amongDirectives:fastDrawParts
-											   fastDraw:NO];
+		Point2  point_viewport  = [self convertPointToViewport:point_view];
+		Point2	bl = V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
+		Point2	tr = V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
+		GLfloat depth           = 1.0;
 
-				
-		if([fineDrawParts count] > 0)
-			clickedDirective = [fineDrawParts objectAtIndex:0];
+		Box2			viewport				= [self viewport];
+		GLfloat 		projectionGLMatrix[16]	= {0.0};
+		GLfloat 		modelViewGLMatrix[16]	= {0.0};
+		
+		// Get view and projection
+		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
+		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
+
+		Point2 point_clip = {
+					(point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport) - 1.0,
+					(point_viewport.y - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 };
+
+			float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+			float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+			float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
+			float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
+
+			Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
+
+		Matrix4	mvp =			Matrix4Multiply(
+										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
+										Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+					
+		id bestObject = nil;
+		[fileBeingDrawn depthTest:point_clip inBox:test_box transform:mvp creditObject:nil bestObject:&bestObject bestDepth:&depth];
+																				
+		clickedDirective = bestObject;
 			
 		// Primitive manipulation?
 		if([clickedDirective isKindOfClass:[LDrawDragHandle class]])
@@ -1602,7 +1626,13 @@
 - (void) mouseSelectionDragToPoint:(Point2)point_view
 				   selectionMode:(SelectionModeT) selectionMode
 {
+#if TIME_BOXTEST
+	NSDate * startTime	= [NSDate date];	
+#endif
+
+#if WANT_TWOPASS_BOXTEST
 	NSArray			*fastDrawParts		= nil;
+#endif	
 	NSArray			*fineDrawParts		= nil;
 	
 	self->selectionMarquee = V2MakeBoxFromPoints(selectionMarquee.origin, point_view);
@@ -1616,6 +1646,7 @@
 		// First do hit-testing on nothing but the bounding boxes; that is very 
 		// fast and likely eliminates a lot of parts. 
 
+#if WANT_TWOPASS_BOXTEST
 		fastDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
 									 amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 											fastDraw:YES];
@@ -1623,12 +1654,21 @@
 		fineDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
 									 amongDirectives:fastDrawParts
 											fastDraw:NO];
-
+#else
+		fineDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
+									 amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
+											fastDraw:NO];
+#endif
 		[self->delegate LDrawGLRenderer:self
 				wantsToSelectDirectives:fineDrawParts
 				   selectionMode:selectionMode ];
 		
 	}
+
+#if TIME_BOXTEST
+	NSTimeInterval drawTime = -[startTime timeIntervalSinceNow];
+	printf("Box: %lf\n", drawTime);
+#endif
 
 	self->didPartSelection = YES;
 	
@@ -1961,91 +2001,41 @@
 //==============================================================================
 - (float) getDepthUnderPoint:(Point2)point_view
 {
-	Point2  point_viewport  = [self convertPointToViewport:point_view];
-	GLfloat depth           = 1.0;
-	
-	// Find the location in the depth buffer. This tells us the percentage of 
-	// depth of the nearest pixel to the viewer.
-	// Note: This function is not available in OpenGL ES.
-//	glReadPixels(point_viewport.x, point_viewport.y,
-//				 1, 1,  	// width, height
-//				 GL_DEPTH_COMPONENT,
-//				 GL_FLOAT, &depth);
-				 
-	// Since we can't read the depth buffer in OpenGL ES, we will use the 
-	// ray-tracing code. 
 
-	Point3				contextNear 			= ZeroPoint3;
-	Point3				contextFar				= ZeroPoint3;
-	Ray3				pickRay 				= {{0}};
-	Point3				pickRay_end 			= ZeroPoint3;
-	Box2				viewport				= [self viewport];
-	GLfloat 			projectionGLMatrix[16]	= {0.0};
-	GLfloat 			modelViewGLMatrix[16]	= {0.0};
-	NSMutableDictionary *hits					= [NSMutableDictionary dictionary];
-	NSArray 			*clickedDirectives		= nil;
-	NSUInteger			counter 				= 0;
-	LDrawDirective		*currentDirective		= nil;
-	float				currentDepth			= 0.0;
+	Point2  point_viewport  = [self convertPointToViewport:point_view];
+	Point2	bl = V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
+	Point2	tr = V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
+	GLfloat depth           = 1.0;
+
+	Box2			viewport				= [self viewport];
+	GLfloat 		projectionGLMatrix[16]	= {0.0};
+	GLfloat 		modelViewGLMatrix[16]	= {0.0};
 	
 	// Get view and projection
 	glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
 	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-	
-	// convert to 3D viewport coordinates
-	contextNear		= V3Make(point_viewport.x, point_viewport.y, 0.0);
-	contextFar		= V3Make(point_viewport.x, point_viewport.y, 1.0);
-	
-	// Pick Ray
-	pickRay.origin      = V3Unproject(contextNear,
-									  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-									  viewport);
-	pickRay_end         = V3Unproject(contextFar,
-									  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
-									  viewport);
-	pickRay.direction   = V3Sub(pickRay_end, pickRay.origin);
-	pickRay.direction	= V3Normalize(pickRay.direction);
-	
-	// Do bounding-box hit test
-	[fileBeingDrawn hitTest:pickRay
-				  transform:IdentityMatrix4
-				  viewScale:[self zoomPercentage]/100.
-				 boundsOnly:YES
-			   creditObject:nil
-					   hits:hits];
-	clickedDirectives = [self getPartsFromHits:hits];
-	
-	// Do full-resolution test for exact depth point
-	if([clickedDirectives count] >= 1)
-	{
-		[hits removeAllObjects];
-		for(counter = 0; counter < [clickedDirectives count]; counter++)
-		{
-			[[clickedDirectives objectAtIndex:counter] hitTest:pickRay
-													 transform:IdentityMatrix4
-													 viewScale:[self zoomPercentage]/100.
-													boundsOnly:NO
-												  creditObject:nil
-														  hits:hits];
-		}
-		// Find shallowest hit. The hit record depths are mapped as depths along 
-		// the pick ray. 
-		for(NSValue *key in hits)
-		{
-			currentDirective    = [key pointerValue];
-			currentDepth        = [[hits objectForKey:key] floatValue];
-			
-			if(currentDepth < depth)
-			{
-				depth = currentDepth;
-			}
-		}
-	}
-	
-	return depth;	
-}
+
+	Point2 point_clip = {
+				(point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport) - 1.0,
+				(point_viewport.y - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 };
+
+		float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
+		float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
+
+		Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
+
+	Matrix4	mvp =			Matrix4Multiply(
+									Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
+									Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+				
+	id bestObject = nil;
+	[fileBeingDrawn depthTest:point_clip inBox:test_box transform:mvp creditObject:nil bestObject:&bestObject bestDepth:&depth];
+																			
+	return depth * 0.5 + 0.5;
+
+}//end getDepthUnderPoint
 
 
 //========== getDirectivesUnderMouse:amongDirectives:fastDraw: =================
@@ -2065,6 +2055,7 @@
 //				ultimately care about -- is always the 0th element.
 //
 //==============================================================================
+#if 0	// replaced by direct depthTest.
 - (NSArray *) getDirectivesUnderPoint:(Point2)point_view
 					  amongDirectives:(NSArray *)directives
 							 fastDraw:(BOOL)fastDraw
@@ -2126,6 +2117,7 @@
 	return clickedDirectives;
 	
 }//end getDirectivesUnderMouse:amongDirectives:fastDraw:
+#endif
 
 
 //========== getDirectivesUnderRect:amongDirectives:fastDraw: ==================
@@ -2189,7 +2181,6 @@
 		{
 			[[directives objectAtIndex:counter] boxTest:test_box
 											  transform:mvp 
-											  viewScale:[self zoomPercentage]/100.
 											 boundsOnly:fastDraw
 										   creditObject:nil
 												   hits:hits];
@@ -2226,6 +2217,8 @@
 //				defined order for the rest of the parts.
 //
 //==============================================================================
+#if 0
+// not used due to depth test
 - (NSArray *) getPartsFromHits:(NSDictionary *)hits
 {
 	NSMutableArray  *clickedDirectives  = [NSMutableArray arrayWithCapacity:[hits count]];
@@ -2259,6 +2252,7 @@
 	return clickedDirectives;
 	
 }//end getPartFromHits:hitCount:
+#endif
 
 
 //========== publishMouseOverPoint: ============================================

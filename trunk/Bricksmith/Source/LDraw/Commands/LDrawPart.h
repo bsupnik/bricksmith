@@ -47,6 +47,8 @@ typedef enum PartType {
 	LDrawModel		*cacheModel;			// The model is the real model we link to.
 	PartTypeT		cacheType;
 	NSLock			*drawLock;
+	
+	Box3			cacheBounds;			// Cached bonuding box of resolved parts, in part's coordinate (that is, _not_ in the coordinates of the underlying model.
 }
 
 //Directives
