@@ -166,14 +166,13 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 }
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
@@ -183,55 +182,102 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	LDrawStep   *currentDirective   = nil;
 	NSUInteger  counter             = 0;
 
-	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
-	
 	// Triangles
 	commands        = triangles;
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-	
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;
 	}
 	// Quadrilaterals
 	commands        = quadrilaterals;
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;		
 	}
 	// Lines
 	commands        = lines;
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;
 	}
 	// All else
 	commands        = everythingElse;
 	commandCount    = [commands count];
 	for(counter = 0; counter < commandCount; counter++)
 	{
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-
 		currentDirective = [commands objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;		
 	}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
 
-}
 
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) testPt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	NSArray     *commands           = nil;
+	NSUInteger  commandCount        = 0;
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+
+	// Triangles
+	commands        = triangles;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+	// Quadrilaterals
+	commands        = quadrilaterals;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+	// Lines
+	commands        = lines;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+	// All else
+	commands        = everythingElse;
+	commandCount    = [commands count];
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commands objectAtIndex:counter];
+		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 #pragma mark -
@@ -744,6 +790,13 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 	[super dealloc];
 	
 }//end dealloc
+
+
+- (Box3) boundingBox3
+{
+	assert(!"How is this getting called?");
+	return InvalidBox;
+}
 
 
 @end

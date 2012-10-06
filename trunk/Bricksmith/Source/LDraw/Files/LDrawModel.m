@@ -73,6 +73,7 @@
 	
 	self->vertexes      = nil; // not created until -optimizeOpenGL
 	self->colorLibrary  = [[ColorLibrary alloc] init];
+	self->cachedBounds = InvalidBox;
 	[self setModelDescription:@""];
 	[self setFileName:@""];
 	[self setAuthor:@""];
@@ -115,6 +116,7 @@
 	
 	//Start with a nice blank model.
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
+	self->cachedBounds = InvalidBox;
 
 	substeps = calloc(range.length, sizeof(LDrawDirective*));
 	
@@ -193,6 +195,7 @@
 - (id) initWithCoder:(NSCoder *)decoder
 {
 	self = [super initWithCoder:decoder];
+	self->cachedBounds = InvalidBox;
 	
 	modelDescription	= [[decoder decodeObjectForKey:@"modelDescription"] retain];
 	fileName			= [[decoder decodeObjectForKey:@"fileName"] retain];
@@ -229,6 +232,7 @@
 - (id) copyWithZone:(NSZone *)zone
 {
 	LDrawModel *copied = (LDrawModel *)[super copyWithZone:zone];
+	copied->cachedBounds = cachedBounds;
 	
 	[copied setModelDescription:[self modelDescription]];
 	[copied setFileName:[self fileName]];
@@ -305,35 +309,72 @@
 }
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
 {
+	if(!VolumeCanIntersectBox(
+						[self boundingBox3],
+						transform,
+						bounds))
+	{
+		return FALSE;
+	}
+
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
 	LDrawStep   *currentDirective   = nil;
 	NSUInteger  counter             = 0;
 
-	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
-	
 	// Draw all the steps in the model
 	for(counter = 0; counter <= maxIndex; counter++)
 	{
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-
 		currentDirective = [steps objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;
 	}
-}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
+
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) 
+		return;
+
+	NSArray     *steps              = [self subdirectives];
+	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+
+	// Draw all the steps in the model
+	for(counter = 0; counter <= maxIndex; counter++)
+	{
+		currentDirective = [steps objectAtIndex:counter];
+		[currentDirective depthTest:pt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
+
 
 //========== write =============================================================
 //
@@ -427,19 +468,28 @@
 	Box3 totalBounds	= InvalidBox;
 	Box3 draggingBounds	= InvalidBox;
 
-	if(self->cachedBounds != NULL)
-		totalBounds = *cachedBounds;
-	else
+	if([self revalCache:CacheFlagBounds] == CacheFlagBounds)
 	{
-		// Find the bounding box of all the normal members of this model
-		totalBounds = [super boundingBox3];
+		cachedBounds = InvalidBox;
 		
-		// If drag-and-drop objects are present, add them into the bounds.
-		if(self->draggingDirectives != nil)
+		NSArray     *steps              = [self subdirectives];
+		NSUInteger  maxIndex            = [self maxStepIndexToOutput];
+		LDrawStep   *currentDirective   = nil;
+		NSUInteger  counter             = 0;
+		// Draw all the steps in the model
+		for(counter = 0; counter <= maxIndex; counter++)
 		{
-			draggingBounds	= [LDrawUtilities boundingBox3ForDirectives:[self->draggingDirectives subdirectives]];
-			totalBounds		= V3UnionBox(draggingBounds, totalBounds);
+			currentDirective = [steps objectAtIndex:counter];
+			cachedBounds = V3UnionBox(cachedBounds, [currentDirective boundingBox3]);
 		}
+	}
+	totalBounds = cachedBounds;
+
+	// If drag-and-drop objects are present, add them into the bounds.
+	if(self->draggingDirectives != nil)
+	{
+		draggingBounds	= [LDrawUtilities boundingBox3ForDirectives:[self->draggingDirectives subdirectives]];
+		totalBounds		= V3UnionBox(draggingBounds, totalBounds);
 	}
 	
 	return totalBounds;
@@ -910,6 +960,7 @@
 		[NSException raise:NSRangeException format:@"index (%ld) beyond maximum step index %ld", (long)stepIndex, (long)maximumIndex];
 	else
 	{
+		[self invalCache:CacheFlagBounds];	
 		self->currentStepDisplayed = stepIndex;
 	}
 	
@@ -924,6 +975,7 @@
 //==============================================================================
 - (void) setStepDisplay:(BOOL)flag
 {
+	[self invalCache:CacheFlagBounds];	
 	self->stepDisplayActive = flag;
 	
 }//end setStepDisplay:
@@ -1003,11 +1055,19 @@
 //==============================================================================
 - (void) removeDirectiveAtIndex:(NSInteger)idx
 {
+	[self invalCache:CacheFlagBounds];
 	if(idx <= currentStepDisplayed && currentStepDisplayed > 0)
 		--currentStepDisplayed;
 	
 	[super removeDirectiveAtIndex:idx];
 }
+
+
+- (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index;
+{
+	[self invalCache:CacheFlagBounds];
+	[super insertDirective:directive atIndex:index];
+}	
 
 #pragma mark -
 #pragma mark NOTIFICATIONS
@@ -1241,11 +1301,6 @@
 		[self addDirective:everythingElseStep];
 	}
 		
-	//Optimizations complete; save some info.
-	Box3 bounds = [self boundingBox3];
-	self->cachedBounds = (Box3*)malloc( sizeof(Box3) );
-	memcpy( cachedBounds, &bounds, sizeof(Box3) );
-	
 }//end optimizeStructure
 
 
@@ -1448,9 +1503,6 @@
 	
 	[vertexes			release];
 	[colorLibrary		release];
-	
-	if(self->cachedBounds != NULL)
-		free(cachedBounds);
 	
 	[super dealloc];
 	

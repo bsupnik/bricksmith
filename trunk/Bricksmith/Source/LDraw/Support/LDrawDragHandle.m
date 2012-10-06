@@ -216,6 +216,32 @@ static const float HandleDiameter	= 7.0;
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	Vector3 v1    = V3MulPointByProjMatrix(self->position, transform);
+	if(V2BoxContains(bounds,V2Make(v1.x,v1.y)))
+	{
+		if(v1.z <= *bestDepth)
+		{
+			*bestDepth = v1.z;
+			*bestObject = creditObject ? creditObject : self;
+		}
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
+
+
 #pragma mark -
 #pragma mark ACTIONS
 #pragma mark -

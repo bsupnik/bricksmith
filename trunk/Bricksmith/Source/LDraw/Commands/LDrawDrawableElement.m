@@ -354,8 +354,12 @@
 //==============================================================================
 - (void) setHidden:(BOOL) flag
 {
-	self->hidden = flag;
-	[[self enclosingDirective] setVertexesNeedRebuilding];
+	if(self->hidden != flag)
+	{
+		self->hidden = flag;
+		[[self enclosingDirective] setVertexesNeedRebuilding];
+		[self invalCache:CacheFlagBounds];
+	}
 	
 }//end setHidden:
 

@@ -289,14 +289,13 @@
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
@@ -317,11 +316,62 @@
 		if(V2BoxIntersectsPolygon(bounds, quad, 4))
 		{
 			[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
+			if(creditObject != nil)
+				return TRUE;
+		}
+	}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
+
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	if(self->hidden == NO)
+	{
+		Vector3 worldVertex1    = V3MulPointByProjMatrix(self->vertex1, transform);
+		Vector3 worldVertex2    = V3MulPointByProjMatrix(self->vertex2, transform);
+		Vector3 worldVertex3    = V3MulPointByProjMatrix(self->vertex3, transform);
+		Vector3 worldVertex4    = V3MulPointByProjMatrix(self->vertex4, transform);
+		Point3 probe = { pt.x, pt.y, *bestDepth };
+
+		if(DepthOnTriangle(worldVertex1,worldVertex2,worldVertex3,&probe))
+		{
+			if(probe.z <= *bestDepth)
+			{
+				*bestDepth = probe.z;
+				*bestObject = creditObject ? creditObject : self;
+			}
+		}
+		if(DepthOnTriangle(worldVertex3,worldVertex4,worldVertex1,&probe))
+		{
+			if(probe.z <= *bestDepth)
+			{
+				*bestDepth = probe.z;
+				*bestObject = creditObject ? creditObject : self;
+			}
 		}
 
+		if(self->dragHandles)
+		{
+			for(LDrawDragHandle *handle in self->dragHandles)
+			{
+				[handle depthTest:pt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+			}
+		}
 	}
-
-}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================
@@ -524,6 +574,11 @@
 //==============================================================================
 - (Box3) boundingBox3
 {
+	[self revalCache:CacheFlagBounds];
+
+	if (self->hidden == YES)
+		return InvalidBox;
+
 	Box3 bounds	= InvalidBox;
 	
 	bounds = V3BoundsFromPoints(vertex1, vertex2);
@@ -633,6 +688,7 @@
 {
 	self->vertex1 = newVertex;
 	[self recomputeNormal];
+	[self invalCache:CacheFlagBounds];
 	
 	if(dragHandles)
 	{
@@ -653,6 +709,7 @@
 {
 	self->vertex2 = newVertex;
 	[self recomputeNormal];
+	[self invalCache:CacheFlagBounds];
 	
 	if(dragHandles)
 	{
@@ -673,6 +730,7 @@
 {
 	self->vertex3 = newVertex;
 	[self recomputeNormal];
+	[self invalCache:CacheFlagBounds];
 	
 	if(dragHandles)
 	{
@@ -693,6 +751,7 @@
 {
 	self->vertex4 = newVertex;
 	[self recomputeNormal];
+	[self invalCache:CacheFlagBounds];
 	
 	if(dragHandles)
 	{

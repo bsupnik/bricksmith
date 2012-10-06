@@ -215,16 +215,30 @@
 //
 //==============================================================================
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
-
 {
 	//subclasses should override this with OpenGL code to draw the line.
 	
 }//end draw:viewScale:parentColor:
 
+
+//========== boundingBox3 ======================================================
+//
+// Purpose:		return the bounds (in model space) of the directive.
+//
+// Notes:		This routine is cached - the observers have a flag for whether
+//				bounding box is invalidated.  Thus implementations that have a
+//				sane bounding box should call revalCache before returning a 
+//				value.
+//
+//				Directives that don't have spatial meaning (e.g. hidden 
+//				directives and comments) can return InvalidBox.
+//
+//==============================================================================
 - (Box3) boundingBox3
 {
 	return InvalidBox;
-}
+}//end boundingBox3
+
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
@@ -252,10 +266,11 @@
 			hits:(NSMutableDictionary *)hits
 {
 	//subclasses should override this with hit-detection code
-}
+	
+}//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Tests the directive and any of its children for intersections 
 //				between the directive's drawn form and the bounding box in the
@@ -265,15 +280,16 @@
 //						coordinates
 //				transform - transformation to apply to directive points to get 
 //						to clip coordinates - perspective divide is required!
-//				scaleFactor - the window zoom level (1.0 == 100%)
-//				boundsOnly - test the bounding box, rather than the 
-//						fully-detailed geometry 
 //				creditObject - object which should get credit if the 
 //						current object has been hit. (Used to credit nested 
 //						geometry to its parent.) If nil, the hit object credits 
 //						itself. 
-//				hits - a set of hit directives that we haev accumulated so far
+//				hits - a set of hit directives that we have accumulated so far
 //						this routine adds more as found.
+//
+// Return:		This function returns true if the _credit object_ was added to 
+//				the set.  This allows hierarchies below the credit object to 
+//				early-exit.
 //
 // Notes:		This test is used to do marquee selection - the marquee is
 //				converted back from viewport to clip coordinates, and then
@@ -293,15 +309,57 @@
 //				simpler.)
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
 {
 	//subclasses should override this with hit-detection code
-}
+	return FALSE;
+
+}//end boxTest:transform:boundsOnly:creditObject:hits:
+
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+// Parameters:	pt - the 2-d location (in screen space) to intersect.
+//				inBox - a bounding box in XY (in screen space) surrounding the
+//						test point.  The size of the box (e.g. how much bigger
+//						it is than the point) defines the "slop" for testing
+//						infinitely thin primitives like lines and drag handles.
+//				transform - a model view and projection matrix to transform from
+//						the directive's model coordinates to screen space.
+//				creditObject - if not nil, we credit this object with the hit;
+//						otherwise we use self.
+//				bestObject - a ptr to an object that is rewritten with the new
+//						best object if one is found.
+//				depth - a ptr to a depth (in normalized device coordinates: -1
+//						is max near, 1 is max far) of that best object.  If a
+//						hit is recorded, depth is updated.
+//
+// Notes:		Depth testing uses "replace if closer" semantics to provide
+//				return results; thus bestDepth should be initialized to point
+//				to 1.0f (the far clip plane) before being called.  The bounding
+//				box needs to be enough bigger than the hit point to provide a
+//				few pixels of slop.  The depth should be measured at the hit 
+//				point.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	// subclasses should override this.
+
+}//end depthTest:inBox:transform: creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================

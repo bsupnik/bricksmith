@@ -87,6 +87,7 @@
 	stepRotationType	= LDrawStepRotationNone;
 	rotationAngle		= ZeroPoint3;
 	stepFlavor			= LDrawStepAnyDirectives;
+	cachedBounds		= InvalidBox;
 	
 	return self;
 	
@@ -110,6 +111,8 @@
 	NSUInteger      insertIndex         = 0;
 		
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
+	
+	cachedBounds = InvalidBox;
 	
 	dispatch_group_t    stepDispatchGroup   = NULL;
 #if USE_BLOCKS
@@ -235,6 +238,7 @@
 	const uint8_t *temporary = NULL; //pointer to a temporary buffer returned by the decoder.
 
 	self = [super initWithCoder:decoder];
+	cachedBounds = InvalidBox;
 	
 	temporary = [decoder decodeBytesForKey:@"rotationAngle" returnedLength:NULL];
 	memcpy(&rotationAngle, temporary, sizeof(Tuple3));
@@ -275,6 +279,7 @@
 	[copied setStepFlavor:self->stepFlavor];
 	[copied setStepRotationType:self->stepRotationType];
 	[copied setRotationAngle:self->rotationAngle];
+	copied->cachedBounds = cachedBounds;
 	
 	return copied;
 	
@@ -379,44 +384,71 @@
 }
 
 
-//========== boxTest:transform:viewScale:boundsOnly:creditObject:hits: =======
+//========== boxTest:transform:boundsOnly:creditObject:hits: ===================
 //
 // Purpose:		Check for intersections with screen-space geometry.
 //
 //==============================================================================
-- (void)    boxTest:(Box2)bounds
+- (BOOL)    boxTest:(Box2)bounds
 		  transform:(Matrix4)transform 
-		  viewScale:(float)scaleFactor 
 		 boundsOnly:(BOOL)boundsOnly 
 	   creditObject:(id)creditObject 
 	           hits:(NSMutableSet *)hits
 {
+	if(!VolumeCanIntersectBox(
+						[self boundingBox3],
+						transform,
+						bounds))
+	{
+		return FALSE;
+	}
+	
 	NSArray     *commandsInStep     = [self subdirectives];
 	NSUInteger  commandCount        = [commandsInStep count];
 	LDrawStep   *currentDirective   = nil;
 	NSUInteger  counter             = 0;
-	NSValue *	creditValue = creditObject ? [NSValue valueWithPointer:creditObject] : nil;
-	
-	
+
 	// Draw all the steps in the model
 	for(counter = 0; counter < commandCount; counter++)
 	{
-		// This early exit is REALLY important for performance.  Basically once we discover that we have hit even a single stud of a large part, it's a total
-		// waste of time to (1) geometrically test the rest of the part (any in is all in) and (2) thrash the life out of our NSSet with a ton of duplicate 
-		// insertions. So...
-		//
-		/// If there is a credit object passed in (meaning we are below a directive that will be atomically all-in selected, like a part or submodel)
-		// and we have already selected it, just stop.  That means some time through our past for-loop we got our part, so we can quit testing.
-		//
-		// We do this optimization in a few places: model iteration, step sub-iteration, and the vertex buffer has this too.  
-		if(creditObject && [hits containsObject:creditValue])
-			return;
-	
 		currentDirective = [commandsInStep objectAtIndex:counter];
-		[currentDirective boxTest:bounds transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
+		if([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits])
+			if(creditObject != nil)
+				return TRUE;
 	}
+	return FALSE;
+}//end boxTest:transform:boundsOnly:creditObject:hits:
 
-}
+
+//========== depthTest:inBox:transform:creditObject:bestObject:bestDepth:=======
+//
+// Purpose:		depthTest finds the closest primitive (in screen space) 
+//				overlapping a given point, as well as its device coordinate
+//				depth.
+//
+//==============================================================================
+- (void)	depthTest:(Point2) pt 
+				inBox:(Box2)bounds 
+			transform:(Matrix4)transform 
+		 creditObject:(id)creditObject 
+		   bestObject:(id *)bestObject 
+			bestDepth:(float *)bestDepth
+{
+	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) 
+		return;
+
+	NSArray     *commandsInStep     = [self subdirectives];
+	NSUInteger  commandCount        = [commandsInStep count];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+
+	// Draw all the steps in the model
+	for(counter = 0; counter < commandCount; counter++)
+	{
+		currentDirective = [commandsInStep objectAtIndex:counter];
+		[currentDirective depthTest:pt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+	}
+}//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
 //========== write =============================================================
@@ -813,6 +845,7 @@
 //==============================================================================
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
 {
+	[self invalCache:CacheFlagBounds];
 	[super insertDirective:directive atIndex:index];
 	
 	[[self enclosingModel] didAddDirective:directive];
@@ -827,6 +860,7 @@
 //==============================================================================
 - (void) removeDirectiveAtIndex:(NSInteger)index
 {
+	[self invalCache:CacheFlagBounds];
 	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
 
 	[super removeDirectiveAtIndex:index];
@@ -1008,6 +1042,16 @@
 	[super dealloc];
 	
 }//end dealloc
+
+- (Box3) boundingBox3
+{
+	if ([self revalCache:CacheFlagBounds] == CacheFlagBounds)
+	{
+		cachedBounds = [LDrawUtilities boundingBox3ForDirectives:[self subdirectives]];
+	}
+	return cachedBounds;
+
+}//end boundingBox3
 
 
 @end

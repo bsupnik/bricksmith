@@ -53,7 +53,7 @@ typedef enum
 {
 	LDrawStepRotationT	stepRotationType;
 	Tuple3				rotationAngle;		// in degrees
-
+	Box3				cachedBounds;		// cached bounds of the step
 	//Optimization variables
 	LDrawStepFlavorT	stepFlavor; //defaults to LDrawStepAnyDirectives
 	LDrawColorT			colorOfAllDirectives;

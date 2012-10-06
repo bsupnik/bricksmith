@@ -27,10 +27,11 @@
 	NSString				*author;
 	
 	LDrawVertexes			*vertexes;
-	Box3					*cachedBounds;			// used only for optimized parts
 	ColorLibrary			*colorLibrary;			// in-scope !COLOURS local to the model
 	BOOL					 stepDisplayActive;		// YES if we are only display steps 1-currentStepDisplayed
 	NSUInteger				 currentStepDisplayed;	// display up to and including this step index
+	
+	Box3					cachedBounds;			// bounds of the model - only covers steps that are showing
 	
 	//steps are stored in the superclass.
 	
