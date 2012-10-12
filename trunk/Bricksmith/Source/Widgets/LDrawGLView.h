@@ -141,6 +141,7 @@
 - (BOOL) LDrawGLView:(LDrawGLView *)glView writeDirectivesToPasteboard:(NSPasteboard *)pasteboard asCopy:(BOOL)copyFlag;
 - (void) LDrawGLView:(LDrawGLView *)glView acceptDrop:(id < NSDraggingInfo >)info directives:(NSArray *)directives;
 - (void) LDrawGLViewPartsWereDraggedIntoOblivion:(LDrawGLView *)glView;
+- (void) LDrawGLViewPartDragEnded:(LDrawGLView*)glView;
 
 - (TransformComponents) LDrawGLViewPreferredPartTransform:(LDrawGLView *)glView;
 

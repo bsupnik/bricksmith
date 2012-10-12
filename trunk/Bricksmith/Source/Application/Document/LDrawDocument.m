@@ -3239,6 +3239,19 @@
 }
 
 
+//========== LDrawGLViewPartDragEnded: =========================================
+//
+// Purpose:		Part drag has ended, successfully or unsuccessfully. This is our 
+//				opportunity to clean up.
+//
+//==============================================================================
+- (void) LDrawGLViewPartDragEnded:(LDrawGLView*)glView
+{
+	[self->selectedDirectivesBeforeCopyDrag release];
+	self->selectedDirectivesBeforeCopyDrag = nil;
+}
+
+
 //========== LDrawGLViewPartsWereDraggedIntoOblivion: ==========================
 //
 // Purpose:		The parts which originated the most recent drag operation have 
@@ -3457,7 +3470,10 @@
 	// If copying, DESELECT all current directives as a visual indicator that 
 	// the originals will stay put. 
 	if(copyFlag == YES)
+	{
+		self->selectedDirectivesBeforeCopyDrag = [self->selectedDirectives copy];
 		[self selectDirective:nil byExtendingSelection:YES];
+	}
 	
 	// Set up pasteboard
 	if([archivedParts count] > 0)
@@ -4461,7 +4477,7 @@
 //
 // Parameters:	newDirective: a directive which can be added to a step. These 
 //						include parts, geometric primitives, and comments.
-//				parent - requested target step; if nil, uses the last visible step
+//				parent - requested target step; if nil, uses the default behavior
 //				insertAtIndex - index in parent.
 //
 //==============================================================================
@@ -4482,7 +4498,26 @@
 	// We may have the model itself selected, in which case we will add this new 
 	// element to the very bottom of the model.
 	if(targetContainer == nil)
-		targetContainer = [selectedModel visibleStep];
+	{
+		LDrawContainer *selectedContainer = [self selectedContainer];
+		
+		if(		selectedContainer != nil
+		   &&	[selectedContainer isKindOfClass:[LDrawFile class]] == NO
+		   &&	[selectedContainer isKindOfClass:[LDrawModel class]] == NO
+		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO )
+		{
+			// If we have an "interesting" container selected -- like a texture 
+			// -- add directives to it instead of at the end of the model. The 
+			// theory here is that these special containers are kind of their 
+			// own little world, and as long as you have one selected, you 
+			// should continue working within it. 
+			targetContainer = selectedContainer;
+		}
+		else
+		{
+			targetContainer = [selectedModel visibleStep];
+		}
+	}
 		
 	if(insertAtIndex == NSNotFound)
 	{
@@ -4697,6 +4732,36 @@
 	[self addModelsToMenus];
 
 }//end loadDataIntoDocumentUI
+
+
+//========== selectedContainer =================================================
+//
+// Purpose:		Returns the step that encloses (or is) the current selection, or
+//				nil if there is no step in the selection chain.
+//
+//==============================================================================
+- (LDrawContainer *) selectedContainer
+{
+	NSInteger		selectedRow 		= [fileContentsOutline selectedRow];
+	id				selectedItem		= [fileContentsOutline itemAtRow:selectedRow];
+	LDrawContainer	*selectedContainer	= nil;
+	
+	// Hack alert!
+	// If we are doing a copy-drag operation, remember the original selection 
+	// and use it. (We can't use the current selection during copy drag because 
+	// we clear it when the drag begins.)
+	if([self->selectedDirectivesBeforeCopyDrag count] > 0)
+		selectedItem = [selectedDirectivesBeforeCopyDrag objectAtIndex:0];
+	
+	// Find selected container
+	if([selectedItem isKindOfClass:[LDrawContainer class]])
+		selectedContainer = selectedItem;
+	else
+		selectedContainer = [selectedItem enclosingDirective];
+	
+	return selectedContainer;
+	
+}//end selectedContainer
 
 
 //========== selectedObjects ===================================================
@@ -4995,7 +5060,9 @@
 			else if([currentObject isKindOfClass:[LDrawStep class]])
 				[self addStep:currentObject parent:(LDrawMPDModel*)parent index:real_index];
 			else
+			{
 				[self addStepComponent:currentObject parent:parent index:real_index];
+			}
 			
 			[currentObject optimizeOpenGL];
 			[addedObjects addObject:currentObject];

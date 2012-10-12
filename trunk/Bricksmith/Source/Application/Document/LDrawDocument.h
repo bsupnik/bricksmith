@@ -74,6 +74,7 @@
 		LDrawFile		*documentContents;
 		LDrawPart		*lastSelectedPart; //the part in the file which was most recently selected in the contents. (retained)
 		NSArray			*selectedDirectives; //mirrors the selection of the file contents outline.
+		NSArray			*selectedDirectivesBeforeCopyDrag;
 		gridSpacingModeT gridMode;
 		LDrawGLView		*mostRecentLDrawView; //file graphic view which most recently had focus. Weak link.
 		BOOL			lockViewingAngle;		// hack to fix unexpected view changes during inserts
@@ -202,6 +203,7 @@
 - (BOOL) elementsAreSelectedOfVisibility:(BOOL)visibleFlag;
 - (NSAttributedString *) formatDirective:(LDrawDirective *)item withStringRepresentation:(NSString *)representation;
 - (void) loadDataIntoDocumentUI;
+- (LDrawContainer *) selectedContainer;
 - (NSArray *) selectedObjects;
 - (LDrawMPDModel *) selectedModel;
 - (LDrawStep *) selectedStep;

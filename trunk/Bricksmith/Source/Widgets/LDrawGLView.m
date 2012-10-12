@@ -2527,6 +2527,11 @@ static Size2 NSSizeToSize2(NSSize size)
 			 endedAt:(NSPoint)aPoint
 		   operation:(NSDragOperation)operation
 {
+	if([self->delegate respondsToSelector:@selector(LDrawGLViewPartDragEnded:)])
+	{
+		[self->delegate LDrawGLViewPartDragEnded:self];
+	}
+	
 	// If the drag didn't wind up in one of the GL views belonging to this 
 	// document, then we need to delete the part's ghost from our model.
 	if(self->dragEndedInOurDocument == NO)
