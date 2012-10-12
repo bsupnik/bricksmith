@@ -110,6 +110,7 @@
 										TOOLBAR_ROTATE_POSITIVE_Z,
 										TOOLBAR_ROTATE_NEGATIVE_Z,
 										NSToolbarFlexibleSpaceItemIdentifier,
+										TOOLBAR_SHOW_INSPECTOR,
 										TOOLBAR_PART_BROWSER,
 										nil ];
 }//end toolbarDefaultItemIdentifiers:
