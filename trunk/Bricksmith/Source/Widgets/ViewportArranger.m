@@ -676,7 +676,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 	for(counter = 0; counter < [columns count]; counter++)
 	{
 		currentColumn       = [columns objectAtIndex:counter];
-		columnAutosaveName  = [NSString stringWithFormat:@"%@_Column%d", baseAutosaveName, counter];
+		columnAutosaveName  = [NSString stringWithFormat:@"%@_Column%ld", baseAutosaveName, (long)counter];
 		
 		[currentColumn setAutosaveName:columnAutosaveName];
 	}
