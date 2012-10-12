@@ -687,14 +687,19 @@ static NSString				*defaultAuthor		= @"anonymous";
 //------------------------------------------------------------------------------
 + (CGImageRef) imageAtPath:(NSString *)imagePath
 {
-	NSURL				*fileURL	= [NSURL fileURLWithPath:imagePath];
+	NSURL				*fileURL	= nil;
 	CGImageSourceRef	imageSource = NULL;
 	CGImageRef			image		= NULL;
 	
-	imageSource = CGImageSourceCreateWithURL( (CFURLRef)fileURL, NULL );
-	if(imageSource != NULL)
+	if(imagePath)
 	{
-		image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+		fileURL	= [NSURL fileURLWithPath:imagePath];
+
+		imageSource = CGImageSourceCreateWithURL( (CFURLRef)fileURL, NULL );
+		if(imageSource != NULL)
+		{
+			image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+		}
 	}
 	
 	if(imageSource) CFRelease(imageSource);
