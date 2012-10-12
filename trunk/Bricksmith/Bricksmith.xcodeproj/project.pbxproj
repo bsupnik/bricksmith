@@ -1773,16 +1773,13 @@
 				IBC_WARNINGS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				"MACOSX_DEPLOYMENT_TARGET[arch=x86_64]" = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					3DconnexionClient,
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.5;
-				"SDKROOT[arch=x86_64]" = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1806,16 +1803,13 @@
 				IBC_WARNINGS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				"MACOSX_DEPLOYMENT_TARGET[arch=x86_64]" = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					3DconnexionClient,
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.6;
-				"SDKROOT[arch=x86_64]" = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1831,7 +1825,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -1844,7 +1838,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};
