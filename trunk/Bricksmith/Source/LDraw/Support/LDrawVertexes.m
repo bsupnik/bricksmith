@@ -298,6 +298,35 @@ static void DeleteOptimizationTags(struct OptimizationTags tags);
 }
 
 
+//========== setAcceptsNonPrimitives: ==========================================
+//
+// Purpose:		Whether the receiver maintains an everythingElse array to track 
+//				non-primitive objects.
+//
+// Notes:		LDrawVertexes held by an LDrawModel to draw child primitives 
+//				should not track non-primitive objects, because the model itself 
+//				will draw them.
+//
+//				LDrawVertexes owned by the PartLibrary which are surrogate 
+//				drawables for library parts *do* need to track non-primitives in 
+//				order to make sure they are drawn.
+//
+//==============================================================================
+- (void) setAcceptsNonPrimitives:(BOOL)flag
+{
+	if(flag == NO)
+	{
+		[self->everythingElse release];
+		self->everythingElse = nil;
+	}
+	else
+	{
+		[self->everythingElse release];
+		self->everythingElse = [[NSMutableArray alloc] init];
+	}
+}
+
+
 //========== setLines:triangles:quadrilaterals:other: ==========================
 //
 // Purpose:		Sets the primitives this container will be responsible for 

@@ -45,6 +45,7 @@ struct OptimizationTags
 	NSMutableArray          *lines;
 	
 	NSMutableArray          *everythingElse;
+	BOOL					acceptsNonPrimitives;
 	
 	NSMutableDictionary		*colorOptimizations; // key is @"%f %f %f %f", value is OptimizationTags in NSValue
 	NSMutableDictionary		*colorWireframeOptimizations; // key is @"%f %f %f %f", value is OptimizationTags in NSValue
@@ -57,6 +58,7 @@ struct OptimizationTags
 		triangles:(NSArray *)trianglesIn
    quadrilaterals:(NSArray *)quadrilateralsIn
 			other:(NSArray *)everythingElseIn;
+- (void) setAcceptsNonPrimitives:(BOOL)flag;
 - (void) setVertexesNeedRebuilding;
 			
 - (void) addDirective:(LDrawDirective *)directive;

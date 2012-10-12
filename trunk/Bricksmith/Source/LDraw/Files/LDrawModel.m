@@ -1189,6 +1189,7 @@
 		// directives. Since the initial parse is multithreaded, we cannot allow 
 		// this object to be used until the model has been fully parsed. 
 		self->vertexes = [[LDrawVertexes alloc] init];
+		[vertexes setAcceptsNonPrimitives:NO]; // we are responsible for drawing non-primitive objects
 		
 		NSMutableArray  *lines              = [NSMutableArray array];
 		NSMutableArray  *triangles          = [NSMutableArray array];
