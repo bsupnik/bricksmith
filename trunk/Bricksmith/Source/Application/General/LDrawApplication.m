@@ -15,7 +15,6 @@
 #import "LDrawApplication.h"
 
 #import <3DConnexionClient/ConnexionClientAPI.h>
-#import <AddressBook/AddressBook.h>
 #import <mach/mach_time.h>
 
 #import "DonationDialogController.h"
@@ -685,15 +684,13 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //==============================================================================
 - (NSString *) userName
 {
-	ABPerson    *userInfo   = [[ABAddressBook sharedAddressBook] me];
-	NSString    *firstName  = [userInfo valueForProperty:kABFirstNameProperty];
-	NSString    *lastName   = [userInfo valueForProperty:kABLastNameProperty];
-	NSString    *fullName   = nil;
+	NSString    *fullName   = NSFullUserName();
 	
-	if([firstName length] > 0 && [lastName length] > 0)
-	{
-		fullName = [NSString stringWithFormat:@"%@ %@", firstName, lastName];
-	}
+	// 10.8 presents a frightening warning when an application tries to access 
+	// the address book. So just use the username.
+//	ABPerson    *userInfo   = [[ABAddressBook sharedAddressBook] me];
+//	NSString    *firstName  = [userInfo valueForProperty:kABFirstNameProperty];
+//	NSString    *lastName   = [userInfo valueForProperty:kABLastNameProperty];
 	
 	return fullName;
 }

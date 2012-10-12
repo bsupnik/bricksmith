@@ -94,7 +94,6 @@
 		0B6F384407C82025007B1075 /* LDrawMPDModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F384207C82025007B1075 /* LDrawMPDModel.m */; };
 		0B6F384807C8207B007B1075 /* LDrawModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F384607C8207B007B1075 /* LDrawModel.m */; };
 		0B6F3A8F07C9934E007B1075 /* LDrawStep.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3A8D07C9934E007B1075 /* LDrawStep.m */; };
-		0B6F3AD407C99917007B1075 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6F3AD307C99917007B1075 /* AddressBook.framework */; };
 		0B6F3FB807CB0253007B1075 /* LDrawConditionalLine.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3FAA07CB0253007B1075 /* LDrawConditionalLine.m */; };
 		0B6F3FBC07CB0253007B1075 /* LDrawLine.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3FAE07CB0253007B1075 /* LDrawLine.m */; };
 		0B6F3FBE07CB0253007B1075 /* LDrawMetaCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3FB007CB0253007B1075 /* LDrawMetaCommand.m */; };
@@ -413,7 +412,6 @@
 		0B6F384607C8207B007B1075 /* LDrawModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDrawModel.m; path = Source/LDraw/Files/LDrawModel.m; sourceTree = SOURCE_ROOT; };
 		0B6F3A8C07C9934E007B1075 /* LDrawStep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LDrawStep.h; path = Source/LDraw/Files/LDrawStep.h; sourceTree = SOURCE_ROOT; };
 		0B6F3A8D07C9934E007B1075 /* LDrawStep.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LDrawStep.m; path = Source/LDraw/Files/LDrawStep.m; sourceTree = SOURCE_ROOT; };
-		0B6F3AD307C99917007B1075 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = /System/Library/Frameworks/AddressBook.framework; sourceTree = "<absolute>"; };
 		0B6F3FA907CB0253007B1075 /* LDrawConditionalLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawConditionalLine.h; sourceTree = "<group>"; };
 		0B6F3FAA07CB0253007B1075 /* LDrawConditionalLine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawConditionalLine.m; sourceTree = "<group>"; };
 		0B6F3FAD07CB0253007B1075 /* LDrawLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawLine.h; sourceTree = "<group>"; };
@@ -613,7 +611,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
-				0B6F3AD407C99917007B1075 /* AddressBook.framework in Frameworks */,
 				0B491FF707F64B5800AC0C10 /* OpenGL.framework in Frameworks */,
 				0B65543A081367E800EA7F4F /* GLUT.framework in Frameworks */,
 				0B34B52E090B07AE00F3A001 /* Carbon.framework in Frameworks */,
@@ -1041,7 +1038,6 @@
 			children = (
 				0B491FF607F64B5800AC0C10 /* OpenGL.framework */,
 				0B655439081367E800EA7F4F /* GLUT.framework */,
-				0B6F3AD307C99917007B1075 /* AddressBook.framework */,
 				1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */,
 				0B34B52D090B07AE00F3A001 /* Carbon.framework */,
 			);
