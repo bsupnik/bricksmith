@@ -56,6 +56,7 @@
 	
 	//Need to create a blank step.
 	[newModel addStep];
+	[newModel optimizePrimitiveStructure]; // initialize the vertex container
 
 	return [newModel autorelease];
 	

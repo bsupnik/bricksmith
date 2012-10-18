@@ -48,8 +48,6 @@
 	LDrawFile       *newFile    = [[LDrawFile alloc] init];
 	LDrawMPDModel   *firstModel = [LDrawMPDModel model];
 	
-	[firstModel optimizePrimitiveStructure]; // initialize the vertex container
-	
 	//Fill it with one empty model.
 	[newFile addSubmodel:firstModel];
 	[newFile setActiveModel:firstModel];
