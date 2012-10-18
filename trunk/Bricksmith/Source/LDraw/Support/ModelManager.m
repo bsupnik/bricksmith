@@ -89,6 +89,10 @@
 	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
 	NSArray 		*partNames		= [fileManager contentsOfDirectoryAtPath:inParentDir error:NULL];
 	
+	// Must use reference-style names. Peer file names are only cached for the 
+	// purposes of finding whether or not a part references a peer file. 
+	partNames = [partNames valueForKey:@"lowercaseString"];
+	
 	peerFileNames	= [[NSMutableSet alloc] initWithArray:partNames];
 	trackedFiles	= [[NSMutableDictionary alloc] init];
 	
