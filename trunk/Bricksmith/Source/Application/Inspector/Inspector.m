@@ -204,6 +204,25 @@
 #pragma mark -
 
 //**** NSWindow ****
+//========== windowDidResignKey: ===============================================
+//
+// Purpose:		Window is losing editing ability.
+//
+//==============================================================================
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+	// End any editing happening in the current inspector. We need to do this 
+	// because once the inspector is no longer key, you can do nasty things to 
+	// the object it is editing -- like deleting it, for example. If you were to 
+	// delete the object the inspector is using, the inspector would then try to 
+	// commit any outstanding edits on an object which is no longer in the 
+	// document. This confuses Undo horribly; the application can hang if you 
+	// try to undo over that change. 
+	[inspectorPanel makeFirstResponder:nil];
+}
+
+
+//**** NSWindow ****
 //========== windowWillReturnUndoManager: ======================================
 //
 // Purpose:		Allows Undo to keep working transparently through this window by 

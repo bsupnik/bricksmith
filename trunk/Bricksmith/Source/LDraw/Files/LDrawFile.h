@@ -31,8 +31,8 @@
 	NSDictionary	*nameModelDict;
 	LDrawMPDModel	*activeModel;
 	NSString		*filePath;			//where this file came from on disk.
-	NSUInteger		drawCount;			//number of threads currently drawing us
-	NSConditionLock *editLock;
+//	NSUInteger		drawCount;			//number of threads currently drawing us
+//	NSConditionLock *editLock;
 }
 
 // Initialization
