@@ -5,7 +5,6 @@
 // Purpose:		The model manager maintains a database of loaded models from
 //				other files for use by documents the users are editing.
 //
-//
 //  Created by bsupnik on 8/20/12.
 //  Copyright 2012, All rights reserved.
 //==============================================================================
@@ -81,18 +80,17 @@
 {
 	//NSLog(@"Starting service on file %p as %@/%@\n",inFile,inParentDir,inFileName);
 	self = [super init];
-	//NSLog(@"Init service table %p\n", self);
-	self->file = inFile;
-	self->fileName = inFileName;
-	self->parentDirectory = inParentDir;
-	[self->fileName retain];
-	[self->parentDirectory retain];
-
-	NSFileManager * fileManager		= [[[NSFileManager alloc] init] autorelease];
-	NSArray			*partNames				= [fileManager contentsOfDirectoryAtPath:inParentDir error:NULL];
 	
-	peerFileNames = [[NSMutableSet alloc] initWithArray:partNames];
-	trackedFiles = [[NSMutableDictionary alloc] init];
+	//NSLog(@"Init service table %p\n", self);
+	self->file				= inFile;
+	self->fileName			= [inFileName retain];
+	self->parentDirectory	= [inParentDir retain];
+	
+	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
+	NSArray 		*partNames		= [fileManager contentsOfDirectoryAtPath:inParentDir error:NULL];
+	
+	peerFileNames	= [[NSMutableSet alloc] initWithArray:partNames];
+	trackedFiles	= [[NSMutableDictionary alloc] init];
 	
 	//NSLog(@"Found %d peers.\n", [self->peerFileNames count]);
 
@@ -146,15 +144,15 @@
 {
 	//NSLog(@"%p: Loading model for part name: %@\n", self, inFileName);
 
-	NSString * fullPath = [parentDirectory stringByAppendingPathComponent:inFileName];
-	NSFileManager *	fileManager	= [[[NSFileManager alloc] init] autorelease];
+	NSString *		fullPath	= [parentDirectory stringByAppendingPathComponent:inFileName];
+	NSFileManager * fileManager = [[[NSFileManager alloc] init] autorelease];
 
 	// Quick check whether the file is still there.
 	if (![fileManager fileExistsAtPath:fullPath])
 		return nil;
 	
-	NSString * fileContents = [LDrawUtilities stringFromFile:fullPath];
-	NSArray * lines         = [fileContents separateByLine];		
+	NSString *	fileContents	= [LDrawUtilities stringFromFile:fullPath];
+	NSArray *	lines			= [fileContents separateByLine];		
 	
 	dispatch_group_t group = NULL;
 #if USE_BLOCKS
@@ -288,8 +286,8 @@ static ModelManager *SharedModelManager = nil;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
 
-	NSString * docParentDir = [docPath stringByDeletingLastPathComponent];
-	NSString * docFileName = [docPath lastPathComponent];
+	NSString *	docParentDir	= [docPath stringByDeletingLastPathComponent];
+	NSString *	docFileName 	= [docPath lastPathComponent];
 	
 	// First: go figure out if we were providing this ldraw file for some other document.
 	// If so, we really need to drop it!
@@ -305,7 +303,7 @@ static ModelManager *SharedModelManager = nil;
 	do {
 		did_drop = false;
 		
-		for(LDrawFile * key in serviceTables)
+		for(NSValue * key in serviceTables)
 		{
 			ModelServiceTable * table = [serviceTables objectForKey:key];
 			if([docParentDir isEqualToString:table->parentDirectory])
@@ -341,8 +339,8 @@ static ModelManager *SharedModelManager = nil;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
 
-	NSString * docParentDir = [docPath stringByDeletingLastPathComponent];
-	NSString * docFileName = [docPath lastPathComponent];
+	NSString *	docParentDir	= [docPath stringByDeletingLastPathComponent];
+	NSString *	docFileName 	= [docPath lastPathComponent];
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
 	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
@@ -376,6 +374,7 @@ static ModelManager *SharedModelManager = nil;
 //	Notes:		This routine will first look for other open documents; if there
 //				are none then it will open a model and store it in the service
 //				table for the requestor.
+//
 //==============================================================================
 - (LDrawModel *) requestModel:(NSString *) partName withDocument:(LDrawFile *) whoIsAsking
 {
@@ -387,14 +386,15 @@ static ModelManager *SharedModelManager = nil;
 	}
 	//NSLog(@"Part check for known file %@/%@ - wants part %@\n", table->parentDirectory, table->fileName, partName);
 	
-	NSString * partDir = table->parentDirectory;
-	NSString * partFileName = partName;
+	NSString *	partDir 		= table->parentDirectory;
+	NSString *	partFileName	= partName;
 
 	for(LDrawFile * key in serviceTables)
 	{
 		ModelServiceTable * otherDoc = [serviceTables objectForKey:key];
-		if([partFileName isEqualToString:otherDoc->fileName] &&
-		   [partDir isEqualToString:otherDoc->parentDirectory])
+		
+		if(		[partFileName isEqualToString:otherDoc->fileName]
+		   &&	[partDir isEqualToString:otherDoc->parentDirectory])
 		{
 			//NSLog(@" Part was already loaded - returning.\n");
 			return [otherDoc->file firstModel];
