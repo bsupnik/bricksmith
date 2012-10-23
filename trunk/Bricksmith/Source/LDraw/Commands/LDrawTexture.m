@@ -948,77 +948,6 @@
 }
 
 
-//========== optimizeStructure =================================================
-//
-// Purpose:		Arranges the directives in such a way that the file will be 
-//				drawn faster. This method should *never* be called on files 
-//				which the user has created himself, since it reorganizes the 
-//				file contents. It is intended only for parts read from the part  
-//				library.
-//
-//				To optimize, we flatten all the primitives referenced by a part 
-//				into a non-nested structure, then separate all the directives 
-//				out by the type: all triangles go in a step, all quadrilaterals 
-//				go in their own step, etc. 
-//
-//				Then when drawing, we need not call glBegin() each time. The 
-//				result is a speed increase of over 1000%. 
-//
-//				1000%. That is not a typo.
-//
-//==============================================================================
-- (void) optimizeStructure
-{
-	NSArray         *steps              = [self subdirectives];
-	
-	NSMutableArray  *lines              = [NSMutableArray array];
-	NSMutableArray  *triangles          = [NSMutableArray array];
-	NSMutableArray  *quadrilaterals     = [NSMutableArray array];
-	NSMutableArray  *everythingElse     = [NSMutableArray array];
-	
-	LDrawDirective	*directive			= nil;
-	NSUInteger      directiveCount      = 0;
-	NSInteger       counter             = 0;
-	
-	// Traverse the entire hiearchy of part references and sort out each 
-	// primitive type into a flat list. This allows staggering speed increases. 
-	[self flattenIntoLines:lines
-				 triangles:triangles
-			quadrilaterals:quadrilaterals
-					 other:everythingElse
-			  currentColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
-		  currentTransform:IdentityMatrix4
-		   normalTransform:IdentityMatrix3
-				 recursive:YES];
-	
-	// Now that we have everything separated, remove the main step (it's the one 
-	// that has the entire model in it) and . 
-	directiveCount = [steps count];
-	for(counter = (directiveCount - 1); counter >= 0; counter--)
-	{
-		[self removeDirectiveAtIndex:counter];
-	}
-	
-	[fallback release];
-	fallback = nil;
-	
-	// Add back all the flattened geometry
-	
-	for(directive in lines)
-		[self addDirective:directive];
-	
-	for(directive in triangles)
-		[self addDirective:directive];
-	
-	for(directive in quadrilaterals)
-		[self addDirective:directive];
-	
-	for(directive in everythingElse)
-		[self addDirective:directive];
-		
-}//end optimizeStructure
-
-
 //========== optimizeVertexes ==================================================
 //
 // Purpose:		Makes sure the vertexes (collected in 
@@ -1176,6 +1105,60 @@
 		  normalTransform:(Matrix3)normalTransform
 				recursive:(BOOL)recursive
 {
+	self->planePoint1   = V3MulPointByProjMatrix(self->planePoint1, transform);
+	self->planePoint2   = V3MulPointByProjMatrix(self->planePoint2, transform);
+	self->planePoint3   = V3MulPointByProjMatrix(self->planePoint3, transform);
+	
+	if(recursive == YES)
+	{
+		NSMutableArray  *texLines              = [NSMutableArray array];
+		NSMutableArray  *texTriangles          = [NSMutableArray array];
+		NSMutableArray  *texQuadrilaterals     = [NSMutableArray array];
+		NSMutableArray  *texEverythingElse     = [NSMutableArray array];
+		
+		LDrawDirective	*directive			= nil;
+		NSUInteger      directiveCount      = 0;
+		NSInteger       counter             = 0;
+		
+		// Traverse the entire hiearchy of part references and sort out each 
+		// primitive type into a flat list. This allows staggering speed increases. 
+		for(LDrawDirective *directive in [self subdirectives])
+		{
+			[directive flattenIntoLines:texLines
+							  triangles:texTriangles
+						 quadrilaterals:texQuadrilaterals
+								  other:texEverythingElse
+						   currentColor:parentColor
+					   currentTransform:transform
+						normalTransform:normalTransform
+							  recursive:recursive];
+		}
+		
+		// Remove all existing directives 
+		directiveCount = [[self subdirectives] count];
+		for(counter = (directiveCount - 1); counter >= 0; counter--)
+		{
+			[self removeDirectiveAtIndex:counter];
+		}
+		
+		[fallback release];
+		fallback = nil;
+	
+		// Add back all the flattened geometry
+		
+		for(directive in texLines)
+			[self addDirective:directive];
+		
+		for(directive in texTriangles)
+			[self addDirective:directive];
+		
+		for(directive in texQuadrilaterals)
+			[self addDirective:directive];
+		
+		for(directive in texEverythingElse)
+			[self addDirective:directive];
+	}
+	
 	// Textures are responsible for drawing their own geometry. We reveal only 
 	// ourself to the parent, not our child geometry. 
 	[everythingElse addObject:self];

@@ -137,8 +137,8 @@
 	// the current step. 
 	do
 	{
-#if USE_BLOCKS
 		stepRange   = [LDrawStep rangeOfDirectiveBeginningAtIndex:contentStartIndex inLines:lines maxIndex:maxLineIndex];
+#if USE_BLOCKS
 		dispatch_group_async(modelDispatchGroup,queue,
 		^{
 #endif
@@ -1294,8 +1294,8 @@
 		}
 		[self addDirective:quadrilateralsStep];
 	}
-	if([everythingElse count] > 0)
-	{
+	if([everythingElse count] > 0 || [[self subdirectives] count] == 0)
+	{								// Make sure there is at least one step in the model!
 		for(id directive in everythingElse)
 		{
 			[everythingElseStep addDirective:directive];
