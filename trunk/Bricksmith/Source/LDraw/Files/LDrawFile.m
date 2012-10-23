@@ -24,6 +24,7 @@
 #import <dispatch/dispatch.h>
 #endif
 
+#import "MacLDraw.h"
 #import "LDrawMPDModel.h"
 #import "LDrawPart.h"
 #import "LDrawUtilities.h"
@@ -313,6 +314,18 @@
 //	[editLock unlockWithCondition:(self->drawCount)];
 	
 }//end draw:viewScale:parentColor:
+
+
+//========== debugDrawboundingBox ==============================================
+//
+// Purpose:		Draw a translucent visualization of our bounding box to test
+//				bounding box caching.
+//
+//==============================================================================
+- (void) debugDrawboundingBox
+{
+	[activeModel debugDrawboundingBox];
+}//end debugDrawboundingBox
 
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
@@ -713,6 +726,11 @@
 {
 	[super insertDirective:directive atIndex:index];
 	[self updateModelLookupTable];
+	
+	// Post a notification on ourself that a model was added - missing parts need
+	// to know this to re-check whether they match this model.
+	[[NSNotificationCenter defaultCenter]
+			postNotificationName:LDrawMPDSubModelAdded object:self ];
 	
 }//end insertDirective:atIndex:
 

@@ -39,6 +39,7 @@
 
 #define WANT_TWOPASS_BOXTEST		0	// this enables the two-pass box-test.  It is actually faster to _not_ do this now that hit testing is optimized.
 #define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
+#define DEBUG_BOUNDING_BOX			0
 
 #define DEBUG_DRAWING				0	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
@@ -260,6 +261,19 @@
 	assert(glIsEnabled(GL_VERTEX_ARRAY));
 	assert(glIsEnabled(GL_NORMAL_ARRAY));
 	assert(glIsEnabled(GL_COLOR_ARRAY));
+
+	#if DEBUG_BOUNDING_BOX
+	glDepthMask(GL_FALSE);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisable(GL_LIGHTING);
+	glColor4f(0.5,0.5,0.5,0.1);
+	[self->fileBeingDrawn debugDrawboundingBox];
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnable(GL_LIGHTING);
+	glDepthMask(GL_TRUE);
+	#endif
 
 	// Marquee selection box -- only if non-zero.
 	if( V2BoxWidth(self->selectionMarquee) != 0 && V2BoxHeight(self->selectionMarquee) != 0)

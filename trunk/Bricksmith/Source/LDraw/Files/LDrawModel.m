@@ -284,6 +284,30 @@
 }//end draw:viewScale:parentColor:
 
 
+//========== debugDrawboundingBox ==============================================
+//
+// Purpose:		Draw a translucent visualization of our bounding box to test
+//				bounding box caching.
+//
+//==============================================================================
+- (void) debugDrawboundingBox
+{
+	NSArray     *steps              = [self subdirectives];
+	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	
+	// Draw all the steps in the model
+	for(counter = 0; counter <= maxIndex; counter++)
+	{
+		currentDirective = [steps objectAtIndex:counter];
+		[currentDirective debugDrawboundingBox];
+	}
+	
+	[super debugDrawboundingBox];
+}//end debugDrawboundingBox
+
+
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
 // Purpose:		Hit-test the geometry.

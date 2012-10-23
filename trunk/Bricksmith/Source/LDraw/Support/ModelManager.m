@@ -151,6 +151,8 @@
 	NSString *		fullPath	= [parentDirectory stringByAppendingPathComponent:inFileName];
 	NSFileManager * fileManager = [[[NSFileManager alloc] init] autorelease];
 
+	fullPath = [fullPath stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+
 	// Quick check whether the file is still there.
 	if (![fileManager fileExistsAtPath:fullPath])
 		return nil;
@@ -252,6 +254,7 @@ static ModelManager *SharedModelManager = nil;
 {
 	self = [super init];	
 	serviceTables = [[NSMutableDictionary alloc] init];	
+	dirChars = [[NSCharacterSet characterSetWithCharactersInString:@"\\/"] retain];
 	return self;
 }
 
@@ -270,6 +273,7 @@ static ModelManager *SharedModelManager = nil;
 //		[f release];
 //	}
 	[serviceTables release];
+	[dirChars release];
 	[super dealloc];
 }
 
@@ -410,8 +414,12 @@ static ModelManager *SharedModelManager = nil;
 		return [alreadyOpenedFile firstModel];
 	
 	if (![table->peerFileNames containsObject:partName])
-		return nil;
-
+	{
+		// Fast case: since we cached our directory, if the part has no relative path
+		// and is missing, we can bail now.
+		if([partName rangeOfCharacterFromSet:dirChars].location == NSNotFound)
+			return nil;
+	}
 	//NSLog(@" Part may exist - trying to open. - returning.\n");
 	
 	LDrawFile * justOpenedNow = [table beginService:partName];

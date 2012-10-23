@@ -77,5 +77,6 @@ typedef enum
 + (BOOL) isLDrawFilenameValid:(NSString *)fileName;
 + (void) updateNameForMovedPart:(LDrawPart *)movedPart;
 + (ViewOrientationT) viewOrientationForAngle:(Tuple3)rotationAngle;
++ (void) unresolveLibraryParts:(LDrawDirective *)directive;
 
 @end

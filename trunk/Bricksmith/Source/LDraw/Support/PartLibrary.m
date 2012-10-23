@@ -15,7 +15,7 @@
 //  Copyright 2005. All rights reserved.
 //==============================================================================
 #import "PartLibrary.h"
-
+#import "MacLDraw.h"
 #import "LDrawFile.h"
 #import "LDrawKeywords.h"
 #import "LDrawModel.h"
@@ -604,6 +604,9 @@ static PartLibrary *SharedPartLibrary = nil;
 	//Save the part catalog out for future reference.
 	[newPartCatalog writeToFile:partCatalogPath atomically:YES];
 	[self setPartCatalog:newPartCatalog];
+	
+	[[NSNotificationCenter defaultCenter]
+			postNotificationName:LDrawPartLibraryReloaded object:self ];
 	
 	// We succeeded in loading the parts!
 	return YES;

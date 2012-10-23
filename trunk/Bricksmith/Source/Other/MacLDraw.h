@@ -171,6 +171,15 @@
 #define LDrawViewBackgroundColorDidChangeNotification	@"LDrawViewBackgroundColorDidChangeNotification"
 
 
+
+//A model was added to a document.  Note that the object
+// for this notification is the LDrawFile that was edited!
+#define LDrawMPDSubModelAdded							@"LDrawMPDSubModelAdded"
+
+//The library was reloaded.  Documents need to tell their parts
+// to re-resolve their references.
+#define LDrawPartLibraryReloaded						@"LDrawPartLibraryReloaded"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 #pragma mark		Menu Tags

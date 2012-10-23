@@ -20,10 +20,9 @@
 //  Copyright (c) 2005. All rights reserved.
 //==============================================================================
 #import "LDrawPart.h"
-
+#import "MacLDraw.h"
 #import <math.h>
 #import <string.h>
-
 #import "LDrawColor.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
@@ -343,6 +342,30 @@
 		[unitCube draw:DRAW_NO_OPTIONS viewScale:1.0 parentColor:drawingColor];
 	}
 }//end drawBounds
+
+
+//========== debugDrawboundingBox ==============================================
+//
+// Purpose:		Draw a translucent visualization of our bounding box to test
+//				bounding box caching.
+//
+//==============================================================================
+- (void) debugDrawboundingBox
+{
+	[self resolvePart];
+	LDrawModel	*modelToDraw	= cacheModel;
+	
+	//If the model can't be found, we can't draw good bounds for it!
+	if(modelToDraw != nil)
+	{
+		glPushMatrix();
+		glMultMatrixf(glTransformation);
+		[modelToDraw debugDrawboundingBox];
+		glPopMatrix();
+	}
+	
+	[super debugDrawboundingBox];	
+}//end debugDrawboundingBox
 
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
@@ -1245,12 +1268,15 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 
 //========== statusInvalidated:who: ============================================
 //
-// Purpose:		
+// Purpose:		This message is sent to us when a directive we are observing is
+//				invalidated.  We invalidate ourselves.  This is what makes our
+//				bbox need recalculating when a sub-model changes.
 //
 //==============================================================================
 - (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
 {
-}
+	[self invalCache:flags];
+}//end statusInvalidated:who:
 
 
 //========== receiveMessage:who: ===============================================
@@ -1468,6 +1494,20 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end registerUndoActions:
 
 
+//========== addedMPDModel =====================================================
+//
+// Purpose:		This message is sent when a model is added to a MPD file; if we
+//				aren't fonud, we unresolve so that we can get a shot at
+//				re-resolving to the newly added part.
+//
+//==============================================================================
+- (void) addedMPDModel:(NSNotification *)notification
+{
+	if(cacheType == PartTypeNotFound)
+		[self unresolvePart];
+}//end addedMPDModel
+
+
 //========== resolvePart =======================================================
 //
 // Purpose:		Find the object this part references and record the way in which 
@@ -1485,33 +1525,34 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			cacheDrawable = mdpModel;
 			cacheType = PartTypeSubmodel;
 			
-			//printf("Part %p telling cache model %p to add us.\n",self,cacheModel);
 			[self invalCache:CacheFlagBounds];
 			[cacheModel addObserver:self];
 		}
 		else 
 		{
-			cacheModel = [[ModelManager sharedModelManager] requestModel:referenceName withDocument:[self enclosingFile]];
-			if(cacheModel)
+			// Try the part library first for speed - sub-paths will thrash the modelmanager.
+			cacheModel = [[PartLibrary sharedPartLibrary] modelForName:referenceName];
+			if(cacheModel != nil)
 			{
-				cacheType = PartTypePeerFile;
-				cacheDrawable = cacheModel;
-				[self invalCache:CacheFlagBounds];
-				[cacheModel addObserver:self];				
+				// Intentional: do not observe library parts - they are immutable so 
+				// we don't need observations, and messing with the lib parts set is expensive.
+				// [cacheModel addObserver:self];
+
+				// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  Do that in -optimizeOpenGL 
+				// instead. 
+				cacheDrawable = nil;
+				[self invalCache:CacheFlagBounds];					
+				cacheType = PartTypeLibrary;
 			}
 			else
 			{
-				cacheModel = [[PartLibrary sharedPartLibrary] modelForName:referenceName];
-				if(cacheModel != nil)
+				cacheModel = [[ModelManager sharedModelManager] requestModel:referenceName withDocument:[self enclosingFile]];
+				if(cacheModel)
 				{
-//					[cacheModel addObserver:self];
-					// WE DO NOT LOOK UP THE DRAWABLE VBO HERE!!!  ResolvePart 
-					// MUST be thread-safe for completion blocks to work so we 
-					// don't ask for a VBO here. Do that in -optimizeOpenGL 
-					// instead. 
-					cacheDrawable = nil;
-					[self invalCache:CacheFlagBounds];					
-					cacheType = PartTypeLibrary;
+					cacheType = PartTypePeerFile;
+					cacheDrawable = cacheModel;
+					[self invalCache:CacheFlagBounds];
+					[cacheModel addObserver:self];				
 				}
 				else
 				{
@@ -1519,6 +1560,9 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 					cacheDrawable = nil;
 					cacheModel = nil;
 					[self invalCache:CacheFlagBounds];
+					// If we are not found, listen to the "sub-model-added" notification; ideally this would be on our enclosing LDrawFile but for
+					// now listen to all instances.
+					[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(addedMPDModel:) name:LDrawMPDSubModelAdded object:nil];					
 				}			
 			}
 		}
@@ -1547,11 +1591,35 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			[cacheModel removeObserver:self];
 		}
 		
+		if(cacheType == PartTypeNotFound)
+		{
+			[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawMPDSubModelAdded object:nil];	
+		}
+		
 		cacheType = PartTypeUnresolved;
 		cacheDrawable = nil;
 		cacheModel = nil;
 	}
-}
+}//end unresolvePart
+
+
+
+//========== unresolvePartIfPartLibrary ========================================
+//
+// Purpose:		Unresolve a part only if it is a library part.  There are two
+//				cases: actual library parts and parts that were not found (and
+//				thus maybe they should be library parts but the library that was
+//				loaded was incomplete.
+//
+//				This is used by unresolveLibraryParts to reload the library.
+//
+//==============================================================================
+- (void) unresolvePartIfPartLibrary
+{
+	if(cacheType == PartTypeLibrary || cacheType == PartTypeNotFound)
+		[self unresolvePart];
+		
+}//end unresolvePartIfPartLibrary
 
 #pragma mark -
 #pragma mark DESTRUCTOR

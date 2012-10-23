@@ -238,6 +238,11 @@
 						   selector:@selector(activeModelChanged:)
 							   name:LDrawFileActiveModelDidChangeNotification
 							 object:[self documentContents] ];
+							 
+	[notificationCenter addObserver:self
+						   selector:@selector(libraryReloaded:)
+							   name:LDrawPartLibraryReloaded
+							object:nil];
 	
 	
 	//---------- Cleanup for legacy systems ------------------------------------
@@ -412,21 +417,27 @@
 #pragma mark -
 #pragma mark Writing
 
-//========== writeToURL:ofType:error: ==========================================
+
+//========== saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo:
 //
 // Purpose:		Saves the file out. We are overriding this NSDocument method to 
 //				grab the path; the actual data-collection is done elsewhere.
 //
 //==============================================================================
-- (BOOL) writeToURL:(NSURL *)absoluteURL
-			 ofType:(NSString *)typeName
-			  error:(NSError **)outError
+- (void)saveToURL:(NSURL *)absoluteURL 
+		   ofType:(NSString *)typeName 
+ forSaveOperation:(NSSaveOperationType)saveOperation 
+		 delegate:(id)delegate 
+  didSaveSelector:(SEL)didSaveSelector 
+	  contextInfo:(void *)contextInfo
 {
-	BOOL success = NO;
-	
-	//do the actual writing.
-	success = [super writeToURL:absoluteURL ofType:typeName error:outError];
-	
+	[super saveToURL:absoluteURL 
+			  ofType:typeName 
+	forSaveOperation:saveOperation 
+			delegate:delegate 
+	 didSaveSelector:didSaveSelector 
+		 contextInfo:contextInfo];
+
 	//track the path.
 	if([absoluteURL isFileURL] == YES)
 	{
@@ -435,10 +446,7 @@
 	}
 	else
 		[[self documentContents] setPath:nil];
-	
-	return success;
-	
-}//end writeToFile:ofType:
+}//end saveToURL:ofType:forSaveOperation:delegate:didSaveSelector:contextInfo:
 
 
 //========== dataOfType:error: =================================================
@@ -3643,6 +3651,20 @@
 #pragma mark -
 #pragma mark NOTIFICATIONS
 #pragma mark -
+
+
+//========== libraryReloaded: ==================================================
+//
+// Purpose:		The library has been reloaded.  We need to notify our entire
+//				set of directives that the library parts might have changed.
+//				The directives don't do this themselves to avoid overhead.
+//
+//==============================================================================
+- (void)libraryReloaded:(NSNotification *)notification
+{
+	[LDrawUtilities unresolveLibraryParts:documentContents];
+}//end libraryReloaded
+
 
 //========== activeModelChanged: ===============================================
 //

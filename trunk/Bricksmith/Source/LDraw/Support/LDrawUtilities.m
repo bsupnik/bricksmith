@@ -894,4 +894,29 @@ static NSString				*defaultAuthor		= @"anonymous";
 }//end viewOrientationForAngle:
 
 
+
+//---------- unresolveLibraryParts: ----------------------------------[static]--
+//
+// Purpose:		This routine walks a directive tree and sends
+//				unresolvePartIfPartLibrary to any parts it finds.  This has the
+//				result of causing all parts to drop their weak reference to the
+//				library.
+//
+//------------------------------------------------------------------------------
++ (void) unresolveLibraryParts:(LDrawDirective *) directive
+{
+	if ([directive respondsToSelector:@selector(allEnclosedElements)])
+	{
+		NSArray * subs = [directive allEnclosedElements];		
+		for (LDrawDirective * d in subs)
+		{
+			[self unresolveLibraryParts:d];
+		}
+	}
+	
+	if([directive respondsToSelector:@selector(unresolvePartIfPartLibrary)])
+		[directive unresolvePartIfPartLibrary];
+}//end unresolveLibraryParts
+
+
 @end

@@ -38,8 +38,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface ModelManager : NSObject {
 
-	NSMutableDictionary * serviceTables;	// Maps NSValue<LDrawfile*> -> ServiceTable.  Service table is in the cpp.
-
+	NSMutableDictionary *	serviceTables;	// Maps NSValue<LDrawfile*> -> ServiceTable.  Service table is in the cpp.
+	NSCharacterSet *		dirChars;
 }
 
 // Singleton access
