@@ -907,7 +907,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 {
 	if ([directive respondsToSelector:@selector(allEnclosedElements)])
 	{
-		NSArray * subs = [directive allEnclosedElements];		
+		NSArray * subs = [(LDrawContainer*)directive allEnclosedElements];		
 		for (LDrawDirective * d in subs)
 		{
 			[self unresolveLibraryParts:d];
@@ -915,7 +915,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 	}
 	
 	if([directive respondsToSelector:@selector(unresolvePartIfPartLibrary)])
-		[directive unresolvePartIfPartLibrary];
+		[(LDrawPart*)directive unresolvePartIfPartLibrary];
 }//end unresolveLibraryParts
 
 
