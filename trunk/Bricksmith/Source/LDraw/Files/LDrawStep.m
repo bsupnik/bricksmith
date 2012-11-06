@@ -648,6 +648,19 @@
 #pragma mark ACCESSORS
 #pragma mark -
 
+//========== boundingBox3 ======================================================
+//==============================================================================
+- (Box3) boundingBox3
+{
+	if ([self revalCache:CacheFlagBounds] == CacheFlagBounds)
+	{
+		cachedBounds = [LDrawUtilities boundingBox3ForDirectives:[self subdirectives]];
+	}
+	return cachedBounds;
+	
+}//end boundingBox3
+
+
 //========== enclosingModel ====================================================
 //
 // Purpose:		Returns the model of which this step is a part.
@@ -1063,16 +1076,5 @@
 	[super dealloc];
 	
 }//end dealloc
-
-- (Box3) boundingBox3
-{
-	if ([self revalCache:CacheFlagBounds] == CacheFlagBounds)
-	{
-		cachedBounds = [LDrawUtilities boundingBox3ForDirectives:[self subdirectives]];
-	}
-	return cachedBounds;
-
-}//end boundingBox3
-
 
 @end

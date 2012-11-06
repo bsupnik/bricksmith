@@ -572,6 +572,19 @@
 #pragma mark ACCESSORS
 #pragma mark -
 
+//========== boundingBox3 ======================================================
+//==============================================================================
+- (Box3) boundingBox3
+{
+	if ([self revalCache:CacheFlagBounds] == CacheFlagBounds)
+	{
+		cachedBounds = [LDrawUtilities boundingBox3ForDirectives:[self subdirectives]];
+	}
+	return cachedBounds;
+	
+}//end boundingBox3
+
+
 //========== glossmapName ======================================================
 //==============================================================================
 - (NSString *) glossmapName
@@ -794,6 +807,7 @@
 {
 	[super insertDirective:directive atIndex:index];
 	
+	[self invalCache:CacheFlagBounds];
 	[vertexes addDirective:directive];
 	
 }//end insertDirective:atIndex:
@@ -810,6 +824,7 @@
 	
 	[super removeDirectiveAtIndex:index];
 	
+	[self invalCache:CacheFlagBounds];
 	[vertexes removeDirective:directive];
 	
 	[directive release];
