@@ -427,7 +427,7 @@
 //				depth.
 //
 //==============================================================================
-- (void)	depthTest:(Point2) testPt 
+- (void)	depthTest:(Point2)testPt 
 				inBox:(Box2)bounds 
 			transform:(Matrix4)transform 
 		 creditObject:(id)creditObject 
@@ -444,6 +444,15 @@
 		currentDirective = [commands objectAtIndex:counter];
 		[currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
 	}
+	
+	if(self->dragHandles)
+	{
+		for(LDrawDragHandle *handle in self->dragHandles)
+		{
+			[handle depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+		}
+	}
+	
 }//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
 
