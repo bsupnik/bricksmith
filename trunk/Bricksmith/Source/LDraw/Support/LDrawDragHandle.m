@@ -170,6 +170,7 @@ static const float HandleDiameter	= 7.0;
 	handleScale = 1.0 / scaleFactor;
 	drawRadius  = HandleDiameter/2 * handleScale;
 	
+	glDisable(GL_TEXTURE_2D);
 	glPushMatrix();
 	{
 		glTranslatef(self->position.x, self->position.y, self->position.z);
@@ -180,6 +181,7 @@ static const float HandleDiameter	= 7.0;
 		glBindVertexArrayAPPLE(0); // Failing to unbind can cause bizarre crashes if other VAOs are in display lists
 	}
 	glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
 	
 }//end draw:viewScale:parentColor:
 
