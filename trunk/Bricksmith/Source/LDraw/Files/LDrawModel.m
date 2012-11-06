@@ -284,6 +284,22 @@
 }//end draw:viewScale:parentColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	NSArray     *steps              = [self subdirectives];
+	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
+	LDrawStep   *currentDirective   = nil;
+	NSUInteger  counter             = 0;
+	
+	// Draw all the steps in the model
+	for(counter = 0; counter <= maxIndex; counter++)
+	{
+		currentDirective = [steps objectAtIndex:counter];
+		[currentDirective drawSelf:renderer];
+	}
+}
+
+
 //========== debugDrawboundingBox ==============================================
 //
 // Purpose:		Draw a translucent visualization of our bounding box to test

@@ -285,6 +285,9 @@
 		D6CB459515E316D300730E2A /* ModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D6CB41DF15E2AA6C00730E2A /* ModelManager.m */; };
 		D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */; };
 		D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */; };
+		D6EDB33B1648A42000B4062B /* LDrawRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB33A1648A42000B4062B /* LDrawRenderer.h */; };
+		D6EDB37C1648A96C00B4062B /* LDrawShaderRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB37A1648A96C00B4062B /* LDrawShaderRenderer.h */; };
+		D6EDB37D1648A96C00B4062B /* LDrawShaderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDB37B1648A96C00B4062B /* LDrawShaderRenderer.m */; };
 		D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D6FC72121604EBB8005A404E /* LDrawFastSet.h */; };
 /* End PBXBuildFile section */
 
@@ -602,6 +605,9 @@
 		D6CB41DF15E2AA6C00730E2A /* ModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelManager.m; sourceTree = "<group>"; };
 		D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtilities.h; sourceTree = "<group>"; };
 		D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenGLUtilities.c; sourceTree = "<group>"; };
+		D6EDB33A1648A42000B4062B /* LDrawRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawRenderer.h; sourceTree = "<group>"; };
+		D6EDB37A1648A96C00B4062B /* LDrawShaderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawShaderRenderer.h; sourceTree = "<group>"; };
+		D6EDB37B1648A96C00B4062B /* LDrawShaderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawShaderRenderer.m; sourceTree = "<group>"; };
 		D6FC72121604EBB8005A404E /* LDrawFastSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawFastSet.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -684,6 +690,9 @@
 				D6CB41DE15E2AA6C00730E2A /* ModelManager.h */,
 				D6CB41DF15E2AA6C00730E2A /* ModelManager.m */,
 				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
+				D6EDB33A1648A42000B4062B /* LDrawRenderer.h */,
+				D6EDB37A1648A96C00B4062B /* LDrawShaderRenderer.h */,
+				D6EDB37B1648A96C00B4062B /* LDrawShaderRenderer.m */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1241,6 +1250,8 @@
 				D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */,
 				D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */,
 				D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */,
+				D6EDB33B1648A42000B4062B /* LDrawRenderer.h in Headers */,
+				D6EDB37C1648A96C00B4062B /* LDrawShaderRenderer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1504,6 +1515,7 @@
 				0B6122EE153516600085F944 /* LDrawTexture.m in Sources */,
 				D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */,
 				D6CB459515E316D300730E2A /* ModelManager.m in Sources */,
+				D6EDB37D1648A96C00B4062B /* LDrawShaderRenderer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

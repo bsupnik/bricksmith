@@ -315,6 +315,38 @@
 }//end drawElement:parentColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	if(self->hidden == NO)
+	{
+		[self resolvePart];
+
+		if(cacheModel)
+		{
+			if([self->color colorCode] != LDrawCurrentColor)
+			{
+				GLfloat c[4];
+				[self->color getColorRGBA:c];
+				[renderer pushColor:c];
+			}
+			
+			if([self isSelected] == YES)
+				[renderer pushWireFrame];
+			
+			[renderer pushMatrix:glTransformation];
+			[cacheModel drawSelf:renderer];
+			[renderer popMatrix];
+			if([self->color colorCode] != LDrawCurrentColor)
+				[renderer popColor];
+				
+			if([self isSelected] == YES)
+				[renderer popWireFrame];
+				
+		}	
+	}
+}//end drawElement:parentColor:
+
+
 //========== drawBoundsWithColor: ==============================================
 //
 // Purpose:		Draws the part's bounds as a solid box. Nonrecursive.

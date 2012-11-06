@@ -316,6 +316,12 @@
 }//end draw:viewScale:parentColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	[activeModel drawSelf:renderer];
+}
+
+
 //========== debugDrawboundingBox ==============================================
 //
 // Purpose:		Draw a translucent visualization of our bounding box to test

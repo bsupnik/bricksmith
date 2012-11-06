@@ -863,6 +863,17 @@
 	#endif
 }
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+}
+
+
+- (void) acceptDL:(LDrawDLHandle)dl cleanupFunc:(LDrawDLCleanup_f)func
+{
+	assert(!"DL sent to a class that cannot handle it.");
+}
+
+
 #pragma mark -
 #pragma mark OBSERVATION
 #pragma mark -

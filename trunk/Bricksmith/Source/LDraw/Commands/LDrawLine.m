@@ -193,6 +193,34 @@
 }//end drawElement:drawingColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	if(self->hidden == NO)
+	{
+		GLfloat	v[6] = { 
+			vertex1.x, vertex1.y, vertex1.z,
+			vertex2.x, vertex2.y, vertex2.z };
+
+		if([self->color colorCode] == LDrawCurrentColor)	
+			[renderer drawLine:v color:NULL];
+		else
+		{
+			GLfloat	rgba[4];
+			[self->color getColorRGBA:rgba];
+			[renderer drawLine:v color:rgba];
+		}
+
+		if(self->dragHandles)
+		{
+			for(LDrawDragHandle *handle in self->dragHandles)
+			{				
+				[handle drawSelf:renderer];
+			}
+		}
+	}
+}
+
+
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
 // Purpose:		Tests the directive and any of its children for intersections 

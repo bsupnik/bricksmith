@@ -186,6 +186,13 @@ static const float HandleDiameter	= 7.0;
 }//end draw:viewScale:parentColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	GLfloat v[3] = { position.x, position.y, position.z };
+	[renderer drawDragHandle:v];
+}
+
+
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
 // Purpose:		Tests the directive for an intersection between the pickRay and 

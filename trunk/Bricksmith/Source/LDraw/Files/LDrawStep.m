@@ -358,6 +358,19 @@
 }//end draw:viewScale:parentColor:
 
 
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	NSArray         *commandsInStep     = [self subdirectives];
+	LDrawDirective  *currentDirective   = nil;
+	
+	//Draw each element in the step.
+	for(currentDirective in commandsInStep)
+	{
+		[currentDirective drawSelf:renderer];
+	}
+}
+
+
 //========== debugDrawboundingBox ==============================================
 //
 // Purpose:		Draw a translucent visualization of our bounding box to test

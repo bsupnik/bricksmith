@@ -12,6 +12,7 @@
 
 #import "MatrixMath.h"
 #import "LDrawFastSet.h"
+#import "LDrawRenderer.h"
 
 #define NEW_SET 1
 
@@ -153,7 +154,7 @@ typedef enum Message {
 // LDrawDirective
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawDirective : NSObject <NSCoding, NSCopying, LDrawObservable>
+@interface LDrawDirective : NSObject <NSCoding, NSCopying, LDrawObservable, LDrawRenderable>
 {
 	@private
 	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
