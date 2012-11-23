@@ -10,6 +10,7 @@
 		0B040CBE164F526D000CA89A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B040CBD164F526D000CA89A /* Sparkle.framework */; };
 		0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 0B040CBD164F526D000CA89A /* Sparkle.framework */; };
 		0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */ = {isa = PBXBuildFile; fileRef = 0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */; };
+		0B040D0D1650926E000CA89A /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B040D0C1650926E000CA89A /* Legonian Ruler.pdf */; };
 		0B04E97B1093BB4200E201EE /* ColorPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9471093BB4200E201EE /* ColorPanel.xib */; };
 		0B04E97C1093BB4200E201EE /* Dimensions.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9491093BB4200E201EE /* Dimensions.xib */; };
 		0B04E97D1093BB4200E201EE /* Donation.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E94B1093BB4200E201EE /* Donation.xib */; };
@@ -326,6 +327,7 @@
 /* Begin PBXFileReference section */
 		0B040CBD164F526D000CA89A /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = ../ThirdParty/Sparkle/Sparkle.framework; sourceTree = SOURCE_ROOT; };
 		0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Bricksmith_Sparkle_signature_public.pem; sourceTree = "<group>"; };
+		0B040D0C1650926E000CA89A /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		0B04E9481093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ColorPanel.xib; sourceTree = "<group>"; };
 		0B04E94A1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Dimensions.xib; sourceTree = "<group>"; };
 		0B04E94C1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Donation.xib; sourceTree = "<group>"; };
@@ -1128,6 +1130,7 @@
 				0B9FE56408AD97280046511D /* Credits.rtf */,
 				0B9FE54E08AD971E0046511D /* InfoPlist.strings */,
 				0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */,
+				0B040D0C1650926E000CA89A /* Legonian Ruler.pdf */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -1417,6 +1420,7 @@
 				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
 				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
 				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
+				0B040D0D1650926E000CA89A /* Legonian Ruler.pdf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

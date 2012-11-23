@@ -149,8 +149,27 @@
 
 
 #pragma mark -
-#pragma mark TABLE VIEW
+#pragma mark ACTIONS
 #pragma mark -
+
+//========== legonianRulerButtonClicked: =======================================
+//
+// Purpose:		Explain those Legonian units!
+//
+//==============================================================================
+- (IBAction) legonianRulerButtonClicked:(id)sender
+{
+	NSString *path = [[NSBundle mainBundle] pathForResource:@"Legonian Ruler" ofType:@"pdf"];
+	
+	[[NSWorkspace sharedWorkspace] openFile:path];
+}
+
+
+#pragma mark -
+#pragma mark DELEGATES
+
+#pragma mark -
+#pragma mark NSTableDataSource
 
 //**** NSTableDataSource ****
 //========== numberOfRowsInTableView: ==========================================

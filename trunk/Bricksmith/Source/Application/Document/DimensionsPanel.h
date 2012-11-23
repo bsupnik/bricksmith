@@ -32,4 +32,7 @@
 - (void) setActiveModel:(LDrawMPDModel *)newModel;
 - (void) setFile:(LDrawFile *)newFile;
 
+// Actions
+- (IBAction) legonianRulerButtonClicked:(id)sender;
+
 @end
