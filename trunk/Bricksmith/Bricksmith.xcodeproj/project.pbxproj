@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B040CBE164F526D000CA89A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B040CBD164F526D000CA89A /* Sparkle.framework */; };
+		0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 0B040CBD164F526D000CA89A /* Sparkle.framework */; };
+		0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */ = {isa = PBXBuildFile; fileRef = 0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */; };
 		0B04E97B1093BB4200E201EE /* ColorPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9471093BB4200E201EE /* ColorPanel.xib */; };
 		0B04E97C1093BB4200E201EE /* Dimensions.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9491093BB4200E201EE /* Dimensions.xib */; };
 		0B04E97D1093BB4200E201EE /* Donation.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E94B1093BB4200E201EE /* Donation.xib */; };
@@ -313,6 +316,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				0BC71D910E6CC8340007F10D /* AMSProgressBar.framework in Copy Frameworks (1) */,
+				0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */,
 			);
 			name = "Copy Frameworks (1)";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -320,6 +324,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0B040CBD164F526D000CA89A /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = ../ThirdParty/Sparkle/Sparkle.framework; sourceTree = SOURCE_ROOT; };
+		0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Bricksmith_Sparkle_signature_public.pem; sourceTree = "<group>"; };
 		0B04E9481093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ColorPanel.xib; sourceTree = "<group>"; };
 		0B04E94A1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Dimensions.xib; sourceTree = "<group>"; };
 		0B04E94C1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Donation.xib; sourceTree = "<group>"; };
@@ -616,6 +622,7 @@
 				0B34B52E090B07AE00F3A001 /* Carbon.framework in Frameworks */,
 				2BB59F4309FEFE960077A885 /* AMSProgressBar.framework in Frameworks */,
 				0B27D22C132B3383005C7E1A /* 3DconnexionClient.framework in Frameworks */,
+				0B040CBE164F526D000CA89A /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1120,6 +1127,7 @@
 				0B34306508B2E93D00A06A40 /* Localizable.strings */,
 				0B9FE56408AD97280046511D /* Credits.rtf */,
 				0B9FE54E08AD971E0046511D /* InfoPlist.strings */,
+				0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -1129,6 +1137,7 @@
 			children = (
 				2B1C603A09FF00B3001EE8FA /* AMSProgressBar.framework */,
 				0B27D22B132B3383005C7E1A /* 3DconnexionClient.framework */,
+				0B040CBD164F526D000CA89A /* Sparkle.framework */,
 				1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */,
 				1058C7A8FEA54F5311CA2CBB /* Other Frameworks */,
 			);
@@ -1407,6 +1416,7 @@
 				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
 				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
 				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
+				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1760,6 +1770,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)\"",
 					"\"$(SRCROOT)/../ThirdParty\"",
+					"\"$(SRCROOT)/../ThirdParty/Sparkle\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -1792,6 +1803,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)\"",
 					"\"$(SRCROOT)/../ThirdParty\"",
+					"\"$(SRCROOT)/../ThirdParty/Sparkle\"",
 				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;

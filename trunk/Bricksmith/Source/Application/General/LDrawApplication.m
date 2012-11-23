@@ -16,6 +16,7 @@
 
 #import <3DConnexionClient/ConnexionClientAPI.h>
 #import <mach/mach_time.h>
+#import <Sparkle/Sparkle.h>
 
 #import "DonationDialogController.h"
 #import "Inspector.h"
@@ -380,8 +381,10 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 
 
 #pragma mark -
-#pragma mark APPLICATION DELEGATE
+#pragma mark DELEGATES
+
 #pragma mark -
+#pragma mark NSApplication
 
 //**** NSApplication ****
 //========== applicationWillFinishLaunching: ===================================
@@ -495,7 +498,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 {
 	DonationDialogController	*donation = [[DonationDialogController alloc] init];
 	
-	if([donation shouldShowDialog] == YES)
+	if([donation shouldShowDialog] == YES && suppressDonationPrompt == NO)
 	{
 		[donation runModal];
 	}
@@ -550,6 +553,21 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	return enable;
 	
 }//end validateMenuItem:
+
+
+#pragma mark -
+#pragma mark Sparkle
+
+//========== updaterWillRelaunchApplication: ===================================
+//
+// Purpose:		Sparkle is about to install an update and relaunch.
+//
+//==============================================================================
+- (void) updaterWillRelaunchApplication:(SUUpdater *)updater
+{
+	// Asking for money in the middle of an update process is a bit distracting.
+	suppressDonationPrompt = YES;
+}
 
 
 #pragma mark -

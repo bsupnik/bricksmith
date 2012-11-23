@@ -29,6 +29,8 @@
 	Inspector				*inspector;				// system for graphically inspecting classes.
 	NSOpenGLContext			*sharedGLContext;		// OpenGL variables like display list numbers are shared through this.
 	UInt16			        connexionClientID;		// The identifier of client to a 3Dconnexion controller, if there is one.
+	
+	BOOL					suppressDonationPrompt;
 }
 
 //Actions

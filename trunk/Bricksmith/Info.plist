@@ -53,5 +53,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>BricksmithApplication</string>
+	<key>SUFeedURL</key>
+	<string>http://bricksmith.sourceforge.net/files/bricksmith_appcast.xml</string>
+	<key>SUPublicDSAKeyFile</key>
+	<string>Bricksmith_Sparkle_signature_public.pem</string>
 </dict>
 </plist>
