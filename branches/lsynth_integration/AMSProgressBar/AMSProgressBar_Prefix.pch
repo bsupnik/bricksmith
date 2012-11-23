@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'AMSProgressBar' target in the 'AMSProgressBar' project.
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif

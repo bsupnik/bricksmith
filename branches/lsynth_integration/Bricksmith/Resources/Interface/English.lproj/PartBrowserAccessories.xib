@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="7.03">
+  <data>
+    <int key="IBDocument.SystemTarget">1050</int>
+    <string key="IBDocument.SystemVersion">9G55</string>
+    <string key="IBDocument.InterfaceBuilderVersion">677</string>
+    <string key="IBDocument.AppKitVersion">949.43</string>
+    <string key="IBDocument.HIToolboxVersion">353.00</string>
+    <object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
+      <bool key="EncodedWithXMLCoder">YES</bool>
+      <integer value="1"/>
+    </object>
+    <object class="NSArray" key="IBDocument.PluginDependencies">
+      <bool key="EncodedWithXMLCoder">YES</bool>
+      <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+    </object>
+    <object class="NSMutableDictionary" key="IBDocument.Metadata">
+      <bool key="EncodedWithXMLCoder">YES</bool>
+      <object class="NSArray" key="dict.sortedKeys">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+      </object>
+      <object class="NSMutableArray" key="dict.values">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+      </object>
+    </object>
+    <object class="NSMutableArray" key="IBDocument.RootObjects" id="1000">
+      <bool key="EncodedWithXMLCoder">YES</bool>
+      <object class="NSCustomObject" id="1001">
+        <string key="NSClassName">PartBrowserDataSource</string>
+      </object>
+      <object class="NSCustomObject" id="1003">
+        <string key="NSClassName">FirstResponder</string>
+      </object>
+      <object class="NSCustomObject" id="1004">
+        <string key="NSClassName">NSApplication</string>
+      </object>
+      <object class="NSMenu" id="851749255">
+        <string key="NSTitle"/>
+        <object class="NSMutableArray" key="NSMenuItems">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+          <object class="NSMenuItem" id="703826799">
+            <reference key="NSMenu" ref="851749255"/>
+            <string key="NSTitle">Insert</string>
+            <string key="NSKeyEquiv"/>
+            <int key="NSMnemonicLoc">2147483647</int>
+            <object class="NSCustomResource" key="NSOnImage" id="256497742">
+              <string key="NSClassName">NSImage</string>
+              <string key="NSResourceName">NSMenuCheckmark</string>
+            </object>
+            <object class="NSCustomResource" key="NSMixedImage" id="466950550">
+              <string key="NSClassName">NSImage</string>
+              <string key="NSResourceName">NSMenuMixedState</string>
+            </object>
+          </object>
+          <object class="NSMenuItem" id="5207717">
+            <reference key="NSMenu" ref="851749255"/>
+            <string key="NSTitle">Add to Favorites</string>
+            <string key="NSKeyEquiv"/>
+            <int key="NSMnemonicLoc">2147483647</int>
+            <reference key="NSOnImage" ref="256497742"/>
+            <reference key="NSMixedImage" ref="466950550"/>
+            <int key="NSTag">4001</int>
+          </object>
+          <object class="NSMenuItem" id="599408829">
+            <reference key="NSMenu" ref="851749255"/>
+            <string key="NSTitle">Remove from Favorites</string>
+            <string key="NSKeyEquiv"/>
+            <int key="NSMnemonicLoc">2147483647</int>
+            <reference key="NSOnImage" ref="256497742"/>
+            <reference key="NSMixedImage" ref="466950550"/>
+            <int key="NSTag">4002</int>
+          </object>
+        </object>
+        <bool key="NSNoAutoenable">YES</bool>
+      </object>
+    </object>
+    <object class="IBObjectContainer" key="IBDocument.Objects">
+      <object class="NSMutableArray" key="connectionRecords">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+        <object class="IBConnectionRecord">
+          <object class="IBOutletConnection" key="connection">
+            <string key="label">contextualMenu</string>
+            <reference key="source" ref="1001"/>
+            <reference key="destination" ref="851749255"/>
+          </object>
+          <int key="connectionID">5</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">addPartClicked:</string>
+            <reference key="source" ref="1001"/>
+            <reference key="destination" ref="703826799"/>
+          </object>
+          <int key="connectionID">6</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">addFavoriteClicked:</string>
+            <reference key="source" ref="1001"/>
+            <reference key="destination" ref="5207717"/>
+          </object>
+          <int key="connectionID">7</int>
+        </object>
+        <object class="IBConnectionRecord">
+          <object class="IBActionConnection" key="connection">
+            <string key="label">removeFavoriteClicked:</string>
+            <reference key="source" ref="1001"/>
+            <reference key="destination" ref="599408829"/>
+          </object>
+          <int key="connectionID">8</int>
+        </object>
+      </object>
+      <object class="IBMutableOrderedSet" key="objectRecords">
+        <object class="NSArray" key="orderedObjects">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+          <object class="IBObjectRecord">
+            <int key="objectID">0</int>
+            <object class="NSArray" key="object" id="1002">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+            </object>
+            <reference key="children" ref="1000"/>
+            <nil key="parent"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">-2</int>
+            <reference key="object" ref="1001"/>
+            <reference key="parent" ref="1002"/>
+            <string type="base64-UTF8" key="objectName">RmlsZSdzIE93bmVyA</string>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">-1</int>
+            <reference key="object" ref="1003"/>
+            <reference key="parent" ref="1002"/>
+            <string key="objectName">First Responder</string>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">-3</int>
+            <reference key="object" ref="1004"/>
+            <reference key="parent" ref="1002"/>
+            <string key="objectName">Application</string>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">1</int>
+            <reference key="object" ref="851749255"/>
+            <object class="NSMutableArray" key="children">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <reference ref="599408829"/>
+              <reference ref="703826799"/>
+              <reference ref="5207717"/>
+            </object>
+            <reference key="parent" ref="1002"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">2</int>
+            <reference key="object" ref="599408829"/>
+            <reference key="parent" ref="851749255"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">3</int>
+            <reference key="object" ref="703826799"/>
+            <reference key="parent" ref="851749255"/>
+          </object>
+          <object class="IBObjectRecord">
+            <int key="objectID">4</int>
+            <reference key="object" ref="5207717"/>
+            <reference key="parent" ref="851749255"/>
+          </object>
+        </object>
+      </object>
+      <object class="NSMutableDictionary" key="flattenedProperties">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+        <object class="NSMutableArray" key="dict.sortedKeys">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+          <string>-1.IBPluginDependency</string>
+          <string>-2.IBPluginDependency</string>
+          <string>-3.IBPluginDependency</string>
+          <string>1.IBEditorWindowLastContentRect</string>
+          <string>1.IBPluginDependency</string>
+          <string>2.IBPluginDependency</string>
+          <string>3.IBPluginDependency</string>
+          <string>4.IBPluginDependency</string>
+        </object>
+        <object class="NSMutableArray" key="dict.values">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>{{665, 780}, {211, 63}}</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+          <string>com.apple.InterfaceBuilder.CocoaPlugin</string>
+        </object>
+      </object>
+      <object class="NSMutableDictionary" key="unlocalizedProperties">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+        <object class="NSArray" key="dict.sortedKeys">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+        </object>
+        <object class="NSMutableArray" key="dict.values">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+        </object>
+      </object>
+      <nil key="activeLocalization"/>
+      <object class="NSMutableDictionary" key="localizations">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+        <object class="NSArray" key="dict.sortedKeys">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+        </object>
+        <object class="NSMutableArray" key="dict.values">
+          <bool key="EncodedWithXMLCoder">YES</bool>
+        </object>
+      </object>
+      <nil key="sourceID"/>
+      <int key="maxID">8</int>
+    </object>
+    <object class="IBClassDescriber" key="IBDocument.Classes">
+      <object class="NSMutableArray" key="referencedPartialClassDescriptions">
+        <bool key="EncodedWithXMLCoder">YES</bool>
+        <object class="IBPartialClassDescription">
+          <string key="className">DocumentToolbarController</string>
+          <string key="superclassName">NSObject</string>
+          <object class="NSMutableDictionary" key="actions">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>gridSpacingSegmentedControlClicked:</string>
+              <string>nudgeXClicked:</string>
+              <string>nudgeYClicked:</string>
+              <string>nudgeZClicked:</string>
+              <string>zoomScaleChanged:</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+            </object>
+          </object>
+          <object class="NSMutableDictionary" key="outlets">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>document</string>
+              <string>gridSegmentedControl</string>
+              <string>nudgeXToolView</string>
+              <string>nudgeYToolView</string>
+              <string>nudgeZToolView</string>
+              <string>zoomToolTextField</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>LDrawDocument</string>
+              <string>NSSegmentedControl</string>
+              <string>NSView</string>
+              <string>NSView</string>
+              <string>NSView</string>
+              <string>NSTextField</string>
+            </object>
+          </object>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Application/Document/DocumentToolbarController.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">ExtendedSplitView</string>
+          <string key="superclassName">NSSplitView</string>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Widgets/ExtendedSplitView.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">LDrawDocument</string>
+          <string key="superclassName">NSDocument</string>
+          <object class="NSMutableDictionary" key="actions">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>addCommentClicked:</string>
+              <string>addConditionalClicked:</string>
+              <string>addLineClicked:</string>
+              <string>addModelClicked:</string>
+              <string>addPartClicked:</string>
+              <string>addQuadrilateralClicked:</string>
+              <string>addRawCommandClicked:</string>
+              <string>addStepClicked:</string>
+              <string>addSubmodelReferenceClicked:</string>
+              <string>addTriangleClicked:</string>
+              <string>advanceOneStep:</string>
+              <string>backOneStep:</string>
+              <string>changeLDrawColor:</string>
+              <string>copy:</string>
+              <string>delete:</string>
+              <string>doMissingModelnameExtensionCheck:</string>
+              <string>doMissingPiecesCheck:</string>
+              <string>doMovedPiecesCheck:</string>
+              <string>duplicate:</string>
+              <string>exportSteps:</string>
+              <string>gridGranularityMenuChanged:</string>
+              <string>hideParts:</string>
+              <string>insertLDrawPart:</string>
+              <string>modelSelected:</string>
+              <string>orderFrontRotationPanel:</string>
+              <string>panelMoveParts:</string>
+              <string>panelRotateParts:</string>
+              <string>paste:</string>
+              <string>quickRotateClicked:</string>
+              <string>showDimensions:</string>
+              <string>showInspector:</string>
+              <string>showParts:</string>
+              <string>showPieceCount:</string>
+              <string>snapSelectionToGrid:</string>
+              <string>stepFieldChanged:</string>
+              <string>stepNavigatorClicked:</string>
+              <string>toggleFileContentsDrawer:</string>
+              <string>toggleStepDisplay:</string>
+              <string>viewAll:</string>
+              <string>viewSteps:</string>
+              <string>zoomActual:</string>
+              <string>zoomIn:</string>
+              <string>zoomOut:</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+            </object>
+          </object>
+          <object class="NSMutableDictionary" key="outlets">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>bindingsController</string>
+              <string>fileContentsOutline</string>
+              <string>fileContentsSplitView</string>
+              <string>fileDetailView1</string>
+              <string>fileDetailView2</string>
+              <string>fileDetailView3</string>
+              <string>fileGraphicView</string>
+              <string>horizontalSplitView</string>
+              <string>partBrowserDrawer</string>
+              <string>partsBrowser</string>
+              <string>scopeStepControlsContainer</string>
+              <string>stepField</string>
+              <string>stepNavigator</string>
+              <string>submodelPopUpMenu</string>
+              <string>toolbarController</string>
+              <string>verticalDetailSplitView</string>
+              <string>viewAllButton</string>
+              <string>viewStepsButton</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>NSObjectController</string>
+              <string>LDrawFileOutlineView</string>
+              <string>ExtendedSplitView</string>
+              <string>LDrawGLView</string>
+              <string>LDrawGLView</string>
+              <string>LDrawGLView</string>
+              <string>LDrawGLView</string>
+              <string>ExtendedSplitView</string>
+              <string>NSDrawer</string>
+              <string>PartBrowserDataSource</string>
+              <string>NSView</string>
+              <string>NSTextField</string>
+              <string>NSSegmentedControl</string>
+              <string>NSPopUpButton</string>
+              <string>DocumentToolbarController</string>
+              <string>ExtendedSplitView</string>
+              <string>NSButton</string>
+              <string>NSButton</string>
+            </object>
+          </object>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Application/Document/LDrawDocument.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">LDrawFileOutlineView</string>
+          <string key="superclassName">NSOutlineView</string>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Widgets/LDrawFileOutlineView.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">LDrawGLView</string>
+          <string key="superclassName">NSOpenGLView</string>
+          <object class="NSMutableDictionary" key="actions">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>drawThreaded:</string>
+              <string>viewOrientationSelected:</string>
+              <string>zoomIn:</string>
+              <string>zoomOut:</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+            </object>
+          </object>
+          <object class="NSMutableDictionary" key="outlets">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>delegate</string>
+              <string>document</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>LDrawDocument</string>
+            </object>
+          </object>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier" id="949003483">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Widgets/LDrawGLView.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">NSObject</string>
+          <reference key="sourceIdentifier" ref="949003483"/>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">NSWindow</string>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Categories/WindowCategory.h</string>
+          </object>
+        </object>
+        <object class="IBPartialClassDescription">
+          <string key="className">PartBrowserDataSource</string>
+          <string key="superclassName">NSObject</string>
+          <object class="NSMutableDictionary" key="actions">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>addFavoriteClicked:</string>
+              <string>addPartClicked:</string>
+              <string>categoryComboBoxChanged:</string>
+              <string>doubleClickedInPartTable:</string>
+              <string>removeFavoriteClicked:</string>
+              <string>searchFieldChanged:</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+              <string>id</string>
+            </object>
+          </object>
+          <object class="NSMutableDictionary" key="outlets">
+            <bool key="EncodedWithXMLCoder">YES</bool>
+            <object class="NSMutableArray" key="dict.sortedKeys">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>addRemoveFavoriteButton</string>
+              <string>categoryComboBox</string>
+              <string>contextualMenu</string>
+              <string>insertButton</string>
+              <string>partPreview</string>
+              <string>partsTable</string>
+              <string>searchField</string>
+            </object>
+            <object class="NSMutableArray" key="dict.values">
+              <bool key="EncodedWithXMLCoder">YES</bool>
+              <string>NSButton</string>
+              <string>NSComboBox</string>
+              <string>NSMenu</string>
+              <string>NSButton</string>
+              <string>LDrawGLView</string>
+              <string>NSTableView</string>
+              <string>NSSearchField</string>
+            </object>
+          </object>
+          <object class="IBClassDescriptionSource" key="sourceIdentifier">
+            <string key="majorKey">IBProjectSource</string>
+            <string key="minorKey">Source/Application/General/PartBrowserDataSource.h</string>
+          </object>
+        </object>
+      </object>
+    </object>
+    <int key="IBDocument.localizationMode">0</int>
+    <string key="IBDocument.LastKnownRelativeProjectPath">../../Bricksmith.xcodeproj</string>
+    <int key="IBDocument.defaultPropertyAccessControl">3</int>
+  </data>
+</archive>

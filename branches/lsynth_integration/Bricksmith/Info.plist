@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>ldr</string>
+				<string>dat</string>
+				<string>mpd</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>LDraw Document</string>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/plain</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>LDraw Document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSDocumentClass</key>
+			<string>LDrawDocument</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>Bricksmith</string>
+	<key>CFBundleHelpBookFolder</key>
+	<string>Help</string>
+	<key>CFBundleHelpBookName</key>
+	<string>Bricksmith Tutorial</string>
+	<key>CFBundleIconFile</key>
+	<string>Bricksmith.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.AllenSmith.Bricksmith</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>Brik</string>
+	<key>CFBundleVersion</key>
+	<string>2.6.1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.6.0</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>BricksmithApplication</string>
+	<key>SUFeedURL</key>
+	<string>http://bricksmith.sourceforge.net/files/bricksmith_appcast.xml</string>
+	<key>SUPublicDSAKeyFile</key>
+	<string>Bricksmith_Sparkle_signature_public.pem</string>
+</dict>
+</plist>

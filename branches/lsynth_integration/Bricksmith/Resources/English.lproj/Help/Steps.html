@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Steps and Step Rotation</title>
+  		<link rel="stylesheet" href="Bricksmith.css" type="text/css">
+  	</head>
+  	
+  	<body id="pagebody">
+  	
+  		<!-- Page Title Header -->
+  		<div id="smallbannerbox">
+			<div id="iconbox">
+				<img id="smallbannericon" src="images/icon128.png">
+			</div>
+			<div id="smallbannerheading">
+				Steps and Step Rotation
+			</div>
+		</div>
+		
+		<!-- Content -->
+		<p>
+		Organizing your model into steps allows you build sequential 	 
+		instructions like Lego’s.
+		</p>
+		
+		<!-- Activating Step Display -->
+		<div id="table">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				
+				<!-- title -->
+				<tr>
+					<td id="tabletitletext" colspan="2">
+						Activating Step Display
+					</td>
+				</tr>
+				
+				<!-- fat divider -->
+				<tr>
+					<td id="tableheadertopline" colspan="2"/>
+				</tr>
+				
+				<!-- Table Data -->
+				
+				<tr>
+					<td class="row-rule" width=250>
+						<img src="images/steps/StepScopeBar.png">
+					</td>
+					<td class="row-rule">
+						Click the <b>Steps</b> button at the top of the viewing 
+						window. Then you can click though each step of your 
+						model and watch it build up. 
+					</td>
+				</tr>
+				
+			</table>
+		</div>
+
+		<h2>
+		Rotating Steps
+		</h2>
+		
+		<p>
+		Sometimes, you may find that you need to show the underside of your 
+		model, such as when putting wheels on the bottom of a car chassis. Or 
+		perhaps you need to rotate it to see the other side. You can do this 
+		with the Step Rotation settings. 
+		</p>
+
+		<div id="notebox">
+			You will only see step rotations applied when Step Display is 
+			active. 
+		</div>
+
+		<p>
+		There are several different ways to enter a step rotation. Ultimately 
+		they all do the same thing: rotate your model. But some types of 
+		rotations are easier to accomplish in one mode than in another.
+		</p>
+
+		<!-- Rotating Steps -->
+		<div id="table">
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				
+				<!-- title -->
+				<tr>
+					<td id="tabletitletext" colspan="3">
+						Step Rotation Modes
+					</td>
+				</tr>
+				
+				<!-- fat divider -->
+				<tr>
+					<td id="tableheadertopline" colspan="3"/>
+				</tr>
+				
+				<!-- column headings -->
+				<tr>
+					<th id="columnheadertext" width="20%">
+						Rotation Type
+					</th>
+					<th id="columnheadertext" width="25%">
+						Best Used For
+					</th>
+					<th id="columnheadertext">
+						Description
+					</th>
+				</tr>
+				
+				<!-- thin divider -->
+				<tr>
+					<td id="tableheaderbottomline" colspan="3"/>
+				</tr>
+				
+				<!-- Table Data -->
+				
+				<tr>
+					<td class="row-rule">
+						None specified
+					</td>
+					<td class="row-rule">
+						Steps that don’t need to begin a special rotation
+					</td>
+					<td class="row-rule">
+						Steps with no specified rotation are drawn with the 
+						rotation of the previous step, or with the default 
+						viewing angle if there was no previous rotation. Most of 
+						your model’s steps will use this setting. 
+					</td>
+				</tr>
+								
+				<tr>
+					<td class="row-rule">
+						Relative to default view
+					</td>
+					<td class="row-rule">
+						Most rotation situations
+					</td>
+					<td class="row-rule">
+						The step’s viewing angle is computed by starting with 
+						the default 3D perspective angle, then adding the value 
+						you specify. This setting is ideal for most normal 
+						step-rotation operations, such as flipping upside-down 
+						or looking at the left or right side of the model. 
+					</td>
+				</tr>
+								
+				<tr>
+					<td class="row-rule">
+						Absolute
+					</td>
+					<td class="row-rule">
+						Head-on views like Front or Top
+					</td>
+					<td class="row-rule">
+						Whatever you type in, that’s what the camera angle is. 
+						This is perfect for setting a view like Top, but 
+						otherwise it should be avoided in favor of Relative 
+						rotation. While it may be tempting to use Absolute 
+						rotation for everything, your instructions will look 
+						better (and more consistent) if you always base your 
+						rotation on the default viewing angle like relative mode 
+						does. 
+					</td>
+				</tr>
+								
+				<tr>
+					<td class="row-rule">
+						Additive
+					</td>
+					<td class="row-rule">
+						When you liked the last step’s view and want to tweak it 
+						without doing math 
+					</td>
+					<td class="row-rule">
+						Additive rotations accumulate from step to step. Four 
+						y=90° additive step rotations would show all four sides 
+						of the model in order. In contrast, each Relative 
+						rotation starts over with the default view as its base, 
+						so they cannot accumulate. 
+					</td>
+				</tr>
+								
+				<tr>
+					<td class="row-rule">
+						End rotations
+					</td>
+					<td class="row-rule">
+						Restoring the view to its default angle
+					</td>
+					<td class="row-rule">
+						Cancels the effect of all step rotations and restores 
+						the viewing angle to the default 3D Perspective angle. 
+					</td>
+				</tr>
+								
+			</table>
+		</div>
+		
+<!-- 
+		<h2>
+		Examples
+		</h2>
+		
+		<h3>
+		Relative to default view
+		</h3>
+ -->
+	</body>
+</html>
