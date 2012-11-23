@@ -98,7 +98,8 @@
 typedef enum CacheFlags {
 
 	// The bounding box of the directive has changed and is no longer valid.
-	CacheFlagBounds = 1	
+	CacheFlagBounds = 1,
+	DisplayList		= 2
 } CacheFlagsT;
 
 typedef enum Message {
@@ -154,7 +155,7 @@ typedef enum Message {
 // LDrawDirective
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawDirective : NSObject <NSCoding, NSCopying, LDrawObservable, LDrawRenderable>
+@interface LDrawDirective : NSObject <NSCoding, NSCopying, LDrawObservable>
 {
 	@private
 	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
@@ -175,6 +176,8 @@ typedef enum Message {
 
 // Directives
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor;
+- (void) drawSelf:(id<LDrawRenderer>)renderer;
+- (void) collectSelf:(id<LDrawCollector>)renderer;
 - (Box3) boundingBox3;
 - (void) debugDrawboundingBox;
 

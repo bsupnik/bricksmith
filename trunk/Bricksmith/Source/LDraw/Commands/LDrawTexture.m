@@ -359,7 +359,6 @@
 	
 }//end draw:viewScale:parentColor:
 
-
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	NSArray 		*commands			= [self subdirectives];
@@ -369,53 +368,77 @@
 	float			length				= 0;
 
 
-	
-
-
-
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glBindTexture(GL_TEXTURE_2D, self->textureTag);
+	struct LDrawTextureSpec spec;
 	
 	normal = V3Sub(self->planePoint2, self->planePoint1);
 	length = V3Length(normal);//128./80;//
 	normal = V3Normalize(normal);
 	
-	float planeCoefficientsS[4];
-	planeCoefficientsS[0] = normal.x / length;
-	planeCoefficientsS[1] = normal.y / length;
-	planeCoefficientsS[2] = normal.z / length;
-	planeCoefficientsS[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
-	
-	// Auto texture vertex generation. This stuff needs to be dumped in favor 
-	// of a more modern solution, but it's here as a stopgap. 
-	
-	glEnable(GL_TEXTURE_GEN_S);
-	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_S, GL_EYE_PLANE, planeCoefficientsS);
+	spec.plane_s[0] = normal.x / length;
+	spec.plane_s[1] = normal.y / length;
+	spec.plane_s[2] = normal.z / length;
+	spec.plane_s[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
 	
 	normal = V3Sub(self->planePoint3, self->planePoint1);
 	length = V3Length(normal);//128./80;//
 	normal = V3Normalize(normal);
 	
-	float planeCoefficientsT[4];
-	planeCoefficientsT[0] = normal.x / length;
-	planeCoefficientsT[1] = normal.y / length;
-	planeCoefficientsT[2] = normal.z / length;
-	planeCoefficientsT[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
+	spec.plane_t[0] = normal.x / length;
+	spec.plane_t[1] = normal.y / length;
+	spec.plane_t[2] = normal.z / length;
+	spec.plane_t[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
 	
-	glEnable(GL_TEXTURE_GEN_T);
-	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_T, GL_EYE_PLANE, planeCoefficientsT);
-	
+	spec.projection = tex_proj_planar;
+	spec.tex_obj = self->textureTag;
 
-
-	[renderer pushTexture:self->textureTag planeS:planeCoefficientsS planeT:planeCoefficientsT];
+	[renderer pushTexture:&spec];
 	for(currentDirective in commands)
 	{
 		[currentDirective drawSelf:renderer];
 	}
 	[renderer popTexture];
+}
+
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	NSArray 		*commands			= [self subdirectives];
+	LDrawDirective	*currentDirective	= nil;
+
+	Vector3 		normal				= ZeroPoint3;
+	float			length				= 0;
+
+
+	struct LDrawTextureSpec spec;
+	
+	normal = V3Sub(self->planePoint2, self->planePoint1);
+	length = V3Length(normal);//128./80;//
+	normal = V3Normalize(normal);
+	
+	spec.plane_s[0] = normal.x / length;
+	spec.plane_s[1] = normal.y / length;
+	spec.plane_s[2] = normal.z / length;
+	spec.plane_s[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
+	
+	normal = V3Sub(self->planePoint3, self->planePoint1);
+	length = V3Length(normal);//128./80;//
+	normal = V3Normalize(normal);
+	
+	spec.plane_t[0] = normal.x / length;
+	spec.plane_t[1] = normal.y / length;
+	spec.plane_t[2] = normal.z / length;
+	spec.plane_t[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
+	
+	spec.projection = tex_proj_planar;
+	spec.tex_obj = self->textureTag;
+
+	[renderer pushTexture:&spec];
+	for(currentDirective in commands)
+	{
+		[currentDirective collectSelf:renderer];
+	}
+	[renderer popTexture];
+	[self revalCache:DisplayList];
+	
 }
 
 
@@ -866,7 +889,7 @@
 {
 	[super insertDirective:directive atIndex:index];
 	
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:CacheFlagBounds|DisplayList];
 	[vertexes addDirective:directive];
 	
 }//end insertDirective:atIndex:
@@ -883,7 +906,7 @@
 	
 	[super removeDirectiveAtIndex:index];
 	
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:CacheFlagBounds|DisplayList];
 	[vertexes removeDirective:directive];
 	
 	[directive release];

@@ -321,6 +321,12 @@
 	[activeModel drawSelf:renderer];
 }
 
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	assert(!"Why are we here?");
+	[activeModel collectSelf:renderer];
+}
+
 
 //========== debugDrawboundingBox ==============================================
 //

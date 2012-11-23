@@ -867,11 +867,10 @@
 {
 }
 
-
-- (void) acceptDL:(LDrawDLHandle)dl cleanupFunc:(LDrawDLCleanup_f)func
+- (void) collectSelf:(id<LDrawCollector>)renderer
 {
-	assert(!"DL sent to a class that cannot handle it.");
 }
+
 
 
 #pragma mark -

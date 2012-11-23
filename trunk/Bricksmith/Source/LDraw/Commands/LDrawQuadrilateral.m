@@ -241,6 +241,22 @@
 {
 	if(self->hidden == NO)
 	{
+		if(self->dragHandles)
+		{
+			for(LDrawDragHandle *handle in self->dragHandles)
+			{				
+				[handle drawSelf:renderer];
+			}
+		}
+	}
+}
+
+
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	[self revalCache:DisplayList];
+	if(self->hidden == NO)
+	{
 		GLfloat	v[12] = { 
 			vertex1.x, vertex1.y, vertex1.z,
 			vertex2.x, vertex2.y, vertex2.z,
@@ -251,18 +267,13 @@
 
 		if([self->color colorCode] == LDrawCurrentColor)	
 			[renderer drawQuad:v normal:n color:NULL];
+		else if([self->color colorCode] == LDrawEdgeColor)	
+			[renderer drawQuad:v normal:n color:(GLfloat*)-1];		
 		else
 		{
 			GLfloat	rgba[4];
 			[self->color getColorRGBA:rgba];
 			[renderer drawQuad:v normal:n color:rgba];
-		}
-		if(self->dragHandles)
-		{
-			for(LDrawDragHandle *handle in self->dragHandles)
-			{				
-				[handle drawSelf:renderer];
-			}
 		}
 	}
 }
@@ -719,7 +730,7 @@
 {
 	self->vertex1 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -740,7 +751,7 @@
 {
 	self->vertex2 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -761,7 +772,7 @@
 {
 	self->vertex3 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -782,7 +793,7 @@
 {
 	self->vertex4 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{

@@ -286,6 +286,68 @@
 
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
+	Box3	my_bounds = [self boundingBox3];
+	GLfloat minxyz[3] = { my_bounds.min.x, my_bounds.min.y, my_bounds.min.z };
+	GLfloat maxxyz[3] = { my_bounds.max.x, my_bounds.max.y, my_bounds.max.z };
+
+	if(![renderer checkCull:minxyz to:maxxyz])
+		return;
+
+	if(dl)
+	{
+		if([self revalCache:DisplayList] == DisplayList)
+		{
+			dl_dtor(dl);
+			dl_dtor = NULL;
+			dl = NULL;
+		}
+	} else
+		[self revalCache:DisplayList];
+		
+	if(!dl)
+	{
+		id<LDrawCollector> collector = [renderer beginDL];
+		[self collectSelf:collector];
+		[renderer endDL:&dl cleanupFunc:&dl_dtor];
+	}
+	if(dl)
+		[renderer drawDL:dl];	
+
+	if (!isOptimized)
+	{
+		NSArray     *steps              = [self subdirectives];
+		NSUInteger  maxIndex            = [self maxStepIndexToOutput];
+		LDrawStep   *currentDirective   = nil;
+		NSUInteger  counter             = 0;
+		
+		// Draw all the steps in the model
+		for(counter = 0; counter <= maxIndex; counter++)
+		{
+			currentDirective = [steps objectAtIndex:counter];
+			[currentDirective drawSelf:renderer];
+		}
+		
+		if(self->draggingDirectives != nil)
+		{
+			id<LDrawCollector> collector = [renderer beginDL];
+			[self->draggingDirectives collectSelf:collector];
+			LDrawDLHandle			drag_dl = NULL;
+			LDrawDLCleanup_f		drag_dl_dtor = NULL;
+			[renderer endDL:&drag_dl cleanupFunc:&drag_dl_dtor];
+			if(drag_dl)
+			{
+				[renderer drawDL:drag_dl];
+				drag_dl_dtor(drag_dl);
+			}
+			[self->draggingDirectives drawSelf:renderer];
+		}
+		
+	}	
+}
+
+
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
 	LDrawStep   *currentDirective   = nil;
@@ -295,7 +357,7 @@
 	for(counter = 0; counter <= maxIndex; counter++)
 	{
 		currentDirective = [steps objectAtIndex:counter];
-		[currentDirective drawSelf:renderer];
+		[currentDirective collectSelf:renderer];
 	}
 }
 
@@ -1001,7 +1063,7 @@
 		[NSException raise:NSRangeException format:@"index (%ld) beyond maximum step index %ld", (long)stepIndex, (long)maximumIndex];
 	else
 	{
-		[self invalCache:CacheFlagBounds];	
+		[self invalCache:CacheFlagBounds|DisplayList];	
 		self->currentStepDisplayed = stepIndex;
 	}
 	
@@ -1016,7 +1078,7 @@
 //==============================================================================
 - (void) setStepDisplay:(BOOL)flag
 {
-	[self invalCache:CacheFlagBounds];	
+	[self invalCache:CacheFlagBounds|DisplayList];	
 	self->stepDisplayActive = flag;
 	
 }//end setStepDisplay:
@@ -1095,8 +1157,8 @@
 //
 //==============================================================================
 - (void) removeDirectiveAtIndex:(NSInteger)idx
-{
-	[self invalCache:CacheFlagBounds];
+{	
+	[self invalCache:CacheFlagBounds|DisplayList];
 	if(idx <= currentStepDisplayed && currentStepDisplayed > 0)
 		--currentStepDisplayed;
 	
@@ -1106,7 +1168,7 @@
 
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index;
 {
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:CacheFlagBounds|DisplayList];
 	[super insertDirective:directive atIndex:index];
 }	
 
@@ -1342,6 +1404,8 @@
 		}
 		[self addDirective:everythingElseStep];
 	}
+
+	isOptimized = TRUE;
 		
 }//end optimizeStructure
 
@@ -1524,6 +1588,8 @@
 }//end registerUndoActions:
 
 
+
+
 #pragma mark -
 #pragma mark DESTRUCTOR
 #pragma mark -
@@ -1549,6 +1615,13 @@
 	[super dealloc];
 	
 }//end dealloc
+
+//- (void) invalCache:(CacheFlagsT) flags
+//{
+//	if(dl)
+//		printf("WARNING: will inval later butmy dl is: %p\n",dl);
+//	[super invalCache:flags];
+//}
 
 
 @end

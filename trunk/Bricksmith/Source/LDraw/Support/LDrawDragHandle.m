@@ -193,6 +193,7 @@ static const float HandleDiameter	= 7.0;
 }
 
 
+
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
 // Purpose:		Tests the directive for an intersection between the pickRay and 

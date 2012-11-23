@@ -192,30 +192,42 @@
 	
 }//end drawElement:drawingColor:
 
-
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
+	[self revalCache:DisplayList];
 	if(self->hidden == NO)
 	{
-		GLfloat	v[6] = { 
-			vertex1.x, vertex1.y, vertex1.z,
-			vertex2.x, vertex2.y, vertex2.z };
-
-		if([self->color colorCode] == LDrawCurrentColor)	
-			[renderer drawLine:v color:NULL];
-		else
-		{
-			GLfloat	rgba[4];
-			[self->color getColorRGBA:rgba];
-			[renderer drawLine:v color:rgba];
-		}
-
 		if(self->dragHandles)
 		{
 			for(LDrawDragHandle *handle in self->dragHandles)
 			{				
 				[handle drawSelf:renderer];
 			}
+		}
+	}
+}
+
+
+
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	[self revalCache:DisplayList];
+	if(self->hidden == NO)
+	{
+		GLfloat	v[6] = { 
+			vertex1.x, vertex1.y, vertex1.z,
+			vertex2.x, vertex2.y, vertex2.z };
+		GLfloat n[3] = { 0, -1, 0 };
+
+		if([self->color colorCode] == LDrawCurrentColor)	
+			[renderer drawLine:v normal:n color:NULL];
+		else if([self->color colorCode] == LDrawEdgeColor)	
+			[renderer drawLine:v normal:n color:(GLfloat*)-1];		
+		else
+		{
+			GLfloat	rgba[4];
+			[self->color getColorRGBA:rgba];
+			[renderer drawLine:v normal:n color:rgba];
 		}
 	}
 }
@@ -538,7 +550,7 @@
 -(void) setVertex1:(Point3)newVertex
 {
 	vertex1 = newVertex;
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -558,7 +570,7 @@
 -(void) setVertex2:(Point3)newVertex
 {
 	vertex2 = newVertex;
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{

@@ -223,21 +223,6 @@
 {
 	if(self->hidden == NO)
 	{
-		GLfloat	v[9] = { 
-			vertex1.x, vertex1.y, vertex1.z,
-			vertex2.x, vertex2.y, vertex2.z,
-			vertex3.x, vertex3.y, vertex3.z };
-
-		GLfloat n[3] = { normal.x, normal.y, normal.z };
-
-		if([self->color colorCode] == LDrawCurrentColor)	
-			[renderer drawTri:v normal:n color:NULL];
-		else
-		{
-			GLfloat	rgba[4];
-			[self->color getColorRGBA:rgba];
-			[renderer drawTri:v normal:n color:rgba];
-		}
 		if(self->dragHandles)
 		{
 			for(LDrawDragHandle *handle in self->dragHandles)
@@ -248,6 +233,31 @@
 	}
 }
 
+
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	[self revalCache:DisplayList];
+	if(self->hidden == NO)
+	{
+		GLfloat	v[9] = { 
+			vertex1.x, vertex1.y, vertex1.z,
+			vertex2.x, vertex2.y, vertex2.z,
+			vertex3.x, vertex3.y, vertex3.z };
+
+		GLfloat n[3] = { normal.x, normal.y, normal.z };
+
+		if([self->color colorCode] == LDrawCurrentColor)	
+			[renderer drawTri:v normal:n color:NULL];
+		else if([self->color colorCode] == LDrawEdgeColor)	
+			[renderer drawTri:v normal:n color:(GLfloat*)-1];		
+		else
+		{
+			GLfloat	rgba[4];
+			[self->color getColorRGBA:rgba];
+			[renderer drawTri:v normal:n color:rgba];
+		}
+	}
+}
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
@@ -621,7 +631,7 @@
 {
 	self->vertex1 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 
 	if(dragHandles)
 	{
@@ -642,7 +652,7 @@
 {
 	self->vertex2 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -663,7 +673,7 @@
 {
 	self->vertex3 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{

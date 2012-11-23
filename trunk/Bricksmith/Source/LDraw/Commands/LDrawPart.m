@@ -1306,8 +1306,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 //
 //==============================================================================
 - (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
-{
-	[self invalCache:flags];
+{	
+	[self invalCache:(flags & CacheFlagBounds)];
 }//end statusInvalidated:who:
 
 

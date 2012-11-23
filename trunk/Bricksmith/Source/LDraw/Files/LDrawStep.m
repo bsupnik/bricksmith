@@ -370,6 +370,18 @@
 	}
 }
 
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	NSArray         *commandsInStep     = [self subdirectives];
+	LDrawDirective  *currentDirective   = nil;
+	
+	//Draw each element in the step.
+	for(currentDirective in commandsInStep)
+	{
+		[currentDirective collectSelf:renderer];
+	}
+	[self revalCache:DisplayList];
+}
 
 //========== debugDrawboundingBox ==============================================
 //
@@ -892,7 +904,7 @@
 //==============================================================================
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
 {
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:CacheFlagBounds|DisplayList];
 	[super insertDirective:directive atIndex:index];
 	
 	[[self enclosingModel] didAddDirective:directive];
@@ -907,7 +919,7 @@
 //==============================================================================
 - (void) removeDirectiveAtIndex:(NSInteger)index
 {
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:CacheFlagBounds|DisplayList];
 	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
 
 	[super removeDirectiveAtIndex:index];
