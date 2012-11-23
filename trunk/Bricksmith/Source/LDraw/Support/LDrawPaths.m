@@ -254,26 +254,6 @@
 }
 
 
-//========== texturesPathForDomain: ============================================
-//==============================================================================
-- (NSString *) texturesPathForDomain:(LDrawDomain)domain
-{
-	NSString *path = nil;
-	
-	if(domain == LDrawOfficial)
-	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:TEXTURES_DIRECTORY_NAME];
-	}
-	else
-	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:UNOFFICIAL_DIRECTORY_NAME];
-		path = [path                     stringByAppendingPathComponent:TEXTURES_DIRECTORY_NAME];
-	}
-	
-	return path;
-}
-
-
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
@@ -414,36 +394,16 @@
 //==============================================================================
 - (NSString *) pathForTextureName:(NSString *)imageName
 {
-	NSFileManager	*fileManager			= [[[NSFileManager alloc] init] autorelease];
-	NSString		*texturesPath			= [self texturesPathForDomain:LDrawOfficial];
-	NSString		*unofficialTexturesPath = [self texturesPathForDomain:LDrawUnofficial];
-	NSMutableString *fixedName				= [NSMutableString stringWithString:imageName];
-	NSString		*imagePath				= nil;
+	NSString	*nameInTextureDirectory = [TEXTURES_DIRECTORY_NAME stringByAppendingPathComponent:imageName];
+	NSString	*imagePath				= nil;
 	
-	// LDraw references parts in subfolders by their relative pathnames in DOS 
-	// (e.g., "s\765s01.dat"). Convert to UNIX for simple searching.
-	[fixedName replaceOccurrencesOfString:@"\\" //DOS path separator (doubled for escape-sequence)
-							   withString:@"/"
-								  options:0
-									range:NSMakeRange(0, [fixedName length]) ];
+	// First follow regular search path with /textures prepended
+	imagePath = [self pathForPartName:nameInTextureDirectory];
 	
-	// If we pass an empty string, we'll wind up test for directories' existences --
-	// not what we want to do.
-	if([imageName length] == 0)
+	// Follow regular search path.
+	if(imagePath == nil)
 	{
-		imagePath = nil;
-	}
-	else
-	{
-		// We have a file path name; try each directory.
-		
-		texturesPath				= [texturesPath 			stringByAppendingPathComponent:fixedName];
-		unofficialTexturesPath		= [unofficialTexturesPath	stringByAppendingPathComponent:fixedName];
-		
-		if([fileManager fileExistsAtPath:texturesPath])
-			imagePath = texturesPath;
-		else if([fileManager fileExistsAtPath:unofficialTexturesPath])
-			imagePath = unofficialTexturesPath;
+		imagePath = [self pathForPartName:imageName];
 	}
 	
 	return imagePath;

@@ -920,45 +920,60 @@ static PartLibrary *SharedPartLibrary = nil;
 
 //========== imageFromNeighboringFileForTexture: ===============================
 //
-// Purpose:		Attempts to resolve the part's name reference against a file 
+// Purpose:		Attempts to resolve the texture's name reference against a file 
 //				located in the same parent folder as the file in which the part 
 //				is contained.
 //
 //				This should be a method of last resort, after searching the part 
-//				library and looking for an MPD reference.
+//				library.
 //
-// Note:		Once a model is found under this method, we READ AND CACHE IT.
-//				You must RESTART Bricksmith to see any updates made to the 
-//				referenced file. This feature is not intended to be convenient, 
-//				bug-free, or industrial-strength. It is merely here to support 
-//				the LDraw standard, and any files that may have been created 
-//				under it.
+// Note:		This is BAD CODE. It caches things permanently. We need to move 
+//				to the new model manager to track when to get rid of images. 
 //
 //==============================================================================
 - (CGImageRef) imageFromNeighboringFileForTexture:(LDrawTexture *)texture
 {
 	LDrawFile		*enclosingFile	= [texture enclosingFile];
 	NSString		*filePath		= [enclosingFile path];
-	NSString		*partName		= nil;
+	NSString		*fileDirectory	= nil;
+	NSString		*imageName		= nil;
 	NSString		*testPath		= nil;
+	NSString		*imagePath		= nil;
 	CGImageRef		image			= nil;
 	NSFileManager	*fileManager	= nil;
 	
 	if(filePath != nil)
 	{
 		fileManager		= [[[NSFileManager alloc] init] autorelease];
+		fileDirectory	= [filePath stringByDeletingLastPathComponent];
+		imageName		= [texture imageDisplayName]; // handle case-sensitive filesystem
 		
-		//look at path = parentFolder/referenceName
-		partName		= [texture imageDisplayName]; // handle case-sensitive filesystem
-		testPath		= [filePath stringByDeletingLastPathComponent];
-		testPath		= [testPath stringByAppendingPathComponent:partName];
+		// look at path = parentFolder/textures/name
+		{
+			testPath = [fileDirectory stringByAppendingPathComponent:TEXTURES_DIRECTORY_NAME];
+			testPath = [testPath stringByAppendingPathComponent:imageName];
+			if([fileManager fileExistsAtPath:testPath])
+			{
+				imagePath = testPath;
+			}
+		}
 		
-		//see if it exists!
-		if([fileManager fileExistsAtPath:testPath])
+		//look at path = parentFolder/name
+		if(imagePath == nil)
+		{
+			testPath = [fileDirectory stringByAppendingPathComponent:imageName];
+			if([fileManager fileExistsAtPath:testPath])
+			{
+				imagePath = testPath;
+			}
+		}
+		
+		// Load if we found something
+		if(imagePath)
 		{
 			image = [self readImageAtPath:testPath asynchronously:NO completionHandler:NULL];
 			if(image != nil)
-				[self->loadedImages setObject:(id)image forKey:partName];
+				[self->loadedImages setObject:(id)image forKey:imageName];
 		}
 	}
 	
@@ -983,13 +998,13 @@ static PartLibrary *SharedPartLibrary = nil;
 //				-pathForFileName:.
 //
 //==============================================================================
-- (LDrawModel *) modelForName:(NSString *) partName
+- (LDrawModel *) modelForName:(NSString *) imageName
 {
 	LDrawModel	*model		= nil;
 	NSString	*partPath	= nil;
 	
 	// Has it already been parsed?
-	model = [self->loadedFiles objectForKey:partName];
+	model = [self->loadedFiles objectForKey:imageName];
 
 
 	if(model == nil)
@@ -997,11 +1012,11 @@ static PartLibrary *SharedPartLibrary = nil;
 		//Well, this means we have to try getting it off the disk!
 		// This case is only hit when a library part uses another library part, e.g.
 		// a brick grabs a collection-of-studs part.
-		partPath	= [[LDrawPaths sharedPaths] pathForPartName:partName];
+		partPath	= [[LDrawPaths sharedPaths] pathForPartName:imageName];
 		model		= [self readModelAtPath:partPath asynchronously:NO completionHandler:NULL];
 		
 		if(model != nil)
-			[self->loadedFiles setObject:model forKey:partName];
+			[self->loadedFiles setObject:model forKey:imageName];
 	}
 
 	return model;
@@ -1029,13 +1044,13 @@ static PartLibrary *SharedPartLibrary = nil;
 //==============================================================================
 - (LDrawModel *) modelForPartInternal:(LDrawPart *) part
 {
-	NSString	*partName	= [part referenceName];
+	NSString	*imageName	= [part referenceName];
 	LDrawModel	*model		= nil;
 	
 	//Try to get a live link if we have parsed this part off disk already.
 	//Ben sez: This routine is currently authorized to load on demand, but 
 	//I never see that code run and I don't think it is suppose to.
-	model = [self modelForName:partName];
+	model = [self modelForName:imageName];
 	
 	if(model == nil) {
 		// We didn't find it in the LDraw folder. Hopefully this is a reference 
@@ -1057,14 +1072,14 @@ static PartLibrary *SharedPartLibrary = nil;
 //				loading process, so there should be no need to do lazy loading.
 //
 //==============================================================================
-- (LDrawModel *) modelForName_threadSafe:(NSString *)partName
+- (LDrawModel *) modelForName_threadSafe:(NSString *)imageName
 {
 	__block LDrawModel	*model		= nil;
 
 #if USE_BLOCKS
 	dispatch_sync(self->catalogAccessQueue, ^{
 #endif	
-		model = [self->loadedFiles objectForKey:partName];
+		model = [self->loadedFiles objectForKey:imageName];
 #if USE_BLOCKS		
 	});
 #endif	

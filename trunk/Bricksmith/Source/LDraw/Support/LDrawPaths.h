@@ -36,7 +36,6 @@ typedef enum
 - (NSString *) MLCadIniPath;
 - (NSString *) partCatalogPath;
 - (NSString *) subpartsPathForDomain:(LDrawDomain)domain;
-- (NSString *) texturesPathForDomain:(LDrawDomain)domain;
 
 // Utilities
 - (NSString *) findLDrawPath;

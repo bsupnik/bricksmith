@@ -175,6 +175,7 @@
 #endif	
 	if(parsedFile)
 	{
+		[parsedFile setPath:fullPath];
 		[trackedFiles setObject:parsedFile forKey:inFileName];
 		[parsedFile release];			// Hash table tracked files retains the ONLY
 										// ref count - our "init" ref count gets tossed!
