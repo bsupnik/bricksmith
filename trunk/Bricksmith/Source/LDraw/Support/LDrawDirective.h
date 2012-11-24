@@ -14,6 +14,7 @@
 #import "LDrawFastSet.h"
 #import "LDrawRenderer.h"
 
+// This uses the hacky C wrapper around NSSet to improve performance.
 #define NEW_SET 1
 
 @class LDrawColor;

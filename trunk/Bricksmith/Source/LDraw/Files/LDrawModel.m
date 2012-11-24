@@ -284,8 +284,28 @@
 }//end draw:viewScale:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		The LDrawModel serves as the display-list holder for all 
+//				primitives directly "underneath" it.  Thus when we hit drawSelf
+//				We revalidate our DL and then just draw it.
+//
+//				"Our" DL is a DL containing only the mesh primtiives DIRECTLY
+//				underneath us.  Triangles that are part of a model that is 
+//				referenced by a PART underneath us are not collected - that is,
+//				collection is not recursive.  We count on the library being 
+//				flattened to ensure one VBO per library part.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
+	// First: cull check!  In my last perf look, draw time was bottlenecked
+	// on the GPU not eating data fast enough, _not_ on CPU.  So burning a
+	// tiny bit of CPU time per part to cull draw calls is a win!
+	
 	Box3	my_bounds = [self boundingBox3];
 	GLfloat minxyz[3] = { my_bounds.min.x, my_bounds.min.y, my_bounds.min.z };
 	GLfloat maxxyz[3] = { my_bounds.max.x, my_bounds.max.y, my_bounds.max.z };
@@ -293,6 +313,9 @@
 	if(![renderer checkCull:minxyz to:maxxyz])
 		return;
 
+	// DL cache control: we may have to throw out our old DL if it has gone
+	// stale. EITHER WAY we mark our DL bit as validated per the rules of
+	// the observable protocol.
 	if(dl)
 	{
 		if([self revalCache:DisplayList] == DisplayList)
@@ -304,48 +327,88 @@
 	} else
 		[self revalCache:DisplayList];
 		
+	// Now: if we do not have a DL (no DL or we threw it out because it
+	// was invalid) build one now: get a collector and call "collect" on
+	// ourselves, which will walk our tree picking up primitives.
 	if(!dl)
 	{
 		id<LDrawCollector> collector = [renderer beginDL];
 		[self collectSelf:collector];
 		[renderer endDL:&dl cleanupFunc:&dl_dtor];
 	}
+	
+	// Finally: if we have a DL (cached or brand new, draw it!!)
 	if(dl)
 		[renderer drawDL:dl];	
 
 	if (!isOptimized)
 	{
+		// Slow stuff part 1, skipped on library parts for speed.
+		
+		// First: recurse the 'drawSelf message.  This is needed for:
+		// - Parts, which draw, not collect and
+		// - Drag handles for selected primitives.
+		// Library parts are guaranteed to be only steps of primitives,
+		// so there is no need for this.
+		
 		NSArray     *steps              = [self subdirectives];
 		NSUInteger  maxIndex            = [self maxStepIndexToOutput];
 		LDrawStep   *currentDirective   = nil;
 		NSUInteger  counter             = 0;
 		
-		// Draw all the steps in the model
 		for(counter = 0; counter <= maxIndex; counter++)
 		{
 			currentDirective = [steps objectAtIndex:counter];
 			[currentDirective drawSelf:renderer];
 		}
 		
+		// And: if we are currently dragging directives, those 
+		// directives were skipped in the cases above.  So we
+		// do something a little scary.  We build a temporary
+		// DL for those directives, draw the DL and nuke them.
+		// We ALSO pass drawSelf message.
+		//
+		// This isn't terrible unless we are dragging a huge 
+		// number of raw primitives.
+		
 		if(self->draggingDirectives != nil)
 		{
-			id<LDrawCollector> collector = [renderer beginDL];
-			[self->draggingDirectives collectSelf:collector];
 			LDrawDLHandle			drag_dl = NULL;
 			LDrawDLCleanup_f		drag_dl_dtor = NULL;
+
+			id<LDrawCollector> collector = [renderer beginDL];
+			[self->draggingDirectives collectSelf:collector];
 			[renderer endDL:&drag_dl cleanupFunc:&drag_dl_dtor];
+
 			if(drag_dl)
 			{
 				[renderer drawDL:drag_dl];
 				drag_dl_dtor(drag_dl);
 			}
+			
 			[self->draggingDirectives drawSelf:renderer];
 		}
 		
 	}	
-}
+}//drawSelf:
 
 
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+//				Models simply recurse to their steps.
+//
+// Notes:		We do NOT revalidate our display list, because we do not expect
+//				to hit this case from a 'parent'.  Rather, we expect a part to 
+//				call "draw" on us (a model) and then we bulid our OWN DL.
+//
+//				See drawSelf: implementation above for cached DL handling!
+//
+//================================================================================
 - (void) collectSelf:(id<LDrawCollector>)renderer
 {
 	NSArray     *steps              = [self subdirectives];
@@ -359,7 +422,7 @@
 		currentDirective = [steps objectAtIndex:counter];
 		[currentDirective collectSelf:renderer];
 	}
-}
+}//end collectSelf:
 
 
 //========== debugDrawboundingBox ==============================================

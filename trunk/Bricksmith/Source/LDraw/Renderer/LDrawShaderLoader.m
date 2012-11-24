@@ -9,6 +9,14 @@
 #import "LDrawShaderLoader.h"
 #import "LDrawUtilities.h"
 
+//========== load_shader ================================================
+//
+// Purpose:		Load a single shader object for linking later.
+//
+// Notes:		shader_prefix is a string pre-inserted into the string.
+//				This is how we get VSHADER and FSHADER defined.  
+//
+//=======================================================================
 static GLuint	load_shader(NSString * file_path, GLenum shader_type, const char * shader_prefix)
 {
 	GLuint	shader_obj = glCreateShader(shader_type);
@@ -32,12 +40,21 @@ static GLuint	load_shader(NSString * file_path, GLenum shader_type, const char *
 		glDeleteShader(shader_obj);
 		return 0;
 	}
-	return shader_obj;
-	
-}
+	return shader_obj;	
+}//end load_shader
 
 
-
+//=========- LDrawLoadShaderFromFile ====================================
+//
+// Purpose:		Load a shader from disk.
+//
+// Notes:		Automatically adds prefixes to select GLSL 120 and define
+//				FSHADER or VSHADER for the two types of shaders.
+//				
+//				Automatically binds the attribute list consecutively pre-
+//				link.
+//
+//=======================================================================
 GLuint	LDrawLoadShaderFromFile(NSString * file_path, const char * attrib_list[])
 {
 	GLuint vshader = load_shader(file_path,GL_VERTEX_SHADER,"#version 120\n#define VSHADER 1\n#define FSHADER 0\n");
@@ -76,11 +93,20 @@ GLuint	LDrawLoadShaderFromFile(NSString * file_path, const char * attrib_list[])
 		return 0;	
 	}
 	return prog;
-}
+}//end LDrawLoadShaderFromFile
 
+
+//=========- LDrawLoadShaderFromResource ================================
+//
+// Purpose:		Load a shader from a resource.
+//
+// Notes:		Finds a shader in our app bundle, which is the preferred
+//				way to use our shaders.
+//
+//=======================================================================
 GLuint	LDrawLoadShaderFromResource(NSString * name, const char * attrib_list[])
 {
 	NSBundle * mainBundle	= [NSBundle mainBundle];
 	NSString * path	= [mainBundle pathForResource:name ofType:nil];
 	return LDrawLoadShaderFromFile(path,attrib_list);
-}
+}//end LDrawLoadShaderFromResource

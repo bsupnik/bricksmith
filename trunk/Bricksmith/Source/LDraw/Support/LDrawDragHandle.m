@@ -186,11 +186,20 @@ static const float HandleDiameter	= 7.0;
 }//end draw:viewScale:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		Drag handles don't use DLs - they simply push their pos
+//				to the renderer immediately.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	GLfloat v[3] = { position.x, position.y, position.z };
 	[renderer drawDragHandle:v];
-}
+}//end drawSelf:
 
 
 

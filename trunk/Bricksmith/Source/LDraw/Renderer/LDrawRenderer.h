@@ -8,10 +8,14 @@
 
 #import <Cocoa/Cocoa.h>
 
-#import "LDrawRenderer.h"
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// TEXTURE DEFINITIONS
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@protocol LDrawRenderable;
-@protocol LDrawRenderer;
+// The rendering API defines a public structure for standard LDraw texturing for the purpose of
+// drawing.
 
 enum {
 	tex_proj_planar = 0
@@ -24,16 +28,41 @@ struct	LDrawTextureSpec {
 	float	plane_t[4];
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// META-COLOR BEHAVIOR
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// These "fake" ptrs can be used in place of a float[4] RGBA color for the meta-colors.
+#define LDrawRenderCurrentColor ((float *) 0)
+#define LDrawRenderComplimentColor ((float *) -1)
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Opaque Display List Handles
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// The rendering API defines an opaque display list handle that a renderer/collector can return.
+// The cleanup function defines a function ptr used to dispose of the display list that a directive
+// might be retaining.
+
 typedef void *	LDrawDLHandle;									// Opaque handle to some kinf of cached drawing representation.
 typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function associated with a given DL.
 
-//@protocol LDrawRenderable
-//@required
-//
-//- (void) acceptDL:(LDrawDLHandle)dl cleanupFunc:(LDrawDLCleanup_f)func;
-//
-//@end
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// 
+// LDrawCollector
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// An LDraw collector accumulates meshes in a fixed coordinate system.  A texture stack can be used
+// to push/pop texture state; if no texture state is pushed, the mesh ends up capable of "taking current
+// texture."
+//
 @protocol LDrawCollector
 
 // Texture stack - sets up new texturing.  When the stack is totally popped, no texturing is applied.
@@ -49,6 +78,19 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 @end
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// LDrawRenderer
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Renderer class - it visits each directive, which calls the various state routines.
+// It provies stacks for color, transform, wire frame, and texture.
+//
+// When we actually want to draw a mesh, we use the begin/end/draw DL routine to create a display
+// list containing the mesh.  beginDL provides a "collector" protocol capable of actually receiving
+// the mesh.
+
 @protocol LDrawRenderer
 @required
 
@@ -56,6 +98,8 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 - (void) pushMatrix:(GLfloat *)matrix;
 - (void) popMatrix;
 
+// Returns true if the AABB between the points is on screen, false if it is entirely off-screen.
+// Useful for culling parts.
 - (BOOL) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ;
 
 // Color stack.  Pushing a color overrides the current color.  If no one ever sets the current color we get
@@ -74,8 +118,8 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 // Drag handle is simply the location of the handle (float[3]).
 - (void) drawDragHandle:(GLfloat *) vertices;
 
-- (id<LDrawCollector>) beginDL;
-- (void) endDL:(LDrawDLHandle *) outHandle cleanupFunc:(LDrawDLCleanup_f *)func;
+- (id<LDrawCollector>) beginDL;	
+- (void) endDL:(LDrawDLHandle *) outHandle cleanupFunc:(LDrawDLCleanup_f *)func;		// Returns NULL if the display list is empty (e.g. no calls between begin/end)
 - (void) drawDL:(LDrawDLHandle)dl;
 
 @end

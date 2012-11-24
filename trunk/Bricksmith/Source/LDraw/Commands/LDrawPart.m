@@ -315,6 +315,16 @@
 }//end drawElement:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		Parts draw by pushing the matrix and color instancing info they
+//				contain into the renderer, then passing drawSelf to the model
+//				backing the part, if it exists.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	if(self->hidden == NO)
@@ -325,16 +335,30 @@
 		{
 			if([self->color colorCode] != LDrawCurrentColor)
 			{
-				GLfloat c[4];
-				[self->color getColorRGBA:c];
-				[renderer pushColor:c];
+				// Old rendering code did not actually support
+				// pushing the edge color as the new current
+				// color - and it's probably against spec.  But
+				// it's not really the place of drawSelf to go
+				// slappign wrists, so pass it to the render,
+				// which actually DOES know how to get this case
+				// right.
+				if([self->color colorCode] == LDrawEdgeColor)	
+					[renderer pushColor:LDrawRenderComplimentColor];
+				else
+				{
+					GLfloat c[4];
+					[self->color getColorRGBA:c];				
+					[renderer pushColor:c];
+				}
 			}
 			
 			if([self isSelected] == YES)
 				[renderer pushWireFrame];
 			
 			[renderer pushMatrix:glTransformation];
+
 			[cacheModel drawSelf:renderer];
+
 			[renderer popMatrix];
 			if([self->color colorCode] != LDrawCurrentColor)
 				[renderer popColor];
@@ -344,7 +368,7 @@
 				
 		}	
 	}
-}//end drawElement:parentColor:
+}//end drawSelf:
 
 
 //========== drawBoundsWithColor: ==============================================

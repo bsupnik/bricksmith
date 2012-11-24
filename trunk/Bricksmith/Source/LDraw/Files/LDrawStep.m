@@ -358,6 +358,16 @@
 }//end draw:viewScale:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		Steps, like most collections, simply pass down the drawSelf
+//				message.  This is needed because parts "draw" themselves; they do
+//				not "collect" themselves.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	NSArray         *commandsInStep     = [self subdirectives];
@@ -368,8 +378,19 @@
 	{
 		[currentDirective drawSelf:renderer];
 	}
-}
+}//end drawSelf:
 
+
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+//				The step does this by recursively collecting its directives.
+//
+//================================================================================
 - (void) collectSelf:(id<LDrawCollector>)renderer
 {
 	NSArray         *commandsInStep     = [self subdirectives];
@@ -381,7 +402,7 @@
 		[currentDirective collectSelf:renderer];
 	}
 	[self revalCache:DisplayList];
-}
+}//end collectSelf:
 
 //========== debugDrawboundingBox ==============================================
 //

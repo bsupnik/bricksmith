@@ -219,6 +219,17 @@
 }//end drawElement:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		Triangles use this message to get their drag handles drawn if
+//				needed.  They do not draw their actual GL primitive because that
+//				has already been "collected" by some parent capable of 
+//				accumulating a mesh.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	if(self->hidden == NO)
@@ -231,12 +242,28 @@
 			}
 		}
 	}
-}
+}//end drawSelf:
 
 
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+//				Real GL primitives participate by passing their color and
+//				geometry data to the collector.
+//
+//================================================================================
 - (void) collectSelf:(id<LDrawCollector>)renderer
 {
+	// We must mark our DL as valid - otherwise we will not invalidate our
+	// DL when edited, and if we don't do that, we won't pass the message
+	// to our parents that our DL is invalid.  This passing the invalid DL up
+	// is what PRIMES our parent model to rebuild DLs as needed.
 	[self revalCache:DisplayList];
+	
 	if(self->hidden == NO)
 	{
 		GLfloat	v[9] = { 
@@ -247,9 +274,9 @@
 		GLfloat n[3] = { normal.x, normal.y, normal.z };
 
 		if([self->color colorCode] == LDrawCurrentColor)	
-			[renderer drawTri:v normal:n color:NULL];
+			[renderer drawTri:v normal:n color:LDrawRenderCurrentColor];
 		else if([self->color colorCode] == LDrawEdgeColor)	
-			[renderer drawTri:v normal:n color:(GLfloat*)-1];		
+			[renderer drawTri:v normal:n color:LDrawRenderComplimentColor];
 		else
 		{
 			GLfloat	rgba[4];
@@ -257,7 +284,8 @@
 			[renderer drawTri:v normal:n color:rgba];
 		}
 	}
-}
+}//end collectSelf:
+
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //

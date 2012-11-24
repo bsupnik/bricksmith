@@ -359,6 +359,19 @@
 	
 }//end draw:viewScale:parentColor:
 
+
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		The texture is a container, so it passes drawSelf to give child 
+//				parts time to draw.  It first pushes its own texture state onto
+//				the stack.  This means that an untextured part inside a texture
+//				will pick up the projected texture, which is what the LDraw spec
+//				calls for.
+//
+//================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
 	NSArray 		*commands			= [self subdirectives];
@@ -397,8 +410,21 @@
 		[currentDirective drawSelf:renderer];
 	}
 	[renderer popTexture];
-}
+}//end drawSelf:
 
+
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+// Notes:		LDrawTextur is a collection of sub-directives that all receive
+//				projective texturing.  So we first push our texture state to the
+//				collector and then recurse.
+//
+//================================================================================
 - (void) collectSelf:(id<LDrawCollector>)renderer
 {
 	NSArray 		*commands			= [self subdirectives];
@@ -439,7 +465,7 @@
 	[renderer popTexture];
 	[self revalCache:DisplayList];
 	
-}
+}//end collectSelf:
 
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======

@@ -1,7 +1,5 @@
 #line 1
 
-#define CUSTOM_TRANSFORM 1
-
 varying vec2	tex_coord;
 varying float	tex_mix;
 #if VSHADER
@@ -20,7 +18,6 @@ varying float	tex_mix;
 	
 	void main (void)
 	{
-#if CUSTOM_TRANSFORM	
 		vec4	pos_obj = vec4(
 								dot(position, transform_x),
 								dot(position, transform_y),
@@ -31,10 +28,6 @@ varying float	tex_mix;
 								dot(normal, transform_x.xyz),
 								dot(normal, transform_y.xyz),
 								dot(normal, transform_z.xyz));
-#else
-		vec4	pos_obj = position;
-		vec3	norm_obj = normal;
-#endif
 	
 		vec3	normal_eye = normalize(gl_NormalMatrix * norm_obj);
 		vec4	eye_pos = gl_ModelViewMatrix * pos_obj;
