@@ -1,0 +1,202 @@
+/*-****************************************************************************/
+/*- Header for main website pages											  */
+/*-****************************************************************************/
+
+#MainHeadingBox
+{
+	width: 100%;
+	height: 128px;
+	border-bottom: solid; 
+	border-bottom-width: 2px;
+	border-bottom-color: rgb(192, 192, 192);
+	padding-bottom: 12pt;
+	margin-bottom: 12pt;
+	margin-top: 12pt;
+}
+
+
+#MainHeadingIconBox
+{
+	width: 35%;
+	height: 100%;
+	float: left;
+	text-align: right;
+}
+
+
+#MainHeadingTextBox
+{
+	width: 65%;
+	height: 100%;
+	float: right;
+}
+
+
+.MainHeading
+{
+	font-family: "Lucida Grande", "Trebuchet MS", sans-serif;
+	font-size: 36pt;
+	font-weight: bold
+}
+
+.MainSubheading
+{
+	font-family: "Lucida Grande", "Trebuchet MS", sans-serif;
+	font-size: 18pt;
+	font-style: italic
+}
+
+
+/*-****************************************************************************/
+/*- Header for minor help pages											 	  */
+/*-****************************************************************************/
+
+#smallbannerbox
+{
+	margin-top: 12pt;
+	margin-left: 0pt;
+	margin-bottom: 12pt;
+	padding-right: 6pt;
+	padding-bottom: 6pt;
+	min-height: 32px;
+}
+
+#iconbox
+{
+	margin-bottom: -3px;
+	float: left;
+}
+
+#smallbannericon
+{
+	width: 32px;
+	height: 32px;
+}
+
+#smallbannerheading
+{
+	margin-left: 32pt;
+	font-size: 16pt;
+	font-weight: bold;
+}
+
+
+/*-****************************************************************************/
+/*- Standard Text Styles													  */
+/*-****************************************************************************/
+
+body {font-family: "Lucida Grande","Trebuchet MS", sans-serif; font-size: 9pt}
+
+H1 {font-family: "Lucida Grande", "Trebuchet MS", sans-serif; font-size: 36pt}
+H2 {font-family: "Lucida Grande", "Trebuchet MS", sans-serif; font-size: 18pt; font-weight: bold}
+H3 {font-family: "Lucida Grande", "Trebuchet MS", sans-serif; font-size: 12pt; font-weight: bold}
+
+H4
+{
+	font-family: "Lucida Grande", "Trebuchet MS", sans-serif;
+	font-size: 9pt;
+	font-weight: bold; 
+	margin-bottom: 2pt;
+}
+
+.introimportantprefix
+{
+	font-family: "Lucida Grande", Arial, sans-serif;
+	font-size: 8pt;
+	font-weight: bold;
+	letter-spacing: 0.1em;
+	color: #778FBD;
+	text-transform: uppercase;
+}
+
+
+/*-****************************************************************************/
+/*- Page Layout																  */
+/*-****************************************************************************/
+
+#pagebody
+{
+	margin-top: 2pt;
+	margin-right: 12pt;
+	margin-left: 12pt;
+	margin-bottom: 12pt;
+}
+
+/* Text region for the body next to the sidebar */
+#mainbodybox
+{
+	position: absolute;
+	margin-left: 190px;
+	margin-right: 12px;
+	margin-top: 12px;
+	width: 100% - 144px;
+	padding: 12px 12px;
+}
+
+#sidebar
+{
+	background-color: rgb(255, 255, 224);
+	float: left;
+	width: 144px;
+	margin-right: 48px;
+	padding: 12px 12px;
+	border: solid 1px #444;
+}
+
+
+#notebox
+{
+	background-color: rgb(255, 255, 127);
+	margin-top: 12px;
+	margin-bottom: 12px;
+	padding: 12px 12px;
+	border: solid 1px #444;
+}
+
+/*-****************************************************************************/
+/*- Tables																	  */
+/*-****************************************************************************/
+
+#table
+{
+	margin-bottom: 30pt;
+}
+
+#tabletitletext
+{
+	font-weight: bold;
+	font-size: 14pt;
+	padding-top: 4pt;
+	padding-bottom: 4pt;
+}
+
+#columnheadertext
+{
+	font-weight: bold;
+	font-size: 10pt;
+	text-align: left;
+	color: #778FBD;
+	padding-top: 4pt;
+	padding-bottom: 4pt;
+}
+
+#tableheadertopline
+{
+	background-color: rgb(192, 192, 192);
+	height: 4px;
+}
+
+#tableheaderbottomline
+{
+	background-color: rgb(192, 192, 192);
+	height: 1px;
+}
+
+.row-rule
+{ 
+	margin: 0; 
+	padding-top: 6pt;
+	padding-bottom: 6pt; 
+	padding-right: 8pt; 
+	border-bottom: 1px solid #ccc; 
+}
