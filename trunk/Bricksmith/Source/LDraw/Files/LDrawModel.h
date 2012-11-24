@@ -37,6 +37,11 @@
 	
 	// Drag and Drop
 	LDrawStep				*draggingDirectives;
+	
+	BOOL					isOptimized;			// Were we ever structure-optimized - used to optimize out 
+													// some drawing on library parts.
+	LDrawDLHandle			dl;						// Cached DL if we have one.
+	LDrawDLCleanup_f		dl_dtor;
 }
 
 //Initialization

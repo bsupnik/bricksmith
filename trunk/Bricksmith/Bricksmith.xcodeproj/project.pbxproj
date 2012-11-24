@@ -281,6 +281,7 @@
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+		D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
@@ -289,6 +290,16 @@
 		D6CB459515E316D300730E2A /* ModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D6CB41DF15E2AA6C00730E2A /* ModelManager.m */; };
 		D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */; };
 		D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */; };
+		D6EDB983164DEB0000B4062B /* LDrawRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB980164DEB0000B4062B /* LDrawRenderer.h */; };
+		D6EDB984164DEB0000B4062B /* LDrawShaderRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */; };
+		D6EDB985164DEB0000B4062B /* LDrawShaderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */; };
+		D6EDB9C8164DF28100B4062B /* LDrawShaderLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */; };
+		D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */; };
+		D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */ = {isa = PBXBuildFile; fileRef = D6EDBA0C164DF86F00B4062B /* test.glsl */; };
+		D6EDBB4716508D7200B4062B /* LDrawBDPAllocator.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */; };
+		D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */; };
+		D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */; };
+		D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */; };
 		D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D6FC72121604EBB8005A404E /* LDrawFastSet.h */; };
 /* End PBXBuildFile section */
 
@@ -602,6 +613,8 @@
 		32DBCF750370BD2300C91783 /* Mac LDraw_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Mac LDraw_Prefix.pch"; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDataStream.h; sourceTree = "<group>"; };
+		D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDataStream.m; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
 		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
@@ -610,6 +623,16 @@
 		D6CB41DF15E2AA6C00730E2A /* ModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelManager.m; sourceTree = "<group>"; };
 		D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtilities.h; sourceTree = "<group>"; };
 		D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenGLUtilities.c; sourceTree = "<group>"; };
+		D6EDB980164DEB0000B4062B /* LDrawRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawRenderer.h; sourceTree = "<group>"; };
+		D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawShaderRenderer.h; sourceTree = "<group>"; };
+		D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawShaderRenderer.m; sourceTree = "<group>"; };
+		D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawShaderLoader.h; sourceTree = "<group>"; };
+		D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawShaderLoader.m; sourceTree = "<group>"; };
+		D6EDBA0C164DF86F00B4062B /* test.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.glsl; sourceTree = "<group>"; };
+		D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawBDPAllocator.h; sourceTree = "<group>"; };
+		D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawBDPAllocator.m; sourceTree = "<group>"; };
+		D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDisplayList.h; sourceTree = "<group>"; };
+		D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDisplayList.m; sourceTree = "<group>"; };
 		D6FC72121604EBB8005A404E /* LDrawFastSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawFastSet.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -711,6 +734,7 @@
 		0B2AB7BB07C7E8BE00085145 /* LDraw */ = {
 			isa = PBXGroup;
 			children = (
+				D6EDB97F164DEB0000B4062B /* Renderer */,
 				0B6F383B07C81F6D007B1075 /* Commands */,
 				0B6F383C07C81F81007B1075 /* Files */,
 				0B1DA5A113172DA700E14960 /* Support */,
@@ -1118,6 +1142,7 @@
 		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D6EDBA0B164DF86F00B4062B /* Shaders */,
 				95D8939216550B6400AA055B /* Legonian Ruler.pdf */,
 				0B2FAE5F101972DF007BA948 /* Bum.ldr */,
 				0B9907620DD7EDBB003F6B13 /* LDConfig.ldr */,
@@ -1153,6 +1178,32 @@
 				2BB5975E09FEFD250077A885 /* AMSProgressBar.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D6EDB97F164DEB0000B4062B /* Renderer */ = {
+			isa = PBXGroup;
+			children = (
+				D6EDB980164DEB0000B4062B /* LDrawRenderer.h */,
+				D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */,
+				D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */,
+				D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */,
+				D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */,
+				D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */,
+				D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */,
+				D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */,
+				D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */,
+				D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */,
+				D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */,
+			);
+			path = Renderer;
+			sourceTree = "<group>";
+		};
+		D6EDBA0B164DF86F00B4062B /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				D6EDBA0C164DF86F00B4062B /* test.glsl */,
+			);
+			path = Shaders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1253,6 +1304,12 @@
 				D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */,
 				D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */,
 				D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */,
+				D6EDB983164DEB0000B4062B /* LDrawRenderer.h in Headers */,
+				D6EDB984164DEB0000B4062B /* LDrawShaderRenderer.h in Headers */,
+				D6EDB9C8164DF28100B4062B /* LDrawShaderLoader.h in Headers */,
+				D6EDBB4716508D7200B4062B /* LDrawBDPAllocator.h in Headers */,
+				D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */,
+				D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1419,6 +1476,7 @@
 				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
 				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
 				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
+				D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */,
 				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
 				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
 			);
@@ -1518,6 +1576,10 @@
 				0B6122EE153516600085F944 /* LDrawTexture.m in Sources */,
 				D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */,
 				D6CB459515E316D300730E2A /* ModelManager.m in Sources */,
+				D6EDB985164DEB0000B4062B /* LDrawShaderRenderer.m in Sources */,
+				D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */,
+				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
+				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

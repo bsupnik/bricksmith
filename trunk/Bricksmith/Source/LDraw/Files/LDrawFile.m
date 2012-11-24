@@ -316,6 +316,38 @@
 }//end draw:viewScale:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+//================================================================================
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	[activeModel drawSelf:renderer];
+}//end drawSelf:
+
+
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+// Notes:		The file should never be 'collected', because parts do not 
+//				reference files - rather they reference the models WITHIN
+//				files.  So while we have a release implementation of passing
+//				the message on, we have an assert to catch this case.
+//
+//================================================================================
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	assert(!"Why are we here?");
+	[activeModel collectSelf:renderer];
+}//end collectSelf:
+
+
 //========== debugDrawboundingBox ==============================================
 //
 // Purpose:		Draw a translucent visualization of our bounding box to test
