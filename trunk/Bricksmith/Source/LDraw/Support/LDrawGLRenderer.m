@@ -42,7 +42,7 @@
 #define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
 #define DEBUG_BOUNDING_BOX			0
 
-#define NEW_RENDERER				1
+#define NEW_RENDERER				0
 
 
 #define DEBUG_DRAWING				1	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
