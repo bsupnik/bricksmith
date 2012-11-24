@@ -1233,10 +1233,16 @@ static PartLibrary *SharedPartLibrary = nil;
 						 imageBuffer );
 						// see function notes about the source storage format.
 			
+			// This requires GL_EXT_framebuffer_object, available on all renderers on 10.6.8 and beyond.
+			// Build mipmaps so we can use linear-mipmap-linear
+			glGenerateMipmapEXT(GL_TEXTURE_2D);
+			
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);	// This enables mip-mapping - makes textures look good when small.
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0);				// Max anisotropic filtering of all renderers on 10.6.8 is 16.0.
+																							// This keeps texture res high when looking at a tile from a low angle.
 
 			glBindTexture(GL_TEXTURE_2D, 0);
 			
