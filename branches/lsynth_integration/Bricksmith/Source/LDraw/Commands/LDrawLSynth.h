@@ -10,10 +10,19 @@
 #import "LDrawDrawableElement.h"
 #import "ColorLibrary.h"
 
+// Lsynth block parser states
+typedef enum
+{
+    PARSER_READY             = 1,
+    PARSER_CONSTRAINTS       = 2,
+    PARSER_SYNTHESIZED_PARTS = 3,
+    PARSER_STATE_COUNT
+} LSynthParserStateT;
+
 @interface LDrawLSynth : LDrawContainer <LDrawColorable>
 {
     NSMutableArray  *synthesizedParts;
-    NSString        *lsynthType;
+    NSString        *synthType;
     int              lsynthClass;
     LDrawColor      *color;
     GLfloat			 glTransformation[16];
@@ -24,7 +33,7 @@
 // Accessors
 - (void) setLsynthClass:(int)lsynthClass;
 - (int) lsynthClass;
-- (void) setLsynthType:(NSString *)lsynthClass;
+- (void) setLsynthType:(NSString *)lsynthType;
 - (NSString *) lsynthType;
 - (void) setHidden:(BOOL)flag;
 - (BOOL) isHidden;
@@ -35,4 +44,5 @@
 - (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
 - (void) dragDropDonateCleanup;
++ (BOOL) lineIsLSynthBeginning:(NSString*)line;
 @end

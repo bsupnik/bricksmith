@@ -62,4 +62,11 @@
 #define LDRAW_MOVED_CATEGORY					@"Moved"
 #define LDRAW_MOVED_DESCRIPTION_PREFIX			@"~Moved to"
 
+// LSynth
+#define LSYNTH_COMMAND                          @"SYNTH"
+#define LSYNTH_SHOW                             @"SHOW"
+#define LSYNTH_BEGIN                            @"BEGIN"
+#define LSYNTH_END                              @"END"
+#define LSYNTH_SYNTHESIZED                      @"SYNTHESIZED"
+
 #endif

@@ -33,7 +33,7 @@
 								projection:(Matrix4)projection
 									  view:(Box2)viewport;
 - (NSInteger) indexOfDirective:(LDrawDirective *)directive;
-- (NSArray *) subdirectives;
+- (NSMutableArray *) subdirectives;
 
 - (void) setPostsNotifications:(BOOL)flag;
 - (void) setVertexesNeedRebuilding;

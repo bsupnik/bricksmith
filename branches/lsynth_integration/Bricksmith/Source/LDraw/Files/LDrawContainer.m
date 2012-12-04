@@ -203,7 +203,7 @@
 // Purpose:		Returns the LDraw directives stored in this collection.
 //
 //==============================================================================
-- (NSArray *) subdirectives
+- (NSMutableArray *) subdirectives
 {
 	return containedObjects;
 	
