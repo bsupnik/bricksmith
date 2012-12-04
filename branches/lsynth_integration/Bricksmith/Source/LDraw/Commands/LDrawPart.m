@@ -1228,6 +1228,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	transformationMatrix = Matrix4Translate(transformationMatrix, moveVector);
 	
 	[self setTransformationMatrix:&transformationMatrix];
+    [self sendMessageToObservers:MessageObservedChanged];
 	
 }//end moveBy:
 
@@ -1315,6 +1316,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	transform = Matrix4Translate(transform, displacement); //translate back to original position
 	
 	[self setTransformationMatrix:&transform];
+    [self sendMessageToObservers:MessageObservedChanged];
 	
 }//end rotateByDegrees:centerPoint:
 

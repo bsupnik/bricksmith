@@ -110,8 +110,13 @@ typedef enum Message {
 	MessageNameChanged = 0,
 	
 	// The MPD's parent has changed, and thus its scope may have changed
-	MessageScopeChanged = 1
-	
+	MessageScopeChanged = 1,
+
+    // The observed have changed in a way that may require the observer to
+    // update its representation (e.g. an LSynth constraint has moved and
+    // requires resynthesis)
+    MessageObservedChanged = 2
+
 	// The 
 } MessageT;
 

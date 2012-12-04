@@ -9,8 +9,40 @@
 #import "LDrawLSynth.h"
 #import "LSynthConfiguration.h"
 #import "LDrawPart.h"
+#import "LDrawUtilities.h"
 
 @implementation LDrawLSynth
+
+//========== init ==============================================================
+//
+// Purpose:		Creates a new container with absolutely nothing in it, but
+//				ready to receive objects.
+//
+//==============================================================================
+- (id) init
+{
+    self = [super init];
+
+    if (self) {
+        synthesizedParts = [[NSMutableArray alloc] init];
+//        lsynthType       = [[NSString alloc] init];
+//        color            = [[LDrawColor alloc] init];
+//        originalColor    = [[LDrawColor alloc] init];
+//        [self setLsynthClass:-1];
+//        deferSynthesis   = NO;
+
+        // !!!! experiments in getting drag and drop working w.r.t. deleteDirective
+//        NSNotificationCenter	*notificationCenter 	= [NSNotificationCenter defaultCenter];
+//        [notificationCenter addObserver:self
+//                               selector:@selector(directiveDidChangeNotification:)
+//                                   name:LDrawDirectiveDidChangeNotification
+//                                 object:nil ];
+
+    }
+
+    return self;
+}//end init
+
 
 #pragma mark -
 #pragma mark DIRECTIVES
@@ -110,10 +142,21 @@
     for(counter = 0; counter < commandCount; counter++)
     {
         currentDirective = [commands objectAtIndex:counter];
-        if ([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:creditObject hits:hits]) {
-            return TRUE;
+        if ([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:self hits:hits]) {
+            if(creditObject != nil) {
+                return TRUE;
+            }
         };
     }
+
+    for (LDrawPart *part in synthesizedParts) {
+        if ([part boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:self hits:hits]) {
+            if(creditObject != nil) {
+                return TRUE;
+            }
+        };
+    }
+
     return FALSE;
 }//end boxTest:transform:viewScale:boundsOnly:creditObject:hits:
 
@@ -277,6 +320,19 @@
 
 }//end transformComponents
 
+//========== setSelected: ======================================================
+//
+// Purpose:		Custom (de)selection action.  We want to make our part transparent
+//              when selected.
+//
+//==============================================================================
+- (void) setSelected:(BOOL)flag
+{
+    [super setSelected:flag];
+    //[self colorSynthesizedPartsTranslucent:flag];
+    //[self sendMessageToObservers:MessageObservedChanged];
+}//end setSelected:
+
 //========== setSubdirectiveSelected: =========================================
 //
 // Purpose:		Set the flag denoting whether a subdirective is selected
@@ -329,8 +385,120 @@
 //==============================================================================
 -(void)synthesize
 {
-    NSLog(@"Would have synthesized");
+    NSString *input = @"";
+    Class CommandClass = Nil;
+
+    // Path to lsynth
+    NSString *lsynthPath = [[NSBundle mainBundle] pathForResource:@"lsynthcp" ofType:nil];
+
+    LDrawColorT code = self->subdirectiveSelected ? LDrawClear : [[self LDrawColor] colorCode] ;
+    input = [input stringByAppendingFormat:@"0 SYNTH BEGIN %@ %d\n", lsynthType, code];
+    input = [input stringByAppendingFormat:@"0 SYNTH %@\n", @"SHOW"]; // TODO: honour visibility?
+    for (LDrawPart *part in [self subdirectives]) {
+        input = [input stringByAppendingFormat:@"%@\n", [part write]];
+    }
+    input = [input stringByAppendingString:@"0 SYNTH END\n"];
+    input = [input stringByAppendingString:@"0 STEP\n"];
+
+    NSTask *task = [[NSTask alloc] init];
+    NSPipe *inPipe = nil;
+    NSPipe *outPipe = nil;
+    NSPipe *errorPipe = nil;
+    NSFileHandle *inFile;
+    NSFileHandle *outFile;
+
+    inPipe = [NSPipe new];
+    outPipe = [NSPipe new];
+    errorPipe = [NSPipe new];
+
+    [task setStandardInput:inPipe];
+    [task setStandardOutput:outPipe];
+    [task setStandardError:errorPipe];
+    [task setLaunchPath:lsynthPath];
+    [task setArguments:@[@"-"]]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
+
+    inFile = [inPipe fileHandleForWriting];
+    outFile = [outPipe fileHandleForReading];
+
+    [inPipe release];
+    [outPipe release];
+    [errorPipe release];
+
+    // Launch the task
+    [task launch];
+
+    // Write the LSynth part to LSynth's STDIN
+    [inFile writeData: [input dataUsingEncoding: NSASCIIStringEncoding]];
+    [inFile closeFile];
+
+    // Read the synthesized file back in from LSynth's STDOUT
+    NSMutableData *data = [[NSMutableData alloc] init];
+    NSData *readData;
+
+    while ((readData = [outFile availableData])
+            && [readData length]) {
+        [data appendData: readData];
+    }
+
+    NSString *lsynthOutput;
+    lsynthOutput = [[NSString alloc]
+            initWithData: data
+                encoding: NSASCIIStringEncoding];
+
+    [task release];
+    [data release];
+    [lsynthOutput autorelease];
+
+    // Split the output into lines
+    NSMutableArray *stringsArray = [NSMutableArray arrayWithArray:[lsynthOutput
+            componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]]];
+
+    // Process the synthesized parts
+    BOOL extract = NO;
+
+    for (NSString *line in stringsArray) {
+        NSRange startRange = [line rangeOfString:@"0 SYNTH SYNTHESIZED BEGIN"];
+        NSRange partRange = [line rangeOfString:@"1"];
+
+        if (extract == YES && partRange.length > 0 && partRange.location == 0) {
+            CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:line];
+            LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:@[line]
+                                                                       inRange:NSMakeRange(0, 1)
+                                                                   parentGroup:nil];
+            [synthesizedParts addObject:newDirective];
+            [newDirective release];
+        } else if (extract == NO && startRange.length > 0)  {
+            extract = YES;
+        }
+    }
 }
+
+//========== moveBy: ===========================================================
+//
+// Purpose:		Passes a movement request down to its subdirectives
+//
+// Optimisation: move all synthesized elements as well to save a resynth
+//
+//==============================================================================
+- (void) moveBy:(Vector3)moveVector
+{
+    // lock synthesis while we move our constraints
+    //self->deferSynthesis = YES;
+
+    // pass on the nudge to drawable subdirectives
+    for (LDrawDirective * constraint in [self subdirectives]) {
+        //if ([constraint conformsToProtocol:@protocol(LDrawDrawableElement)]) {
+            [(LDrawPart *)constraint moveBy:moveVector];
+        //}
+    }
+
+    // reenable synthesis and resynthesize
+    //self->deferSynthesis = NO;
+    [synthesizedParts removeAllObjects];
+    [self synthesize];
+    [self colorSynthesizedPartsTranslucent:[self isSelected]];
+
+}//end moveBy:
 
 //========== colorSynthesizedPartsTranslucent: =================================
 //
@@ -378,6 +546,41 @@
     return Matrix4CreateFromGLMatrix4(glTransformation);
 
 }//end transformationMatrix
+
+
+//========== cleanupAfterDrop ====================================================
+//
+// Purpose:		Called as part of a drag and drop operation to allow us to resynthesize
+//              if constraints have changed.
+//
+//==============================================================================
+-(void)cleanupAfterDrop
+{
+    NSLog(@"dragDropDonateCleanup");
+    [synthesizedParts removeAllObjects];
+    [self synthesize];
+    //[self sendMessageToObservers:MessageObservedChanged];
+    //[self invalCache:CacheFlagBounds|DisplayList];
+}
+
+#pragma mark -
+#pragma mark NOTIFICATIONS
+#pragma mark -
+
+//========== receiveMessage ====================================================
+//
+// Purpose:		The things we observe call this when something one-time and
+//				eventful happens - we can respond if desired.
+//
+//==============================================================================
+- (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
+{
+    if (msg == MessageObservedChanged) {
+            [synthesizedParts removeAllObjects];
+            [self synthesize];
+//            [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
+    }
+}
 
 #pragma mark -
 #pragma mark DESTRUCTOR

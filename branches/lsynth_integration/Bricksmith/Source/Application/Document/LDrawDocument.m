@@ -64,6 +64,7 @@
 #import "WindowCategory.h"
 #import "LSynthConfiguration.h"
 #import "LDrawDragHandle.h"
+#import "LDrawContainer.h"
 
 
 @implementation LDrawDocument
@@ -2458,7 +2459,7 @@
 //==============================================================================
 -(void) InsertLSynthPart:(id)sender
 {
-    NSLog(@"InsertLSynthPart: NOT IMPLEMETED");
+    NSLog(@"InsertLSynthPart: NOT IMPLEMENTED");
     NSLog(@"Part to be inserted: %@", sender);
     NSLog(@"object: %@", [sender representedObject]);
 }//end InsertLSynthPart:
@@ -2595,6 +2596,7 @@
             synthesizablePart = parent;
 
             //  Add our constraint, resynthesize and mark as needing display
+            [constraint addObserver:parent];
             [parent insertDirective:constraint atIndex:index];
             [self updateInspector];
             [synthesizablePart synthesize];
@@ -3239,8 +3241,17 @@
 		// When rearranging models within a file, don't do "copy X" renaming.
 		renameDuplicateModels = NO;
 	}
-	
-	// Do The Move.
+
+    // Gather up (unique) parents that are donating child nodes to this move
+    // If the parents support tidying up they'll be given a chance later.
+    // This is intended for e.g. containers such as LDrawSynth that may need
+    // to take action if their subdirectives change.
+    NSMutableSet *donatingParents = [[NSMutableSet alloc] init];
+    for (LDrawPart *part in doomedObjects) {
+        [donatingParents addObject:[sourceView parentForItem:part]];
+    }
+
+    // Do The Move.
 	pastedObjects = [self pasteFromPasteboard:pasteboard
 						preventNameCollisions:renameDuplicateModels
 									   parent:newParent
@@ -3255,8 +3266,20 @@
 		
 		[undoManager setActionName:NSLocalizedString(@"UndoReorder", nil)];
 	}
-	
-	//And lastly, select the dragged objects.
+
+    // Ask the source and target parents to cleanup if they can
+    for (LDrawDirective *parent in [donatingParents allObjects]) {
+        if ([parent isKindOfClass:[LDrawContainer class]] &&
+            [parent respondsToSelector:@selector(cleanupAfterDrop)]) {
+            [parent performSelector:@selector(cleanupAfterDrop)];
+        }
+    }
+
+    if ([newParent respondsToSelector:@selector(cleanupAfterDrop)]) {
+        [newParent performSelector:@selector(cleanupAfterDrop)];
+    }
+
+    //And lastly, select the dragged objects.
 	[(LDrawFileOutlineView*)outlineView selectObjects:pastedObjects];
 
 	return YES;
@@ -4999,7 +5022,7 @@
 	[attributes setObject:obliqueness		forKey:NSObliquenessAttributeName];
 	
 	//Create the attributed string.
-	styledString = [[NSAttributedString alloc]
+    	styledString = [[NSAttributedString alloc]
 							initWithString:representation
 								attributes:attributes ];
 	
@@ -5361,7 +5384,7 @@
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-				[self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
+            [self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
 				[self addStep:currentObject parent:(LDrawMPDModel*)parent index:real_index];
 			else

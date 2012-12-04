@@ -32,7 +32,7 @@
 - (TransformComponents) transformComponents;
 
 // Utilities
-- (void)synthesize;
+- (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
-
+- (void) dragDropDonateCleanup;
 @end
