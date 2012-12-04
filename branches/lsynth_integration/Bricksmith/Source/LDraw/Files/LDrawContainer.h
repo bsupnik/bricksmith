@@ -37,6 +37,7 @@
 
 - (void) setPostsNotifications:(BOOL)flag;
 - (void) setVertexesNeedRebuilding;
+- (void) setSubdirectiveSelected:(BOOL)flag;
 
 //Actions
 - (void) addDirective:(LDrawDirective *)directive;

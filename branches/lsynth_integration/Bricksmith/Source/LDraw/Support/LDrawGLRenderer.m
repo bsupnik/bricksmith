@@ -2150,7 +2150,7 @@
 
 //========== getDirectivesUnderRect:amongDirectives:fastDraw: ==================
 //
-// Purpose:		Finds the directives under a given mouse-recangle.  This
+// Purpose:		Finds the directives under a given mouse-rectangle.  This
 //				does a two-pass search so that clients can do a bounding box
 //				test first.
 //

@@ -17,13 +17,18 @@
     int              lsynthClass;
     LDrawColor      *color;
     GLfloat			 glTransformation[16];
+    BOOL             hidden;
+    BOOL             subdirectiveSelected;
 }
 
 // Accessors
 - (void) setLsynthClass:(int)lsynthClass;
+- (int) lsynthClass;
 - (void) setLsynthType:(NSString *)lsynthClass;
 - (NSString *) lsynthType;
-- (int) lsynthClass;
+- (void) setHidden:(BOOL)flag;
+- (BOOL) isHidden;
+
 - (TransformComponents) transformComponents;
 
 // Utilities

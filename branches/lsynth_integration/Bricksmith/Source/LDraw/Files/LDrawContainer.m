@@ -369,6 +369,18 @@
 						  
 }//end removeDirectiveAtIndex:
 
+//========== setSubdirectiveSelected: ==========================================
+//
+// Purpose: Called by a subdirective when it's been selected.  This allows
+//          container directives to act on child selection.  Override in
+//          subclasses.
+//
+//==============================================================================
+- (void) setSubdirectiveSelected:(BOOL)subdirective
+{
+    // stub
+}
+
 
 #pragma mark -
 #pragma mark UTILITES

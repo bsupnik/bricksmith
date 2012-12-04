@@ -63,6 +63,7 @@
 #import "ViewportArranger.h"
 #import "WindowCategory.h"
 #import "LSynthConfiguration.h"
+#import "LDrawDragHandle.h"
 
 
 @implementation LDrawDocument
@@ -2448,12 +2449,19 @@
 
 #pragma mark Models Menu - LSynth Submenu
 
+//========== InsertLSynthPart: =================================================
+//
+// Purpose:		Insert a synthesizable part directive into the model.
+//
+// Parameters:	sender: an NSMenuItem representing the model to make active.
+//
+//==============================================================================
 -(void) InsertLSynthPart:(id)sender
 {
     NSLog(@"InsertLSynthPart: NOT IMPLEMETED");
     NSLog(@"Part to be inserted: %@", sender);
     NSLog(@"object: %@", [sender representedObject]);
-}
+}//end InsertLSynthPart:
 
 //========== insertSynthesizedDirective: =======================================
 //
@@ -2465,8 +2473,6 @@
 //==============================================================================
 - (void) insertSynthesizableDirective:(id)sender
 {
-    NSLog(@"Synthesized Object to be inserted: %@", sender);
-    NSLog(@"object: %@", [sender representedObject]);
     LDrawLSynth         *synthesizedObject = [[[LDrawLSynth alloc] init] autorelease];
     //NSUndoManager       *undoManager   = [self undoManager];
 
@@ -2489,8 +2495,14 @@
         LDrawContainer *parent = nil;
         NSInteger index = 0;
 
+        // Step selected
+        if ([[fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]] isMemberOfClass:[LDrawStep class]]) {
+            parent = [fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]];
+            index = [[parent subdirectives] count];
+        }
+
         // No selection, add it at the bottom
-        if (self->lastSelectedPart == nil) {
+        else if (self->lastSelectedPart == nil) {
             parent = nil;       // leave it up to the addStepComponent: method to add our Synth step correctly
             index = NSNotFound; // add at the end
         }
@@ -2500,19 +2512,19 @@
         // - Parent is the LDrawLSynth's parent step
         else if ([self->lastSelectedPart isMemberOfClass:[LDrawLSynth class]]) {
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            int row = [parent indexOfDirective:self->lastSelectedPart];
-            index = ++row;
+            LDrawLSynth *synthPart = self->lastSelectedPart;
+            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
         }
         
         // Constraint is selected, add it after the containing LDrawLSynth
         else if ([self->lastSelectedPart isMemberOfClass:[LDrawPart class]] &&
                  [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
             parent = [fileContentsOutline parentForItem:[fileContentsOutline parentForItem:self->lastSelectedPart]];
-            NSInteger *row = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            index = [fileContentsOutline rowForItem:row++];
+            LDrawLSynth *synthPart = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
         }
 
-        // don't know what it is...
+        // Don't know what it is.  Probably a part.
         else {
             NSLog(@"no idea");
             parent = nil;
@@ -2541,11 +2553,6 @@
 //==============================================================================
 -(void) InsertLSynthConstraint:(id)sender
 {
-    NSLog(@"Constraint to be inserted: %@", sender);
-    NSLog(@"object: %@", [sender representedObject]);
-
-    NSInteger       rowForItem          = 0;
-
     // We are fussier than for synthesizable containers; we can *only* be added to them.
     // We just have to worry about the relative position
 
@@ -2560,24 +2567,22 @@
         TransformComponents transformation = [lastSelectedPart transformComponents];
         [constraint setTransformComponents:transformation];
 
-        // LDrawLSynth part selected
+        // LDrawLSynth part selected, add at the end
         if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
             parent = self->lastSelectedPart;
-            index = 0;
+            index = [[parent subdirectives] count];
             synthesizablePart = parent;
 
             //  Add our constraint, resynthesize and mark as needing display
             [constraint setEnclosingDirective:parent];
             [constraint addObserver:parent];
             [parent insertDirective:constraint atIndex:index];
-
-//            [constraint setSelected:YES];
-
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
 
-            // Show the new element.   - THIS IS NEARLY RIGHT
+            // Show the new element
             [fileContentsOutline expandItem:parent];
+            [fileContentsOutline selectObjects:@[constraint]];
             [constraint setSelected:YES];
         }
 
@@ -2586,30 +2591,24 @@
                 [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
             int row = [parent indexOfDirective:self->lastSelectedPart];
-            index = ++row;
+            index = row + 1;
             synthesizablePart = parent;
 
+            //  Add our constraint, resynthesize and mark as needing display
             [parent insertDirective:constraint atIndex:index];
-
             [self updateInspector];
-
-            [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:@[constraint]];
-            [self updateInspector];
-
-            int rowForItem = [fileContentsOutline rowForItem:self->lastSelectedPart] + 1;
-            [fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
-                             byExtendingSelection:NO];
-
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
+            [fileContentsOutline expandItem:parent];
+            [fileContentsOutline selectObjects:@[constraint]];
+            [constraint setSelected:YES];
         }
 
         else {
             NSLog(@"BIG FAT CONSTRAINT ADDING ERROR");
         }
     }
-}
+} // end InsertLSynthConstraint
 
 //http://stackoverflow.com/questions/1096768/how-to-select-items-in-nsoutlineview-without-nstreecontroller
 //@implementation NSOutlineView (Additions)
@@ -3041,8 +3040,8 @@
 		//Apply formatting to our little string.
 		representation = [self formatDirective:item
 					  withStringRepresentation:representation];
-	}
-		
+    }
+
 	return representation;
 
 }//end outlineView:objectValueForTableColumn:byItem:
@@ -4154,8 +4153,6 @@
 	LDrawMPDModel   *activeModel    = [[self documentContents] activeModel];
 	BOOL            enable          = NO;
 
-    NSLog(@"validating menu item: %i", tag);
-
 	switch(tag)
 	{
 
@@ -4256,7 +4253,12 @@
 			// That would be an inifinite loop.
 			enable = (activeModel != [menuItem representedObject]);
 			break;
-		
+
+
+        case lsynthSynthesizableMenuTag:
+            // We can only add synthesizable parts below a step so ensure we've not selected a model
+            enable = (selectedPart != nil) && (![selectedPart isKindOfClass:[LDrawMPDModel class]]);
+            break;
 
         case lsynthConstraintMenuTag:
             // We can only insert a constraint into an LDrawLSynth part.

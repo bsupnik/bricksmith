@@ -279,6 +279,7 @@
 		2BF2E3160AB0FCAB0026D5DB /* MLCadIni.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3120AB0FCAB0026D5DB /* MLCadIni.m */; };
 		2BF2E3170AB0FCAB0026D5DB /* TransformerIntMinus1.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF2E3130AB0FCAB0026D5DB /* TransformerIntMinus1.h */; };
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
+		737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772C25D6D43398DCA3E163 /* LSynthPart.tiff */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
@@ -641,6 +642,7 @@
 		2BF2E3130AB0FCAB0026D5DB /* TransformerIntMinus1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransformerIntMinus1.h; sourceTree = "<group>"; };
 		2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransformerIntMinus1.m; sourceTree = "<group>"; };
 		32DBCF750370BD2300C91783 /* Mac LDraw_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Mac LDraw_Prefix.pch"; sourceTree = "<group>"; };
+		73772C25D6D43398DCA3E163 /* LSynthPart.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthPart.tiff; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
@@ -1031,6 +1033,7 @@
 				0B9524771585873800F3EE79 /* Texture.pdf */,
 				0B30E08A0ED90D3000470615 /* Triangle.pdf */,
 				0B9FE5B208AD97770046511D /* Unknown.tiff */,
+				73772C25D6D43398DCA3E163 /* LSynthPart.tiff */,
 			);
 			path = Badges;
 			sourceTree = "<group>";
@@ -1545,6 +1548,7 @@
 				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
 				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
 				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
+				737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

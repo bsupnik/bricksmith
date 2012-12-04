@@ -1012,6 +1012,23 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end setTransformationMatrix
 
 
+//========== setSelected: ======================================================
+//
+// Purpose:		Somebody make this a protocol method.
+//
+//==============================================================================
+- (void) setSelected:(BOOL)flag
+{
+    [super setSelected:flag];
+
+    // would like LDrawContainer to be a protocol.  In its absence...
+    if ([[self enclosingDirective] respondsToSelector:@selector(setSubdirectiveSelected:)]) {
+        [[self enclosingDirective] setSubdirectiveSelected:flag];
+    }
+
+}//end setSelected:
+
+
 #pragma mark -
 #pragma mark MOVEMENT
 #pragma mark -
