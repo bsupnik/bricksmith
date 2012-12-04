@@ -1068,13 +1068,14 @@ int main(int argc, char* argv[])
         extern void list_band_constraints(void);
         
         printf("LSynth is an LDraw compatible flexible part synthesizer\n");
-        printf("  usage: lsynthcp [-v] [-h] [-m] [-l] [-p] <src> <dst>\n");
+        printf("  usage: lsynthcp [[-v] [-h] [-m] [-l] [-p] <src> <dst>] [-]\n");
         printf("    -v - prints lsynthcp version\n");
         printf("    -h - prints this help message\n");
         printf("    -m - prints out the LSynth portion of the MLcad.ini for using\n");
         printf("         this program\n");
         printf("    -l - format the output as an official ldraw part\n");
         printf("    -p - prints out the full path name of the this executable\n");
+        printf("    -  - causes LSynth to use STDIN/STDOUT\n");
         printf("The easiest way to use LSynth is from within MLcad.  You need to\n");
         printf("make additions to MLCad.ini.  Please see Willy Tscager's tutorial\n");
         printf("page http://www.holly-wood.it/mlcad/lsynth-en.html.\n");
