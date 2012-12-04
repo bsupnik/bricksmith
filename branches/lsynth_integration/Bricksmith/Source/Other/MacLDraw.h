@@ -239,7 +239,12 @@ typedef enum MenuTags
 	modelsSeparatorMenuTag			= 602,
 	insertReferenceMenuTag			= 603,
 	submodelReferenceMenuTag		= 604, //used for all items in the Insert Reference menu.
-	
+	rawCommandMenuTag               = 605,
+    lsynthMenuTag                   = 606,
+    lsynthPartMenuTag               = 607, // LSynth parts
+    lsynthSynthesizableMenuTag      = 608, // LSynth synthesizable part: band, hose etc.
+    lsynthConstraintMenuTag         = 609, // LSynth constraint items
+
 	// Window Menu
 	windowMenuTag					= 7,
 	

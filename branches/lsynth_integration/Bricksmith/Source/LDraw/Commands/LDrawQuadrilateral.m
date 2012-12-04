@@ -237,6 +237,70 @@
 }//end drawElement:parentColor:
 
 
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		Quads use this message to get their drag handles drawn if
+//				needed.  They do not draw their actual GL primitive because that
+//				has already been "collected" by some parent capable of 
+//				accumulating a mesh.
+//
+//================================================================================
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	if(self->hidden == NO)
+	{
+		if(self->dragHandles)
+		{
+			for(LDrawDragHandle *handle in self->dragHandles)
+			{				
+				[handle drawSelf:renderer];
+			}
+		}
+	}
+}//end drawSelf:
+
+
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+//				Real GL primitives participate by passing their color and
+//				geometry data to the collector.
+//
+//================================================================================
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	[self revalCache:DisplayList];
+	if(self->hidden == NO)
+	{
+		GLfloat	v[12] = { 
+			vertex1.x, vertex1.y, vertex1.z,
+			vertex2.x, vertex2.y, vertex2.z,
+			vertex3.x, vertex3.y, vertex3.z,
+			vertex4.x, vertex4.y, vertex4.z };
+
+		GLfloat n[3] = { normal.x, normal.y, normal.z };
+
+		if([self->color colorCode] == LDrawCurrentColor)	
+			[renderer drawQuad:v normal:n color:LDrawRenderCurrentColor];
+		else if([self->color colorCode] == LDrawEdgeColor)	
+			[renderer drawQuad:v normal:n color:LDrawRenderComplimentColor];
+		else
+		{
+			GLfloat	rgba[4];
+			[self->color getColorRGBA:rgba];
+			[renderer drawQuad:v normal:n color:rgba];
+		}
+	}
+}//end collectSelf:
+
+
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
 // Purpose:		Tests the directive and any of its children for intersections 
@@ -688,7 +752,7 @@
 {
 	self->vertex1 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -709,7 +773,7 @@
 {
 	self->vertex2 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -730,7 +794,7 @@
 {
 	self->vertex3 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{
@@ -751,7 +815,7 @@
 {
 	self->vertex4 = newVertex;
 	[self recomputeNormal];
-	[self invalCache:CacheFlagBounds];
+	[self invalCache:(CacheFlagBounds|DisplayList)];
 	
 	if(dragHandles)
 	{

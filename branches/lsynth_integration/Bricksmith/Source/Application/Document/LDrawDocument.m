@@ -32,6 +32,7 @@
 #import "LDrawPart.h"
 #import "LDrawQuadrilateral.h"
 #import "LDrawTriangle.h"
+#import "LDrawLSynth.h"
 
 #import <AMSProgressBar/AMSProgressBar.h>
 
@@ -61,6 +62,7 @@
 #import "UserDefaultsCategory.h"
 #import "ViewportArranger.h"
 #import "WindowCategory.h"
+#import "LSynthConfiguration.h"
 
 
 @implementation LDrawDocument
@@ -121,7 +123,9 @@
 
     [super windowControllerDidLoadNib:aController];
 	
-	
+    // Create and populate the Model->LSynth menus
+    [self populateLSynthModelMenus];
+
 	// Create the toolbar.
 	toolbar = [[[NSToolbar alloc] initWithIdentifier:@"LDrawDocumentToolbar"] autorelease];
 	[toolbar setAutosavesConfiguration:YES];
@@ -254,6 +258,78 @@
 	[coordinateFormatter release];
 	
 }//end windowControllerDidLoadNib:
+
+
+//========== populateLSynthModelMenus ==========================================
+//
+// Purpose:		Populate the LSynth Model menus. We guard against creating
+//              more than one menu.
+//
+//==============================================================================
+- (void) populateLSynthModelMenus
+{
+    LDrawApplication *appDelegate    = [NSApp delegate];
+    NSMenu           *mainMenu       = [NSApp mainMenu];
+    NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+
+    NSLog(@"populateLSynthModelMenus");
+
+    // We only want to create this menu once
+    if (! [modelMenu itemWithTag:lsynthMenuTag]) {
+        NSInteger  separatorIndex = [modelMenu indexOfItemWithTag:rawCommandMenuTag];
+        NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
+
+        // A declarative encoding of our LSynth menus
+        // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
+        NSArray *menus = @[
+        @{@"title"  : @"Add Part",                      @"getter" : @"getParts",           @"entry_key" : @"nickname",
+          @"action" : @"InsertLSynthPart:",             @"tag" : [NSNumber numberWithInt:lsynthPartMenuTag]},
+        @{@"title"  : @"Add Hose",                      @"getter" : @"getHoseTypes",       @"entry_key" : @"title",
+          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
+        @{@"title"  : @"Add Hose Constraint",           @"getter" : @"getHoseConstraints", @"entry_key" : @"description",
+          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]},
+        @{@"title"  : @"Add Band",                      @"getter" : @"getBandTypes",       @"entry_key" : @"title",
+          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
+        @{@"title"  : @"Add Band Constraint",           @"getter" : @"getBandConstraints", @"entry_key" : @"description",
+          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]}
+        ];
+
+        for (NSDictionary *menuSpec in menus) {
+            NSMenu *menu = [[[NSMenu alloc] init] autorelease];
+
+            // Retrieve the appropriate data for each menu entry, based on the getter given above
+            // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
+            // for an alternative that could avoid the use of NSSelectorFromString by storing the selectors
+            // directly in a dictionary.
+
+            for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])]) {
+                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
+                [entryMenuItem setRepresentedObject:entry];
+                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
+                [entryMenuItem setTarget:self];
+                // Should these be unique, i.e. add an loop index to a base value? Don't need them to be, yet.
+                [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
+                [menu addItem:entryMenuItem];
+            }
+            NSMenuItem *subMenu = [[[NSMenuItem alloc] init] autorelease];
+            [subMenu setTitle:[menuSpec objectForKey:@"title"]];
+            [subMenu setSubmenu:menu];
+
+            [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
+            //[menu setDelegate:self];
+
+            [lsynthMenu addItem:subMenu];
+        }
+
+        // Add in the main LSynth menu to the Model menu
+        NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
+        [lsynthSubMenu setTitle:@"LSynth"];
+        [lsynthSubMenu setTag:lsynthMenuTag];
+        [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
+        [modelMenu insertItem:lsynthSubMenu atIndex:separatorIndex + 1];
+    }
+}//end populateLSynthModelMenus
 
 
 #pragma mark -
@@ -979,7 +1055,7 @@
 //				selection to be these and only these directives, deselecting
 //				all others in the process.
 //
-//				This is used for marquee selection - when changinga lot of
+//				This is used for marquee selection - when changing a lot of
 //				selection it's more CPU efficient to change them all at once. 
 //
 // Notes:		This routine will perform multiple disclosures of items in the
@@ -1021,7 +1097,7 @@
 			if([indices containsIndex:indexToSelect])
 			{
 				// Allen says don't do "toggle" behavior with shift-marquee select.  
-				// If we did wanta toggle, we'd enable this.
+				// If we did want a toggle, we'd enable this.
 				//[indices removeIndex:indexToSelect];			
 			}
 			else
@@ -2370,6 +2446,197 @@
 		
 }//end modelSelected
 
+#pragma mark Models Menu - LSynth Submenu
+
+-(void) InsertLSynthPart:(id)sender
+{
+    NSLog(@"InsertLSynthPart: NOT IMPLEMETED");
+    NSLog(@"Part to be inserted: %@", sender);
+    NSLog(@"object: %@", [sender representedObject]);
+}
+
+//========== insertSynthesizedDirective: =======================================
+//
+// Purpose:		Insert a synthesizable directive into the model.  This is a
+//              hose or band.
+//
+// Parameters:	sender: an NSMenuItem representing the model to make active.
+//
+//==============================================================================
+- (void) insertSynthesizableDirective:(id)sender
+{
+    NSLog(@"Synthesized Object to be inserted: %@", sender);
+    NSLog(@"object: %@", [sender representedObject]);
+    LDrawLSynth         *synthesizedObject = [[[LDrawLSynth alloc] init] autorelease];
+    //NSUndoManager       *undoManager   = [self undoManager];
+
+    // TODO: fixup colour choice for synthesizable parts
+    // from partbrowserdatasource:
+    // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
+    LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
+	TransformComponents transformation = IdentityComponents;
+    
+    //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
+    //[synthesizedObject setLsynthColor:selectedColor];
+    [synthesizedObject setLDrawColor:selectedColor];
+    [synthesizedObject setLsynthType:[[sender representedObject] objectForKey:@"LSYNTH_TYPE"]];
+    [synthesizedObject setLsynthClass:[[sender representedObject] integerForKey:@"LSYNTH_CLASS"]]; // band or hose
+    
+    // Check we're being called sensibly (i.e. from a menu)
+    if (sender != nil && [sender representedObject] != nil) {
+
+        // NEW
+        LDrawContainer *parent = nil;
+        NSInteger index = 0;
+
+        // No selection, add it at the bottom
+        if (self->lastSelectedPart == nil) {
+            parent = nil;       // leave it up to the addStepComponent: method to add our Synth step correctly
+            index = NSNotFound; // add at the end
+        }
+        
+        // LDrawLSynth is selected
+        // - Add it after
+        // - Parent is the LDrawLSynth's parent step
+        else if ([self->lastSelectedPart isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            int row = [parent indexOfDirective:self->lastSelectedPart];
+            index = ++row;
+        }
+        
+        // Constraint is selected, add it after the containing LDrawLSynth
+        else if ([self->lastSelectedPart isMemberOfClass:[LDrawPart class]] &&
+                 [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:[fileContentsOutline parentForItem:self->lastSelectedPart]];
+            NSInteger *row = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            index = [fileContentsOutline rowForItem:row++];
+        }
+
+        // don't know what it is...
+        else {
+            NSLog(@"no idea");
+            parent = nil;
+            index = NSNotFound;
+        }
+
+        // tidy up to conform to other addStepComponent: calls and do the same with constraint adding to open up the tree
+        //[self addStepComponent:synthesizedObject parent:nil index:NSNotFound];
+
+        [self addStepComponent:synthesizedObject
+                        parent:parent
+                         index:index];
+    }
+    
+}//end insertSynthesizedDirective:
+
+
+//========== InsertLSynthConstraint: =======================================
+//
+// Purpose:		Insert a synthesizable directive constraint into the model.
+//              We don't distinguish between hose or band constraints since
+//              both types can be used for either synthesizable type.
+//
+// Parameters:	sender: an NSMenuItem representing the constraint to insert
+//
+//==============================================================================
+-(void) InsertLSynthConstraint:(id)sender
+{
+    NSLog(@"Constraint to be inserted: %@", sender);
+    NSLog(@"object: %@", [sender representedObject]);
+
+    NSInteger       rowForItem          = 0;
+
+    // We are fussier than for synthesizable containers; we can *only* be added to them.
+    // We just have to worry about the relative position
+
+    if(self->lastSelectedPart != nil) {
+        LDrawPart *constraint = [[LDrawPart alloc] init];
+        [constraint setDisplayName:[[sender representedObject] objectForKey:@"partName"]];
+        [constraint setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]]; // parent's colour
+
+        LDrawContainer *parent = nil;
+        NSInteger index = NSNotFound;
+        LDrawLSynth *synthesizablePart = nil;
+        TransformComponents transformation = [lastSelectedPart transformComponents];
+        [constraint setTransformComponents:transformation];
+
+        // LDrawLSynth part selected
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+            parent = self->lastSelectedPart;
+            index = 0;
+            synthesizablePart = parent;
+
+            //  Add our constraint, resynthesize and mark as needing display
+            [constraint setEnclosingDirective:parent];
+            [constraint addObserver:parent];
+            [parent insertDirective:constraint atIndex:index];
+
+//            [constraint setSelected:YES];
+
+            [synthesizablePart synthesize];
+            [[self documentContents] noteNeedsDisplay];
+
+            // Show the new element.   - THIS IS NEARLY RIGHT
+            [fileContentsOutline expandItem:parent];
+            [constraint setSelected:YES];
+        }
+
+        // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
+        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
+                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            int row = [parent indexOfDirective:self->lastSelectedPart];
+            index = ++row;
+            synthesizablePart = parent;
+
+            [parent insertDirective:constraint atIndex:index];
+
+            [self updateInspector];
+
+            [fileContentsOutline expandItem:parent];
+            [fileContentsOutline selectObjects:@[constraint]];
+            [self updateInspector];
+
+            int rowForItem = [fileContentsOutline rowForItem:self->lastSelectedPart] + 1;
+            [fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
+                             byExtendingSelection:NO];
+
+            [synthesizablePart synthesize];
+            [[self documentContents] noteNeedsDisplay];
+        }
+
+        else {
+            NSLog(@"BIG FAT CONSTRAINT ADDING ERROR");
+        }
+    }
+}
+
+//http://stackoverflow.com/questions/1096768/how-to-select-items-in-nsoutlineview-without-nstreecontroller
+//@implementation NSOutlineView (Additions)
+//
+//- (void)expandParentsOfItem:(id)item {
+//    while (item != nil) {
+//        id parent = [self parentForItem: item];
+//        if (![self isExpandable: parent])
+//            break;
+//        if (![self isItemExpanded: parent])
+//            [self expandItem: parent];
+//        item = parent;
+//    }
+//}
+//
+//- (void)selectItem:(id)item {
+//    NSInteger itemIndex = [self rowForItem:item];
+//    if (itemIndex < 0) {
+//        [self expandParentsOfItem: item];
+//        itemIndex = [self rowForItem:item];
+//        if (itemIndex < 0)
+//            return;
+//    }
+//
+//    [self selectRowIndexes: [NSIndexSet indexSetWithIndex: itemIndex] byExtendingSelection: NO];
+//}
+//@end
 
 
 #pragma mark -
@@ -3090,7 +3357,8 @@
 	[[self documentContents] noteNeedsDisplay];
 	
 	//See if we just selected a new part; if so, we must remember it.
-	if([lastSelectedItem isKindOfClass:[LDrawPart class]])
+	if ([lastSelectedItem isKindOfClass:[LDrawPart class]] ||
+        [lastSelectedItem isKindOfClass:[LDrawLSynth class]])
 		[self setLastSelectedPart:lastSelectedItem];
 	
 	[originalContext makeCurrentContext];
@@ -3885,7 +4153,9 @@
 	NSPasteboard    *pasteboard     = [NSPasteboard generalPasteboard];
 	LDrawMPDModel   *activeModel    = [[self documentContents] activeModel];
 	BOOL            enable          = NO;
-	
+
+    NSLog(@"validating menu item: %i", tag);
+
 	switch(tag)
 	{
 
@@ -3987,7 +4257,15 @@
 			enable = (activeModel != [menuItem representedObject]);
 			break;
 		
-		
+
+        case lsynthConstraintMenuTag:
+            // We can only insert a constraint into an LDrawLSynth part.
+            // Ensure it (or a constraint) is selected
+            enable = ([selectedPart isKindOfClass:[LDrawLSynth class]] ||
+                      [[fileContentsOutline parentForItem:selectedPart] isKindOfClass:[LDrawLSynth class]]);
+            break;
+
+
 		////////////////////////////////////////
 		//
 		// Something else.
@@ -4689,7 +4967,10 @@
 		
 	else if([item isKindOfClass:[LDrawPart class]])
 		colorKey = SYNTAX_COLOR_PARTS_KEY;
-	
+
+    else if ([item isKindOfClass:[LDrawLSynth class]])
+        colorKey = SYNTAX_COLOR_PARTS_KEY;
+
 	else if([item isKindOfClass:[LDrawLine				class]] ||
 	        [item isKindOfClass:[LDrawTriangle			class]] ||
 			[item isKindOfClass:[LDrawQuadrilateral		class]] ||

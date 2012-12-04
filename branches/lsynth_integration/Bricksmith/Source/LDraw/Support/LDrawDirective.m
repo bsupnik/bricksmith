@@ -836,6 +836,13 @@
 	
 }//end registerUndoActions:
 
+
+//========== addObserver: ========================================================
+//
+// Purpose:		Adds a directive as an observer of _this_ directive.  Implements
+//				the observable protocol.
+//
+//================================================================================
 - (void) addObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
@@ -846,8 +853,15 @@
 	//printf("directive %p told to add observer %p.\n", self,observer);
 	[observers addObject:[NSValue valueWithPointer:observer]];
 	#endif
-}
+}//end addObserver:
 
+
+//========== addObserver: ========================================================
+//
+// Purpose:		Removes an observer that was watching us for notifications. 
+//				Implements the observable protocol.
+//
+//================================================================================
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
@@ -861,7 +875,50 @@
 
 		[observers removeObject:[NSValue valueWithPointer:observer]];
 	#endif
-}
+}//end removeObserver
+
+
+//========== drawSelf: ===========================================================
+//
+// Purpose:		Draw this directive and its subdirectives by calling APIs on 
+//				the passed in renderer, then calling drawSelf on children.
+//
+// Notes:		The drawSelf API draws existing DLs and changes GL state; some
+//				directives will, as part of drawing, (re)build their DLs on the
+//				fly.  Thus VBO build-up is a by-product of drawing a frame where
+//				the DL is needed.  So we don't actually build VBOs for all models
+//				on document-open - only the ones we can see!
+//
+//================================================================================
+- (void) drawSelf:(id<LDrawRenderer>)renderer
+{
+	// Default implementation does ... nothing.
+}//end drawSelf:
+
+
+//========== collectSelf: ========================================================
+//
+// Purpose:		Collect self is called on each directive by its parents to
+//				accumulate _mesh_ data into a display list for later drawing.
+//				The collector protocol passed in is some object capable of 
+//				remembering the collectable data.
+//
+// Notes:		As a general rule, directives that participate in display lists
+//				need to re-validate their display list cache bit when this is 
+//				called so that the next data edit can move the DL state to 
+//				invalid.  (Once data is invalid, further invalidations are 
+//				ignored.)
+//
+//				This requirement falls on both real mesh-participants like
+//				LDrawTriangle but also their direct containers like LDrawSteps
+//				and LDrawTextures.
+//
+//================================================================================
+- (void) collectSelf:(id<LDrawCollector>)renderer
+{
+	// Default implementation collects...nothing.
+}//end collectSelf:
+
 
 #pragma mark -
 #pragma mark OBSERVATION

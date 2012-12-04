@@ -282,6 +282,13 @@
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
+		95D893AC165532B100AA055B /* lsynthcp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
+		95D893AE1655334500AA055B /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
+		95D893B816555F3E00AA055B /* LSynthConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 95D893B616555F3E00AA055B /* LSynthConfiguration.h */; };
+		95D893B916555F3E00AA055B /* LSynthConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D893B716555F3E00AA055B /* LSynthConfiguration.m */; };
+		95D893CA16569CFD00AA055B /* LDrawLSynth.h in Headers */ = {isa = PBXBuildFile; fileRef = 95D893C816569CFD00AA055B /* LDrawLSynth.h */; };
+		95D893CB16569CFD00AA055B /* LDrawLSynth.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D893C916569CFD00AA055B /* LDrawLSynth.m */; };
+		D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */; };
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
 		D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */; };
@@ -289,6 +296,16 @@
 		D6CB459515E316D300730E2A /* ModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D6CB41DF15E2AA6C00730E2A /* ModelManager.m */; };
 		D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */; };
 		D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */ = {isa = PBXBuildFile; fileRef = D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */; };
+		D6EDB983164DEB0000B4062B /* LDrawRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB980164DEB0000B4062B /* LDrawRenderer.h */; };
+		D6EDB984164DEB0000B4062B /* LDrawShaderRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */; };
+		D6EDB985164DEB0000B4062B /* LDrawShaderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */; };
+		D6EDB9C8164DF28100B4062B /* LDrawShaderLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */; };
+		D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */; };
+		D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */ = {isa = PBXBuildFile; fileRef = D6EDBA0C164DF86F00B4062B /* test.glsl */; };
+		D6EDBB4716508D7200B4062B /* LDrawBDPAllocator.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */; };
+		D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */; };
+		D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */; };
+		D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */; };
 		D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D6FC72121604EBB8005A404E /* LDrawFastSet.h */; };
 /* End PBXBuildFile section */
 
@@ -307,6 +324,20 @@
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = AMSProgressBar;
 		};
+		95D893A61655325100AA055B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 95D8939E1655325000AA055B /* LSynth.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 95BE9C111609F609004437E1;
+			remoteInfo = LSynth;
+		};
+		95D893A91655328300AA055B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 95D8939E1655325000AA055B /* LSynth.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 95BE9C101609F609004437E1;
+			remoteInfo = LSynth;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -320,6 +351,16 @@
 				0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */,
 			);
 			name = "Copy Frameworks (1)";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95D893AB165532A400AA055B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				95D893AC165532B100AA055B /* lsynthcp in CopyFiles */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -603,6 +644,14 @@
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
+		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
+		95D893AD1655334500AA055B /* lsynth.mpd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lsynth.mpd; path = ../../ThirdParty/LSynth/LSynth/lsynth.mpd; sourceTree = "<group>"; };
+		95D893B616555F3E00AA055B /* LSynthConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LSynthConfiguration.h; sourceTree = "<group>"; };
+		95D893B716555F3E00AA055B /* LSynthConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LSynthConfiguration.m; sourceTree = "<group>"; };
+		95D893C816569CFD00AA055B /* LDrawLSynth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawLSynth.h; sourceTree = "<group>"; };
+		95D893C916569CFD00AA055B /* LDrawLSynth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawLSynth.m; sourceTree = "<group>"; };
+		D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDataStream.h; sourceTree = "<group>"; };
+		D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDataStream.m; sourceTree = "<group>"; };
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
 		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
 		D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairPlus.tiff; sourceTree = "<group>"; };
@@ -610,6 +659,16 @@
 		D6CB41DF15E2AA6C00730E2A /* ModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelManager.m; sourceTree = "<group>"; };
 		D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtilities.h; sourceTree = "<group>"; };
 		D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OpenGLUtilities.c; sourceTree = "<group>"; };
+		D6EDB980164DEB0000B4062B /* LDrawRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawRenderer.h; sourceTree = "<group>"; };
+		D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawShaderRenderer.h; sourceTree = "<group>"; };
+		D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawShaderRenderer.m; sourceTree = "<group>"; };
+		D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawShaderLoader.h; sourceTree = "<group>"; };
+		D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawShaderLoader.m; sourceTree = "<group>"; };
+		D6EDBA0C164DF86F00B4062B /* test.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.glsl; sourceTree = "<group>"; };
+		D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawBDPAllocator.h; sourceTree = "<group>"; };
+		D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawBDPAllocator.m; sourceTree = "<group>"; };
+		D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDisplayList.h; sourceTree = "<group>"; };
+		D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDisplayList.m; sourceTree = "<group>"; };
 		D6FC72121604EBB8005A404E /* LDrawFastSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawFastSet.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -711,6 +770,7 @@
 		0B2AB7BB07C7E8BE00085145 /* LDraw */ = {
 			isa = PBXGroup;
 			children = (
+				D6EDB97F164DEB0000B4062B /* Renderer */,
 				0B6F383B07C81F6D007B1075 /* Commands */,
 				0B6F383C07C81F81007B1075 /* Files */,
 				0B1DA5A113172DA700E14960 /* Support */,
@@ -742,6 +802,8 @@
 				0B6122EC153516600085F944 /* LDrawTexture.m */,
 				0B6F3FB507CB0253007B1075 /* LDrawTriangle.h */,
 				0B6F3FB607CB0253007B1075 /* LDrawTriangle.m */,
+				95D893C816569CFD00AA055B /* LDrawLSynth.h */,
+				95D893C916569CFD00AA055B /* LDrawLSynth.m */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -1016,6 +1078,8 @@
 		0BF729AB08AD849300E3DA53 /* General */ = {
 			isa = PBXGroup;
 			children = (
+				95D893B616555F3E00AA055B /* LSynthConfiguration.h */,
+				95D893B716555F3E00AA055B /* LSynthConfiguration.m */,
 				0B25F03E093D5F960099D85E /* BricksmithApplication.h */,
 				0B25F03F093D5F960099D85E /* BricksmithApplication.m */,
 				0B2FADD110196C2E007BA948 /* DonationDialogController.h */,
@@ -1080,6 +1144,7 @@
 				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 				2BB5975809FEFD250077A885 /* AMSProgressBar.xcodeproj */,
+				95D8939E1655325000AA055B /* LSynth.xcodeproj */,
 			);
 			name = "Mac LDraw";
 			sourceTree = "<group>";
@@ -1118,6 +1183,8 @@
 		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D6EDBA0B164DF86F00B4062B /* Shaders */,
+				95D893AD1655334500AA055B /* lsynth.mpd */,
 				95D8939216550B6400AA055B /* Legonian Ruler.pdf */,
 				0B2FAE5F101972DF007BA948 /* Bum.ldr */,
 				0B9907620DD7EDBB003F6B13 /* LDConfig.ldr */,
@@ -1153,6 +1220,40 @@
 				2BB5975E09FEFD250077A885 /* AMSProgressBar.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		95D8939F1655325000AA055B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				95D893A71655325100AA055B /* lsynthcp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D6EDB97F164DEB0000B4062B /* Renderer */ = {
+			isa = PBXGroup;
+			children = (
+				D6EDB980164DEB0000B4062B /* LDrawRenderer.h */,
+				D6EDB981164DEB0000B4062B /* LDrawShaderRenderer.h */,
+				D6EDB982164DEB0000B4062B /* LDrawShaderRenderer.m */,
+				D6EDB9C6164DF28100B4062B /* LDrawShaderLoader.h */,
+				D6EDB9C7164DF28100B4062B /* LDrawShaderLoader.m */,
+				D6EDBB4516508D7200B4062B /* LDrawBDPAllocator.h */,
+				D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */,
+				D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */,
+				D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */,
+				D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */,
+				D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */,
+			);
+			path = Renderer;
+			sourceTree = "<group>";
+		};
+		D6EDBA0B164DF86F00B4062B /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				D6EDBA0C164DF86F00B4062B /* test.glsl */,
+			);
+			path = Shaders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1253,6 +1354,14 @@
 				D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */,
 				D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */,
 				D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */,
+				95D893B816555F3E00AA055B /* LSynthConfiguration.h in Headers */,
+				95D893CA16569CFD00AA055B /* LDrawLSynth.h in Headers */,
+				D6EDB983164DEB0000B4062B /* LDrawRenderer.h in Headers */,
+				D6EDB984164DEB0000B4062B /* LDrawShaderRenderer.h in Headers */,
+				D6EDB9C8164DF28100B4062B /* LDrawShaderLoader.h in Headers */,
+				D6EDBB4716508D7200B4062B /* LDrawBDPAllocator.h in Headers */,
+				D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */,
+				D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1268,10 +1377,12 @@
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				0BB5926D08AD93610049B708 /* Copy Frameworks (1) */,
+				95D893AB165532A400AA055B /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				95D893AA1655328300AA055B /* PBXTargetDependency */,
 				2BB5976009FEFD2E0077A885 /* PBXTargetDependency */,
 			);
 			name = Bricksmith;
@@ -1302,6 +1413,10 @@
 					ProductGroup = 2BB5975909FEFD250077A885 /* Products */;
 					ProjectRef = 2BB5975809FEFD250077A885 /* AMSProgressBar.xcodeproj */;
 				},
+				{
+					ProductGroup = 95D8939F1655325000AA055B /* Products */;
+					ProjectRef = 95D8939E1655325000AA055B /* LSynth.xcodeproj */;
+				},
 			);
 			projectRoot = ..;
 			targets = (
@@ -1316,6 +1431,13 @@
 			fileType = wrapper.framework;
 			path = AMSProgressBar.framework;
 			remoteRef = 2BB5975D09FEFD250077A885 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		95D893A71655325100AA055B /* lsynthcp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = lsynthcp;
+			remoteRef = 95D893A61655325100AA055B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1419,8 +1541,10 @@
 				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
 				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
 				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
+				D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */,
 				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
 				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
+				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1518,6 +1642,12 @@
 				0B6122EE153516600085F944 /* LDrawTexture.m in Sources */,
 				D6EC01BF15A54B3B0004CEB8 /* OpenGLUtilities.c in Sources */,
 				D6CB459515E316D300730E2A /* ModelManager.m in Sources */,
+				95D893B916555F3E00AA055B /* LSynthConfiguration.m in Sources */,
+				95D893CB16569CFD00AA055B /* LDrawLSynth.m in Sources */,
+				D6EDB985164DEB0000B4062B /* LDrawShaderRenderer.m in Sources */,
+				D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */,
+				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
+				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1528,6 +1658,11 @@
 			isa = PBXTargetDependency;
 			name = AMSProgressBar;
 			targetProxy = 2BB5975F09FEFD2E0077A885 /* PBXContainerItemProxy */;
+		};
+		95D893AA1655328300AA055B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LSynth;
+			targetProxy = 95D893A91655328300AA055B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1841,7 +1976,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 			};
 			name = Debug;
 		};
@@ -1854,7 +1989,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 			};
 			name = Release;
 		};

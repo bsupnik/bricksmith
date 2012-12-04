@@ -528,7 +528,7 @@
 //========== receiveMessage ====================================================
 //
 // Purpose:		The things we observe call this when something one-time and 
-//				eventful happens - we can repsond if desired.
+//				eventful happens - we can respond if desired.
 //
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable

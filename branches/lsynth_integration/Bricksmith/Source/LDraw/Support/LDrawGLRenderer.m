@@ -29,6 +29,7 @@
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#import "LDrawShaderRenderer.h"
 #include "LDrawVertexes.h"
 #include "OpenGLUtilities.h"
 #include "MacLDraw.h"
@@ -41,7 +42,10 @@
 #define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
 #define DEBUG_BOUNDING_BOX			0
 
-#define DEBUG_DRAWING				0	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
+#define NEW_RENDERER				0
+
+
+#define DEBUG_DRAWING				1	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
 
@@ -247,9 +251,19 @@
 	glLineWidth(MIN([self zoomPercentage]/100 * 0.5, 1.0));
 
 	// DRAW!
+	#if !NEW_RENDERER
+	
 	[self->fileBeingDrawn draw:options
 					 viewScale:[self zoomPercentage]/100.
 				   parentColor:color];
+	
+	#else
+
+	LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] init];	
+	[self->fileBeingDrawn drawSelf:ren];
+	[ren release];
+
+	#endif
 
 	// We allow primitive drawing to leave their VAO bound to avoid setting the VAO
 	// back to zero between every draw call.  Set it once here to avoid usign some
