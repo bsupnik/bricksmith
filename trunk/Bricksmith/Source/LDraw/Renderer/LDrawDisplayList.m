@@ -705,12 +705,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			
 					struct LDrawDLPerTex * tptr = dl->texes;
 					
+					if(tptr->line_count)
+						glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 					if(tptr->tri_count)
 						glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 					if(tptr->quad_count)
 						glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-					if(tptr->line_count)
-						glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 				}
 			}
 			
@@ -769,12 +769,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				glVertexAttribPointer(attr_transform_z, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+16);
 				glVertexAttribPointer(attr_transform_w, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+20);
 
+				if(s->dl->line_count)
+					glDrawArraysInstancedARB(GL_LINES,s->dl->line_off,s->dl->line_count, s->inst_count);
 				if(s->dl->tri_count)
 					glDrawArraysInstancedARB(GL_TRIANGLES,s->dl->tri_off,s->dl->tri_count, s->inst_count);
 				if(s->dl->quad_count)
 					glDrawArraysInstancedARB(GL_QUADS,s->dl->quad_off,s->dl->quad_count, s->inst_count);
-				if(s->dl->line_count)
-					glDrawArraysInstancedARB(GL_LINES,s->dl->line_off,s->dl->line_count, s->inst_count);
 			}
 
 			glDisableVertexAttribArray(attr_transform_x);
@@ -851,12 +851,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				else 
 					setup_tex_spec(&l->spec);
 				
+				if(tptr->line_count)
+					glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 				if(tptr->tri_count)
 					glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 				if(tptr->quad_count)
 					glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-				if(tptr->line_count)
-					glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 			}
 			++l;
 		}
@@ -1000,15 +1000,15 @@ void LDrawDLDraw(
 	
 	struct LDrawDLPerTex * tptr = dl->texes;
 	
-	if(dl->tex_count == 1 && tptr->spec.tex_obj == 0 && spec == NULL)
+	if(dl->tex_count == 1 && tptr->spec.tex_obj == 0 && (spec == NULL || spec->tex_obj == 0))
 	{
 		// Special case: one untextured mesh - just draw.
+		if(tptr->line_count)
+			glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 		if(tptr->tri_count)
 			glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 		if(tptr->quad_count)
 			glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-		if(tptr->line_count)
-			glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 	}
 	else
 	{
@@ -1024,12 +1024,12 @@ void LDrawDLDraw(
 			else 
 				setup_tex_spec(spec);
 			
+			if(tptr->line_count)
+				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 			if(tptr->tri_count)
 				glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 			if(tptr->quad_count)
 				glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-			if(tptr->line_count)
-				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 		}
 
 		setup_tex_spec(spec);
