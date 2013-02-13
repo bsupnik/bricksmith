@@ -172,6 +172,7 @@ typedef enum Message {
 	#endif
 	CacheFlagsT		invalFlags;
 	BOOL			isSelected;
+    NSString       *iconName;
 	
 }
 
@@ -209,6 +210,7 @@ typedef enum Message {
 
 - (void) setEnclosingDirective:(LDrawContainer *)newParent;
 - (void) setSelected:(BOOL)flag;
+- (void) setIconName:(NSString *)icon;
 
 // protocol Inspectable
 - (void) lockForEditing;

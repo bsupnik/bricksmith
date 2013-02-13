@@ -219,9 +219,9 @@
 
     //[self setPostsNotifications:YES];
 
-//    [[NSNotificationCenter defaultCenter]
-//            postNotificationName:LDrawDirectiveDidChangeNotification
-//                          object:self];
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName:LDrawDirectiveDidChangeNotification
+                          object:self];
 
     blockLog = [blockLog stringByAppendingString:@"\n---------------------------------------------------------------------------\n"];
     NSLog(@"%@", blockLog);
@@ -236,6 +236,14 @@
 //==============================================================================
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
 {
+    // Pick a badge icon depending on the LSynth class (band or hose)
+    if (self->lsynthClass == LSYNTH_HOSE) {
+        [directive setIconName:@"LSynthHoseConstraint"];
+    }
+    else if (self->lsynthClass == LSYNTH_BAND) {
+        [directive setIconName:@"LSynthBandConstraint"];
+    }
+
     [directive setEnclosingDirective:self];
 
     [[self subdirectives] insertObject:directive atIndex:index];

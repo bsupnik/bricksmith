@@ -49,6 +49,7 @@
 	self = [super init];
 	
 	[self setDisplayName:@""];
+    [self setIconName:@"Brick"];
 	[self setTransformComponents:IdentityComponents];
 	//	drawLock = [[NSLock alloc] init];
 	
@@ -641,20 +642,6 @@
 	return [[PartLibrary sharedPartLibrary] descriptionForPart:self];
 	
 }//end browsingDescription
-
-
-//========== iconName ==========================================================
-//
-// Purpose:		Returns the name of image file used to display this kind of 
-//				object, or nil if there is no icon.
-//
-//==============================================================================
-- (NSString *) iconName
-{
-	return @"Brick";
-	
-}//end iconName
-
 
 //========== inspectorClassName ================================================
 //
