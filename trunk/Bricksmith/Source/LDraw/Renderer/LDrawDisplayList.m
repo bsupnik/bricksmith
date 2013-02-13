@@ -50,11 +50,13 @@
 
 */
 
+#define WANT_STATS 0
+
 #define VERT_STRIDE 10								// Stride of our vertices - we always write X Y Z	NX NY NZ		R G B A
-#define INST_CUTOFF 3000000							// Minimum instances to use hw case, which has higher overhead to set up.  
+#define INST_CUTOFF 5								// Minimum instances to use hw case, which has higher overhead to set up.  
 #define INST_MAX_COUNT (1024 * 128)					// Maximum instances to write per draw before going to immediate mode - avoids unbounded VRAM use.
-#define INST_RING_BUFFER_COUNT 1					// Number of VBOs to rotate for hw instancing - doesn't actually help, it turns out.
-#define MODE_FOR_INST_STREAM GL_DYNAMIC_DRAW		// VBO mode for instancing.
+#define INST_RING_BUFFER_COUNT 4					// Number of VBOs to rotate for hw instancing - doesn't actually help, it turns out.
+#define MODE_FOR_INST_STREAM GL_DYNAMIC_STATIC		// VBO mode for instancing.
 
 enum {
 	dl_has_alpha = 1,		// At least one prim in this DL has translucency.
@@ -122,7 +124,11 @@ struct LDrawDL {
 	int						flags;					// See flags defs above.
 	GLuint					vbo;					// Single VBO containing all geometry in the DL.
 	int						tex_count;				// Number of per-textures; untex case is always first if present.
+	#if WANT_STATS
+	int						vert_count;
+	#endif
 	struct LDrawDLPerTex	texes[0];				// Variable size array of textures - DL is allocated larger as needed.
+
 };
 
 //==========  SESSION DATA STRUCTURES ========================================
@@ -158,6 +164,22 @@ struct LDrawDLSortedInstanceLink {
 
 // One drawing session.
 struct LDrawDLSession {
+	#if WANT_STATS
+	struct {
+		int								num_btch_imm;		// Immediate drawing batches and verts
+		int								num_vert_imm;		
+		int								num_btch_srt;		// Sorted drawin batches and verts.
+		int								num_vert_srt;
+		int								num_btch_att;		// Attribute instancing: batches, verts, instances
+		int								num_vert_att;
+		int								num_inst_att;
+		int								num_work_att;
+		int								num_btch_ins;		// Hardare instancing: batches, verts, instances
+		int								num_vert_ins;
+		int								num_inst_ins;
+		int								num_work_ins;
+	} stats;
+	#endif
 	struct LDrawBDP *					alloc;					// Pool allocator for the session to rapidly save linked lists of 'stuff'.
 	struct LDrawDL *					dl_head;				// Linked list of all DLs that will be instance-drawn, with count.
 	int									dl_count;
@@ -432,6 +454,10 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	
 	dl->tex_count = total_texes;
 	
+	#if WANT_STATS
+	dl->vert_count = total_vertices;
+	#endif	
+	
 	// Generate and map a VBO for our mesh data.
 	glGenBuffers(1,&dl->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dl->vbo);
@@ -546,6 +572,9 @@ struct LDrawDLSession * LDrawDLSessionCreate(const GLfloat model_view[3])
 	session->dl_count = 0;
 	session->sorted_head = NULL;
 	session->sort_count = 0;
+	#if WANT_STATS
+	memset(&session->stats,0,sizeof(session->stats));
+	#endif
 	memcpy(session->model_view,model_view,sizeof(GLfloat)*16);
 	session->inst_ring = inst_ring_last;
 	// each session picks up a new buffer in the ring of instance buffers.
@@ -613,6 +642,13 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				cur_segment->inst_base = NULL; 
 				cur_segment->inst_base += (inst_data - inst_base);
 				cur_segment->inst_count = dl->instance_count;
+				
+				#if WANT_STATS
+					session->stats.num_btch_ins++;
+					session->stats.num_inst_ins += (dl->instance_count);
+					session->stats.num_vert_ins += (dl->instance_count * dl->vert_count);
+					session->stats.num_work_ins += dl->vert_count;
+				#endif
 			
 				// Now walk the instance list, copying the instances into the instance VBO one by one.
 			
@@ -643,6 +679,13 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			}
 			else
 			{
+				#if WANT_STATS
+					session->stats.num_btch_att++;
+					session->stats.num_inst_att += (dl->instance_count);
+					session->stats.num_vert_att += (dl->instance_count * dl->vert_count);
+					session->stats.num_work_att += dl->vert_count;
+				#endif
+			
 				// Immediate mode instancing - we draw now!  So bind up the mesh of this DL.
 				glBindBuffer(GL_ARRAY_BUFFER,dl->vbo);
 				float * p = NULL;
@@ -662,12 +705,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			
 					struct LDrawDLPerTex * tptr = dl->texes;
 					
+					if(tptr->line_count)
+						glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 					if(tptr->tri_count)
 						glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 					if(tptr->quad_count)
 						glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-					if(tptr->line_count)
-						glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 				}
 			}
 			
@@ -726,12 +769,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				glVertexAttribPointer(attr_transform_z, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+16);
 				glVertexAttribPointer(attr_transform_w, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+20);
 
+				if(s->dl->line_count)
+					glDrawArraysInstancedARB(GL_LINES,s->dl->line_off,s->dl->line_count, s->inst_count);
 				if(s->dl->tri_count)
 					glDrawArraysInstancedARB(GL_TRIANGLES,s->dl->tri_off,s->dl->tri_count, s->inst_count);
 				if(s->dl->quad_count)
 					glDrawArraysInstancedARB(GL_QUADS,s->dl->quad_off,s->dl->quad_count, s->inst_count);
-				if(s->dl->line_count)
-					glDrawArraysInstancedARB(GL_LINES,s->dl->line_off,s->dl->line_count, s->inst_count);
 			}
 
 			glDisableVertexAttribArray(attr_transform_x);
@@ -808,12 +851,12 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				else 
 					setup_tex_spec(&l->spec);
 				
+				if(tptr->line_count)
+					glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 				if(tptr->tri_count)
 					glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 				if(tptr->quad_count)
 					glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-				if(tptr->line_count)
-					glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 			}
 			++l;
 		}
@@ -821,6 +864,18 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 	
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 
+	#if WANT_STATS
+		printf("Immediate drawing: %d batches, %d vertices.\n",session->stats.num_btch_imm, session->stats.num_vert_imm);
+		printf("Sorted drawing: %d batches, %d vertices.\n",session->stats.num_btch_srt, session->stats.num_vert_srt);
+		printf("Attribute instancing: %d batches, %d instances, %d (%d) vertices.\n", session->stats.num_btch_att, session->stats.num_inst_att, session->stats.num_work_att, session->stats.num_vert_att);
+		printf("Hardware instancing: %d batches, %d instances, %d (%d) vertices.\n", session->stats.num_btch_ins, session->stats.num_inst_ins, session->stats.num_work_ins, session->stats.num_vert_ins);
+		printf("Working set estimate (MB): %zd\n", 
+					(session->stats.num_vert_srt + 
+					 session->stats.num_vert_imm + 
+					 session->stats.num_work_ins +
+					 session->stats.num_work_att) * VERT_STRIDE * sizeof(GLfloat) / (1024 * 1024));
+	#endif
+	
 	// Finally done - all allocations for session (including our own obj) come from a BDP, so cleanup is quick.  
 	// Instance VBO remains to be reused.
 	// DLs themselves live on beyond session.
@@ -860,6 +915,11 @@ void LDrawDLDraw(
 		int want_sort = (dl->flags & dl_has_alpha) || ((dl->flags & dl_has_meta) && (cur_color[3] < 1.0f || cmp_color[3] < 1.0f));
 		if(want_sort)
 		{
+			#if WANT_STATS
+				session->stats.num_btch_srt++;
+				session->stats.num_vert_srt += dl->vert_count;
+			#endif
+		
 			// Build a sorted link, copy the instance data to it, and link it up to our session for later processing.
 			struct LDrawDLSortedInstanceLink * link = LDrawBDPAllocate(session->alloc, sizeof(struct LDrawDLSortedInstanceLink));
 			link->next = session->sorted_head;
@@ -916,6 +976,10 @@ void LDrawDLDraw(
 	
 	// IMMEDIATE MODE DRAW CASE!  If we get here, we are going to draw this DL right now at this
 	// position.
+	#if WANT_STATS
+		session->stats.num_btch_imm++;
+		session->stats.num_vert_imm += dl->vert_count;
+	#endif
 	
 	// Push current transform & color into attribute state.
 	int i;
@@ -936,15 +1000,15 @@ void LDrawDLDraw(
 	
 	struct LDrawDLPerTex * tptr = dl->texes;
 	
-	if(dl->tex_count == 1 && tptr->spec.tex_obj == 0 && spec == NULL)
+	if(dl->tex_count == 1 && tptr->spec.tex_obj == 0 && (spec == NULL || spec->tex_obj == 0))
 	{
 		// Special case: one untextured mesh - just draw.
+		if(tptr->line_count)
+			glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 		if(tptr->tri_count)
 			glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 		if(tptr->quad_count)
 			glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-		if(tptr->line_count)
-			glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 	}
 	else
 	{
@@ -960,12 +1024,12 @@ void LDrawDLDraw(
 			else 
 				setup_tex_spec(spec);
 			
+			if(tptr->line_count)
+				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 			if(tptr->tri_count)
 				glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 			if(tptr->quad_count)
 				glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
-			if(tptr->line_count)
-				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 		}
 
 		setup_tex_spec(spec);

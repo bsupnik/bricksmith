@@ -68,8 +68,8 @@ static void set_color4fv(GLfloat * c, GLfloat storage[4])
 //================================================================================
 static void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4])
 {
-	dst[0] = v[0] * m[0] + v[1] * m[4] + v[2] * m[8] + v[3] * m[12];
-	dst[1] = v[0] * m[1] + v[1] * m[5] + v[2] * m[9] + v[3] * m[13];
+	dst[0] = v[0] * m[0] + v[1] * m[4] + v[2] * m[8 ] + v[3] * m[12];
+	dst[1] = v[0] * m[1] + v[1] * m[5] + v[2] * m[9 ] + v[3] * m[13];
 	dst[2] = v[0] * m[2] + v[1] * m[6] + v[2] * m[10] + v[3] * m[14];
 	dst[3] = v[0] * m[3] + v[1] * m[7] + v[2] * m[11] + v[3] * m[15];
 }//end applyMatrix
@@ -297,7 +297,7 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 
 		maxb[0] = MAX(maxb[0],p[0]);
 		maxb[1] = MAX(maxb[1],p[1]);
-		maxb[2] = MAX(minb[2],p[2]);
+		maxb[2] = MAX(maxb[2],p[2]);
 	}
 
 	if(maxb[0] < -1.0f ||

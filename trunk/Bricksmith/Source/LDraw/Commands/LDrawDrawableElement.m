@@ -374,6 +374,7 @@
 	[newColor retain];
 	[self->color release];
 	self->color = newColor;
+	[self invalCache:(DisplayList)];	// Needed to force anyone who is cached to recompute the new DL with possibly baked color!	
 	
 }//end setLDrawColor:
 

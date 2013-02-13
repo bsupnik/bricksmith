@@ -106,7 +106,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 															NSOpenGLPFADoubleBuffer,
 															NSOpenGLPFADepthSize,		32,
 															NSOpenGLPFASampleBuffers,	1, // enable line antialiasing
-															NSOpenGLPFASamples,			3, // antialiasing beauty
+															NSOpenGLPFASamples,			4, // antialiasing beauty
 															0};
 
 	pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes: pixelAttributes];
