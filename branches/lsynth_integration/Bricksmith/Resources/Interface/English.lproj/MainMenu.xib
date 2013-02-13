@@ -296,7 +296,7 @@
 								</object>
 								<object class="NSMenuItem" id="358050584">
 									<reference key="NSMenu" ref="633798449"/>
-									<string key="NSTitle">Reveal In Finder</string>
+									<string key="NSTitle">Show In Finder</string>
 									<string key="NSKeyEquiv">F</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -3385,18 +3385,15 @@
 						<string key="advanceOneStep:">id</string>
 						<string key="backOneStep:">id</string>
 						<string key="copy:">id</string>
-						<string key="cut:">id</string>
 						<string key="delete:">id</string>
 						<string key="duplicate:">id</string>
 						<string key="exportSteps:">id</string>
 						<string key="gridGranularityMenuChanged:">id</string>
 						<string key="hideParts:">id</string>
-						<string key="orderFrontMovePanel:">id</string>
 						<string key="orderFrontRotationPanel:">id</string>
 						<string key="paste:">id</string>
 						<string key="quickRotateClicked:">id</string>
 						<string key="revealInFinder:">id</string>
-						<string key="selectAll:">id</string>
 						<string key="showAllParts:">id</string>
 						<string key="showDimensions:">id</string>
 						<string key="showInspector:">id</string>
@@ -3407,7 +3404,6 @@
 						<string key="toggleFileContentsDrawer:">id</string>
 						<string key="toggleStepDisplay:">id</string>
 						<string key="viewAll:">id</string>
-						<string key="viewOrientationSelected:">id</string>
 						<string key="viewSteps:">id</string>
 						<string key="zoomActual:">id</string>
 						<string key="zoomIn:">id</string>
@@ -3462,10 +3458,6 @@
 							<string key="name">copy:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBActionInfo" key="cut:">
-							<string key="name">cut:</string>
-							<string key="candidateClassName">id</string>
-						</object>
 						<object class="IBActionInfo" key="delete:">
 							<string key="name">delete:</string>
 							<string key="candidateClassName">id</string>
@@ -3486,10 +3478,6 @@
 							<string key="name">hideParts:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBActionInfo" key="orderFrontMovePanel:">
-							<string key="name">orderFrontMovePanel:</string>
-							<string key="candidateClassName">id</string>
-						</object>
 						<object class="IBActionInfo" key="orderFrontRotationPanel:">
 							<string key="name">orderFrontRotationPanel:</string>
 							<string key="candidateClassName">id</string>
@@ -3504,10 +3492,6 @@
 						</object>
 						<object class="IBActionInfo" key="revealInFinder:">
 							<string key="name">revealInFinder:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="selectAll:">
-							<string key="name">selectAll:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="showAllParts:">
@@ -3548,10 +3532,6 @@
 						</object>
 						<object class="IBActionInfo" key="viewAll:">
 							<string key="name">viewAll:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="viewOrientationSelected:">
-							<string key="name">viewOrientationSelected:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="viewSteps:">

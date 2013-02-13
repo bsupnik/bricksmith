@@ -11,6 +11,67 @@
 
 @implementation LSynthConfiguration
 
+#pragma mark -
+#pragma mark CLASS CONSTANTS
+#pragma mark -
+
+//========== Class constants ===================================================
+//
+// Purpose:		Class Constants
+//
+// TODO: make configurable preferences
+//
+//==============================================================================
+
+static NSString *DEFAULT_HOSE_CONSTRAINT = @"LS01.DAT";
+static NSString *DEFAULT_BAND_CONSTRAINT = @"3648a.dat";
+static NSString *DEFAULT_HOSE_TYPE = @"TECHNIC_PNEUMATIC_HOSE";
+static NSString *DEFAULT_BAND_TYPE = @"TECHNIC_CHAIN_LINK";
+
+//========== defaultHoseConstraint =============================================
+//
+// Purpose: Return the default hose constraint
+//
+//==============================================================================
++(NSString *) defaultHoseConstraint
+{
+    return DEFAULT_HOSE_CONSTRAINT;
+}//end defaultHoseConstraint
+
+//========== defaultBandConstraint =============================================
+//
+// Purpose: Return the default band constraint
+//
+//==============================================================================
++(NSString *) defaultBandConstraint
+{
+    return DEFAULT_BAND_CONSTRAINT;
+}//end defaultBandConstraint
+
+//========== defaultHoseType ===================================================
+//
+// Purpose: Return the default hose type
+//
+//==============================================================================
++(NSString *) defaultHoseType
+{
+    return DEFAULT_HOSE_TYPE;
+}//end defaultHoseType
+
+//========== defaultBandCType ==================================================
+//
+// Purpose: Return the default band type
+//
+//==============================================================================
++(NSString *) defaultBandType
+{
+    return DEFAULT_BAND_TYPE;
+}//end defaultBandType
+
+#pragma mark -
+#pragma mark SINGLETON
+#pragma mark -
+
 // Container for our singleton instance
 static LSynthConfiguration* instance = nil;
 
@@ -365,5 +426,26 @@ static LSynthConfiguration* instance = nil;
     return nil;
 } //end constraintDefinitionForPart:
 
+//========== typeForTypeName: ==================================================
+//
+// Purpose:		Look up a band or hose definition by name.  Used when the class
+//              is changed.  Not especially performant.
+//
+//==============================================================================
+-(NSDictionary *)typeForTypeName:(NSString *)typeName
+{
+    for (NSDictionary *type in band_types) {
+        if ([[type valueForKey:@"LSYNTH_TYPE"] isEqualToString:typeName]) {
+            return type;
+        }
+    }
+
+    for (NSDictionary *type in hose_types) {
+        if ([[type valueForKey:@"LSYNTH_TYPE"] isEqualToString:typeName]) {
+            return type;
+        }
+    }
+    return nil;
+}//end typeForTypeName:
 
 @end

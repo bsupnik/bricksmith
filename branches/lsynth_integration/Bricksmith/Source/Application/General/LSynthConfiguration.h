@@ -47,7 +47,16 @@ typedef enum
 -(BOOL) isLSynthConstraint:(LDrawPart *)part;
 
 #pragma mark -
-#pragma mark Accessors
+#pragma mark CONSTANT ACCESSORS
+#pragma mark -
+
++(NSString *) defaultHoseConstraint;
++(NSString *) defaultBandConstraint;
++(NSString *) defaultHoseType;
++(NSString *) defaultBandType;
+
+#pragma mark -
+#pragma mark ACCESSORS
 #pragma mark -
 
 -(NSMutableArray *) getParts;
@@ -59,6 +68,7 @@ typedef enum
 -(NSMutableArray *) getQuickRefHoses;
 -(NSMutableArray *) getQuickRefBandContstraints;
 -(NSMutableArray *) getQuickRefHoseConstraints;
--(NSDictionary *) constraintDefinitionForPart:(LDrawPart *)directive;
+-(NSDictionary *)   constraintDefinitionForPart:(LDrawPart *)directive;
+-(NSDictionary *)   typeForTypeName:(NSString *)typeName;
 
 @end

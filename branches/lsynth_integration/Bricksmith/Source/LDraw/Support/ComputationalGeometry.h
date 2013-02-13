@@ -8,7 +8,7 @@
 //==============================================================================
 
 #import <Foundation/Foundation.h>
-#import "LDrawPart.h";
+#import "LDrawPart.h"
 
 @interface ComputationalGeometry : NSObject
 

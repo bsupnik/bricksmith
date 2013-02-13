@@ -165,6 +165,20 @@
     NSMutableArray *results = [NSMutableArray arrayWithCapacity:4];
     int i = 0;
 
+    // Let A, B be the centers, and C, D be points at which the tangent
+    // touches first and second circle, and n be the normal vector to it.
+    //
+    // We have the system:
+    //   n * n = 1          (n is a unit vector)
+    //   C = A + r1 * n
+    //   D = B +/- r2 * n
+    //   n * CD = 0         (common orthogonality)
+    //
+    // n * CD = n * (AB +/- r2*n - r1*n) = AB*n - (r1 -/+ r2) = 0,  <=>
+    // AB * n = (r1 -/+ r2), <=>
+    // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
+    // This is a linear equation in unknown vector n.
+
     for (int sign1 = 1; sign1 >= -1; sign1 -= 2) {
         double c = ([c1 r] - (sign1 * [c2 r])) / d;
 

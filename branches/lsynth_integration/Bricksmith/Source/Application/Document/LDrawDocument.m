@@ -3142,7 +3142,7 @@
 	
 	//an LDraw directive; thank goodness! It knows how to describe itself.
 	// The description will form the basis of the attributed text for the cell.
-	if([item isKindOfClass:[LDrawDirective class]]){
+	if([item isKindOfClass:[LDrawDirective class]]) {
 		representation = [item browsingDescription];
 		
 		//Apply formatting to our little string.
@@ -3378,18 +3378,17 @@
 		[undoManager setActionName:NSLocalizedString(@"UndoReorder", nil)];
 	}
 
-    // Ask the source and target parents to cleanup if they can
-    // TODO: May not be required any more.  Was added for LSynth resynthesis
-    //       but dirty flags handle this
+    // Ask the source and target parents to cleanup if they can e.g. used for
+    // updating container selection state
     for (LDrawDirective *parent in [donatingParents allObjects]) {
         if ([parent isKindOfClass:[LDrawContainer class]] &&
-            [parent respondsToSelector:@selector(cleanupAfterDrop)]) {
-            [parent performSelector:@selector(cleanupAfterDrop)];
+            [parent respondsToSelector:@selector(cleanupAfterDropIsDonor:)]) {
+            [parent performSelector:@selector(cleanupAfterDropIsDonor:) withObject:[NSNumber numberWithBool:YES]];
         }
     }
 
-    if ([newParent respondsToSelector:@selector(cleanupAfterDrop)]) {
-        [newParent performSelector:@selector(cleanupAfterDrop)];
+    if ([newParent respondsToSelector:@selector(cleanupAfterDropIsDonor:)]) {
+        [newParent performSelector:@selector(cleanupAfterDropIsDonor:) withObject:[NSNumber numberWithBool:NO]];
     }
 
     //And lastly, select the dragged objects.

@@ -10,6 +10,7 @@
 #import "LDrawDrawableElement.h"
 #import "ColorLibrary.h"
 #import "LDrawMovableDirective.h"
+#import "LSynthConfiguration.h"
 
 // Lsynth block parser states
 typedef enum
@@ -45,5 +46,8 @@ typedef enum
 // Utilities
 - (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
+- (NSString *)determineIconName:(LDrawDirective *)directive;
+-(int)synthesizedPartsCount;
+
 + (BOOL) lineIsLSynthBeginning:(NSString*)line;
 @end

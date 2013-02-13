@@ -194,7 +194,7 @@
 - (LDrawGLView *) main3DViewport;
 - (void) updateViewportAutosaveNamesAndRestore:(BOOL)shouldRestore;
 
-// Utilites
+// Utilities
 - (void) addModel:(LDrawMPDModel *)newModel atIndex:(NSInteger)insertAtIndex preventNameCollisions:(BOOL)renameModels;
 - (void) addStep:(LDrawStep *)newStep parent:(LDrawMPDModel*)selectedModel index:(NSInteger)insertAtIndex;
 - (void) addPartNamed:(NSString *)partName;

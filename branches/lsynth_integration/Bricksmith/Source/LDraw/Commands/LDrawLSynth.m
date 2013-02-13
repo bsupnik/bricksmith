@@ -18,6 +18,7 @@
 #import "LDrawLSynthDirective.h"
 #import "ComputationalGeometry.h"
 #import "MatrixMath.h"
+#import "MacLDraw.h"
 
 @implementation LDrawLSynth
 
@@ -40,6 +41,8 @@
         self->synthType  = [[NSString alloc] init];
         color            = [[LDrawColor alloc] init];
     }
+
+    //[self addObserver:self];
 
     return self;
 }//end init
@@ -70,7 +73,6 @@
 {
     NSLog(@"========================================================================\n");
 
-//    NSString          *blockLog            = @"";
     NSString          *currentLine         = nil;
     Class              CommandClass        = Nil;
     NSRange            commandRange        = range;
@@ -78,8 +80,6 @@
     LSynthParserStateT parserState         = PARSER_READY;
 
     self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
-
-    //[self setPostsNotifications:NO];
 
     if(self)
     {
@@ -210,8 +210,6 @@
         [self invalCache:ContainerInvalid];
     }
 
-    //[self setPostsNotifications:YES];
-
     [[NSNotificationCenter defaultCenter]
             postNotificationName:LDrawDirectiveDidChangeNotification
                           object:self];
@@ -219,6 +217,21 @@
     return self;
 
 }//end initWithLines:inRange:
+
+#pragma mark -
+#pragma mark DISPLAY
+#pragma mark -
+
+//========== inspectorClassName ================================================
+//
+// Purpose:		Returns the name of the class used to inspect this one.
+//
+//==============================================================================
+- (NSString *) inspectorClassName
+{
+    return @"InspectionLSynth";
+
+}//end inspectorClassName
 
 #pragma mark -
 #pragma mark DIRECTIVES
@@ -332,14 +345,17 @@
 //==============================================================================
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
 {
-    NSArray         *constraints      = [self subdirectives];
-    LDrawDirective  *currentDirective = nil;
+    NSPasteboard	*pasteboard		     = [NSPasteboard pasteboardWithName:NSDragPboard];
+    NSArray			*archivedDirectives  = [pasteboard propertyListForType:LDrawDraggingPboardType];
+    NSData			*data				 = [archivedDirectives objectAtIndex:0];
+    NSArray         *constraints         = [self subdirectives];
+    LDrawDirective  *currentDirective    = nil;
 
     if(self->hidden == NO)
     {
         // Draw each constraint, if:
-        if ([self isSelected] == YES ||            // We're selected
-                self->subdirectiveSelected != NO ||  // A subdirective (constraint) is selected
+        if ([self isSelected] == YES ||               // We're selected
+                self->subdirectiveSelected != NO ||   // A subdirective (constraint) is selected
                 self->lsynthClass == LSYNTH_BAND      // We're a Band, so show constraints regardless
                 ) {
             for(currentDirective in constraints)
@@ -352,7 +368,7 @@
         // This is the only place we invoke synthesis.  While it may incur a small delay in drawing
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
-            //NSLog(@"invalid container");
+            NSLog(@"invalid container");
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
         }
@@ -362,6 +378,11 @@
         {
             [currentDirective draw:optionsMask viewScale:scaleFactor parentColor:color];
         }
+
+    //        //  We've changed.  Picked up by e.g. the inspector
+    //        [[NSNotificationCenter defaultCenter]
+    //                postNotificationName:LDrawDirectiveDidChangeNotification
+    //                              object:self];
     }
 
 }//end draw:viewScale:parentColor:
@@ -570,6 +591,37 @@
 #pragma mark ACCESSORS
 #pragma mark -
 
+//========== boundingBox3 ======================================================
+//
+// Purpose:		Returns the minimum and maximum points of the box which
+//				perfectly contains this object. Returns InvalidBox if the part
+//				cannot be found.
+//
+//==============================================================================
+- (Box3) boundingBox3 {
+    Point3 min = {0,0,0};
+    Point3 max = {0,0,0};
+    Box3 partMinMax = {min, max};
+    bool firstPass = YES;
+
+    // Find the bounding box for all constraints
+    for (LDrawDirective * constraint in [self subdirectives]) {
+        if ([constraint respondsToSelector:@selector(boundingBox3)]) {
+            partMinMax = [constraint boundingBox3];
+
+            min.x = (partMinMax.min.x < min.x || firstPass) ? partMinMax.min.x : min.x;
+            min.y = (partMinMax.min.y < min.y || firstPass) ? partMinMax.min.y : min.y;
+            min.z = (partMinMax.min.z < min.z || firstPass) ? partMinMax.min.z : min.z;
+
+            max.x = (partMinMax.max.x > max.x || firstPass) ? partMinMax.max.x : max.x;
+            max.y = (partMinMax.max.y > max.y || firstPass) ? partMinMax.max.y : max.y;
+            max.z = (partMinMax.max.z > max.z || firstPass) ? partMinMax.max.z : max.z;
+        }
+        firstPass = NO;
+    }
+    return (Box3){min, max};
+}
+
 //========== setLsynthClass: ====================================================
 //
 //  Purpose:		Sets the class of the Synthesized part, Pneumatic tube, or Technic
@@ -602,6 +654,7 @@
     [type retain];
     [self->synthType release];
     self->synthType = type;
+
 }//end setLsynthType:
 
 //========== lsynthClass: ====================================================
@@ -778,7 +831,8 @@
     // constraints inside the convex hull.  Dig down for more details.
     BOOL doAutoHull = YES; // Placeholder until we make it a configurable setting
     if (doAutoHull == YES && self->lsynthClass == LSYNTH_BAND) {
-        [self doAutoHullOnBand];
+        // TODO: Turned off while the Inspector code is fleshed out
+        //[self doAutoHullOnBand];
     }
 
     // Clean up first
@@ -1143,15 +1197,21 @@
 
 //========== cleanupAfterDrop ====================================================
 //
-// Purpose:		Called as part of a drag and drop operation to allow us to
-//              re-synthesize if constraints have changed.
+// Purpose:		Called as part of a drag and drop operation.
+//              The argument indicates whether we were a donating parent or not.
+//              this in turn affect whether we should be selected.
 //
 // TODO: Should be a protocol
 //
 //==============================================================================
--(void)cleanupAfterDrop
+-(void)cleanupAfterDropIsDonor:(NSNumber *)isDonor
 {
-    //[self synthesize]; // TODO: does dirtying cache flags negate the need for this? Yes, apparently
+    if ([isDonor boolValue] == YES) {
+        [self setSelected:NO];
+    }
+    else if ([isDonor boolValue] == NO) {
+        [self setSelected:YES];
+    }
 } //end cleanupAfterDrop
 
 //========== lineIsLSynthBeginning: ===========================================
@@ -1214,6 +1274,17 @@
     return isEnd;
 } //end lineIsLSynthTerminator:
 
+//========== synthesizedPartsCount ==========================================
+//
+// Purpose:		Returns the number of parts synthesized to create the shape.
+//
+//==============================================================================
+-(int)synthesizedPartsCount
+{
+    return [synthesizedParts count];
+}
+
+
 #pragma mark -
 #pragma mark NOTIFICATIONS
 #pragma mark -
@@ -1226,7 +1297,7 @@
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
-    //NSLog(@"LSynth receive message %i", msg);
+    NSLog(@"LSynth receive message %i", msg);
 
     if (msg == MessageObservedChanged) {
         [self invalCache:ContainerInvalid];
