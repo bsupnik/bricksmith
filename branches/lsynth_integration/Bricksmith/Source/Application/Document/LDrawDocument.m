@@ -10,7 +10,7 @@
 // Threading:	The LDrawFile encapsulated in this class is a shared resource. 
 //				We must take care not to edit it while it is being drawn in 
 //				another thread. As such, all the calls in the "Undoable 
-//				Activities" section are bracketed with the approriate locking 
+//				Activities" section are bracketed with the appropriate locking
 //				calls. (ANY edit of the document should be undoable.)
 //
 //  Created by Allen Smith on 2/14/05.
@@ -65,6 +65,7 @@
 #import "LSynthConfiguration.h"
 #import "LDrawDragHandle.h"
 #import "LDrawContainer.h"
+#import "LDrawLSynthDirective.h"
 
 
 @implementation LDrawDocument
@@ -304,7 +305,7 @@
         ];
 
         for (NSDictionary *menuSpec in menus) {
-            NSMenu *menu = [[[NSMenu alloc] init] autorelease];
+            NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
 
             // Retrieve the appropriate data for each menu entry, based on the getter given above
             // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
@@ -328,15 +329,61 @@
             [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
             //[menu setDelegate:self];
 
-            [lsynthMenu addItem:subMenu];
+            [lsynthMenu addItem:subMenu]; // a menuItem
         }
+
+        //
+        // Add INSIDE/OUTSIDE menus
+        //
+
+        // Main menu and menuItem
+
+        NSMenu *insideOutsideMenu = [[[NSMenu alloc] init] autorelease];
+        NSMenuItem *insideOutsideMenuItem = [[[NSMenuItem alloc] init] autorelease];
+        [insideOutsideMenuItem setTitle:@"Inside/Outside"];
+        [lsynthMenu setSubmenu:insideOutsideMenu forItem:insideOutsideMenuItem];
+        [lsynthMenu addItem:insideOutsideMenuItem];
+
+        // Menu entries
+
+// TODO: Add these in later
+//        NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [surroundSelectionItem setTitle:@"Surround Selection"];
+//        [surroundSelectionItem setTarget:self];
+//        [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
+//        [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:surroundSelectionItem];
+//
+//        NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [invertSelectionItem setTitle:@"Invert Selection"];
+//        [invertSelectionItem setTarget:self];
+//        [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
+//        [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:invertSelectionItem];
+
+        NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addInsideItem setTitle:@"Insert INSIDE"];
+        [addInsideItem setTarget:self];
+        [addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addInsideItem setTag:lsynthInsertINSIDETag];
+        [insideOutsideMenu addItem:addInsideItem];
+
+        NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addOutsideItem setTitle:@"Insert OUTSIDE"];
+        [addOutsideItem setTarget:self];
+        [addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addOutsideItem setTag:lsynthInsertOUTSIDETag];
+        [insideOutsideMenu addItem:addOutsideItem];
+
 
         // Add in the main LSynth menu to the Model menu
         NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
         [lsynthSubMenu setTitle:@"LSynth"];
         [lsynthSubMenu setTag:lsynthMenuTag];
         [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
-        [modelMenu insertItem:lsynthSubMenu atIndex:separatorIndex + 1];
+        // Add it at the top.  Should it go at the bottom?  It's my favourite
+        // feature but may not be everyone's
+        [modelMenu insertItem:lsynthSubMenu atIndex:0];
     }
 }//end populateLSynthModelMenus
 
@@ -852,7 +899,8 @@
 	{
 		currentObject = [selectedObjects objectAtIndex:counter];
 		
-		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+//		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+        if([currentObject conformsToProtocol:@protocol(LDrawMovableDirective)])
 			[self moveDirective: (LDrawDrawableElement*)currentObject
 					inDirection: movementVector];
 	}
@@ -882,20 +930,23 @@
 	nudgeVector.y *= nudgeMagnitude;
 	nudgeVector.z *= nudgeMagnitude;
 	
-	//find the first selected item that can acutally be moved.
+	//find the first selected item that can actually be moved.
 	for(counter = 0; counter < [selectedObjects count] && firstNudgable == nil; counter++)
 	{
 		currentObject = [selectedObjects objectAtIndex:counter];
 		
-		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
-			firstNudgable = currentObject;
+//		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+//			firstNudgable = currentObject;
+        if([currentObject conformsToProtocol:@protocol(LDrawMovableDirective)])
+            firstNudgable = currentObject;
+
 	}
 	
 	if(firstNudgable != nil)
 	{
 		//compute the absolute movement for the relative nudge. The actual 
 		// movement for a nudge is dependent on the axis along which the 
-		// nudge is occuring (because Lego follows different vertical and 
+		// nudge is occurring (because Lego follows different vertical and
 		// horizontal scales). But we must move all selected parts by the 
 		// SAME AMOUNT, otherwise they would get oriented all over the place.
 		nudgeVector = [firstNudgable displacementForNudge:nudgeVector];
@@ -1601,6 +1652,20 @@
 		
 	}
 }//end exportStepsPanelDidEnd:returnCode:contextInfo:
+
+//========== revealInFinder: ===================================================
+//
+// Purpose:		Open a Finder window with the current file selected.
+//
+//==============================================================================
+- (IBAction) revealInFinder:(id)sender
+{
+    // Cribbed directly from
+    // http://stackoverflow.com/questions/7652928/launch-osx-finder-window-with-specific-files-selected
+    NSArray *fileURLs = [NSArray arrayWithObjects:[self fileURL], nil];
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
+
+}//end revealInFinder:
 
 #pragma mark -
 #pragma mark Edit Menu
@@ -2471,7 +2536,7 @@
     NSLog(@"object: %@", [sender representedObject]);
 }//end InsertLSynthPart:
 
-//========== insertSynthesizedDirective: =======================================
+//========== insertSynthesizableDirective: =====================================
 //
 // Purpose:		Insert a synthesizable directive into the model.  This is a
 //              hose or band.
@@ -2487,11 +2552,12 @@
     // TODO: fixup colour choice for synthesizable parts
     // from partbrowserdatasource:
     // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
-    LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
+    //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
+    // Allow for no color selected
+    LDrawColor          *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
 	TransformComponents transformation = IdentityComponents;
     
     //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
-    //[synthesizedObject setLsynthColor:selectedColor];
     [synthesizedObject setLDrawColor:selectedColor];
     [synthesizedObject setLsynthType:[[sender representedObject] objectForKey:@"LSYNTH_TYPE"]];
     [synthesizedObject setLsynthClass:[[sender representedObject] integerForKey:@"LSYNTH_CLASS"]]; // band or hose
@@ -2619,37 +2685,69 @@
     }
 } // end InsertLSynthConstraint
 
-//http://stackoverflow.com/questions/1096768/how-to-select-items-in-nsoutlineview-without-nstreecontroller
-//@implementation NSOutlineView (Additions)
-//
-//- (void)expandParentsOfItem:(id)item {
-//    while (item != nil) {
-//        id parent = [self parentForItem: item];
-//        if (![self isExpandable: parent])
-//            break;
-//        if (![self isItemExpanded: parent])
-//            [self expandItem: parent];
-//        item = parent;
-//    }
-//}
-//
-//- (void)selectItem:(id)item {
-//    NSInteger itemIndex = [self rowForItem:item];
-//    if (itemIndex < 0) {
-//        [self expandParentsOfItem: item];
-//        itemIndex = [self rowForItem:item];
-//        if (itemIndex < 0)
-//            return;
-//    }
-//
-//    [self selectRowIndexes: [NSIndexSet indexSetWithIndex: itemIndex] byExtendingSelection: NO];
-//}
-//@end
+-(void) surroundLSynthConstraints:(id)sender
+{
+    NSLog(@"surroundLSynthConstraints");
+}
 
+-(void) invertLSynthConstraintSelection:(id)sender
+{
+    NSLog(@"invertLSynthConstraintSelection");
+}
+
+//========== insertINSIDEOUTSIDELSynthDirective: ===============================
+//
+// Purpose:		Insert an LSynth direction directive, INSIDE or OUTSIDE, which
+//              causes a constraint to switch the side the band passes it.
+//
+//==============================================================================
+-(void) insertINSIDEOUTSIDELSynthDirective:(id)sender
+{
+    NSLog(@"addINSIDEOUTSIDELSynthDirective");
+    if(self->lastSelectedPart != nil) {
+        LDrawLSynthDirective *direction = [[LDrawLSynthDirective alloc] init];
+
+        // Set direction based on menuItem tag
+        if ([(NSMenuItem *)sender tag] == lsynthInsertINSIDETag) {
+            [direction setStringValue:@"INSIDE"];
+        }
+        else if ([(NSMenuItem *)sender tag] == lsynthInsertOUTSIDETag) {
+            [direction setStringValue:@"OUTSIDE"];
+        }
+        LDrawContainer *parent = nil;
+        NSInteger index = NSNotFound;
+
+        // LDrawLSynth part selected, add at the end
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+            parent = self->lastSelectedPart;
+            index = [[parent subdirectives] count];
+
+        }
+
+        // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
+        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
+                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            int row = [parent indexOfDirective:self->lastSelectedPart];
+            index = row + 1;
+        }
+
+        [direction setEnclosingDirective:parent];
+        [direction addObserver:parent];
+        [parent insertDirective:direction atIndex:index];
+        [(LDrawLSynth *)parent synthesize];
+        [[self documentContents] noteNeedsDisplay];
+        [fileContentsOutline expandItem:parent];
+        [fileContentsOutline selectObjects:@[direction]];
+        [direction setSelected:YES];
+
+    }
+}//end insertINSIDEOUTSIDELSynthDirective:
 
 #pragma mark -
 #pragma mark UNDOABLE ACTIVITIES
 #pragma mark -
+
 //these are *low-level* calls which provide support for the Undo architecture.
 // all of these are wrapped by high-level calls, which are all application-level 
 // code should ever need to use.
@@ -3188,8 +3286,13 @@
 //			NSLog(@"killing thingy-not-in-step");
 			dragOperation	= NSDragOperationNone;
 		}
-		
-		
+
+        // Prohibit dragging non-constraint objects onto an LDrawLSynth part
+        else if (   [currentObject	isKindOfClass:[LDrawPart class]]
+                 && [newParent isKindOfClass:[LDrawLSynth class]]
+                 && ![[LSynthConfiguration sharedInstance] isLSynthConstraint:currentObject]) {
+            dragOperation	= NSDragOperationNone;
+        }
 	}
 	return dragOperation;
 
@@ -4187,6 +4290,17 @@
 
 	switch(tag)
 	{
+        ////////////////////////////////////////
+        //
+        // File Menu
+        //
+        ////////////////////////////////////////
+        case revealInFinderTag:
+            enable = YES;
+            if ([self fileURL] == nil) {
+                enable = NO;
+            }
+            break;
 
 		////////////////////////////////////////
 		//
@@ -4298,6 +4412,45 @@
             enable = ([selectedPart isKindOfClass:[LDrawLSynth class]] ||
                       [[fileContentsOutline parentForItem:selectedPart] isKindOfClass:[LDrawLSynth class]]);
             break;
+
+// TODO: add these in later
+//        case lsynthSurroundINSIDEOUTSIDETag:
+//            // INSIDE/OUTSIDE pairs can only surround constraints under a single LSynth part
+//            // Valid selections are therefore an LSynth part, a single constraint or multiple
+//            // contiguous constraints.
+//            enable = NO;
+//
+//            // Single object selected, and is constraint or LSynth part
+//            if ([selectedItems count] == 1) {
+//                if ([[selectedItems objectAtIndex:0] isKindOfClass:[LDrawLSynth class]] ||
+//                    [[fileContentsOutline parentForItem:[selectedItems objectAtIndex:0]] isKindOfClass:[LDrawLSynth class]]) {
+//                    enable = YES;
+//                }
+//            }
+//
+//            // More than one thing selected.  Check they are direct siblings and contiguous
+//            else {
+//                NSMutableSet *parents = [[NSMutableSet alloc] init];
+//                for (LDrawDirective *directive in selectedItems) {
+//                    [parents addObject:[fileContentsOutline parent]];
+//
+//                }
+//            }
+//
+//            break;
+//
+//        case lsynthInvertINSIDEOUTSIDETag:
+//            enable = YES;
+//            break;
+
+        case lsynthInsertINSIDETag:
+            enable = YES;
+            break;
+
+        case lsynthInsertOUTSIDETag:
+            enable = YES;
+            break;
+
 
 
 		////////////////////////////////////////
@@ -4988,7 +5141,6 @@
 	// truncate, we achieve the desired effect.
 	[paragraphStyle setLineBreakMode:NSLineBreakByTruncatingTail];
 	
-	
 	//Find the specified syntax color for the directive.
 	if([item isKindOfClass:[LDrawModel class]])
 		colorKey = SYNTAX_COLOR_MODELS_KEY;
@@ -5002,7 +5154,8 @@
 	else if([item isKindOfClass:[LDrawPart class]])
 		colorKey = SYNTAX_COLOR_PARTS_KEY;
 
-    else if ([item isKindOfClass:[LDrawLSynth class]])
+    else if ([item isKindOfClass:[LDrawLSynth class]] ||
+             [item isKindOfClass:[LDrawLSynthDirective class]])
         colorKey = SYNTAX_COLOR_PARTS_KEY;
 
 	else if([item isKindOfClass:[LDrawLine				class]] ||

@@ -195,6 +195,7 @@ typedef enum MenuTags
 	
 	// File Menu
 	fileMenuTag						= 1,
+    revealInFinderTag               = 101,
 	
 	// Edit Menu
 	editMenuTag						= 2,
@@ -244,6 +245,10 @@ typedef enum MenuTags
     lsynthPartMenuTag               = 607, // LSynth parts
     lsynthSynthesizableMenuTag      = 608, // LSynth synthesizable part: band, hose etc.
     lsynthConstraintMenuTag         = 609, // LSynth constraint items
+    lsynthSurroundINSIDEOUTSIDETag  = 630,
+    lsynthInvertINSIDEOUTSIDETag    = 631,
+    lsynthInsertINSIDETag           = 632,
+    lsynthInsertOUTSIDETag          = 633,
 
 	// Window Menu
 	windowMenuTag					= 7,

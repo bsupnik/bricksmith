@@ -2439,6 +2439,8 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self->renderer updateDragWithPosition:V2Make(viewPoint.x, viewPoint.y)
 							 constrainAxis:constrainDragAxis];
 
+    NSLog(@"SHOULD UPDATE CONTAINER");
+
 	return dragOperation;
 	
 }//end draggingUpdated:

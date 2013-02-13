@@ -279,7 +279,13 @@
 		2BF2E3160AB0FCAB0026D5DB /* MLCadIni.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3120AB0FCAB0026D5DB /* MLCadIni.m */; };
 		2BF2E3170AB0FCAB0026D5DB /* TransformerIntMinus1.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF2E3130AB0FCAB0026D5DB /* TransformerIntMinus1.h */; };
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
+		7377202E7BB604722F2D9608 /* LDrawLSynthDirective.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */; };
+		737720D1F0AB3D6C7F435721 /* LDrawMovableDirective.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */; };
+		737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */; };
 		737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772C25D6D43398DCA3E163 /* LSynthPart.tiff */; };
+		737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */; };
+		73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */; };
+		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
@@ -350,6 +356,8 @@
 			files = (
 				0BC71D910E6CC8340007F10D /* AMSProgressBar.framework in Copy Frameworks (1) */,
 				0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */,
+				737720D1F0AB3D6C7F435721 /* LDrawMovableDirective.h in Copy Frameworks (1) */,
+				7377202E7BB604722F2D9608 /* LDrawLSynthDirective.h in Copy Frameworks (1) */,
 			);
 			name = "Copy Frameworks (1)";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -642,7 +650,13 @@
 		2BF2E3130AB0FCAB0026D5DB /* TransformerIntMinus1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransformerIntMinus1.h; sourceTree = "<group>"; };
 		2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransformerIntMinus1.m; sourceTree = "<group>"; };
 		32DBCF750370BD2300C91783 /* Mac LDraw_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Mac LDraw_Prefix.pch"; sourceTree = "<group>"; };
+		73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthHoseConstraint.tiff; sourceTree = "<group>"; };
+		737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawLSynthDirective.m; sourceTree = "<group>"; };
+		73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawMovableDirective.h; sourceTree = "<group>"; };
+		7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthBandConstraint.tiff; sourceTree = "<group>"; };
 		73772C25D6D43398DCA3E163 /* LSynthPart.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthPart.tiff; sourceTree = "<group>"; };
+		73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthDirection.tiff; sourceTree = "<group>"; };
+		73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawLSynthDirective.h; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
@@ -754,6 +768,7 @@
 				D6CB41DE15E2AA6C00730E2A /* ModelManager.h */,
 				D6CB41DF15E2AA6C00730E2A /* ModelManager.m */,
 				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
+				73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -806,6 +821,8 @@
 				0B6F3FB607CB0253007B1075 /* LDrawTriangle.m */,
 				95D893C816569CFD00AA055B /* LDrawLSynth.h */,
 				95D893C916569CFD00AA055B /* LDrawLSynth.m */,
+				73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */,
+				737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -1034,6 +1051,9 @@
 				0B30E08A0ED90D3000470615 /* Triangle.pdf */,
 				0B9FE5B208AD97770046511D /* Unknown.tiff */,
 				73772C25D6D43398DCA3E163 /* LSynthPart.tiff */,
+				7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */,
+				73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */,
+				73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */,
 			);
 			path = Badges;
 			sourceTree = "<group>";
@@ -1549,6 +1569,9 @@
 				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
 				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
 				737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */,
+				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
+				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
+				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1652,6 +1675,7 @@
 				D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */,
 				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
 				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,
+				73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

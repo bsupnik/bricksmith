@@ -125,6 +125,7 @@
 
 // - File menu
 - (IBAction) exportSteps:(id)sender;
+- (IBAction) revealInFinder:(id)sender;
 
 // - Edit menu
 - (IBAction) copy:(id)sender;

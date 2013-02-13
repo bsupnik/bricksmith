@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class LDrawPart;
+
 // The class of a synthesis object
 typedef enum
 {
@@ -27,6 +29,8 @@ typedef enum
 
     NSMutableArray *quickRefHoses;
     NSMutableArray *quickRefBands;
+    NSMutableArray *quickRefHoseConstraints;
+    NSMutableArray *quickRefBandConstraints;
 }
 
 #pragma mark -
@@ -42,6 +46,7 @@ typedef enum
 #pragma mark -
 
 -(void) parseLsynthConfig:(NSString *)lsynthConfigurationPath;
+-(BOOL) isLSynthConstraint:(LDrawPart *)part;
 
 #pragma mark -
 #pragma mark Accessors
@@ -54,5 +59,7 @@ typedef enum
 -(NSMutableArray *)getBandConstraints;
 -(NSMutableArray *)getQuickRefBands;
 -(NSMutableArray *)getQuickRefHoses;
+-(NSMutableArray *)getQuickRefBandContstraints;
+-(NSMutableArray *)getQuickRefHoseConstraints;
 
 @end

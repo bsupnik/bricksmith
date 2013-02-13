@@ -7,6 +7,7 @@
 #import "LSynthConfiguration.h"
 #import "LDrawUtilities.h"
 #import "MacLDraw.h"
+#import "LDrawPart.h"
 
 @implementation LSynthConfiguration
 
@@ -37,14 +38,16 @@ static LSynthConfiguration* instance = nil;
 -(id)init
 {
     if (self = [super init]) {
-        parts            = [[NSMutableArray alloc] init];
-        hose_constraints = [[NSMutableArray alloc] init];
-        hose_types       = [[NSMutableArray alloc] init];
-        band_constraints = [[NSMutableArray alloc] init];
-        band_types       = [[NSMutableArray alloc] init];
+        parts                   = [[NSMutableArray alloc] init];
+        hose_constraints        = [[NSMutableArray alloc] init];
+        hose_types              = [[NSMutableArray alloc] init];
+        band_constraints        = [[NSMutableArray alloc] init];
+        band_types              = [[NSMutableArray alloc] init];
 
-        quickRefBands    = [[NSMutableArray alloc] init];
-        quickRefHoses    = [[NSMutableArray alloc] init];
+        quickRefBands           = [[NSMutableArray alloc] init];
+        quickRefHoses           = [[NSMutableArray alloc] init];
+        quickRefBandConstraints = [[NSMutableArray alloc] init];
+        quickRefHoseConstraints = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -149,6 +152,7 @@ static LSynthConfiguration* instance = nil;
                         };
 
                         [hose_constraints addObject:hose_constraint];
+                        [quickRefHoseConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
                     }
                     
                     // The description precedes the constraint definition so save it for the next time round
@@ -205,6 +209,7 @@ static LSynthConfiguration* instance = nil;
                         };
                         
                         [band_constraints addObject:band_constraint];
+                        [quickRefBandConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
                     }
                     
                     // The description precedes the constraint definition so save it for the next time round
@@ -257,6 +262,26 @@ static LSynthConfiguration* instance = nil;
     }
 }
 
+//========== isLSynthConstraint: ===============================================
+//
+// Purpose:		Determine if a given part is an "official" LSynth constraint,
+//              i.e. defined in lsynth.ldr, and parsed into the LSynthConfiguration
+//              object.
+//
+//==============================================================================
+-(BOOL) isLSynthConstraint:(LDrawPart *)part
+{
+    if ([quickRefBandConstraints containsObject:[part referenceName]] ||
+        [quickRefHoseConstraints containsObject:[part referenceName]]) {
+        return YES;
+    }
+    return NO;
+}//end isLSynthConstraint:
+
+#pragma mark -
+#pragma mark ACCESSORS
+#pragma mark -
+
 // TODO: move to properties
 
 - (NSMutableArray *) getParts
@@ -293,4 +318,16 @@ static LSynthConfiguration* instance = nil;
 {
     return self->quickRefHoses;
 }
+
+- (NSMutableArray *)getQuickRefBandContstraints
+{
+    return self->quickRefBandConstraints;
+}
+
+- (NSMutableArray *)getQuickRefHoseConstraints
+{
+    return self->quickRefHoseConstraints;
+}
+
+
 @end

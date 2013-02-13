@@ -13,8 +13,13 @@
 #import "StringCategory.h"
 #import "LDrawKeywords.h"
 #import "LDrawApplication.h"
+#import "LDrawLSynthDirective.h"
 
 @implementation LDrawLSynth
+
+#pragma mark -
+#pragma mark INITIALIZATION
+#pragma mark -
 
 //========== init ==============================================================
 //
@@ -41,11 +46,6 @@
     return self;
 }//end init
 
-
-#pragma mark -
-#pragma mark DIRECTIVES
-#pragma mark -
-
 //========== initWithLines:inRange:parentGroup: ================================
 //
 // Purpose:		Initializes the synthesized part with the supplied range of lines
@@ -70,7 +70,7 @@
              inRange:(NSRange)range
          parentGroup:(dispatch_group_t)parentGroup
 {
-        NSLog(@"========================================================================\n");
+    NSLog(@"========================================================================\n");
 
 
 
@@ -164,13 +164,11 @@
                         }
                         else if ([field isEqualToString:@"INSIDE"] ||
                                 [field isEqualToString:@"OUTSIDE"]) {
-//                            // basically store it as a comment?
-//                            LDrawLSynthDirection *direction = [[LDrawLSynthDirection alloc] init];
-//                            [direction setStringValue:field];
-//                            [self addDirective:direction];
-//                            [direction setEnclosingDirective:self];
-//                            //[direction addObserver:self];
-//
+                            LDrawLSynthDirective *directive = [[LDrawLSynthDirective alloc] init];
+                            [directive setStringValue:field];
+                            [self addDirective:directive];
+                            [directive setEnclosingDirective:self];
+                            [directive addObserver:self];
                         }
                     }
                 }
@@ -195,7 +193,7 @@
                         [self addDirective:newDirective];
                     }
 
-                            // synthesised part
+                    // synthesised part
                     else if (parserState == 1) {
                         [synthesizedParts addObject:newDirective];
                     }
@@ -229,6 +227,10 @@
 
 }//end initWithLines:inRange:
 
+#pragma mark -
+#pragma mark DIRECTIVES
+#pragma mark -
+
 //========== insertDirective:atIndex: ==========================================
 //
 // Purpose:		Inserts the new directive into the step.
@@ -249,15 +251,37 @@
     [[self subdirectives] insertObject:directive atIndex:index];
     [directive addObserver:self];
 
-//    [[NSNotificationCenter defaultCenter]
-//            postNotificationName:LDrawDirectiveDidChangeNotification
-//                          object:self];
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName:LDrawDirectiveDidChangeNotification
+                          object:self];
 
-
-    //[self synthesizeWithGroup:nil];
+// NOT RIGHT - WHAT ABOUT WHEN LOADING?
+    [self synthesize];
+    [self setSelected:YES];
+    [self colorSynthesizedPartsTranslucent:[self isSelected]];
 
 
 }//end insertDirective:atIndex:
+
+//========== removeDirective: ==================================================
+//
+// Purpose:		Remove a contained directive (constraint etc.) and resynthesize
+//
+//==============================================================================
+- (void) removeDirective:(LDrawDirective *)doomedDirective
+{
+    // We can leave removal to the base class
+    [super removeDirective:doomedDirective];
+
+    // But we need to resynthesize ourselves
+
+// NOT RIGHT - WHAT ABOUT WHEN LOADING?
+    [self synthesize];
+    [self setSelected:YES];
+    [self colorSynthesizedPartsTranslucent:[self isSelected]];
+
+
+}
 
 //---------- rangeOfDirectiveBeginningAtIndex:inLines:maxIndex: ------[static]--
 //
@@ -695,6 +719,58 @@
 }//end LDrawColor
 
 #pragma mark -
+#pragma mark <LDrawMovableElement> protocol methods
+#pragma mark -
+
+//========== displacementForNudge: =============================================
+//
+// Purpose:		Determine the displacement for a specific nudge.  We rely on the
+//              first subdirective that can help; all subdirectives will move
+//              same amount.
+//
+//==============================================================================
+- (Vector3) displacementForNudge:(Vector3)nudgeVector
+{
+    NSLog(@"lsynth displacementForNudge");
+    for (LDrawDirective *directive in [self subdirectives]) {
+         if ([directive conformsToProtocol:@protocol(LDrawMovableDirective)]) {
+             return [directive displacementForNudge:nudgeVector];
+         }
+    }
+    Vector3 v = {0,0,0};
+    return v;
+
+}
+
+//========== moveBy: ===========================================================
+//
+// Purpose:		Passes a movement request down to its subdirectives
+//
+// Optimisation: move all synthesized elements as well to save a resynth
+//
+//==============================================================================
+- (void) moveBy:(Vector3)moveVector
+{
+    // pass on the nudge to drawable subdirectives
+    for (LDrawDirective * constraint in [self subdirectives]) {
+        if([constraint conformsToProtocol:@protocol(LDrawMovableDirective)])  {
+            [(LDrawPart *)constraint moveBy:moveVector];
+        }
+    }
+
+// TODO: This *should* be more efficient, but causes constraint movement artifacts.
+//       Resynthesis is used instead, for the moment.
+//    for (LDrawDirective * part in self->synthesizedParts) {
+//        [(LDrawPart *)part moveBy:moveVector];
+//    }
+
+    [self synthesize];
+    [self colorSynthesizedPartsTranslucent:[self isSelected]];
+
+}//end moveBy:
+
+
+#pragma mark -
 #pragma mark UTILITY FUNCTIONS
 #pragma mark -
 
@@ -707,6 +783,9 @@
 //==============================================================================
 -(void)synthesize
 {
+    // Cleanup first
+    [synthesizedParts removeAllObjects];
+
     NSString *input = @"";
     Class CommandClass = Nil;
 
@@ -802,34 +881,7 @@
             extract = YES;
         }
     }
-}
-
-//========== moveBy: ===========================================================
-//
-// Purpose:		Passes a movement request down to its subdirectives
-//
-// Optimisation: move all synthesized elements as well to save a resynth
-//
-//==============================================================================
-- (void) moveBy:(Vector3)moveVector
-{
-    // lock synthesis while we move our constraints
-    //self->deferSynthesis = YES;
-
-    // pass on the nudge to drawable subdirectives
-    for (LDrawDirective * constraint in [self subdirectives]) {
-        //if ([constraint conformsToProtocol:@protocol(LDrawDrawableElement)]) {
-            [(LDrawPart *)constraint moveBy:moveVector];
-        //}
-    }
-
-    // reenable synthesis and resynthesize
-    //self->deferSynthesis = NO;
-    [synthesizedParts removeAllObjects];
-    [self synthesize];
-    [self colorSynthesizedPartsTranslucent:[self isSelected]];
-
-}//end moveBy:
+}//end synthesize
 
 //========== colorSynthesizedPartsTranslucent: =================================
 //
@@ -854,6 +906,7 @@
     for (LDrawPart *part in self->synthesizedParts) {
         [part setLDrawColor:theColor];
     }
+
 }  //end colorSynthesizedPartsTranslucent:
 
 //========== transformationMatrix ==============================================
@@ -887,7 +940,6 @@
 //==============================================================================
 -(void)cleanupAfterDrop
 {
-    [synthesizedParts removeAllObjects];
     [self synthesize];
 }
 
@@ -964,7 +1016,6 @@
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
     if (msg == MessageObservedChanged) {
-            [synthesizedParts removeAllObjects];
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
     }
