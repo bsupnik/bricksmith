@@ -29,6 +29,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		73772C228B6956582AE876BB /* licence.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = licence.txt; sourceTree = "<group>"; };
 		95BE9C111609F609004437E1 /* lsynthcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lsynthcp; sourceTree = BUILT_PRODUCTS_DIR; };
 		95BE9C241609F65E004437E1 /* band.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = band.c; sourceTree = "<group>"; };
 		95BE9C251609F65E004437E1 /* band.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = band.h; sourceTree = "<group>"; };
@@ -92,6 +93,7 @@
 				95BE9C301609F65E004437E1 /* strings.c */,
 				95BE9C311609F65E004437E1 /* strings.h */,
 				95E2DB55160D06A500DCFEE3 /* lsynth.mpd */,
+				73772C228B6956582AE876BB /* licence.txt */,
 			);
 			path = LSynth;
 			sourceTree = "<group>";
