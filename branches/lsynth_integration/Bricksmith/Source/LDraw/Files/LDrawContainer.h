@@ -46,6 +46,7 @@
 - (void) removeDirective:(LDrawDirective *)doomedDirective;
 - (void) removeDirectiveAtIndex:(NSInteger)index;
 
+- (BOOL) acceptsDroppedDirective:(LDrawDirective *)directive;
 - (void) optimizeVertexes;
 
 @end

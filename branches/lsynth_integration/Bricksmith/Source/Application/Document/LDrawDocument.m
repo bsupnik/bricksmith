@@ -3378,6 +3378,8 @@
 	}
 
     // Ask the source and target parents to cleanup if they can
+    // TODO: May not be required any more.  Was added for LSynth resynthesis
+    //       but dirty flags handle this
     for (LDrawDirective *parent in [donatingParents allObjects]) {
         if ([parent isKindOfClass:[LDrawContainer class]] &&
             [parent respondsToSelector:@selector(cleanupAfterDrop)]) {
@@ -3770,7 +3772,7 @@
 	if(markedSelection)
 	{
 		// Since we are going to do a bulk selection, calculate 
-		// the union of the past selcetion and this one if we are
+		// the union of the past selection and this one if we are
 		// extending.  Otherwise we only want the new selection.
 		NSMutableArray * all;
 		NSArray * sel = (all = (selectionMode != SelectionReplace)
@@ -4154,8 +4156,13 @@
 		{
 			[[self documentContents] noteNeedsDisplay];
 		}
-		[fileContentsOutline reloadData];
-		
+
+        // Ensure that even if the outline contents have changed (for instance a
+        // container that inserts directives automatically) the original selection
+        // is maintained
+        [fileContentsOutline selectObjects:selectedDirectives];
+        [fileContentsOutline reloadData];
+
 		//Model menu needs to change if:
 		//	*model list changes (in the file)
 		//	*model name changes (in the model)
@@ -4295,6 +4302,7 @@
         // File Menu
         //
         ////////////////////////////////////////
+
         case revealInFinderTag:
             enable = YES;
             if ([self fileURL] == nil) {
@@ -4991,13 +4999,14 @@
 		if(		selectedContainer != nil
 		   &&	[selectedContainer isKindOfClass:[LDrawFile class]] == NO
 		   &&	[selectedContainer isKindOfClass:[LDrawModel class]] == NO
-		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO )
+		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO
+           &&   [selectedContainer acceptsDroppedDirective:newDirective] == YES)
 		{
 			// If we have an "interesting" container selected -- like a texture 
-			// -- add directives to it instead of at the end of the model. The 
-			// theory here is that these special containers are kind of their 
-			// own little world, and as long as you have one selected, you 
-			// should continue working within it. 
+			// -- that accepts the dropped directive add directives to it instead
+			// of at the end of the model. The theory here is that these special
+			// containers are kind of their  own little world, and as long as you
+			// have one selected, you should continue working within it.
 			targetContainer = selectedContainer;
 		}
 		else
@@ -5546,7 +5555,7 @@
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-            [self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
+                [self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
 				[self addStep:currentObject parent:(LDrawMPDModel*)parent index:real_index];
 			else

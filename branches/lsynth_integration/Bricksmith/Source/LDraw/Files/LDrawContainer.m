@@ -409,6 +409,17 @@
 	return containsReference;
 }
 
+//========== acceptsDroppedDirective: ==========================================
+//
+// Purpose:		Returns YES if this container will accept a directive dropped on
+//              it.  Intended to be overridden by subclasses
+//
+//==============================================================================
+-(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
+{
+    return YES;
+}//end acceptsDroppedDirective:
+
 
 //========== flattenIntoLines:triangles:quadrilaterals:other:currentColor: =====
 //

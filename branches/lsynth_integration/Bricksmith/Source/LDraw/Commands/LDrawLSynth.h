@@ -45,6 +45,5 @@ typedef enum
 // Utilities
 - (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
-- (void) dragDropDonateCleanup;
 + (BOOL) lineIsLSynthBeginning:(NSString*)line;
 @end

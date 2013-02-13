@@ -279,10 +279,10 @@
 		2BF2E3160AB0FCAB0026D5DB /* MLCadIni.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3120AB0FCAB0026D5DB /* MLCadIni.m */; };
 		2BF2E3170AB0FCAB0026D5DB /* TransformerIntMinus1.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF2E3130AB0FCAB0026D5DB /* TransformerIntMinus1.h */; };
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
-		7377202E7BB604722F2D9608 /* LDrawLSynthDirective.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */; };
-		737720D1F0AB3D6C7F435721 /* LDrawMovableDirective.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */; };
 		737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */; };
 		737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772C25D6D43398DCA3E163 /* LSynthPart.tiff */; };
+		737726AC692EF27FD80B47C7 /* ComputationalGeometry.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772E30A6856B15E73A951A /* ComputationalGeometry.h */; };
+		737726E8FC931A7828531671 /* ComputationalGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */; };
 		737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */; };
 		73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */; };
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
@@ -356,8 +356,7 @@
 			files = (
 				0BC71D910E6CC8340007F10D /* AMSProgressBar.framework in Copy Frameworks (1) */,
 				0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */,
-				737720D1F0AB3D6C7F435721 /* LDrawMovableDirective.h in Copy Frameworks (1) */,
-				7377202E7BB604722F2D9608 /* LDrawLSynthDirective.h in Copy Frameworks (1) */,
+				737726AC692EF27FD80B47C7 /* ComputationalGeometry.h in Copy Frameworks (1) */,
 			);
 			name = "Copy Frameworks (1)";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -655,10 +654,13 @@
 		73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawMovableDirective.h; sourceTree = "<group>"; };
 		7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthBandConstraint.tiff; sourceTree = "<group>"; };
 		73772C25D6D43398DCA3E163 /* LSynthPart.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthPart.tiff; sourceTree = "<group>"; };
+		73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ComputationalGeometry.m; path = Source/LDraw/Support/ComputationalGeometry.m; sourceTree = "<group>"; };
 		73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthDirection.tiff; sourceTree = "<group>"; };
 		73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawLSynthDirective.h; sourceTree = "<group>"; };
+		73772E30A6856B15E73A951A /* ComputationalGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ComputationalGeometry.h; path = Source/LDraw/Support/ComputationalGeometry.h; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
 		95D893AD1655334500AA055B /* lsynth.mpd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lsynth.mpd; path = ../../ThirdParty/LSynth/LSynth/lsynth.mpd; sourceTree = "<group>"; };
@@ -1168,6 +1170,8 @@
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 				2BB5975809FEFD250077A885 /* AMSProgressBar.xcodeproj */,
 				95D8939E1655325000AA055B /* LSynth.xcodeproj */,
+				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
+				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
 			);
 			name = "Mac LDraw";
 			sourceTree = "<group>";
@@ -1221,6 +1225,7 @@
 				0B9FE56408AD97280046511D /* Credits.rtf */,
 				0B9FE54E08AD971E0046511D /* InfoPlist.strings */,
 				0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */,
+				950703DF1678C72D0045A811 /* relink_symlinks.sh */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -1676,6 +1681,7 @@
 				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
 				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,
 				73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */,
+				737726E8FC931A7828531671 /* ComputationalGeometry.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

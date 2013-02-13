@@ -195,7 +195,8 @@
 	self		= [super initWithCoder:decoder];
 	
 	[self setDisplayName:[decoder decodeObjectForKey:@"displayName"]];
-	
+    [self setIconName:@"Brick"];
+
 	//Decoding structures is a bit messy.
 	temporary	= [decoder decodeBytesForKey:@"glTransformation" returnedLength:NULL];
 	memcpy(glTransformation, temporary, sizeof(GLfloat)*16 );

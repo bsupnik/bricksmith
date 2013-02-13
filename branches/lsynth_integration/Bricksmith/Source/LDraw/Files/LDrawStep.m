@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		LDrawStep.h
+// File:		LDrawStep.m
 //
 // Purpose:		Represents a collection of Lego bricks which compose a single 
 //				step when constructing a model.
