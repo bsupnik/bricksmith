@@ -654,10 +654,10 @@
 		73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawMovableDirective.h; sourceTree = "<group>"; };
 		7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthBandConstraint.tiff; sourceTree = "<group>"; };
 		73772C25D6D43398DCA3E163 /* LSynthPart.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthPart.tiff; sourceTree = "<group>"; };
-		73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ComputationalGeometry.m; path = Source/LDraw/Support/ComputationalGeometry.m; sourceTree = "<group>"; };
+		73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ComputationalGeometry.m; sourceTree = "<group>"; };
 		73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthDirection.tiff; sourceTree = "<group>"; };
 		73772CF1E56647D450E6AAA1 /* LDrawLSynthDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawLSynthDirective.h; sourceTree = "<group>"; };
-		73772E30A6856B15E73A951A /* ComputationalGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ComputationalGeometry.h; path = Source/LDraw/Support/ComputationalGeometry.h; sourceTree = "<group>"; };
+		73772E30A6856B15E73A951A /* ComputationalGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ComputationalGeometry.h; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
@@ -771,6 +771,8 @@
 				D6CB41DF15E2AA6C00730E2A /* ModelManager.m */,
 				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
 				73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */,
+				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
+				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1170,8 +1172,6 @@
 				19C28FB0FE9D524F11CA2CBB /* Products */,
 				2BB5975809FEFD250077A885 /* AMSProgressBar.xcodeproj */,
 				95D8939E1655325000AA055B /* LSynth.xcodeproj */,
-				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
-				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
 			);
 			name = "Mac LDraw";
 			sourceTree = "<group>";

@@ -17,6 +17,7 @@
 #import "LDrawApplication.h"
 #import "LDrawLSynthDirective.h"
 #import "ComputationalGeometry.h"
+#import "MatrixMath.h"
 
 @implementation LDrawLSynth
 
@@ -159,6 +160,7 @@
                             //[self addDirective:directive];
                             [directive setEnclosingDirective:self];
                             [directive addObserver:self];
+                            [directive release];
                         }
                     }
                 }
@@ -196,6 +198,7 @@
                         // poss. use LDrawLSynthDirective?
                         NSLog(@"Discarding invalid part in LSynth");
                     }
+                    [newDirective release];
                 }
                 lineIndex += 1;
             }
@@ -349,7 +352,7 @@
         // This is the only place we invoke synthesis.  While it may incur a small delay in drawing
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
-            NSLog(@"invalid container");
+            //NSLog(@"invalid container");
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
         }
@@ -769,19 +772,13 @@
 //==============================================================================
 -(void)synthesize
 {
-    NSLog(@"SYNTHESIZE");
+    //NSLog(@"SYNTHESIZE");
 
-    // This is an exploratory method and will be wrapped in conditional logic for release.
-    // It modifies the constraints to provide automatic OUTSIDE/INSIDE determination for
-    // sets of constraints inside the convex hull.  Dig down for more details.
-    if ([[self subdirectives] count] > 2) {
-        [self applyConvexHull];
-        // post NSOutlineViewSelectionDidChangeNotification
-//        [[NSNotificationCenter defaultCenter]
-//                postNotificationName:LDrawDirectiveDidChangeNotification
-//                              object:self];
-
-
+    // Modifies the constraints to provide automatic OUTSIDE/INSIDE determination for
+    // constraints inside the convex hull.  Dig down for more details.
+    BOOL doAutoHull = YES; // Placeholder until we make it a configurable setting
+    if (doAutoHull == YES && self->lsynthClass == LSYNTH_BAND) {
+        [self doAutoHullOnBand];
     }
 
     // Clean up first
@@ -882,110 +879,185 @@
             extract = YES;
         }
     }
-}//end synthesize
-
-//========== applyConvexHull ===================================================
+}
+//========== doAutoHullOnBand ==================================================
 //
-// Purpose:		Calculate which constraints comprise the convex hull - imagine
-//              wrapping a rubber band round the points.  The points NOT in this
-//              set are the ones we need to wrap with INSIDE/OUTSIDE directions
-//              if we're applying those rules automatically.
+// Purpose:	Calculate the INSIDE/OUTSIDE directives automatically.
 //
-
-/*
-
-S: 0 = INSIDE, 1 = OUTSIDE
-start inside by default but revisit at end
-
-current state S P N C
-            0 0 1 1
-
-
- */
-
-
+//          Based on calculating the convex hull of the constraints and inserting
+//          INSIDE/OUTSIDE directives appropriately.
+//
 //==============================================================================
--(void)applyConvexHull
+- (void)doAutoHullOnBand
 {
-    /*
-     The algorithm is along the lines of:
+    // clean out INSIDE/OUTSIDE directives
+    for (int i = [[self subdirectives] count] - 1; i >= 0; i--) {
+        if ([[[self subdirectives] objectAtIndex:i] isKindOfClass:[LDrawLSynthDirective class]]) {
+            [[self subdirectives] removeObjectAtIndex:i];
+        }
+    }
+    //NSLog(@"Cleaned subdirs: %@", [self subdirectives]);
 
-     * Calculate the transformation required to place the first constraint on the XY
-       plane with correct (identity) orientation.
-     * Apply this transformation to the other constraints
-     * Discard their Z coord, rendering a set of XY points
-     * Calculate the convex poly for this set of 2D points
-     * Wrap each set of contiguous points NOT in the convex poly in inside/outside dirs
+    // Prepare the constraints for calculating the convex hull.
+    NSMutableArray *preparedData = [self prepareAutoHullData];
 
-     Most of the convex hull algorithm is hidden away in the ComputationalGeometry class.
-     We take the calculated hull membership and apply it to the constraints, auto-generating
-     the appropriate OUTSIDE/INSIDE directives as required.
-      */
-
-    //NSLog(@"CALCULATING THE CONVEX POLY");
-
-    NSMutableArray *preparedData = [ComputationalGeometry prepareHullData:[self subdirectives]];
-    //NSLog(@"PreparedData before: %@", preparedData);
-    // Modify our prepared data with hull membership
+    // Determine the Convex Hull.  This is the meat.  After this we know
+    // which constraints are really on the hull.  We respect their radii..
     [ComputationalGeometry doJarvisMarch:preparedData];
-    //NSLog(@"PreparedData after: %@", preparedData);
 
-    // Iterate over the prepared data, generating constraint subdirectives appropriately
-    [[self subdirectives] removeAllObjects];
+    //NSLog(@"Prepared Data After: %@", preparedData);
 
-    // Add an extra OUTSIDE at the end if the first constraint is not in the convex hull
-    bool appendINSIDE = [[preparedData objectAtIndex:0] objectForKey:@"inHull"] != YES;
-
-    // Deal with the end point edge-case
-    if (appendINSIDE == YES) {
-        LDrawLSynthDirective *OUTSIDE = [[LDrawLSynthDirective alloc] init];
-        [OUTSIDE setStringValue:@"OUTSIDE"];
-        [[self subdirectives] addObject:OUTSIDE];
-    }
-
-    int state;
-    for (int i=0; i < [preparedData count]; i++) {
-
-        //NSLog(@"prepared data: %@", [preparedData objectAtIndex:i]);
-
-        // not the last directive
-        if (i < ([preparedData count] - 1)) {
-            // These booleans are not performing as expected
-            // Going from INSIDE to OUTSIDE
-            if ([[preparedData objectAtIndex:i] valueForKey:@"inHull"] == @true &&
-                [[preparedData objectAtIndex:(i+1)] valueForKey:@"inHull"] == @false) {
-                // generate OUTSIDE
-                LDrawLSynthDirective *OUTSIDE = [[LDrawLSynthDirective alloc] init];
-                [OUTSIDE setStringValue:@"OUTSIDE"];
-                [[self subdirectives] addObject:[[preparedData objectAtIndex:i] objectForKey:@"directive"]];
-                [[self subdirectives] addObject:OUTSIDE];
-            }
-            // Going from OUTSIDE to INSIDE
-            else if ([[preparedData objectAtIndex:i] valueForKey:@"inHull"] == @false &&
-                     [[preparedData objectAtIndex:(i+1)] objectForKey:@"inHull"] == @true) {
-                // generate OUTSIDE
-                LDrawLSynthDirective *INSIDE = [[LDrawLSynthDirective alloc] init];
-                [INSIDE setStringValue:@"INSIDE"];
-                [[self subdirectives] addObject:[[preparedData objectAtIndex:i] objectForKey:@"directive"]];
-                [[self subdirectives] addObject:INSIDE];
-            }
-            else {
-                [[self subdirectives] addObject:[[preparedData objectAtIndex:i] objectForKey:@"directive"]];
-            }
+    // Reintegrate our hull-determined data.  We'll likely have multiple
+    // points all on the hull, each associated with a single constraint.
+    // This boils them down to a set of constraints on the hull.
+    NSMutableSet *hullConstraints = [[[NSMutableSet alloc] init] autorelease];
+    for (NSMutableDictionary *point in preparedData) {
+        if ([[point objectForKey:@"inHull"] integerValue] == YES) {
+            [hullConstraints addObject:[point objectForKey:@"directive"]];
         }
+    }
+    //NSLog(@"hullConstraints: %@", hullConstraints);
+
+    // Knowing which constraints are on the hull allows us to add
+    // INSIDE/OUTSIDE constraints as we iterate over them.
+    // We could modify the constraints in-place but recreating the
+    // subdirectives array is simpler.
+    NSMutableArray *newConstraints = [[[NSMutableArray alloc] init] autorelease];
+
+    for (int i=0;i< [[self subdirectives] count];i++) {
+        LDrawPart *part = [[self subdirectives] objectAtIndex:i];
+        LDrawPart *nextPart = [[self subdirectives] objectAtIndex:((i+1) % [[self subdirectives] count])];
+
+        // The first point is potentially a special case.  Handle it.
+        // Not on the hull? Then prepend an OUTSIDE
+        if (i == 0 && ![hullConstraints containsObject:part]) {
+            LDrawLSynthDirective *OUTSIDE = [[LDrawLSynthDirective alloc] init];
+            [OUTSIDE setStringValue:@"OUTSIDE"];
+            [newConstraints addObject:OUTSIDE];
+            [OUTSIDE release];
+        }
+
+        // This part is on the hull (i.e. INSIDE the band) and the next part is
+        // NOT on hull (i.e. OUTSIDE)
+        if ( [hullConstraints containsObject:part] &&
+            ![hullConstraints containsObject:nextPart]) {
+            // generate OUTSIDE
+            LDrawLSynthDirective *OUTSIDE = [[LDrawLSynthDirective alloc] init];
+            [OUTSIDE setStringValue:@"OUTSIDE"];
+            [newConstraints addObject:part];
+            [newConstraints addObject:OUTSIDE];
+            [OUTSIDE release];
+        }
+
+        // This part is not on the hull (i.e. OUTSIDE the band) and the next part IS
+        // on hull (i.e. INSIDE)
+        else if ( ![hullConstraints containsObject:part] &&
+                [hullConstraints containsObject:nextPart]){
+            // generate INSIDE
+            LDrawLSynthDirective *INSIDE = [[LDrawLSynthDirective alloc] init];
+            [INSIDE setStringValue:@"INSIDE"];
+            [newConstraints addObject:part];
+            [newConstraints addObject:INSIDE];
+            [INSIDE release];
+        }
+
+        // The constraint has the same hull membership as the next one so
+        // no change of direction.  Just add it.
         else {
-            [[self subdirectives] addObject:[[preparedData objectAtIndex:i] objectForKey:@"directive"]];
+            [newConstraints addObject:part];
+        }
+
+        //NSLog(@"New Constraints: %@", newConstraints);
+    }
+
+    // Finally, update the constraints
+    [[self subdirectives] removeAllObjects];
+    [[self subdirectives] addObjectsFromArray:newConstraints];
+}
+
+//========== prepareAutoHullData ===============================================
+//
+// Purpose:	Prepare a datastructure containing points, directives etc., ready for
+//          calculating the convex hull.
+//
+//==============================================================================
+- (NSMutableArray *)prepareAutoHullData {
+
+    // Used for looking up constraint radii
+    LSynthConfiguration *config = [LSynthConfiguration sharedInstance];
+
+    // Map each constraint to XY plane, based on the orientation of the first constraint
+    // We build up details for each constraint in mappedPoints as we progress.
+    // The inverse of the first constraint's transformation moves it back to (0,0,0).
+    // The same inverse transform will do similar for the other constraints
+    NSMutableArray *mappedPoints = [[[NSMutableArray alloc] init] autorelease];
+    Matrix4 transform = [[[self subdirectives] objectAtIndex:0] transformationMatrix];
+    Matrix4 inverseTransform = Matrix4Invert(transform);
+    for (LDrawPart *part in [self subdirectives]) {
+        Matrix4 transformed;
+        transformed = Matrix4Multiply([part transformationMatrix], inverseTransform);
+        TransformComponents t;
+        Matrix4DecomposeTransformation(transformed, &t);
+        NSMutableDictionary *point = @{@"directive" : part,
+                                            @"x"          : @(t.translate.x),
+                                            @"y"          : @(t.translate.y),
+                                            @"r"          : @([[[config constraintDefinitionForPart:part] valueForKey:@"radius"] integerValue]),
+                                            @"hullPoints" : [NSMutableArray arrayWithArray:@[]]};
+        [mappedPoints addObject:point];
+    }
+    //NSLog(@"Mapped Points: %@", mappedPoints);
+
+    // Generate hull points by calculating "outside" tangents for each pair of
+    // constraint-derived circles, e.g. ((0,1), (1,2), ..., (N,0)
+    // Some of these will be on the inside of the convex hull but that's OK since the
+    // convex hull calculation will discard them.
+    for (int i=0; i<[mappedPoints count]; i++) {
+        int j = (i+1) % [mappedPoints count]; // next constraint, cyclical (N+1 -> 0)
+
+        NSMutableArray *tangents = [ComputationalGeometry tangentBetweenCircle:[mappedPoints objectAtIndex:i]
+                                                                     andCircle:[mappedPoints objectAtIndex:j]];
+        if (tangents != nil) {
+            // add both outside tangent points for the current constraint
+            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:@{
+                    @"x" : [[tangents objectAtIndex:0] objectAtIndex:0],
+                    @"y" : [[tangents objectAtIndex:0] objectAtIndex:1]}];
+            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:@{
+                    @"x" : [[tangents objectAtIndex:1] objectAtIndex:0],
+                    @"y" : [[tangents objectAtIndex:1] objectAtIndex:1]}];
+
+            // add both outside tangent points for the next constraint
+            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:@{
+                    @"x" : [[tangents objectAtIndex:0] objectAtIndex:2],
+                    @"y" : [[tangents objectAtIndex:0] objectAtIndex:3]}];
+            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:@{
+                    @"x" : [[tangents objectAtIndex:1] objectAtIndex:2],
+                    @"y" : [[tangents objectAtIndex:1] objectAtIndex:3]}];
+        }
+
+        //NSLog(@"Tangents: %@", tangents);
+    }
+    //NSLog(@"Mapped Points after tangent calc: %@", mappedPoints);
+
+    // Prepare the mappedPoints for the Convex Hull algorithm
+    // We create a dictionary for each hull point for each mappedPoint
+    // We'll reintegrate later to decide which constraints are in or out
+    // (in doAutoHullOnBand)
+    NSMutableArray *preparedData = [[[NSMutableArray alloc] init] autorelease];
+    for (NSMutableDictionary *point in mappedPoints) {
+        for (NSMutableDictionary *coords in [point objectForKey:@"hullPoints"]) {
+            //NSLog(@"Point: %@", coords);
+            // TODO: check that int values are OK.  Prob. should use float?
+
+            [preparedData addObject:[NSMutableDictionary dictionaryWithDictionary:@{
+                    @"directive" : [point objectForKey:@"directive"],
+                    @"x"         : @([[coords objectForKey:@"x"] integerValue]),
+                    @"y"         : @([[coords objectForKey:@"y"] integerValue]),
+                    @"inHull"    : @false}]];
         }
     }
-
-    // Deal with the end point edge-case
-    if (appendINSIDE == YES) {
-        LDrawLSynthDirective *OUTSIDE = [[LDrawLSynthDirective alloc] init];
-        [OUTSIDE setStringValue:@"OUTSIDE"];
-        [[self subdirectives] addObject:OUTSIDE];
-    }
-
-}//end applyConvexHull
+    //NSLog(@"Prepared Data: %@", preparedData);
+    return preparedData;
+}//end prepareAutoHullData
 
 //========== determineIconName: ================================================
 //
@@ -1154,31 +1226,12 @@ current state S P N C
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
-    NSLog(@"LSynth receive message %i", msg);
+    //NSLog(@"LSynth receive message %i", msg);
 
     if (msg == MessageObservedChanged) {
         [self invalCache:ContainerInvalid];
     }
 } //end receiveMessage:who:
-
-////========== statusInvalidated:who: ============================================
-////
-//// Purpose:		This message is sent to us when a directive we are observing is
-////				invalidated.  We invalidate ourselves.
-////
-////==============================================================================
-//- (void) statusInvalidated:(CacheFlagsT) flags who:(id<LDrawObservable>) observable
-//{
-//    NSLog(@"LSynth Status invalidated: %i", flags);
-////    [self invalCache:(flags & ContainerInvalid)];
-//    [self invalCache:(flags & CacheFlagBounds)];
-//
-//}//end statusInvalidated:who:
-
-//- (CacheFlagsT) revalCache:(CacheFlagsT) flags
-//{
-//    NSLog(@"reval cache");
-//}
 
 #pragma mark -
 #pragma mark DESTRUCTOR
@@ -1198,7 +1251,5 @@ current state S P N C
     [super dealloc];
 
 }//end dealloc
-
-
 
 @end

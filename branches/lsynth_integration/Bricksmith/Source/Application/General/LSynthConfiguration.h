@@ -37,9 +37,7 @@ typedef enum
 #pragma mark Class Methods
 #pragma mark -
 
-//+(LSynthClassT) classForType:(NSString *)type;
 +(LSynthConfiguration*) sharedInstance;
-
 
 #pragma mark -
 #pragma mark Instance Methods
@@ -52,14 +50,15 @@ typedef enum
 #pragma mark Accessors
 #pragma mark -
 
--(NSMutableArray *)getParts;
--(NSMutableArray *)getHoseTypes;
--(NSMutableArray *)getBandTypes;
--(NSMutableArray *)getHoseConstraints;
--(NSMutableArray *)getBandConstraints;
--(NSMutableArray *)getQuickRefBands;
--(NSMutableArray *)getQuickRefHoses;
--(NSMutableArray *)getQuickRefBandContstraints;
--(NSMutableArray *)getQuickRefHoseConstraints;
+-(NSMutableArray *) getParts;
+-(NSMutableArray *) getHoseTypes;
+-(NSMutableArray *) getBandTypes;
+-(NSMutableArray *) getHoseConstraints;
+-(NSMutableArray *) getBandConstraints;
+-(NSMutableArray *) getQuickRefBands;
+-(NSMutableArray *) getQuickRefHoses;
+-(NSMutableArray *) getQuickRefBandContstraints;
+-(NSMutableArray *) getQuickRefHoseConstraints;
+-(NSDictionary *) constraintDefinitionForPart:(LDrawPart *)directive;
 
 @end

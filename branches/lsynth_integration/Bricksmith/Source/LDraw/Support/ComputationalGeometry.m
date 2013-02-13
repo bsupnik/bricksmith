@@ -16,136 +16,197 @@
 //
 //==============================================================================
 
-// Jarvis pseudocode
-/*
-
-jarvis(S)
-   pointOnHull = leftmost point in S
-   i = 0
-   repeat
-      P[i] = pointOnHull
-      endpoint = S[0]         // initial endpoint for a candidate edge on the hull
-      for j from 1 to |S|-1
-         if (endpoint == pointOnHull) or (S[j] is on left of line from P[i] to endpoint)
-            endpoint = S[j]   // found greater left turn, update endpoint
-      i = i+1
-      pointOnHull = endpoint
-   until endpoint == P[0]      // wrapped around to first hull point
-
- */
-
-
-// Jarvis in Python
-//# Jarvis March O(nh) - Tom Switzer <thomas.switzer@gmail.com>
-//
-//TURN_LEFT, TURN_RIGHT, TURN_NONE = (1, -1, 0)
-//
-//def turn(p, q, r):
-//"""Returns -1, 0, 1 if p,q,r forms a right, straight, or left turn."""
-//return cmp((q[0] - p[0]) * (r[1] - p[1])   -   (r[0] - p[0]) * (q[1] - p[1])  , 0)
-//
-//def _dist(p, q):
-//  """Returns the squared Euclidean distance between p and q."""
-//  dx, dy = q[0] - p[0], q[1] - p[1]
-//  return dx * dx + dy * dy
-//
-//def _next_hull_pt(points, p):
-//  """Returns the next point on the convex hull in CCW from p."""
-//  q = p
-//  for r in points:
-//    t = turn(p, q, r)
-//    if t == TURN_RIGHT or t == TURN_NONE and _dist(p, r) > _dist(p, q):
-//      q = r
-//  return q
-//
-//def convex_hull(points):
-//  """Returns the points on the convex hull of points in CCW order."""
-//  hull = [min(points)]
-//  for p in hull:
-//    q = _next_hull_pt(points, p)
-//    if q != hull[0]:
-//      hull.append(q)
-//  return hull
-
 #import "ComputationalGeometry.h"
 #import "LDrawDirective.h"
 #import "LDrawPart.h"
+#import "LSynthConfiguration.h"
+#import "MatrixMath.h"
+
+//@interface TangentPoint
+//{
+//    int x;
+//    int y;
+//    LDrawDirective *directive;
+//}
+//@end
+//
+//@implementation TangentPoint
+//@end
+
+//==============================================================================
+//
+// A convenience container for a circle - probably unnecessary.
+//
+//==============================================================================
+
+@interface Circle : NSObject
+{
+    int x;
+    int y;
+    int r;
+    LDrawDirective *directive;
+}
+-(void)setX:(int)x;
+-(void)setY:(int)y;
+-(void)setR:(int)r;
+-(Circle *)initWithX:(int)x Y:(int)y R:(int)r;
+@end
+
+@implementation Circle
+
+#pragma mark -
+#pragma mark INITIALISATION
+#pragma mark -
+
+-(id)initWithX:(int)x Y:(int)y R:(int)r
+{
+    if (self = [super init]) {
+        self.x = x;
+        self.y = y;
+        self.r = r;
+
+    }
+    return self;
+}
+
+#pragma mark -
+#pragma mark ACCESSORS
+#pragma mark -
+
+-(int) x
+{
+    return self->x;
+}
+-(void)setX:(int)x
+{
+    self->x = x;
+}
+-(int) y {
+    return self->y;
+}
+-(void)setY:(int)y
+{
+    self->y = y;
+}
+-(int) r {
+    return self->r;
+}
+-(void)setR:(int)r
+{
+    self->r = r;
+}
+-(LDrawDirective *) directive {
+    return self->directive;
+}
+
+
+@end
 
 @implementation ComputationalGeometry
+
+#pragma mark -
+#pragma mark CIRCLE TANGENTS
+#pragma mark -
+
+// Methods to calculate the outer tangent points between a number of constraints
+// This is basically the Two Circles' Tangents problem.  We need to calculate the
+// outermost convex hull so that we can honour constraints' radii (i.e. gear size)
+// and perform INSIDE/OUTSIDE determination correctly.  The naive convex hull method
+// uses constraint centers with no regard for their size which results in e.g. chains
+// looping around a gear.  Size Matters.
+
+//========== tangentsBetweenDirective:andDirective: ============================
+//
+// Purpose:		Calculate the end points of the outer tangents between two
+//              circles.  These can represent e.g. band constraints such as gears
+//
+// Algorithm based on Java implementation found at:
+//     http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Tangents_between_two_circles
+//
+// Notes from that implementation:
+//
+// Returns an empty, or 2x4, or 4x4 array of doubles representing
+//  the two exterior and two interior tangent segments (in that order).
+//  If some tangents don't exist, they aren't present in the output.
+//  Each segment is represent by a 4-tuple x1,y1,x2,y2.
+//
+//  Exterior tangents exist iff one of the circles doesn't contain
+//  the other. Interior tangents exist iff circles don't intersect.
+//
+//  In the limiting case when circles touch from outside/inside, there are
+//  no interior/exterior tangents, respectively, but just one common
+//  tangent line (which isn't returned at all, or returned as two very
+//  close or equal points by this code, depending on roundoff -- sorry!)
+//
+//==============================================================================
+/**
+ *  Finds tangent segments between two given circles.
+ *
+  */
++(NSMutableArray *)tangentBetweenCircle:(NSMutableDictionary *)circle1 andCircle:(NSMutableDictionary *)circle2
+{
+    // Recast the supplied dictionaries as Circles for clarity in the main algorithm
+    Circle *c1 = [[[Circle alloc] initWithX:[[circle1 valueForKey:@"x"] integerValue]
+                                         Y:[[circle1 valueForKey:@"y"] integerValue]
+                                         R:[[circle1 valueForKey:@"r"] integerValue]] autorelease];
+    Circle *c2 = [[[Circle alloc] initWithX:[[circle2 valueForKey:@"x"] integerValue]
+                                         Y:[[circle2 valueForKey:@"y"] integerValue]
+                                         R:[[circle2 valueForKey:@"r"] integerValue]] autorelease];
+
+    double d_sq = pow([c1 x] - [c2 x], 2) + pow([c1 y] - [c2 y], 2);
+    if (d_sq <= pow([c1 r] - [c2 r], 2)) {
+        return nil; // empty array
+    }
+
+    double d = sqrt(d_sq);
+    double vx = ([c2 x] - [c1 x]) / d;
+    double vy = ([c2 y] - [c1 y]) / d;
+
+    NSMutableArray *results = [NSMutableArray arrayWithCapacity:4];
+    int i = 0;
+
+    for (int sign1 = 1; sign1 >= -1; sign1 -= 2) {
+        double c = ([c1 r] - (sign1 * [c2 r])) / d;
+
+        if (pow(c, 2) > 1.0) {
+            continue;
+        }
+
+        double h = sqrt(0.0 > 1.0 - pow(c, 2) ? 0.0 : 1.0 - pow(c, 2)); // max of 0 and 1-c^2
+
+        for (int sign2 = 1; sign2 >= -1; sign2 -= 2) {
+            double nx = (vx * c) - sign2 * h * vy;
+            double ny = (vy * c) - sign2 * h * vx;
+            NSMutableArray *a = [NSMutableArray arrayWithCapacity:4];
+            [a insertObject:[NSNumber numberWithDouble:([c1 x] + ([c1 r] * nx))] atIndex:0];
+            [a insertObject:[NSNumber numberWithDouble:([c1 y] + ([c1 r] * ny))] atIndex:1];
+            [a insertObject:[NSNumber numberWithDouble:([c2 x] + (sign1 * [c2 r] * nx))] atIndex:2];
+            [a insertObject:[NSNumber numberWithDouble:([c2 y] + (sign1 * [c2 r] * ny))] atIndex:3];
+            [results insertObject:a atIndex:i];
+            i++;
+        }
+    }
+
+    // Return 0, 2 or 4 results.
+    return [results subarrayWithRange:NSMakeRange(0, i)];
+}
+
 
 #pragma mark -
 #pragma mark CONVEX HULL
 #pragma mark -
 
+//========== doJarvisMarch: ====================================================
+//
+// Purpose:		Implement the Jarvis' March algorithm.
+//
 // This Jarvis' March algorithm is an adaptation of Python code found here:
 //     http://tixxit.net/2009/12/jarvis-march/
 // There are days when you miss Python's maleability...
 // It's been adapted to work with a fixed list of points, modifying hull membership
 // for each point.  This allows us to apply the hull (as OUTSIDE/INSIDE LSynth
 // directives) to an existing LSynth's constraints.
-
-//========== prepareHullData: ==================================================
 //
-// Purpose:		Prepare a set of directives for computing convex hull membership
-//
-//              We take an array of LDrawDirectives, calculate the transformation
-//              of the first directive, apply the reverse transformation to all
-//              points so that they effectively lie in the XY plane, and create
-//              a new array with dictionaries for each directive.
-//              The dictionary stores the directive, x & y, and hull membership.
-//
-//==============================================================================
-+(NSMutableArray *)prepareHullData:(NSMutableArray *)directives
-{
-    // Get the first real part.  This determines the orientation of the synth part
-    LDrawPart *firstPart;
-    for (LDrawDirective *directive in directives) {
-        if ([directive isKindOfClass:[LDrawPart class]]) {
-            firstPart = directive;
-            break;
-        }
-    }
-    //NSLog(@"First directive is %@", firstPart);
-
-    // Calculate the transformation required to place the first constraint on the XY
-    // plane with correct orientation.
-    Matrix4 transform = [firstPart transformationMatrix];
-    Matrix4 inverseTransform = Matrix4Invert(transform);
-    //printf("Transform:\n");
-    //Matrix4Print(&transform);
-    //printf("Inverse transform:\n");
-    //Matrix4Print(&inverseTransform);
-
-    // Apply this inverse transformation to the constraints and
-    // create an augmented list of directives
-    Matrix4 transformed;
-    NSMutableArray *preparedData = [[NSMutableArray alloc] init];
-    for (LDrawDirective *directive in directives) {
-        if ([directive isKindOfClass:[LDrawPart class]]) {
-            transformed = Matrix4Multiply([(LDrawPart *)directive transformationMatrix], inverseTransform);
-            //NSLog(@"(X, Y) - (%f, %f)\n", transformed.element[3][0], transformed.element[3][1]);
-            // Note the mutability of the literal: we will need to modify inHull later
-            [preparedData addObject:[@{@"directive" : directive,
-                                      @"x"         : [NSNumber numberWithLong:transformed.element[3][0]],
-                                      @"y"         : [NSNumber numberWithLong:transformed.element[3][1]],
-                                      @"inHull"    : @false} mutableCopy]];
-        }
-    }
-    return preparedData;
-}
-
-//========== doJarvisMarch: ====================================================
-//
-// Purpose:		Implement the Jarvis' March algorithm.
-//
-//def convex_hull(points):
-//  """Returns the points on the convex hull of points in CCW order."""
-//  hull = [min(points)]
-//  for p in hull:
-//    q = _next_hull_pt(points, p)
-//    if q != hull[0]:
-//      hull.append(q)
-//  return hull
 //==============================================================================
 +(void)doJarvisMarch:(NSMutableArray *)preparedData
 {
@@ -158,19 +219,20 @@ jarvis(S)
         leftmost = [ComputationalGeometry leftmost:preparedData];
         //NSLog(@"LEFTMOST: %i %@", leftmost, [preparedData objectAtIndex:leftmost]);
         [[preparedData objectAtIndex:leftmost] setValue:@true forKey:@"inHull"];
-    }
+    
 
-    // main loop - keep finding the next point until it's the starting one
-    bool stopIterating = NO;
-    int pIndex = leftmost;
-    while (!stopIterating) {
-        int qIndex = [ComputationalGeometry nextHullPointWithPoints:preparedData andPointIndex:pIndex];
-        if (qIndex != leftmost){
-            [[preparedData objectAtIndex:qIndex] setValue:@true forKey:@"inHull"];
-            pIndex = qIndex;
-        }
-        else{
-            stopIterating = YES;
+        // main loop - keep finding the next point until it's the starting one
+        bool stopIterating = NO;
+        int pIndex = leftmost;
+        while (!stopIterating) {
+            int qIndex = [ComputationalGeometry nextHullPointWithPoints:preparedData andPointIndex:pIndex];
+            if (qIndex != leftmost){
+                [[preparedData objectAtIndex:qIndex] setValue:@true forKey:@"inHull"];
+                pIndex = qIndex;
+            }
+            else{
+                stopIterating = YES;
+            }
         }
     }
 }
@@ -179,14 +241,6 @@ jarvis(S)
 //
 // Purpose:		Find the next point on the convex hull
 //
-//def _next_hull_pt(points, p):
-//  """Returns the next point on the convex hull in CCW from p."""
-//  q = p
-//  for r in points:
-//    t = turn(p, q, r)
-//    if t == TURN_RIGHT or t == TURN_NONE and _dist(p, r) > _dist(p, q):
-//      q = r
-//  return q
 //==============================================================================
 +(int)nextHullPointWithPoints:(NSMutableDictionary *)points andPointIndex:(int)pIndex
 {
@@ -195,7 +249,7 @@ jarvis(S)
         //TURN_LEFT, TURN_RIGHT, TURN_NONE = (1, -1, 0)
         int t = [ComputationalGeometry turnWithPoints:points P:pIndex Q:qIndex R:rIndex];
 
-        NSLog(@"next hull point turn: %i", t);
+        //NSLog(@"next hull point turn: %i", t);
 
         if (t == -1 || (t == 0 &&
             [ComputationalGeometry distanceBetweenPoints:points P:pIndex Q:rIndex] >
@@ -204,7 +258,7 @@ jarvis(S)
         }
     }
 
-    NSLog(@"Next hull point: %i", qIndex);
+    //NSLog(@"Next hull point: %i", qIndex);
 
     return qIndex;
 }
@@ -229,7 +283,7 @@ jarvis(S)
 //==============================================================================
 +(int)turnWithPoints:(NSMutableArray *)points P:(int)pIndex Q:(int)qIndex R:(int)rIndex
 {
-    NSLog(@"PQR: %i, %i, %i", pIndex, qIndex, rIndex);
+    //NSLog(@"PQR: %i, %i, %i", pIndex, qIndex, rIndex);
 
     int px = [[[points objectAtIndex:pIndex] objectForKey:@"x"] integerValue];
     int qx = [[[points objectAtIndex:qIndex] objectForKey:@"x"] integerValue];
@@ -241,7 +295,7 @@ jarvis(S)
     // ((q[0] - p[0]) * (r[1] - p[1])   -   (r[0] - p[0]) * (q[1] - p[1])
     int turn = ((qx - px) * (ry - py)) - ((rx - px) * (qy - py));
 
-     NSLog(@"turnWithPoints: %i", turn);
+     //NSLog(@"turnWithPoints: %i", turn);
 
     // TURN_LEFT, TURN_RIGHT, TURN_NONE = (1, -1, 0)
     return turn < 0 ?
@@ -262,7 +316,7 @@ jarvis(S)
     int dx = [[[points objectAtIndex:qIndex] objectForKey:@"x"] integerValue] - [[[points objectAtIndex:pIndex] objectForKey:@"x"] integerValue];
     int dy = [[[points objectAtIndex:qIndex] objectForKey:@"y"] integerValue] - [[[points objectAtIndex:pIndex] objectForKey:@"y"] integerValue];
 
-    NSLog(@"distance: %i", dx * dx + dy * dy);
+    //NSLog(@"distance: %i", dx * dx + dy * dy);
 
     return dx * dx + dy * dy;
 }
@@ -276,7 +330,7 @@ jarvis(S)
 {
     int *leftmost = nil;
     for (int i=0; i < [points count]; i++) {
-        NSLog(@"Leftmost: %i, %i, %@, %@", i, leftmost, [[points objectAtIndex:i] objectForKey:@"x"], [[points objectAtIndex:leftmost] objectForKey:@"x"]);
+        //NSLog(@"Leftmost: %i, %i, %@, %@", i, leftmost, [[points objectAtIndex:i] objectForKey:@"x"], [[points objectAtIndex:leftmost] objectForKey:@"x"]);
         if (leftmost == nil || [[[points objectAtIndex:i] objectForKey:@"x"] integerValue] < [[[points objectAtIndex:leftmost] objectForKey:@"x"] integerValue]) {
             leftmost = i;
         }

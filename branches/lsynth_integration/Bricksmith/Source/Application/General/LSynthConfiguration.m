@@ -137,14 +137,20 @@ static LSynthConfiguration* instance = nil;
                         NSString *desc = [[previousLine componentsSeparatedByString:@"- Type "] objectAtIndex:1];
                         
                         NSDictionary *hose_constraint = @{
-                            @"flip"   :   [[NSNumber alloc] initWithInt:flip],
-                            @"offset" : @[[[NSNumber alloc] initWithFloat:offset[0]],
-                                          [[NSNumber alloc] initWithFloat:offset[1]],
-                                          [[NSNumber alloc] initWithFloat:offset[0]]],
+                            @"flip"   :   [NSNumber numberWithInt:flip],
+                            @"offset" : @[[NSNumber numberWithFloat:offset[0]],
+                                          [NSNumber numberWithFloat:offset[1]],
+                                          [NSNumber numberWithFloat:offset[2]]],
                             @"orient" : @[
-                                          @[[[NSNumber alloc] initWithFloat:orient[0][0]], [[NSNumber alloc] initWithFloat:orient[0][1]], [[NSNumber alloc] initWithFloat:orient[0][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[1][0]], [[NSNumber alloc] initWithFloat:orient[1][1]], [[NSNumber alloc] initWithFloat:orient[1][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[2][0]], [[NSNumber alloc] initWithFloat:orient[2][1]], [[NSNumber alloc] initWithFloat:orient[2][2]]]
+                                          @[[NSNumber numberWithFloat:orient[0][0]],
+                                            [NSNumber numberWithFloat:orient[0][1]],
+                                            [NSNumber numberWithFloat:orient[0][2]]],
+                                          @[[NSNumber numberWithFloat:orient[1][0]],
+                                            [NSNumber numberWithFloat:orient[1][1]],
+                                            [NSNumber numberWithFloat:orient[1][2]]],
+                                          @[[NSNumber numberWithFloat:orient[2][0]],
+                                            [NSNumber numberWithFloat:orient[2][1]],
+                                            [NSNumber numberWithFloat:orient[2][2]]]
                                          ],
                             @"partName"   : [[NSString alloc] initWithUTF8String:type],
                             @"description" : desc,
@@ -194,19 +200,26 @@ static LSynthConfiguration* instance = nil;
                         NSString *desc = [[previousLine componentsSeparatedByString:@"// "] objectAtIndex:1];
                         
                         NSDictionary *band_constraint = @{
-                            @"radius"   :   [[NSNumber alloc] initWithInt:radius],
-                            @"offset" : @[[[NSNumber alloc] initWithFloat:offset[0]],
-                                          [[NSNumber alloc] initWithFloat:offset[1]],
-                                          [[NSNumber alloc] initWithFloat:offset[0]]],
+                            @"radius"   :   [NSNumber numberWithInt:radius],
+                            @"offset" : @[[NSNumber numberWithFloat:offset[0]],
+                                          [NSNumber numberWithFloat:offset[1]],
+                                          [NSNumber numberWithFloat:offset[2]]],
                             @"orient" : @[
-                                          @[[[NSNumber alloc] initWithFloat:orient[0][0]], [[NSNumber alloc] initWithFloat:orient[0][1]], [[NSNumber alloc] initWithFloat:orient[0][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[1][0]], [[NSNumber alloc] initWithFloat:orient[1][1]], [[NSNumber alloc] initWithFloat:orient[1][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[2][0]], [[NSNumber alloc] initWithFloat:orient[2][1]], [[NSNumber alloc] initWithFloat:orient[2][2]]]
+                                          @[[NSNumber numberWithFloat:orient[0][0]],
+                                            [NSNumber numberWithFloat:orient[0][1]],
+                                            [NSNumber numberWithFloat:orient[0][2]]],
+                                          @[[NSNumber numberWithFloat:orient[1][0]],
+                                            [NSNumber numberWithFloat:orient[1][1]],
+                                            [NSNumber numberWithFloat:orient[1][2]]],
+                                          @[[NSNumber numberWithFloat:orient[2][0]],
+                                            [NSNumber numberWithFloat:orient[2][1]],
+                                            [NSNumber numberWithFloat:orient[2][2]]]
                                          ],
-                            @"partName"   : [[NSString alloc] initWithUTF8String:type],
+                            @"partName"   : [NSString stringWithUTF8String:type],
                             @"description" : desc,
                             @"LSYNTH_CONSTRAINT_CLASS" : [NSNumber numberWithInt:LSYNTH_BAND]
                         };
+
                         
                         [band_constraints addObject:band_constraint];
                         [quickRefBandConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
@@ -214,7 +227,7 @@ static LSynthConfiguration* instance = nil;
                     
                     // The description precedes the constraint definition so save it for the next time round
                     else if ([[lines objectAtIndex:(lineIndex)] length] > 0) {
-                        previousLine = [[NSString alloc] initWithString:[lines objectAtIndex:(lineIndex)]];
+                        previousLine = [lines objectAtIndex:(lineIndex)];
                     }
                     
                     lineIndex++;
@@ -328,6 +341,29 @@ static LSynthConfiguration* instance = nil;
 {
     return self->quickRefHoseConstraints;
 }
+
+//========== constraintDefinitionForPart: ======================================
+//
+// Purpose:		Look up a constraint by part type.  Not especially performant.
+//              Consider adding a dictionary for lookup?
+//
+//==============================================================================
+-(NSDictionary *)constraintDefinitionForPart:(LDrawPart *)directive
+{
+    for (NSDictionary *constraint in self->hose_constraints) {
+        if ([[[constraint objectForKey:@"partName"] lowercaseString] isEqualToString:[directive referenceName]]) {
+            return constraint;
+        }
+    }
+
+    for (NSDictionary *constraint in self->band_constraints) {
+        if ([[[constraint objectForKey:@"partName"] lowercaseString] isEqualToString:[directive referenceName]]) {
+            return constraint;
+        }
+    }
+
+    return nil;
+} //end constraintDefinitionForPart:
 
 
 @end

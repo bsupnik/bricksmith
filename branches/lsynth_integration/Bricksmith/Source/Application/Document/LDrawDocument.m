@@ -2682,6 +2682,7 @@
         else {
             NSLog(@"BIG FAT CONSTRAINT ADDING ERROR");
         }
+        [constraint release];
     }
 } // end InsertLSynthConstraint
 
@@ -2740,7 +2741,7 @@
         [fileContentsOutline expandItem:parent];
         [fileContentsOutline selectObjects:@[direction]];
         [direction setSelected:YES];
-
+        [direction release];
     }
 }//end insertINSIDEOUTSIDELSynthDirective:
 
@@ -3394,6 +3395,7 @@
     //And lastly, select the dragged objects.
 	[(LDrawFileOutlineView*)outlineView selectObjects:pastedObjects];
 
+    [donatingParents release];
 	return YES;
 	
 }//end outlineView:acceptDrop:item:childIndex:
