@@ -276,7 +276,14 @@
 
     NSLog(@"populateLSynthModelMenus");
 
-    // We only want to create this menu once
+    // We recreate this menu each time we're called since the
+    // target potentially changes (different window/document)
+    // TODO: make this once per document?
+
+    if ([modelMenu itemWithTag:lsynthMenuTag]) {
+        [modelMenu removeItemAtIndex:[modelMenu indexOfItemWithTag:lsynthMenuTag]];
+    }
+
     if (! [modelMenu itemWithTag:lsynthMenuTag]) {
         NSInteger  separatorIndex = [modelMenu indexOfItemWithTag:rawCommandMenuTag];
         NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
@@ -310,7 +317,7 @@
                 [entryMenuItem setRepresentedObject:entry];
                 [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
                 [entryMenuItem setTarget:self];
-                // Should these be unique, i.e. add an loop index to a base value? Don't need them to be, yet.
+                // Should these be unique, i.e. add a loop index to a base value? Don't need them to be, yet.
                 [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
                 [menu addItem:entryMenuItem];
             }
@@ -4091,7 +4098,9 @@
 - (void) windowDidBecomeMain:(NSNotification *)aNotification
 {
 	[self updateInspector];
-	
+
+    [self populateLSynthModelMenus];
+
 	[self addModelsToMenus];
 	
 }//end windowDidBecomeMain:

@@ -28,8 +28,8 @@
 
     if (self) {
         synthesizedParts = [[NSMutableArray alloc] init];
-        self->synthType       = [[NSString alloc] init];
-//        color            = [[LDrawColor alloc] init];
+        self->synthType  = [[NSString alloc] init];
+        color            = [[LDrawColor alloc] init];
 //        originalColor    = [[LDrawColor alloc] init];
 //        [self setLsynthClass:-1];
 //        deferSynthesis   = NO;
@@ -49,7 +49,6 @@
 //========== initWithLines:inRange:parentGroup: ================================
 //
 // Purpose:		Initializes the synthesized part with the supplied range of lines
-//
 //
 // LSynth format is
 //
@@ -84,7 +83,7 @@
 
     self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 
-    [self setPostsNotifications:NO];
+    //[self setPostsNotifications:NO];
 
     if(self)
     {
@@ -100,7 +99,6 @@
 
         NSArray *fields = [currentLine componentsSeparatedByString:@" "];
         NSString *type = [fields objectAtIndex:3];
-//!!!!!!!!!        [self setImageName:[fields objectAtIndex:3]];
         [self setLsynthType:[fields objectAtIndex:3]];
         [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [[fields objectAtIndex:4] integerValue]]];
 
@@ -202,7 +200,9 @@
                         [synthesizedParts addObject:newDirective];
                     }
                     else {
-                        NSLog(@"Discarding invalid part in LSynth"); //TODO: deal with these better.  Should be lossless, the user knows what they're doing
+                        // TODO: deal with these better.  Should be lossless, the user knows what they're doing
+                        // poss. use LDrawLSynthDirective?
+                        NSLog(@"Discarding invalid part in LSynth");
                     }
                 }
                 lineIndex += 1;
@@ -212,14 +212,16 @@
 
     }
 
-    [self synthesize];
+    // If we've read in synthesized parts or don't have any constraints then don't initially synthesize
+    if ([synthesizedParts count] == 0 && [[self allEnclosedElements] count] > 0) {
+        [self synthesize];
+    }
 
+    //[self setPostsNotifications:YES];
 
-    [self setPostsNotifications:YES];
-
-    [[NSNotificationCenter defaultCenter]
-            postNotificationName:LDrawDirectiveDidChangeNotification
-                          object:self];
+//    [[NSNotificationCenter defaultCenter]
+//            postNotificationName:LDrawDirectiveDidChangeNotification
+//                          object:self];
 
     blockLog = [blockLog stringByAppendingString:@"\n---------------------------------------------------------------------------\n"];
     NSLog(@"%@", blockLog);
@@ -467,7 +469,7 @@
     NSMutableString *written        = [NSMutableString string];
     NSString        *CRLF           = [NSString CRLF];
     NSString        *lsynthVisibility = @"SHOW";
-    NSArray         *commands		= [self subdirectives];
+    NSArray         *constraints    = [self subdirectives];
     LDrawDirective  *currentCommand = nil;
     NSString		*commandString	= nil;
     NSUInteger      numberCommands  = 0;
@@ -478,15 +480,27 @@
     [written appendFormat:@"0 SYNTH BEGIN %@ %d%@", [self lsynthType], (int)[self->color colorCode], CRLF];
     [written appendFormat:@"0 SYNTH %@%@", lsynthVisibility, CRLF];
 
-    numberCommands  = [commands count];
+    numberCommands  = [constraints count];
     for(counter = 0; counter < numberCommands; counter++)
     {
-        currentCommand = [commands objectAtIndex:counter];
+        currentCommand = [constraints objectAtIndex:counter];
         commandString = [currentCommand write];
         [written appendString:commandString];
         [written appendString:CRLF];
     }
 
+    // Write out synthesized parts, if there are any to write out
+    // TODO: Make dependent on a preference or as part of an Export command
+    if ([self->synthesizedParts count] > 0) {
+        [written appendString:@"0 SYNTH SYNTHESIZED BEGIN"];
+        [written appendString:CRLF];
+        for (LDrawPart *part in self->synthesizedParts) {
+            [written appendString:[part write]];
+            [written appendString:CRLF];
+        }
+        [written appendString:@"0 SYNTH SYNTHESIZED END"];
+        [written appendString:CRLF];
+    }
     // End
     [written appendString:@"0 SYNTH END"];
 //	[written appendString:CRLF];
@@ -628,7 +642,7 @@
 - (void) setSelected:(BOOL)flag
 {
     [super setSelected:flag];
-    //[self colorSynthesizedPartsTranslucent:flag];
+    [self colorSynthesizedPartsTranslucent:flag];
     //[self sendMessageToObservers:MessageObservedChanged];
 }//end setSelected:
 
@@ -659,7 +673,7 @@
     [self->color release];
     self->color = newColor;
 
-    //[self colorSynthesizedPartsTranslucent:[self isSelected]];
+    [self colorSynthesizedPartsTranslucent:[self isSelected]];
 }//end setLDrawColor:
 
 //========== LDrawColor ========================================================
@@ -817,22 +831,21 @@
 //==============================================================================
 - (void)colorSynthesizedPartsTranslucent:(BOOL)yesNo
 {
-    NSLog(@"Would have colorSynthesizedPartsTranslucent");
-//    LDrawColor *theColor;
-//    if (yesNo == YES) {
-//        theColor = [color fullCopyWithZone:nil];
-//        GLfloat rgba[4];
-//        [theColor getColorRGBA:rgba];
-//        rgba[3] = 0.2; // Adjust the alpha.  TODO: make this globally configurable
-//        [theColor setColorRGBA:rgba];
-//    }
-//    else {
-//        theColor = color;
-//    }
-//
-//    for (LDrawPart *part in self->synthesizedParts) {
-//        [part setLDrawColor:theColor];
-//    }
+    LDrawColor *theColor;
+    if (yesNo == YES) {
+        theColor = [color fullCopyWithZone:nil];
+        GLfloat rgba[4];
+        [theColor getColorRGBA:rgba];
+        rgba[3] = 0.2; // Adjust the alpha.  TODO: make this globally configurable
+        [theColor setColorRGBA:rgba];
+    }
+    else {
+        theColor = color;
+    }
+
+    for (LDrawPart *part in self->synthesizedParts) {
+        [part setLDrawColor:theColor];
+    }
 }  //end colorSynthesizedPartsTranslucent:
 
 //========== transformationMatrix ==============================================
@@ -945,7 +958,7 @@
     if (msg == MessageObservedChanged) {
             [synthesizedParts removeAllObjects];
             [self synthesize];
-//            [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
+            [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
     }
 }
 

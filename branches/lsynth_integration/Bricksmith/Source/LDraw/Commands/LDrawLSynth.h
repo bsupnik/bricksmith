@@ -37,6 +37,7 @@ typedef enum
 - (NSString *) lsynthType;
 - (void) setHidden:(BOOL)flag;
 - (BOOL) isHidden;
+- (void) setLDrawColor:(LDrawColor *)color;
 
 - (TransformComponents) transformComponents;
 
