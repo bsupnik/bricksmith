@@ -7,8 +7,70 @@
 #import "LSynthConfiguration.h"
 #import "LDrawUtilities.h"
 #import "MacLDraw.h"
+#import "LDrawPart.h"
 
 @implementation LSynthConfiguration
+
+#pragma mark -
+#pragma mark CLASS CONSTANTS
+#pragma mark -
+
+//========== Class constants ===================================================
+//
+// Purpose:		Class Constants
+//
+// TODO: make configurable preferences
+//
+//==============================================================================
+
+static NSString *DEFAULT_HOSE_CONSTRAINT = @"LS01.DAT";
+static NSString *DEFAULT_BAND_CONSTRAINT = @"3648a.dat";
+static NSString *DEFAULT_HOSE_TYPE = @"TECHNIC_PNEUMATIC_HOSE";
+static NSString *DEFAULT_BAND_TYPE = @"TECHNIC_CHAIN_LINK";
+
+//========== defaultHoseConstraint =============================================
+//
+// Purpose: Return the default hose constraint
+//
+//==============================================================================
++(NSString *) defaultHoseConstraint
+{
+    return DEFAULT_HOSE_CONSTRAINT;
+}//end defaultHoseConstraint
+
+//========== defaultBandConstraint =============================================
+//
+// Purpose: Return the default band constraint
+//
+//==============================================================================
++(NSString *) defaultBandConstraint
+{
+    return DEFAULT_BAND_CONSTRAINT;
+}//end defaultBandConstraint
+
+//========== defaultHoseType ===================================================
+//
+// Purpose: Return the default hose type
+//
+//==============================================================================
++(NSString *) defaultHoseType
+{
+    return DEFAULT_HOSE_TYPE;
+}//end defaultHoseType
+
+//========== defaultBandCType ==================================================
+//
+// Purpose: Return the default band type
+//
+//==============================================================================
++(NSString *) defaultBandType
+{
+    return DEFAULT_BAND_TYPE;
+}//end defaultBandType
+
+#pragma mark -
+#pragma mark SINGLETON
+#pragma mark -
 
 // Container for our singleton instance
 static LSynthConfiguration* instance = nil;
@@ -37,14 +99,16 @@ static LSynthConfiguration* instance = nil;
 -(id)init
 {
     if (self = [super init]) {
-        parts            = [[NSMutableArray alloc] init];
-        hose_constraints = [[NSMutableArray alloc] init];
-        hose_types       = [[NSMutableArray alloc] init];
-        band_constraints = [[NSMutableArray alloc] init];
-        band_types       = [[NSMutableArray alloc] init];
+        parts                   = [[NSMutableArray alloc] init];
+        hose_constraints        = [[NSMutableArray alloc] init];
+        hose_types              = [[NSMutableArray alloc] init];
+        band_constraints        = [[NSMutableArray alloc] init];
+        band_types              = [[NSMutableArray alloc] init];
 
-        quickRefBands    = [[NSMutableArray alloc] init];
-        quickRefHoses    = [[NSMutableArray alloc] init];
+        quickRefBands           = [[NSMutableArray alloc] init];
+        quickRefHoses           = [[NSMutableArray alloc] init];
+        quickRefBandConstraints = [[NSMutableArray alloc] init];
+        quickRefHoseConstraints = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -134,14 +198,20 @@ static LSynthConfiguration* instance = nil;
                         NSString *desc = [[previousLine componentsSeparatedByString:@"- Type "] objectAtIndex:1];
                         
                         NSDictionary *hose_constraint = @{
-                            @"flip"   :   [[NSNumber alloc] initWithInt:flip],
-                            @"offset" : @[[[NSNumber alloc] initWithFloat:offset[0]],
-                                          [[NSNumber alloc] initWithFloat:offset[1]],
-                                          [[NSNumber alloc] initWithFloat:offset[0]]],
+                            @"flip"   :   [NSNumber numberWithInt:flip],
+                            @"offset" : @[[NSNumber numberWithFloat:offset[0]],
+                                          [NSNumber numberWithFloat:offset[1]],
+                                          [NSNumber numberWithFloat:offset[2]]],
                             @"orient" : @[
-                                          @[[[NSNumber alloc] initWithFloat:orient[0][0]], [[NSNumber alloc] initWithFloat:orient[0][1]], [[NSNumber alloc] initWithFloat:orient[0][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[1][0]], [[NSNumber alloc] initWithFloat:orient[1][1]], [[NSNumber alloc] initWithFloat:orient[1][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[2][0]], [[NSNumber alloc] initWithFloat:orient[2][1]], [[NSNumber alloc] initWithFloat:orient[2][2]]]
+                                          @[[NSNumber numberWithFloat:orient[0][0]],
+                                            [NSNumber numberWithFloat:orient[0][1]],
+                                            [NSNumber numberWithFloat:orient[0][2]]],
+                                          @[[NSNumber numberWithFloat:orient[1][0]],
+                                            [NSNumber numberWithFloat:orient[1][1]],
+                                            [NSNumber numberWithFloat:orient[1][2]]],
+                                          @[[NSNumber numberWithFloat:orient[2][0]],
+                                            [NSNumber numberWithFloat:orient[2][1]],
+                                            [NSNumber numberWithFloat:orient[2][2]]]
                                          ],
                             @"partName"   : [[NSString alloc] initWithUTF8String:type],
                             @"description" : desc,
@@ -149,6 +219,7 @@ static LSynthConfiguration* instance = nil;
                         };
 
                         [hose_constraints addObject:hose_constraint];
+                        [quickRefHoseConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
                     }
                     
                     // The description precedes the constraint definition so save it for the next time round
@@ -190,26 +261,34 @@ static LSynthConfiguration* instance = nil;
                         NSString *desc = [[previousLine componentsSeparatedByString:@"// "] objectAtIndex:1];
                         
                         NSDictionary *band_constraint = @{
-                            @"radius"   :   [[NSNumber alloc] initWithInt:radius],
-                            @"offset" : @[[[NSNumber alloc] initWithFloat:offset[0]],
-                                          [[NSNumber alloc] initWithFloat:offset[1]],
-                                          [[NSNumber alloc] initWithFloat:offset[0]]],
+                            @"radius"   :   [NSNumber numberWithInt:radius],
+                            @"offset" : @[[NSNumber numberWithFloat:offset[0]],
+                                          [NSNumber numberWithFloat:offset[1]],
+                                          [NSNumber numberWithFloat:offset[2]]],
                             @"orient" : @[
-                                          @[[[NSNumber alloc] initWithFloat:orient[0][0]], [[NSNumber alloc] initWithFloat:orient[0][1]], [[NSNumber alloc] initWithFloat:orient[0][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[1][0]], [[NSNumber alloc] initWithFloat:orient[1][1]], [[NSNumber alloc] initWithFloat:orient[1][2]]],
-                                          @[[[NSNumber alloc] initWithFloat:orient[2][0]], [[NSNumber alloc] initWithFloat:orient[2][1]], [[NSNumber alloc] initWithFloat:orient[2][2]]]
+                                          @[[NSNumber numberWithFloat:orient[0][0]],
+                                            [NSNumber numberWithFloat:orient[0][1]],
+                                            [NSNumber numberWithFloat:orient[0][2]]],
+                                          @[[NSNumber numberWithFloat:orient[1][0]],
+                                            [NSNumber numberWithFloat:orient[1][1]],
+                                            [NSNumber numberWithFloat:orient[1][2]]],
+                                          @[[NSNumber numberWithFloat:orient[2][0]],
+                                            [NSNumber numberWithFloat:orient[2][1]],
+                                            [NSNumber numberWithFloat:orient[2][2]]]
                                          ],
-                            @"partName"   : [[NSString alloc] initWithUTF8String:type],
+                            @"partName"   : [NSString stringWithUTF8String:type],
                             @"description" : desc,
                             @"LSYNTH_CONSTRAINT_CLASS" : [NSNumber numberWithInt:LSYNTH_BAND]
                         };
+
                         
                         [band_constraints addObject:band_constraint];
+                        [quickRefBandConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
                     }
                     
                     // The description precedes the constraint definition so save it for the next time round
                     else if ([[lines objectAtIndex:(lineIndex)] length] > 0) {
-                        previousLine = [[NSString alloc] initWithString:[lines objectAtIndex:(lineIndex)]];
+                        previousLine = [lines objectAtIndex:(lineIndex)];
                     }
                     
                     lineIndex++;
@@ -257,6 +336,26 @@ static LSynthConfiguration* instance = nil;
     }
 }
 
+//========== isLSynthConstraint: ===============================================
+//
+// Purpose:		Determine if a given part is an "official" LSynth constraint,
+//              i.e. defined in lsynth.ldr, and parsed into the LSynthConfiguration
+//              object.
+//
+//==============================================================================
+-(BOOL) isLSynthConstraint:(LDrawPart *)part
+{
+    if ([quickRefBandConstraints containsObject:[part referenceName]] ||
+        [quickRefHoseConstraints containsObject:[part referenceName]]) {
+        return YES;
+    }
+    return NO;
+}//end isLSynthConstraint:
+
+#pragma mark -
+#pragma mark ACCESSORS
+#pragma mark -
+
 // TODO: move to properties
 
 - (NSMutableArray *) getParts
@@ -293,4 +392,60 @@ static LSynthConfiguration* instance = nil;
 {
     return self->quickRefHoses;
 }
+
+- (NSMutableArray *)getQuickRefBandContstraints
+{
+    return self->quickRefBandConstraints;
+}
+
+- (NSMutableArray *)getQuickRefHoseConstraints
+{
+    return self->quickRefHoseConstraints;
+}
+
+//========== constraintDefinitionForPart: ======================================
+//
+// Purpose:		Look up a constraint by part type.  Not especially performant.
+//              Consider adding a dictionary for lookup?
+//
+//==============================================================================
+-(NSDictionary *)constraintDefinitionForPart:(LDrawPart *)directive
+{
+    for (NSDictionary *constraint in self->hose_constraints) {
+        if ([[[constraint objectForKey:@"partName"] lowercaseString] isEqualToString:[directive referenceName]]) {
+            return constraint;
+        }
+    }
+
+    for (NSDictionary *constraint in self->band_constraints) {
+        if ([[[constraint objectForKey:@"partName"] lowercaseString] isEqualToString:[directive referenceName]]) {
+            return constraint;
+        }
+    }
+
+    return nil;
+} //end constraintDefinitionForPart:
+
+//========== typeForTypeName: ==================================================
+//
+// Purpose:		Look up a band or hose definition by name.  Used when the class
+//              is changed.  Not especially performant.
+//
+//==============================================================================
+-(NSDictionary *)typeForTypeName:(NSString *)typeName
+{
+    for (NSDictionary *type in band_types) {
+        if ([[type valueForKey:@"LSYNTH_TYPE"] isEqualToString:typeName]) {
+            return type;
+        }
+    }
+
+    for (NSDictionary *type in hose_types) {
+        if ([[type valueForKey:@"LSYNTH_TYPE"] isEqualToString:typeName]) {
+            return type;
+        }
+    }
+    return nil;
+}//end typeForTypeName:
+
 @end

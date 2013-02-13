@@ -9,6 +9,8 @@
 #import "LDrawContainer.h"
 #import "LDrawDrawableElement.h"
 #import "ColorLibrary.h"
+#import "LDrawMovableDirective.h"
+#import "LSynthConfiguration.h"
 
 // Lsynth block parser states
 typedef enum
@@ -19,7 +21,7 @@ typedef enum
     PARSER_STATE_COUNT
 } LSynthParserStateT;
 
-@interface LDrawLSynth : LDrawContainer <LDrawColorable>
+@interface LDrawLSynth : LDrawContainer <LDrawColorable, LDrawMovableDirective>
 {
     NSMutableArray  *synthesizedParts;
     NSString        *synthType;
@@ -37,12 +39,15 @@ typedef enum
 - (NSString *) lsynthType;
 - (void) setHidden:(BOOL)flag;
 - (BOOL) isHidden;
+- (void) setLDrawColor:(LDrawColor *)color;
 
 - (TransformComponents) transformComponents;
 
 // Utilities
 - (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
-- (void) dragDropDonateCleanup;
+- (NSString *)determineIconName:(LDrawDirective *)directive;
+-(int)synthesizedPartsCount;
+
 + (BOOL) lineIsLSynthBeginning:(NSString*)line;
 @end

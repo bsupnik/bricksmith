@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class LDrawPart;
+
 // The class of a synthesis object
 typedef enum
 {
@@ -27,32 +29,46 @@ typedef enum
 
     NSMutableArray *quickRefHoses;
     NSMutableArray *quickRefBands;
+    NSMutableArray *quickRefHoseConstraints;
+    NSMutableArray *quickRefBandConstraints;
 }
 
 #pragma mark -
 #pragma mark Class Methods
 #pragma mark -
 
-//+(LSynthClassT) classForType:(NSString *)type;
 +(LSynthConfiguration*) sharedInstance;
-
 
 #pragma mark -
 #pragma mark Instance Methods
 #pragma mark -
 
 -(void) parseLsynthConfig:(NSString *)lsynthConfigurationPath;
+-(BOOL) isLSynthConstraint:(LDrawPart *)part;
 
 #pragma mark -
-#pragma mark Accessors
+#pragma mark CONSTANT ACCESSORS
 #pragma mark -
 
--(NSMutableArray *)getParts;
--(NSMutableArray *)getHoseTypes;
--(NSMutableArray *)getBandTypes;
--(NSMutableArray *)getHoseConstraints;
--(NSMutableArray *)getBandConstraints;
--(NSMutableArray *)getQuickRefBands;
--(NSMutableArray *)getQuickRefHoses;
++(NSString *) defaultHoseConstraint;
++(NSString *) defaultBandConstraint;
++(NSString *) defaultHoseType;
++(NSString *) defaultBandType;
+
+#pragma mark -
+#pragma mark ACCESSORS
+#pragma mark -
+
+-(NSMutableArray *) getParts;
+-(NSMutableArray *) getHoseTypes;
+-(NSMutableArray *) getBandTypes;
+-(NSMutableArray *) getHoseConstraints;
+-(NSMutableArray *) getBandConstraints;
+-(NSMutableArray *) getQuickRefBands;
+-(NSMutableArray *) getQuickRefHoses;
+-(NSMutableArray *) getQuickRefBandContstraints;
+-(NSMutableArray *) getQuickRefHoseConstraints;
+-(NSDictionary *)   constraintDefinitionForPart:(LDrawPart *)directive;
+-(NSDictionary *)   typeForTypeName:(NSString *)typeName;
 
 @end

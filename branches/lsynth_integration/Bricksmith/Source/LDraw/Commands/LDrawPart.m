@@ -49,6 +49,7 @@
 	self = [super init];
 	
 	[self setDisplayName:@""];
+    [self setIconName:@"Brick"];
 	[self setTransformComponents:IdentityComponents];
 	//	drawLock = [[NSLock alloc] init];
 	
@@ -194,7 +195,8 @@
 	self		= [super initWithCoder:decoder];
 	
 	[self setDisplayName:[decoder decodeObjectForKey:@"displayName"]];
-	
+    [self setIconName:@"Brick"];
+
 	//Decoding structures is a bit messy.
 	temporary	= [decoder decodeBytesForKey:@"glTransformation" returnedLength:NULL];
 	memcpy(glTransformation, temporary, sizeof(GLfloat)*16 );
@@ -641,20 +643,6 @@
 	return [[PartLibrary sharedPartLibrary] descriptionForPart:self];
 	
 }//end browsingDescription
-
-
-//========== iconName ==========================================================
-//
-// Purpose:		Returns the name of image file used to display this kind of 
-//				object, or nil if there is no icon.
-//
-//==============================================================================
-- (NSString *) iconName
-{
-	return @"Brick";
-	
-}//end iconName
-
 
 //========== inspectorClassName ================================================
 //

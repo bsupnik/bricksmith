@@ -420,7 +420,7 @@
 //				The collector protocol passed in is some object capable of 
 //				remembering the collectable data.
 //
-// Notes:		LDrawTextur is a collection of sub-directives that all receive
+// Notes:		LDrawTexture is a collection of sub-directives that all receive
 //				projective texturing.  So we first push our texture state to the
 //				collector and then recurse.
 //
