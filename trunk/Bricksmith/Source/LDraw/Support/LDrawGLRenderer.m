@@ -42,7 +42,7 @@
 #define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
 #define DEBUG_BOUNDING_BOX			0
 
-#define NEW_RENDERER				0
+#define NEW_RENDERER				1
 
 
 #define DEBUG_DRAWING				1	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
@@ -216,10 +216,10 @@
 //==============================================================================
 - (void) draw
 {
-	NSDate				*startTime			= nil;
-	NSUInteger			 options			= DRAW_NO_OPTIONS;
-	NSTimeInterval		 drawTime			= 0;
-	BOOL				 considerFastDraw	= NO;
+	NSDate			*startTime			= nil;
+//	NSUInteger		options 			= DRAW_NO_OPTIONS;
+	NSTimeInterval	drawTime			= 0;
+	BOOL			considerFastDraw	= NO;
 	
 	startTime	= [NSDate date];
 
@@ -253,18 +253,18 @@
 	// DRAW!
 	#if !NEW_RENDERER
 	
-	[self->fileBeingDrawn draw:options
-					 viewScale:[self zoomPercentage]/100.
-				   parentColor:color];
+		[self->fileBeingDrawn draw:options
+						 viewScale:[self zoomPercentage]/100.
+					   parentColor:color];
 	
 	#else
 
-	LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] init];	
-	[self->fileBeingDrawn drawSelf:ren];
-	[ren release];
+		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] init];	
+		[self->fileBeingDrawn drawSelf:ren];
+		[ren release];
 
 	#endif
-
+  
 	// We allow primitive drawing to leave their VAO bound to avoid setting the VAO
 	// back to zero between every draw call.  Set it once here to avoid usign some
 	// poor directive to draw!
@@ -483,11 +483,9 @@
 	
 	// When using a perspective view, we must use gluLookAt to reposition 
 	// the camera. That basically means translating the model. But all we're 
-	// concerned about here is the *rotation*, so we'll zero out the 
-	// translation components. 
-	transformation.element[3][0] = 0;
-	transformation.element[3][1] = 0; //translation is in the bottom row of the matrix.
-	transformation.element[3][2] = 0;
+	// concerned about here is the *rotation*, so we'll zero out the camera
+	// translation component. 
+	transformation.element[3][2] -= self->cameraDistance; //translation is in the bottom row of the matrix.
 	
 	return transformation;
 	
@@ -848,6 +846,7 @@
 	//Register for important notifications.
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawDirectiveDidChangeNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawFileActiveModelDidChangeNotification object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawModelRotationCenterDidChangeNotification object:nil];
 		
 	[[NSNotificationCenter defaultCenter]
 			addObserver:self
@@ -857,9 +856,17 @@
 	
 	[[NSNotificationCenter defaultCenter]
 			addObserver:self
-			   selector:@selector(displayNeedsUpdating:)
+			   selector:@selector(activeModelDidChange:)
 				   name:LDrawFileActiveModelDidChangeNotification
 				 object:self->fileBeingDrawn ];
+	
+	[[NSNotificationCenter defaultCenter]
+			addObserver:self
+			   selector:@selector(rotationCenterChanged:)
+				   name:LDrawModelRotationCenterDidChangeNotification
+				 object:self->fileBeingDrawn ];
+				 
+	[self updateRotationCenter];
 	
 }//end setLDrawDirective:
 
@@ -961,9 +968,11 @@
 	// The camera distance was set for us by -resetFrameSize, so as to be 
 	// able to see the entire model. 
 	modelview = V3LookAt(V3Make(0, 0, self->cameraDistance),
-						 V3Make(0, 0, 0), 
+						 ZeroPoint3, 
 						 V3Make(0, -1, 0), 
 						 modelview);
+						 
+	modelview = Matrix4Translate(modelview, V3Negate(rotationCenter));
 	
 	Matrix4GetGLMatrix4(modelview, glModelview);
 	glLoadMatrixf(glModelview);
@@ -1308,13 +1317,9 @@
 //				then do a part drag or marquee based on whether the user clicked
 //				on a part or on empty space.
 //
-// Notes:		This method is optimized to do an iterative search, first with a
-//				low-resolution draw, then on a high-resolution pass. It's about 
-//				six times faster than just drawing the whole model.
-//
 //==============================================================================
 - (BOOL) mouseSelectionClick:(Point2)point_view
-			 selectionMode:(SelectionModeT)selectionMode
+			   selectionMode:(SelectionModeT)selectionMode
 {
 	LDrawDirective	*clickedDirective	= nil;
 	
@@ -1326,32 +1331,28 @@
 	   &&	self->allowsEditing == YES
 	   &&	[self->delegate respondsToSelector:@selector(LDrawGLRenderer:wantsToSelectDirective:byExtendingSelection:)] )
 	{
-		//first do hit-testing on nothing but the bounding boxes; that is very fast 
-		// and likely eliminates a lot of parts.
+		Point2	point_viewport			= [self convertPointToViewport:point_view];
+		Point2	bl						= V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
+		Point2	tr						= V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
+		GLfloat depth					= 1.0;
 
-		Point2  point_viewport  = [self convertPointToViewport:point_view];
-		Point2	bl = V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
-		Point2	tr = V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
-		GLfloat depth           = 1.0;
-
-		Box2			viewport				= [self viewport];
-		GLfloat 		projectionGLMatrix[16]	= {0.0};
-		GLfloat 		modelViewGLMatrix[16]	= {0.0};
+		Box2	viewport				= [self viewport];
+		GLfloat projectionGLMatrix[16]	= {0.0};
+		GLfloat modelViewGLMatrix[16]	= {0.0};
 		
 		// Get view and projection
 		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
 		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
 
-		Point2 point_clip = {
-					(point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport) - 1.0,
-					(point_viewport.y - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 };
+		Point2 point_clip = V2Make( (point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport)  - 1.0,
+								    (point_viewport.y - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 );
 
-			float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
-			float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
-			float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
-			float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
-
-			Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
+		float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
+		float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
+		float y2 = (MAX(bl.y,tr.y) - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0;
+		
+		Box2 test_box = V2MakeBoxFromPoints( V2Make(x1, y1), V2Make(x2, y2) );
 
 		Matrix4	mvp =			Matrix4Multiply(
 										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
@@ -1378,30 +1379,34 @@
 			BOOL has_sel_directive = clickedDirective != nil &&  [clickedDirective isSelected];
 			BOOL has_any_directive = clickedDirective != nil;
 			
-			switch(selectionMode) {
-			case SelectionReplace:				
-				// Replacement mode?  Select unless we hit an already hit one - we do not "deselect others" on a click.
-				if(!has_sel_directive)
-					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];				
-				break;
-			case SelectionExtend:
-				// Extended selection.  If we hit a part, toggle it - if we miss a part, don't do anything, nothing to do.
-				if(has_any_directive)
-					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
-				break;
-			case SelectionIntersection:
-				// Intersection.  If we hit an unselected directive, do the select to grab it - this will grab it (via option-shift).
-				// Then we copy.  If we have no directive, the whole sel clears, which is the correct start for an intersection (since the
-				// marquee is empty).
-				if(!has_sel_directive)
-					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
-				break;
-			case SelectionSubtract:
-				// Subtraction.  If we have an UNSELECTED directive, we have to grab it.  If we have a selected directive  we do nothing so
-				// we can option-drag-copy thes el.  And if we just miss everything, the subtraction hasn't nuked anything yet...again we do nothing.
-				if(has_any_directive && !has_sel_directive)
-					[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
-				break;
+			switch(selectionMode)
+			{
+				case SelectionReplace:				
+					// Replacement mode?  Select unless we hit an already hit one - we do not "deselect others" on a click.
+					if(!has_sel_directive)
+						[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];				
+					break;
+				
+				case SelectionExtend:
+					// Extended selection.  If we hit a part, toggle it - if we miss a part, don't do anything, nothing to do.
+					if(has_any_directive)
+						[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+					break;
+				
+				case SelectionIntersection:
+					// Intersection.  If we hit an unselected directive, do the select to grab it - this will grab it (via option-shift).
+					// Then we copy.  If we have no directive, the whole sel clears, which is the correct start for an intersection (since the
+					// marquee is empty).
+					if(!has_sel_directive)
+						[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+					break;
+				
+				case SelectionSubtract:
+					// Subtraction.  If we have an UNSELECTED directive, we have to grab it.  If we have a selected directive  we do nothing so
+					// we can option-drag-copy thes el.  And if we just miss everything, the subtraction hasn't nuked anything yet...again we do nothing.
+					if(has_any_directive && !has_sel_directive)
+						[self->delegate LDrawGLRenderer:self wantsToSelectDirective:clickedDirective byExtendingSelection:extendSelection ];
+					break;
 			}
 		}
 	}
@@ -1587,6 +1592,11 @@
 	// are displaying.
 	Matrix4 inversed = [self getInverseMatrix];
 	
+	// clear any translation resulting from a rotation center
+	inversed.element[3][0] = 0;
+	inversed.element[3][1] = 0;
+	inversed.element[3][2] = 0;
+	
 	// Now we will convert what appears to be the vertical and horizontal 
 	// axes into the actual model vectors they represent. 
 	Vector4 vectorX             = {1,0,0,1}; //unit vector i along x-axis.
@@ -1615,8 +1625,10 @@
 	
 	//Now rotate the model around the visual "up" and "down" directions.
 	glMatrixMode(GL_MODELVIEW);
+	glTranslatef(rotationCenter.x, rotationCenter.y, rotationCenter.z);
 	glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
 	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
+	glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
 	
 	if([self->delegate respondsToSelector:@selector(LDrawGLRendererMouseNotPositioning:)])
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
@@ -1977,6 +1989,22 @@
 #pragma mark NOTIFICATIONS
 #pragma mark -
 
+//========== activeModelDidChange: =============================================
+//
+// Purpose:		The selected MPD model changed.
+//
+//==============================================================================
+- (void) activeModelDidChange:(NSNotification *)notification
+{
+	[self->delegate LDrawGLRendererNeedsCurrentContext:self];
+	
+	[self updateRotationCenter];
+	[self resetFrameSize];
+	
+}//end displayNeedsUpdating
+
+
+
 //========== displayNeedsUpdating: =============================================
 //
 // Purpose:		Someone (likely our file) has notified us that it has changed, 
@@ -1992,6 +2020,20 @@
 	[self resetFrameSize]; //calls setNeedsDisplay
 	
 }//end displayNeedsUpdating
+
+
+//========== rotationCenterChanged: ============================================
+//
+// Purpose:		The active model changed the point around which it is to be spun.
+//
+//==============================================================================
+- (void) rotationCenterChanged:(NSNotification *)notification
+{
+	[self->delegate LDrawGLRendererNeedsCurrentContext:self];
+	
+	[self updateRotationCenter];
+
+}//end rotationCenterChanged:
 
 
 //========== reshape ===========================================================
@@ -2029,15 +2071,14 @@
 //==============================================================================
 - (float) getDepthUnderPoint:(Point2)point_view
 {
+	Point2	point_viewport			= [self convertPointToViewport:point_view];
+	Point2	bl						= V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
+	Point2	tr						= V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
+	GLfloat depth					= 1.0;
 
-	Point2  point_viewport  = [self convertPointToViewport:point_view];
-	Point2	bl = V2Make(point_viewport.x-HANDLE_SIZE,point_viewport.y-HANDLE_SIZE);
-	Point2	tr = V2Make(point_viewport.x+HANDLE_SIZE,point_viewport.y+HANDLE_SIZE);
-	GLfloat depth           = 1.0;
-
-	Box2			viewport				= [self viewport];
-	GLfloat 		projectionGLMatrix[16]	= {0.0};
-	GLfloat 		modelViewGLMatrix[16]	= {0.0};
+	Box2	viewport				= [self viewport];
+	GLfloat projectionGLMatrix[16]	= {0.0};
+	GLfloat modelViewGLMatrix[16]	= {0.0};
 	
 	// Get view and projection
 	glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
@@ -2368,16 +2409,21 @@
 		//			Solution: set matrix manually. Is there a better one?
 		glMatrixMode(GL_MODELVIEW);
 		glGetFloatv(GL_MODELVIEW_MATRIX, currentMatrix);
-
-		// As cameraDistance approaches infinity, the view approximates 
-		// an orthographic projection. We want a fairly large number 
-		// here to produce a small, only slightly-noticable perspective. 
+		Matrix4 modelview = Matrix4CreateFromGLMatrix4(currentMatrix);
+		
+		// remove the old camera distance
+		modelview = Matrix4Translate(modelview, V3Make(0, 0, -self->cameraDistance));
+		
+		// Apply new distance
+		// Note: As cameraDistance approaches infinity, the view approximates an 
+		//		 orthographic projection. We want a fairly large distance to 
+		//		 produce a small, only slightly-noticable perspective. 
 		self->cameraDistance = - (newSize) * CAMERA_DISTANCE_FACTOR;
-		currentMatrix[12] = 0; //reset the camera location. Positions 12-14 of 
-		currentMatrix[13] = 0; // the matrix hold the translation values.
-		currentMatrix[14] = cameraDistance;
-		glLoadMatrixf(currentMatrix); // It's easiest to set them directly.
-
+		modelview = Matrix4Translate(modelview, V3Make(0, 0, cameraDistance));
+		
+		Matrix4GetGLMatrix4(modelview, currentMatrix);
+		glLoadMatrixf(currentMatrix);
+		
 		//
 		// Resize the Frame
 		//
@@ -2647,6 +2693,41 @@
 	}
 }
 
+
+//========== updateRotationCenter ==============================================
+//
+// Purpose:		Resync our copy of the rotationCenter with the one used by the 
+//				model. 
+//
+//==============================================================================
+- (void) updateRotationCenter
+{
+	Point3	oldCenter	= self->rotationCenter;
+	Point3	point		= ZeroPoint3;
+	
+	if([fileBeingDrawn isKindOfClass:[LDrawFile class]])
+	{
+		point = [[(LDrawFile*)fileBeingDrawn activeModel] rotationCenter];
+	}
+	else if([fileBeingDrawn isKindOfClass:[LDrawModel class]])
+	{
+		point = [(LDrawModel*)fileBeingDrawn rotationCenter];
+	}
+	
+	self->rotationCenter = point;
+	
+	if(V3EqualPoints(oldCenter, rotationCenter) == NO)
+	{
+		// update modelview matrix
+		glMatrixMode(GL_MODELVIEW);
+		glTranslatef(oldCenter.x, oldCenter.y, oldCenter.z);
+		glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
+		
+		// scroll to new center
+		Size2   frame       = self->bounds;
+		[self scrollCenterToPoint:V2Make(frame.width/2, frame.height/2 )];
+	}
+}
 
 #pragma mark -
 #pragma mark Geometry

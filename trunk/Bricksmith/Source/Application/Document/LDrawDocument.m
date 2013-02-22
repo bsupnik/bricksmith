@@ -1959,6 +1959,47 @@
 }//end backOneStep:
 
 
+//========== useSelectionForRotationCenter: ====================================
+//
+// Purpose:		Defines the model's rotation center.
+//
+//==============================================================================
+- (IBAction) useSelectionForRotationCenter:(id)sender
+{
+	NSMutableArray *selectedDrawables = [NSMutableArray array];
+	
+	for(id currentDirective in self->selectedDirectives)
+	{
+		if([currentDirective isKindOfClass:[LDrawDrawableElement class]])
+		{
+			[selectedDrawables addObject:currentDirective];
+		}
+	}
+	
+	if([selectedDrawables count] == 0)
+	{
+		[[self->documentContents activeModel] setRotationCenter:ZeroPoint3];
+	}
+	else
+	{
+		[[self->documentContents activeModel] setRotationCenter:[(LDrawDrawableElement*)[selectedDrawables objectAtIndex:0] position]];
+	}
+	
+}//end useSelectionForRotationCenter:
+
+
+//========== clearRotationCenter: ==============================================
+//
+// Purpose:		Resets rotation center to the origin.
+//
+//==============================================================================
+- (IBAction) clearRotationCenter:(id)sender
+{
+	[[self->documentContents activeModel] setRotationCenter:ZeroPoint3];
+		
+}//end clearRotationCenter:
+
+
 #pragma mark -
 #pragma mark Piece Menu
 
@@ -3943,6 +3984,14 @@
 		//
 		////////////////////////////////////////
 		
+		case useSelectionForSpinCenterMenuTag:
+			enable = ([selectedItems count] > 0);
+			break;
+		
+		case resetSpinCenterMenuTag:
+			enable = !V3EqualPoints(ZeroPoint3, [[self->documentContents activeModel] rotationCenter]);
+			break;
+
 		case stepDisplayMenuTag:
 			[menuItem setState:([activeModel stepDisplay])];
 			enable = YES;

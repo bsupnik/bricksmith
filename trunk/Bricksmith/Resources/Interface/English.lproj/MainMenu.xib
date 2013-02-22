@@ -11,7 +11,7 @@
 			<string key="NS.object.0">851</string>
 		</object>
 		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-			<integer value="57"/>
+			<integer value="266"/>
 		</array>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -893,6 +893,36 @@
 									<string key="NSTitle"/>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+								</object>
+								<object class="NSMenuItem" id="882312984">
+									<reference key="NSMenu" ref="287983113"/>
+									<string key="NSTitle">Use selection for spin center</string>
+									<string key="NSKeyEquiv">u</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+									<int key="NSTag">408</int>
+								</object>
+								<object class="NSMenuItem" id="299066850">
+									<reference key="NSMenu" ref="287983113"/>
+									<string key="NSTitle">Reset spin center</string>
+									<string key="NSKeyEquiv">U</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+									<int key="NSTag">409</int>
+								</object>
+								<object class="NSMenuItem" id="1015383599">
+									<reference key="NSMenu" ref="287983113"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<bool key="NSIsSeparator">YES</bool>
+									<string key="NSTitle"/>
+									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="904676617"/>
 									<reference key="NSMixedImage" ref="1001426656"/>
@@ -1949,6 +1979,22 @@
 					</object>
 					<int key="connectionID">428</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">useSelectionForRotationCenter:</string>
+						<reference key="source" ref="859723934"/>
+						<reference key="destination" ref="882312984"/>
+					</object>
+					<int key="connectionID">431</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">clearRotationCenter:</string>
+						<reference key="source" ref="859723934"/>
+						<reference key="destination" ref="299066850"/>
+					</object>
+					<int key="connectionID">433</int>
+				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<array key="orderedObjects">
@@ -2646,6 +2692,9 @@
 							<reference ref="829968156"/>
 							<reference ref="584960690"/>
 							<reference ref="634438110"/>
+							<reference ref="882312984"/>
+							<reference ref="1015383599"/>
+							<reference ref="299066850"/>
 						</array>
 						<reference key="parent" ref="543432576"/>
 					</object>
@@ -2864,6 +2913,21 @@
 						<reference key="parent" ref="0"/>
 						<string key="objectName">Sparkle Updater</string>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">429</int>
+						<reference key="object" ref="882312984"/>
+						<reference key="parent" ref="287983113"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">430</int>
+						<reference key="object" ref="1015383599"/>
+						<reference key="parent" ref="287983113"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">432</int>
+						<reference key="object" ref="299066850"/>
+						<reference key="parent" ref="287983113"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -2995,7 +3059,7 @@
 				<boolean value="YES" key="259.ImportedFromIB2"/>
 				<string key="265.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="265.ImportedFromIB2"/>
-				<string key="266.IBEditorWindowLastContentRect">{{312, 722}, {168, 173}}</string>
+				<string key="266.IBEditorWindowLastContentRect">{{312, 672}, {285, 223}}</string>
 				<string key="266.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="266.ImportedFromIB2"/>
 				<string key="267.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3119,6 +3183,9 @@
 				<string key="423.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="425.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="426.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="429.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="430.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="432.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="5.ImportedFromIB2"/>
 				<string key="56.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3151,7 +3218,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">428</int>
+			<int key="maxID">433</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3524,6 +3591,7 @@
 						<string key="advanceOneStep:">id</string>
 						<string key="backOneStep:">id</string>
 						<string key="changeLDrawColor:">id</string>
+						<string key="clearRotationCenter:">id</string>
 						<string key="copy:">id</string>
 						<string key="delete:">id</string>
 						<string key="doMissingModelnameExtensionCheck:">id</string>
@@ -3550,6 +3618,7 @@
 						<string key="stepNavigatorClicked:">id</string>
 						<string key="toggleFileContentsDrawer:">id</string>
 						<string key="toggleStepDisplay:">id</string>
+						<string key="useSelectionForRotationCenter:">id</string>
 						<string key="viewAll:">id</string>
 						<string key="viewSteps:">id</string>
 						<string key="zoomActual:">id</string>
@@ -3607,6 +3676,10 @@
 						</object>
 						<object class="IBActionInfo" key="changeLDrawColor:">
 							<string key="name">changeLDrawColor:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="clearRotationCenter:">
+							<string key="name">clearRotationCenter:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="copy:">
@@ -3711,6 +3784,10 @@
 						</object>
 						<object class="IBActionInfo" key="toggleStepDisplay:">
 							<string key="name">toggleStepDisplay:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="useSelectionForRotationCenter:">
+							<string key="name">useSelectionForRotationCenter:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="viewAll:">

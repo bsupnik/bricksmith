@@ -175,11 +175,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSOpenGLPixelFormat     *pixelFormat        = [LDrawApplication openGLPixelFormat];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
 	
-	[[self openGLContext] makeCurrentContext];
-	
-	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
-	[renderer setDelegate:self];
-
 	selectionIsMarquee = NO;
 	marqueeSelectionMode = SelectionReplace;
 	
@@ -198,7 +193,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	//---------- Initialize instance variables ---------------------------------
 	
 	[self setAcceptsFirstResponder:YES];
-	[self->renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
 	canDrawLock				= [[NSConditionLock alloc] initWithCondition:NO];
 	keepDrawThreadAlive		= YES;
@@ -231,6 +225,10 @@ static Size2 NSSizeToSize2(NSSize size)
 //	[[self openGLContext] setValues: &surfaceOrder
 //					   forParameter: NSOpenGLCPSurfaceOrder ];
 			
+	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
+	[renderer setDelegate:self];
+	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
+
 	[self setViewOrientation:ViewOrientation3D];
 	
 	

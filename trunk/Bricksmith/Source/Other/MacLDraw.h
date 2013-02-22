@@ -226,6 +226,8 @@ typedef enum MenuTags
 	nextStepMenuTag					= 405,
 	previousStepMenuTag				= 406,
 	orientationMenuTag				= 407,
+	useSelectionForSpinCenterMenuTag= 408,
+	resetSpinCenterMenuTag			= 409,
 	
 	// Piece Menu
 	pieceMenuTag					= 5,

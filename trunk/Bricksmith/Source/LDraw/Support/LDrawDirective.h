@@ -139,6 +139,7 @@ typedef enum Message {
 //A directive was modified, either explicitly by the user or by undo/redo.
 // Object is the LDrawDirective that changed. No userInfo.
 #define LDrawDirectiveDidChangeNotification				@"LDrawDirectiveDidChangeNotification"
+#define LDrawModelRotationCenterDidChangeNotification	@"LDrawModelRotationCenterDidChangeNotification"
 
 
 ////////////////////////////////////////////////////////////////////////////////
