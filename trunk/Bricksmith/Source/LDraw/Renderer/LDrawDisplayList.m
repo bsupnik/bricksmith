@@ -66,6 +66,34 @@ enum {
 };
 
 
+//========== get_instance_cutoff =================================================
+//
+// Purpose:	Determine whether we can use hardware instancing.
+//
+// Notes:	Pre-DX10 Mac GPUs on older operating systems don't support instancing;
+//			This routine checks for the GL_ARB_instanced_arrays extension string,
+//			which will always be present since we are using legacy 2.1-style
+//			contexts. (If we go to the core profile we'll need to also look at the
+//			GL version.)
+//
+//			If the hardware won't instance, we simply set the instancing min limit
+//			to an insanely high limit so that we never hit that case.
+//
+//================================================================================
+static int	get_instance_cutoff()
+{
+	static int has_instancing = -1;
+	if(has_instancing == -1)
+	{
+		const GLubyte * ext_str = glGetString(GL_EXTENSIONS);
+		if(strstr((const char *) ext_str,"GL_ARB_instanced_arrays") != NULL)
+			has_instancing = 1;
+		else
+			has_instancing = 0;
+	}
+	return has_instancing ? INST_CUTOFF : INT32_MAX;
+}
+
 //========== applyMatrix =========================================================
 //
 // Purpose:	Apply a 4x4 matrix to a 4-component vector with copy.  
@@ -634,7 +662,7 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 		{
 			dl = session->dl_head;
 
-			if(dl->instance_count >= INST_CUTOFF && inst_remain >= dl->instance_count)
+			if(dl->instance_count >= get_instance_cutoff() && inst_remain >= dl->instance_count)
 			{
 				// If we have capacity for hw instancing and this DL is used enough, create a segment record and fill it out.
 				cur_segment->vbo = dl->vbo;
