@@ -259,7 +259,7 @@
 	
 	#else
 
-		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] init];	
+		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] initWithScale:[self zoomPercentage]/100.];	
 		[self->fileBeingDrawn drawSelf:ren];
 		[ren release];
 
