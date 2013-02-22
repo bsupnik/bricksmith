@@ -870,8 +870,8 @@
      	       __block BOOL matches = TRUE;
         	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
     	            matches = matches && 
-                	        ([partNumber            containsString:word options:NSCaseInsensitiveSearch] ||	
-            	             [partSansWhitespace    containsString:word options:NSCaseInsensitiveSearch]);
+                	        ([partNumber            containsString_AMS:word options:NSCaseInsensitiveSearch] ||	
+            	             [partSansWhitespace    containsString_AMS:word options:NSCaseInsensitiveSearch]);
         	    }];            
 				if(matches)
 					[matchingParts addObject:record];
@@ -881,7 +881,7 @@
 					
 					for(NSString* keyword in keywords)
 					{
-						if([[keyword stringByRemovingWhitespace] containsString:searchSansWhitespace options:NSCaseInsensitiveSearch])
+						if([[keyword stringByRemovingWhitespace] containsString_AMS:searchSansWhitespace options:NSCaseInsensitiveSearch])
 						{
 							[matchingParts addObject:record];
 							break;

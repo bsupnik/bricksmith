@@ -1588,7 +1588,7 @@ static PartLibrary *SharedPartLibrary = nil;
 					// Force alias parts into a ghetto category which will keep 
 					// them far away from normal building. 
 					NSString *officialStatus = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
-					if([officialStatus containsString:@"Part Alias" options:kNilOptions])
+					if([officialStatus containsString_AMS:@"Part Alias" options:kNilOptions])
 					{
 						category = Category_Alias;
 						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];

@@ -16,26 +16,39 @@
 @implementation NSString (StringCategory)
 
 
-//========== containsString:options: ===========================================
+//========== containsString_AMS:options: =======================================
 //
-// Purpose:		Handy for quick searches.
+// Purpose:		For quick searches.
 //
-// Note:		Every string is reported as containing the empty string (@"").
+//				Every string is reported as containing the empty string (@""). 
+//				This is consistent with set theory and other common programming 
+//				APIs, but not Cocoa, which specifically disavows the empty 
+//				string in -[NSString rangeOfString:]. Bricksmith relies on the 
+//				empty string being a substring.
+//
+// Note:		The absurd name to prevent name collisions with methods which 
+//				may not recognize the empty string as a substring. In
+//				10.8.0, invoking any contextual menu loads previously-unloaded 
+//				bundles into the application, one of which contains an 
+//				undocumented category method of -containsString:options:. If my 
+//				method had the natural name, it would get replaced at runtime 
+//				with Apple's method, which does not recognize the empty string 
+//				as a subset and would break Bricksmith. 
 //
 //==============================================================================
-- (BOOL) containsString:(NSString *)substring options:(NSUInteger)mask
+- (BOOL) containsString_AMS:(NSString *)substring options:(NSUInteger)mask
 {
 	NSRange foundRange = [self rangeOfString:substring options:mask];
 	
 	if(		foundRange.location == NSNotFound
-		&& [substring isEqualToString:@""] == NO)
+		&& [substring length] > 0)
 	{
 		return NO;
 	}
 	else
 		return YES;
 		
-}//end containsString:options:
+}//end containsString_AMS:options:
 
 
 //---------- CRLF ----------------------------------------------------[static]--
