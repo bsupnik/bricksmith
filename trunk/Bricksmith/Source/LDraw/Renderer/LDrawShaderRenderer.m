@@ -9,6 +9,7 @@
 #import "LDrawShaderRenderer.h"
 #import "LDrawShaderLoader.h"
 #import "LDrawDisplayList.h"
+#import "LDrawBDPAllocator.h"
 #import "ColorLibrary.h"
 
 // This list of attribute names matches the text of the GLSL attribute declarations - 
@@ -24,6 +25,14 @@ static const char * attribs[] = {
 	"color_current",
 	"color_compliment",
 	"texture_mix", NULL };
+
+// Drag handle linked list.  When we get drag handle requests we transform the location into eye-space (to 'capture' the 
+// drag handle location, then we draw it later when our coordinate system isn't possibly scaled.
+struct	LDrawDragHandleInstance {
+	struct LDrawDragHandleInstance * next;
+	float	xyz[3];
+	float	size;
+};
 
 //========== set_color4fv ========================================================
 //
@@ -145,8 +154,9 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 // Purpose: initialize our renderer, and grab all basic OpenGL state we need.
 //
 //================================================================================
-- (id) init
-{
+- (id) initWithScale:(float)initial_scale;
+{	
+	pool = LDrawBDPCreate();
 	// Build our shader if it doesn't exist yet.  For now, just stash the GL 
 	// object statically.
 	static GLuint prog = 0;
@@ -163,6 +173,8 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 		glUseProgram(prog);
 	
 	self = [super init];
+
+	self->scale = initial_scale;
 
 	[[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor] getColorRGBA:color_now];
 	glVertexAttrib1f(attr_texture_mix,0.0f);
@@ -191,6 +203,8 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 				
+	drag_handles = NULL;
+				
 	return self;
 }//end init:
 
@@ -203,8 +217,21 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 //================================================================================
 - (void) dealloc
 {
+	struct LDrawDragHandleInstance * dh;
 	LDrawDLSessionDrawAndDestroy(session);
 	session = nil;
+	
+	// Go through and draw the drag handles...
+	
+	for(dh = drag_handles; dh != NULL; dh = dh->next)
+	{
+		GLfloat s = dh->size / self->scale;
+		GLfloat m[16] = { s, 0, 0, 0, 0, s, 0, 0, 0, 0, s, 0, dh->xyz[0], dh->xyz[1],dh->xyz[2], 1.0 };
+
+		[self pushMatrix:m];		
+		[self drawDragHandleImm:dh->xyz withSize:dh->size];
+		[self popMatrix];
+	}
 
 	// Put back OGL state to what LDraw usually has.
 	glUseProgram(0);
@@ -215,6 +242,8 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
+
+	LDrawBDPDestroy(pool);
 
 	[super dealloc];
 	
@@ -498,29 +527,160 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 }//end drawLine:normal:color:
 
 
-//========== drawDragHandle: =====================================================
+//========== drawDragHandle:withSize: ============================================
 //
 // Purpose:	This draws one drag handle using the current transform.
 //
-// TODO:	This needs to be cleaned up!
+// Notes:	We do'nt draw anything - we just grab a list link and stash the
+//			drag handle in "global model space" - that is, the space that the 
+//			root of all drawing happens, without the local part transform.
+//			We do that so that when we pop out all local transforms and draw 
+//			later we will be in the right place, but we'll have no local scaling 
+//			that could deform our handle.
 //
 //================================================================================
-- (void) drawDragHandle:(GLfloat *) vertices
+- (void) drawDragHandle:(GLfloat *)xyz withSize:(GLfloat)size
 {
-	glPointSize(5);
-	glColor4f(0,0,0,1);
-	glBegin(GL_POINTS);
-	glVertex3fv(vertices);
-	glEnd();
-	glPointSize(1);
+	struct LDrawDragHandleInstance * dh = (struct LDrawDragHandleInstance *) LDrawBDPAllocate(pool,sizeof(struct LDrawDragHandleInstance));
+	
+	dh->next = drag_handles;	
+	drag_handles = dh;
+	dh->size = 7.0;
+	
+	GLfloat handle_local[4] = { xyz[0], xyz[1], xyz[2], 1.0f };
+	GLfloat handle_world[4];
+	
+	applyMatrix(handle_world,transform_now, handle_local);
+	
+	dh->xyz[0] = handle_world[0];
+	dh->xyz[1] = handle_world[1];
+	dh->xyz[2] = handle_world[2];
+	dh->size = size;
 
-}//end drawDragHandle:
+}//end drawDragHandle:withSize:
+
+
+//========== drawDragHandle:withSize: ============================================
+//
+// Purpose:	Draw a drag handle - for realzies this time
+//
+// Notes:	This routine builds a one-off sphere VBO as needed.  BrickSmith
+//			guarantees that we never lose our shared group of GL contexts, so we
+//			don't have to worry about the last context containing the VBO going
+//			away.
+//
+//			The vertex format for the sphere handle is just pure vertices - since
+//			the draw routine sets up its own VAO with its own internal format,
+//			there's no need to depend on or conform to vertex formats for the rest
+//			of the drawing system.
+//
+//================================================================================
+- (void) drawDragHandleImm:(GLfloat *)xyz withSize:(GLfloat)size
+{
+	static GLuint   vaoTag          = 0;
+	static GLuint   vboTag          = 0;
+	static GLuint   vboVertexCount  = 0;
+
+	if(vaoTag == 0)
+	{
+		// Bail if we've already done it.
+
+		int latitudeSections = 8;
+		int longitudeSections = 8;
+		
+		float           latitudeRadians     = (M_PI / latitudeSections); // lat. wraps halfway around sphere
+		float           longitudeRadians    = (2*M_PI / longitudeSections); // long. wraps all the way
+		int             vertexCount         = 0;
+		GLfloat			*vertexes           = NULL;
+		int             latitudeCount       = 0;
+		int             longitudeCount      = 0;
+		float           latitude            = 0;
+		float           longitude           = 0;
+		
+		//---------- Generate Sphere -----------------------------------------------
+		
+		// Each latitude strip begins with two vertexes at the prime meridian, then 
+		// has two more vertexes per segment thereafter. 
+		vertexCount = (2 + longitudeSections*2) * latitudeSections; 
+
+		glGenBuffers(1, &vboTag);
+		glBindBuffer(GL_ARRAY_BUFFER, vboTag);	
+		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+		vertexes = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		
+		// Calculate vertexes for each strip of latitude.
+		for(latitudeCount = 0; latitudeCount < latitudeSections; latitudeCount += 1 )
+		{
+			latitude = (latitudeCount * latitudeRadians);
+			
+			// Include the prime meridian twice; once to start the strip and once to 
+			// complete the last triangle of the -1 meridian. 
+			for(longitudeCount = 0; longitudeCount <= longitudeSections; longitudeCount += 1 )
+			{
+				longitude = longitudeCount * longitudeRadians;
+			
+				// Ben says: when we are "pushing" vertices into a GL_WRITE_ONLY mapped buffer, we should really
+				// never read back from the vertices that we read to - the memory we are writing to often has funky
+				// properties like being uncached which make it expensive to do anything other than what we said we'd
+				// do (and we said: we are only going to write to them).  
+				//
+				// Mind you it's moot in this case since we only need to write vertices.
+			
+				// Top vertex
+				*vertexes++ =cos(longitude)*sin(latitude);
+				*vertexes++ =sin(longitude)*sin(latitude);
+				*vertexes++ =cos(latitude);
+			
+				// Bottom vertex
+				*vertexes++ = cos(longitude)*sin(latitude + latitudeRadians);
+				*vertexes++ = sin(longitude)*sin(latitude + latitudeRadians);
+				*vertexes++ = cos(latitude + latitudeRadians);
+			}
+		}
+
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);	
+
+		//---------- Optimize ------------------------------------------------------
+		
+		vboVertexCount = vertexCount;
+		
+		// Encapsulate in a VAO
+		glGenVertexArraysAPPLE(1, &vaoTag);
+		glBindVertexArrayAPPLE(vaoTag);
+		glBindBuffer(GL_ARRAY_BUFFER, vboTag);	
+		glEnableVertexAttribArray(attr_position);
+		glEnableVertexAttribArray(attr_normal);		
+		// Normal and vertex use the same data - in a unit sphere the normals are the vertices!
+		glVertexAttribPointer(attr_position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
+		glVertexAttribPointer(attr_normal, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
+		// The sphere color is constant - no need to get it from per-vertex data.
+		glBindVertexArrayAPPLE(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+	}
+	
+	glDisable(GL_TEXTURE_2D);
+	
+	int i;
+	for(i = 0; i < 4; ++i)
+		glVertexAttrib4f(attr_transform_x+i,transform_now[i],transform_now[4+i],transform_now[8+i],transform_now[12+i]);
+
+	glVertexAttrib4f(attr_color,0.50,0.53,1.00,1.00);		// Nice lavendar color for the whole sphere.
+	
+	glBindVertexArrayAPPLE(vaoTag);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, vboVertexCount);
+	glBindVertexArrayAPPLE(0); // Failing to unbind can cause bizarre crashes if other VAOs are in display lists
+
+	glEnable(GL_TEXTURE_2D);
+
+}//end drawDragHandleImm:
 
 
 //========== beginDL: ============================================================
 //
-// Purpose:	This begins accumulating a display lis.
-////
+// Purpose:	This begins accumulating a display list.
+//
 //================================================================================
 - (id<LDrawCollector>) beginDL
 {
