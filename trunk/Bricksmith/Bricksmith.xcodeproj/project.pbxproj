@@ -286,6 +286,8 @@
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
 		D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */; };
+		D6C0C5CF16DABE70007E4266 /* Suggestions.h in Headers */ = {isa = PBXBuildFile; fileRef = D6C0C5CD16DABE70007E4266 /* Suggestions.h */; };
+		D6C0C5D016DABE70007E4266 /* Suggestions.m in Sources */ = {isa = PBXBuildFile; fileRef = D6C0C5CE16DABE70007E4266 /* Suggestions.m */; };
 		D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D6CB41DE15E2AA6C00730E2A /* ModelManager.h */; };
 		D6CB459515E316D300730E2A /* ModelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D6CB41DF15E2AA6C00730E2A /* ModelManager.m */; };
 		D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */; };
@@ -619,6 +621,8 @@
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
 		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
 		D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairPlus.tiff; sourceTree = "<group>"; };
+		D6C0C5CD16DABE70007E4266 /* Suggestions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Suggestions.h; sourceTree = "<group>"; };
+		D6C0C5CE16DABE70007E4266 /* Suggestions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Suggestions.m; sourceTree = "<group>"; };
 		D6CB41DE15E2AA6C00730E2A /* ModelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelManager.h; sourceTree = "<group>"; };
 		D6CB41DF15E2AA6C00730E2A /* ModelManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelManager.m; sourceTree = "<group>"; };
 		D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLUtilities.h; sourceTree = "<group>"; };
@@ -1062,6 +1066,8 @@
 				0BF729B708AD849300E3DA53 /* PreferencesDialogController.m */,
 				0B2700850981FCEA0058A7BE /* ToolPalette.h */,
 				0B2700860981FCEA0058A7BE /* ToolPalette.m */,
+				D6C0C5CD16DABE70007E4266 /* Suggestions.h */,
+				D6C0C5CE16DABE70007E4266 /* Suggestions.m */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -1310,6 +1316,7 @@
 				D6EDBB4716508D7200B4062B /* LDrawBDPAllocator.h in Headers */,
 				D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */,
 				D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */,
+				D6C0C5CF16DABE70007E4266 /* Suggestions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1580,6 +1587,7 @@
 				D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */,
 				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
 				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,
+				D6C0C5D016DABE70007E4266 /* Suggestions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

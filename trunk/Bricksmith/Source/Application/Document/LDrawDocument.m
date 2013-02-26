@@ -61,6 +61,30 @@
 #import "UserDefaultsCategory.h"
 #import "ViewportArranger.h"
 #import "WindowCategory.h"
+#import "Suggestions.h"
+
+void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray * subs, int want_role)
+{
+	NSUInteger i, counter;
+	NSMenuItem * my_item = nil;
+	NSMenu * choices_menu = nil;
+	
+	my_item = [[[NSMenuItem alloc] initWithTitle:child_name action:NULL keyEquivalent:@""] autorelease];
+	[parent_menu addItem:my_item];
+	
+	choices_menu = [[[NSMenu alloc] initWithTitle:@"choices"] autorelease];
+	[my_item setSubmenu:choices_menu];
+	
+	counter = [subs count];
+	for(i = 0; i < counter; ++i)
+	{
+		PartSuggestion * ps = [subs objectAtIndex:i];
+
+		NSMenuItem * ps_item = [[[NSMenuItem alloc] initWithTitle:(want_role ? [ps role] : [ps childName]) action:@selector(addSuggestionClicked:) keyEquivalent:@""] autorelease];
+		[choices_menu addItem:ps_item];		
+		[ps_item setRepresentedObject:ps];
+	}
+}
 
 
 @implementation LDrawDocument
@@ -72,6 +96,7 @@
 //==============================================================================
 - (id) init
 {
+//	[[Suggestions sharedSuggestions] dump];
     self = [super init];
     if (self)
 	{
@@ -2369,6 +2394,45 @@
 	[undoManager setActionName:NSLocalizedString(@"UndoAddMetaCommand", nil)];
 }//end addCommentClicked:
 
+- (IBAction) addSuggestionClicked:(id)sender
+{
+	PartSuggestion * suggestion = [sender representedObject];
+	
+	NSString * partName = [suggestion child];
+	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
+	NSUndoManager       *undoManager    = [self undoManager];
+	LDrawColor          *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	TransformComponents transformation  = IdentityComponents;
+	
+	//We got a part; let's add it!
+	if(partName != nil)
+	{
+		//Set up the part attributes
+		[newPart setLDrawColor:selectedColor];
+		[newPart setDisplayName:partName];
+		
+		if(self->lastSelectedPart != nil)
+		{
+			// Collect the transformation from the previous part and apply it to 
+			// the new one. 
+			transformation = [lastSelectedPart transformComponents];
+
+			transformation = [suggestion calcChildPosition:transformation];
+			
+			[newPart setTransformComponents:transformation];
+		}
+		
+		[newPart optimizeOpenGL];
+		
+		[self addStepComponent:newPart parent:nil index:NSNotFound];
+		
+		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
+		[[self documentContents] noteNeedsDisplay];
+	}
+	
+	
+}
+
 
 //========== addMinifigure: ====================================================
 //
@@ -3133,7 +3197,8 @@
 	//See if we just selected a new part; if so, we must remember it.
 	if([lastSelectedItem isKindOfClass:[LDrawPart class]])
 		[self setLastSelectedPart:lastSelectedItem];
-	
+
+	[self buildSuggestionMenus];
 	[originalContext makeCurrentContext];
 	
 }//end outlineViewSelectionDidChange:
@@ -4191,6 +4256,66 @@
 	[self->submodelPopUpMenu removeAllItems];
 	
 }//end clearModelMenus
+
+- (void) buildSuggestionMenus
+{
+	NSMenu      *mainMenu       = [NSApp mainMenu];
+	NSMenu      *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+	NSMenuItem	*relatedItem	= [modelMenu itemWithTag:suggestionMenuTag];
+	if ([relatedItem hasSubmenu])
+	{
+		[relatedItem setSubmenu:nil];
+	}
+	
+	if([selectedDirectives count] == 1)
+	{
+		LDrawDirective * p = [selectedDirectives objectAtIndex:0];
+		if([p isKindOfClass:[LDrawPart class]])
+		{
+			LDrawPart * pp = (LDrawPart *) p;
+			NSString * parentName = [pp referenceName];
+			
+			Suggestions * s = [Suggestions sharedSuggestions];
+			
+			NSArray * kids = [s getChildPartList:parentName];
+			NSArray * roles = [s getChildRoleList:parentName];
+			
+			assert(([kids count] == 0) == ([roles count] == 0));
+			
+			if([kids count])
+			{
+				NSMenu * kids_and_roles = [[[NSMenu alloc] initWithTitle:@"Suggestions"] autorelease];
+				
+				[relatedItem setSubmenu:kids_and_roles];
+				[relatedItem setEnabled:TRUE];
+				
+				NSUInteger count, i;
+				
+				// Do all children
+				count = [kids count];
+				for (i = 0; i < count; ++i)
+				{
+					NSString * child = [kids objectAtIndex:i];
+					NSArray * choices = [s getSuggestionList:parentName withChild:child];
+					AppendChoicestoNewItem(kids_and_roles,[[choices objectAtIndex:0] childName],choices,1);
+				}
+				
+				[kids_and_roles addItem:[NSMenuItem separatorItem]];
+				
+				count = [roles count];
+				for(i = 0; i < count; ++i)
+				{
+					NSString * role = [roles objectAtIndex:i];
+					NSArray * choices = [s getSuggestionList:parentName withRole:role];
+					AppendChoicestoNewItem(kids_and_roles,role,choices,0);
+				}
+				
+			}
+		}
+		
+	}
+}
+
 
 
 #pragma mark -

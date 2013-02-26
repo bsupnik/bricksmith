@@ -11,7 +11,7 @@
 			<string key="NS.object.0">851</string>
 		</object>
 		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-			<integer value="266"/>
+			<integer value="434"/>
 		</array>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1170,6 +1170,16 @@
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="904676617"/>
 									<reference key="NSMixedImage" ref="1001426656"/>
+								</object>
+								<object class="NSMenuItem" id="437850983">
+									<reference key="NSMenu" ref="470995292"/>
+									<string key="NSTitle">Insert Related Part</string>
+									<string key="NSKeyEquiv"/>
+									<int key="NSKeyEquivModMask">524288</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+									<int key="NSTag">605</int>
 								</object>
 								<object class="NSMenuItem" id="1054298575">
 									<reference key="NSMenu" ref="470995292"/>
@@ -2576,6 +2586,7 @@
 							<reference ref="1054298575"/>
 							<reference ref="757961484"/>
 							<reference ref="159236136"/>
+							<reference ref="437850983"/>
 						</array>
 						<reference key="parent" ref="1047764561"/>
 					</object>
@@ -2928,6 +2939,11 @@
 						<reference key="object" ref="299066850"/>
 						<reference key="parent" ref="287983113"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">434</int>
+						<reference key="object" ref="437850983"/>
+						<reference key="parent" ref="470995292"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -3015,7 +3031,7 @@
 				<boolean value="YES" key="229.ImportedFromIB2"/>
 				<string key="23.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="23.ImportedFromIB2"/>
-				<string key="230.IBEditorWindowLastContentRect">{{415, 712}, {219, 183}}</string>
+				<string key="230.IBEditorWindowLastContentRect">{{415, 692}, {219, 203}}</string>
 				<string key="230.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="230.ImportedFromIB2"/>
 				<string key="231.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3186,6 +3202,8 @@
 				<string key="429.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="430.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="432.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="434.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<boolean value="YES" key="434.ImportedFromIB2"/>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="5.ImportedFromIB2"/>
 				<string key="56.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3218,7 +3236,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">433</int>
+			<int key="maxID">435</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">

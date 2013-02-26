@@ -241,6 +241,7 @@ typedef enum MenuTags
 	modelsSeparatorMenuTag			= 602,
 	insertReferenceMenuTag			= 603,
 	submodelReferenceMenuTag		= 604, //used for all items in the Insert Reference menu.
+	suggestionMenuTag				= 605,
 	
 	// Window Menu
 	windowMenuTag					= 7,
