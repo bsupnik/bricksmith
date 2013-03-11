@@ -877,7 +877,7 @@
     [task setStandardOutput:outPipe];
     [task setStandardError:errorPipe];
     [task setLaunchPath:lsynthPath];
-    [task setArguments:@[@"-"]]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
+    [task setArguments:[NSArray arrayWithObject:@"-"]]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
 
     inFile = [inPipe fileHandleForWriting];
     outFile = [outPipe fileHandleForReading];
@@ -924,7 +924,7 @@
 
         if (extract == YES && partRange.length > 0 && partRange.location == 0) {
             CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:line];
-            LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:@[line]
+            LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:[NSArray arrayWithObject:line]
                                                                        inRange:NSMakeRange(0, 1)
                                                                    parentGroup:nil];
             [synthesizedParts addObject:newDirective];
@@ -945,7 +945,8 @@
 - (void)doAutoHullOnBand
 {
     // clean out INSIDE/OUTSIDE directives
-    for (int i = [[self subdirectives] count] - 1; i >= 0; i--) {
+    int i;
+    for (i = [[self subdirectives] count] - 1; i >= 0; i--) {
         if ([[[self subdirectives] objectAtIndex:i] isKindOfClass:[LDrawLSynthDirective class]]) {
             [[self subdirectives] removeObjectAtIndex:i];
         }
@@ -978,7 +979,7 @@
     // subdirectives array is simpler.
     NSMutableArray *newConstraints = [[[NSMutableArray alloc] init] autorelease];
 
-    for (int i=0;i< [[self subdirectives] count];i++) {
+    for (i=0; i<[[self subdirectives] count]; i++) {
         LDrawPart *part = [[self subdirectives] objectAtIndex:i];
         LDrawPart *nextPart = [[self subdirectives] objectAtIndex:((i+1) % [[self subdirectives] count])];
 
@@ -1052,11 +1053,15 @@
         transformed = Matrix4Multiply([part transformationMatrix], inverseTransform);
         TransformComponents t;
         Matrix4DecomposeTransformation(transformed, &t);
-        NSMutableDictionary *point = @{@"directive" : part,
-                                            @"x"          : @(t.translate.x),
-                                            @"y"          : @(t.translate.y),
-                                            @"r"          : @([[[config constraintDefinitionForPart:part] valueForKey:@"radius"] integerValue]),
-                                            @"hullPoints" : [NSMutableArray arrayWithArray:@[]]};
+        NSMutableDictionary *point = [NSMutableDictionary
+            dictionaryWithObjects:[NSArray
+                arrayWithObjects:part,
+                                 [NSNumber numberWithFloat:t.translate.x],
+                                 [NSNumber numberWithFloat:t.translate.y],
+                                 [NSNumber numberWithInt:[[[config constraintDefinitionForPart:part] valueForKey:@"radius"] integerValue]],
+                                 [NSMutableArray array],
+                                 nil]
+                         forKeys:[NSArray arrayWithObjects:@"directive", @"x", @"y", @"r", @"hullPoints", nil]];
         [mappedPoints addObject:point];
     }
     //NSLog(@"Mapped Points: %@", mappedPoints);
@@ -1065,27 +1070,36 @@
     // constraint-derived circles, e.g. ((0,1), (1,2), ..., (N,0)
     // Some of these will be on the inside of the convex hull but that's OK since the
     // convex hull calculation will discard them.
-    for (int i=0; i<[mappedPoints count]; i++) {
+    // TODO: can we  take advantage of CCW ordering of constraints?
+    int i;
+    for (i=0; i<[mappedPoints count]; i++) {
         int j = (i+1) % [mappedPoints count]; // next constraint, cyclical (N+1 -> 0)
 
         NSMutableArray *tangents = [ComputationalGeometry tangentBetweenCircle:[mappedPoints objectAtIndex:i]
                                                                      andCircle:[mappedPoints objectAtIndex:j]];
         if (tangents != nil) {
+            // Tangents are between two circles (i.e. constraints)
             // add both outside tangent points for the current constraint
-            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:@{
-                    @"x" : [[tangents objectAtIndex:0] objectAtIndex:0],
-                    @"y" : [[tangents objectAtIndex:0] objectAtIndex:1]}];
-            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:@{
-                    @"x" : [[tangents objectAtIndex:1] objectAtIndex:0],
-                    @"y" : [[tangents objectAtIndex:1] objectAtIndex:1]}];
+            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:
+                [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[[tangents objectAtIndex:0] objectAtIndex:0],
+                                                                              [[tangents objectAtIndex:0] objectAtIndex:1], nil]
+                                            forKeys:[NSArray arrayWithObjects:@"x", @"y", nil]]];
+
+            [[[mappedPoints objectAtIndex:i] objectForKey:@"hullPoints"] addObject:
+                    [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[[tangents objectAtIndex:1] objectAtIndex:0],
+                                                                                  [[tangents objectAtIndex:1] objectAtIndex:1], nil]
+                                                forKeys:[NSArray arrayWithObjects:@"x", @"y", nil]]];
 
             // add both outside tangent points for the next constraint
-            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:@{
-                    @"x" : [[tangents objectAtIndex:0] objectAtIndex:2],
-                    @"y" : [[tangents objectAtIndex:0] objectAtIndex:3]}];
-            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:@{
-                    @"x" : [[tangents objectAtIndex:1] objectAtIndex:2],
-                    @"y" : [[tangents objectAtIndex:1] objectAtIndex:3]}];
+            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:
+                    [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[[tangents objectAtIndex:0] objectAtIndex:2],
+                                                                                  [[tangents objectAtIndex:0] objectAtIndex:3], nil]
+                                                forKeys:[NSArray arrayWithObjects:@"x", @"y", nil]]];
+
+            [[[mappedPoints objectAtIndex:j] objectForKey:@"hullPoints"] addObject:
+                    [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[[tangents objectAtIndex:1] objectAtIndex:2],
+                                                                                  [[tangents objectAtIndex:1] objectAtIndex:3], nil]
+                                                forKeys:[NSArray arrayWithObjects:@"x", @"y", nil]]];
         }
 
         //NSLog(@"Tangents: %@", tangents);
@@ -1102,11 +1116,13 @@
             //NSLog(@"Point: %@", coords);
             // TODO: check that int values are OK.  Prob. should use float?
 
-            [preparedData addObject:[NSMutableDictionary dictionaryWithDictionary:@{
-                    @"directive" : [point objectForKey:@"directive"],
-                    @"x"         : @([[coords objectForKey:@"x"] integerValue]),
-                    @"y"         : @([[coords objectForKey:@"y"] integerValue]),
-                    @"inHull"    : @false}]];
+            [preparedData addObject:[NSMutableDictionary
+                dictionaryWithObjects:[NSArray arrayWithObjects:[point objectForKey:@"directive"],
+                    [NSNumber numberWithInt:[[coords objectForKey:@"x"] integerValue]],
+                    [NSNumber numberWithInt:[[coords objectForKey:@"y"] integerValue]],
+                    [NSNumber numberWithBool:false],
+                    nil]
+                forKeys:[NSArray arrayWithObjects:@"directive", @"x", @"y", @"inHull", nil]]];
         }
     }
     //NSLog(@"Prepared Data: %@", preparedData);

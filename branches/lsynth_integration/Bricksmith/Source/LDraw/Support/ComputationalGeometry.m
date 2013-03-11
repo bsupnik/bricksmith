@@ -58,13 +58,12 @@
 #pragma mark INITIALISATION
 #pragma mark -
 
--(id)initWithX:(int)x Y:(int)y R:(int)r
+-(id)initWithX:(int)X Y:(int)Y R:(int)R
 {
     if (self = [super init]) {
-        self.x = x;
-        self.y = y;
-        self.r = r;
-
+        self.x = X;
+        self.y = Y;
+        self.r = R;
     }
     return self;
 }
@@ -77,23 +76,23 @@
 {
     return self->x;
 }
--(void)setX:(int)x
+-(void)setX:(int)X
 {
-    self->x = x;
+    self->x = X;
 }
 -(int) y {
     return self->y;
 }
--(void)setY:(int)y
+-(void)setY:(int)Y
 {
-    self->y = y;
+    self->y = Y;
 }
 -(int) r {
     return self->r;
 }
--(void)setR:(int)r
+-(void)setR:(int)R
 {
-    self->r = r;
+    self->r = R;
 }
 -(LDrawDirective *) directive {
     return self->directive;
@@ -179,7 +178,8 @@
     // v * n = (r1 -/+ r2) / d,  where v = AB/|AB| = AB/d
     // This is a linear equation in unknown vector n.
 
-    for (int sign1 = 1; sign1 >= -1; sign1 -= 2) {
+    int sign1;
+    for (sign1 = 1; sign1 >= -1; sign1 -= 2) {
         double c = ([c1 r] - (sign1 * [c2 r])) / d;
 
         if (pow(c, 2) > 1.0) {
@@ -188,7 +188,8 @@
 
         double h = sqrt(0.0 > 1.0 - pow(c, 2) ? 0.0 : 1.0 - pow(c, 2)); // max of 0 and 1-c^2
 
-        for (int sign2 = 1; sign2 >= -1; sign2 -= 2) {
+        int sign2;
+        for (sign2 = 1; sign2 >= -1; sign2 -= 2) {
             double nx = (vx * c) - sign2 * h * vy;
             double ny = (vy * c) - sign2 * h * vx;
             NSMutableArray *a = [NSMutableArray arrayWithCapacity:4];
@@ -232,8 +233,8 @@
         //NSLog(@"PreparedData in doJarvisMarch: %@", preparedData);
         leftmost = [ComputationalGeometry leftmost:preparedData];
         //NSLog(@"LEFTMOST: %i %@", leftmost, [preparedData objectAtIndex:leftmost]);
-        [[preparedData objectAtIndex:leftmost] setValue:@true forKey:@"inHull"];
-    
+        [[preparedData objectAtIndex:leftmost] setValue:[NSNumber numberWithBool:(BOOL)true] forKey:@"inHull"];
+
 
         // main loop - keep finding the next point until it's the starting one
         bool stopIterating = NO;
@@ -241,7 +242,7 @@
         while (!stopIterating) {
             int qIndex = [ComputationalGeometry nextHullPointWithPoints:preparedData andPointIndex:pIndex];
             if (qIndex != leftmost){
-                [[preparedData objectAtIndex:qIndex] setValue:@true forKey:@"inHull"];
+                [[preparedData objectAtIndex:qIndex] setValue:[NSNumber numberWithBool:(BOOL)true] forKey:@"inHull"];
                 pIndex = qIndex;
             }
             else{
@@ -259,7 +260,8 @@
 +(int)nextHullPointWithPoints:(NSMutableDictionary *)points andPointIndex:(int)pIndex
 {
     int qIndex = pIndex;
-    for (int rIndex=0; rIndex < [points count]; rIndex++) {
+    int rIndex;
+    for (rIndex=0; rIndex < [points count]; rIndex++) {
         //TURN_LEFT, TURN_RIGHT, TURN_NONE = (1, -1, 0)
         int t = [ComputationalGeometry turnWithPoints:points P:pIndex Q:qIndex R:rIndex];
 
@@ -343,7 +345,8 @@
 +(int)leftmost:(NSMutableArray *)points
 {
     int *leftmost = nil;
-    for (int i=0; i < [points count]; i++) {
+    int i;
+    for (i=0; i < [points count]; i++) {
         //NSLog(@"Leftmost: %i, %i, %@, %@", i, leftmost, [[points objectAtIndex:i] objectForKey:@"x"], [[points objectAtIndex:leftmost] objectForKey:@"x"]);
         if (leftmost == nil || [[[points objectAtIndex:i] objectForKey:@"x"] integerValue] < [[[points objectAtIndex:leftmost] objectForKey:@"x"] integerValue]) {
             leftmost = i;

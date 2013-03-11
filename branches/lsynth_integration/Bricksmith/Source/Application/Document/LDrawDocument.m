@@ -291,18 +291,29 @@
 
         // A declarative encoding of our LSynth menus
         // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
-        NSArray *menus = @[
-        @{@"title"  : @"Add Part",                      @"getter" : @"getParts",           @"entry_key" : @"nickname",
-          @"action" : @"InsertLSynthPart:",             @"tag" : [NSNumber numberWithInt:lsynthPartMenuTag]},
-        @{@"title"  : @"Add Hose",                      @"getter" : @"getHoseTypes",       @"entry_key" : @"title",
-          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
-        @{@"title"  : @"Add Hose Constraint",           @"getter" : @"getHoseConstraints", @"entry_key" : @"description",
-          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]},
-        @{@"title"  : @"Add Band",                      @"getter" : @"getBandTypes",       @"entry_key" : @"title",
-          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
-        @{@"title"  : @"Add Band Constraint",           @"getter" : @"getBandConstraints", @"entry_key" : @"description",
-          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]}
-        ];
+        NSArray *menus = [NSArray arrayWithObjects:
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"nickname", @"InsertLSynthPart:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose", @"getHoseTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose Constraint", @"getHoseConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band", @"getBandTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band Constraint", @"getBandConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+
+                          nil];
 
         for (NSDictionary *menuSpec in menus) {
             NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
@@ -2656,7 +2667,7 @@
 
             // Show the new element
             [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:@[constraint]];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
             [constraint setSelected:YES];
         }
 
@@ -2675,7 +2686,7 @@
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
             [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:@[constraint]];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
             [constraint setSelected:YES];
         }
 
@@ -2739,7 +2750,7 @@
         [(LDrawLSynth *)parent synthesize];
         [[self documentContents] noteNeedsDisplay];
         [fileContentsOutline expandItem:parent];
-        [fileContentsOutline selectObjects:@[direction]];
+        [fileContentsOutline selectObjects:[NSArray arrayWithObject:direction]];
         [direction setSelected:YES];
         [direction release];
     }
