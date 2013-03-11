@@ -290,7 +290,7 @@
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
-		9558C8FA1685F2D0000443B1 /* InspectorLSynth.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9558C8F91685F2D0000443B1 /* InspectorLSynth.xib */; };
+		952AA8F6169D55690087919E /* InspectorLSynth.xib in Resources */ = {isa = PBXBuildFile; fileRef = 952AA8F8169D55690087919E /* InspectorLSynth.xib */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		95D893AC165532B100AA055B /* lsynthcp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
 		95D893AE1655334500AA055B /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
@@ -667,7 +667,7 @@
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
-		9558C8F91685F2D0000443B1 /* InspectorLSynth.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = InspectorLSynth.xib; sourceTree = "<group>"; };
+		952AA8F7169D55690087919E /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/InspectorLSynth.xib; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
 		95D893AD1655334500AA055B /* lsynth.mpd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lsynth.mpd; path = ../../ThirdParty/LSynth/LSynth/lsynth.mpd; sourceTree = "<group>"; };
@@ -718,19 +718,10 @@
 		0B04E9461093BB4200E201EE /* Interface */ = {
 			isa = PBXGroup;
 			children = (
+				952AA8F5169D552E0087919E /* Inspectors */,
 				0B04E9471093BB4200E201EE /* ColorPanel.xib */,
 				0B04E9491093BB4200E201EE /* Dimensions.xib */,
 				0B04E94B1093BB4200E201EE /* Donation.xib */,
-				0B04E94D1093BB4200E201EE /* Inspector.xib */,
-				0B04E94F1093BB4200E201EE /* InspectorComment.xib */,
-				0B04E9511093BB4200E201EE /* InspectorConditionalLine.xib */,
-				0B04E9531093BB4200E201EE /* InspectorLine.xib */,
-				0B04E9551093BB4200E201EE /* InspectorMPDModel.xib */,
-				0B04E9571093BB4200E201EE /* InspectorPart.xib */,
-				0B04E9591093BB4200E201EE /* InspectorQuadrilateral.xib */,
-				0B04E95B1093BB4200E201EE /* InspectorStep.xib */,
-				0B04E95D1093BB4200E201EE /* InspectorTriangle.xib */,
-				0B04E95F1093BB4200E201EE /* InspectorUnknownCommand.xib */,
 				0B04E9611093BB4200E201EE /* LDrawDocument.xib */,
 				0B04E9631093BB4200E201EE /* LDrawGLViewAccessories.xib */,
 				0B04E9651093BB4200E201EE /* MainMenu.xib */,
@@ -743,7 +734,6 @@
 				0B04E9731093BB4200E201EE /* Preferences.xib */,
 				0B04E9751093BB4200E201EE /* RotationPanel.xib */,
 				0B04E9771093BB4200E201EE /* ToolPalette.xib */,
-				9558C8F91685F2D0000443B1 /* InspectorLSynth.xib */,
 			);
 			path = Interface;
 			sourceTree = "<group>";
@@ -1260,6 +1250,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		952AA8F5169D552E0087919E /* Inspectors */ = {
+			isa = PBXGroup;
+			children = (
+				0B04E94D1093BB4200E201EE /* Inspector.xib */,
+				0B04E94F1093BB4200E201EE /* InspectorComment.xib */,
+				0B04E9511093BB4200E201EE /* InspectorConditionalLine.xib */,
+				0B04E9531093BB4200E201EE /* InspectorLine.xib */,
+				0B04E9551093BB4200E201EE /* InspectorMPDModel.xib */,
+				0B04E9571093BB4200E201EE /* InspectorPart.xib */,
+				0B04E9591093BB4200E201EE /* InspectorQuadrilateral.xib */,
+				0B04E95B1093BB4200E201EE /* InspectorStep.xib */,
+				0B04E95D1093BB4200E201EE /* InspectorTriangle.xib */,
+				952AA8F8169D55690087919E /* InspectorLSynth.xib */,
+				0B04E95F1093BB4200E201EE /* InspectorUnknownCommand.xib */,
+			);
+			name = Inspectors;
+			sourceTree = "<group>";
+		};
 		95D8939F1655325000AA055B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1587,7 +1595,7 @@
 				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
 				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
 				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
-				9558C8FA1685F2D0000443B1 /* InspectorLSynth.xib in Resources */,
+				952AA8F6169D55690087919E /* InspectorLSynth.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1945,6 +1953,14 @@
 			name = Help;
 			sourceTree = "<group>";
 		};
+		952AA8F8169D55690087919E /* InspectorLSynth.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				952AA8F7169D55690087919E /* en */,
+			);
+			name = InspectorLSynth.xib;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -2017,6 +2033,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-weak_framework",
@@ -2031,6 +2048,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					3DconnexionClient.framework,
