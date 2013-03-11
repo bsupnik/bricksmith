@@ -68,6 +68,7 @@
 		0B2FAE2F10196F8C007BA948 /* BackgroundColorView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B2FAE2D10196F8C007BA948 /* BackgroundColorView.h */; };
 		0B2FAE3010196F8C007BA948 /* BackgroundColorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B2FAE2E10196F8C007BA948 /* BackgroundColorView.m */; };
 		0B2FAE60101972DF007BA948 /* Bum.ldr in Resources */ = {isa = PBXBuildFile; fileRef = 0B2FAE5F101972DF007BA948 /* Bum.ldr */; };
+		0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B30C6BD16DC61000023B3A6 /* InspectorLSynth.xib */; };
 		0B30E08B0ED90D3000470615 /* Triangle.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B30E08A0ED90D3000470615 /* Triangle.pdf */; };
 		0B30E0D40EDA746900470615 /* Quadrilateral.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B30E0D30EDA746900470615 /* Quadrilateral.pdf */; };
 		0B34306708B2E93D00A06A40 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B34306508B2E93D00A06A40 /* Localizable.strings */; };
@@ -290,7 +291,6 @@
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
-		952AA8F6169D55690087919E /* InspectorLSynth.xib in Resources */ = {isa = PBXBuildFile; fileRef = 952AA8F8169D55690087919E /* InspectorLSynth.xib */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		95D893AC165532B100AA055B /* lsynthcp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
 		95D893AE1655334500AA055B /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
@@ -439,6 +439,7 @@
 		0B2FAE2D10196F8C007BA948 /* BackgroundColorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundColorView.h; sourceTree = "<group>"; };
 		0B2FAE2E10196F8C007BA948 /* BackgroundColorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackgroundColorView.m; sourceTree = "<group>"; };
 		0B2FAE5F101972DF007BA948 /* Bum.ldr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Bum.ldr; sourceTree = "<group>"; };
+		0B30C6BE16DC61000023B3A6 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/InspectorLSynth.xib; sourceTree = "<group>"; };
 		0B30E08A0ED90D3000470615 /* Triangle.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Triangle.pdf; sourceTree = "<group>"; };
 		0B30E0D30EDA746900470615 /* Quadrilateral.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Quadrilateral.pdf; sourceTree = "<group>"; };
 		0B34306608B2E93D00A06A40 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -667,7 +668,6 @@
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
-		952AA8F7169D55690087919E /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/InspectorLSynth.xib; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
 		95D893AD1655334500AA055B /* lsynth.mpd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lsynth.mpd; path = ../../ThirdParty/LSynth/LSynth/lsynth.mpd; sourceTree = "<group>"; };
@@ -1257,12 +1257,12 @@
 				0B04E94F1093BB4200E201EE /* InspectorComment.xib */,
 				0B04E9511093BB4200E201EE /* InspectorConditionalLine.xib */,
 				0B04E9531093BB4200E201EE /* InspectorLine.xib */,
+				0B30C6BD16DC61000023B3A6 /* InspectorLSynth.xib */,
 				0B04E9551093BB4200E201EE /* InspectorMPDModel.xib */,
 				0B04E9571093BB4200E201EE /* InspectorPart.xib */,
 				0B04E9591093BB4200E201EE /* InspectorQuadrilateral.xib */,
 				0B04E95B1093BB4200E201EE /* InspectorStep.xib */,
 				0B04E95D1093BB4200E201EE /* InspectorTriangle.xib */,
-				952AA8F8169D55690087919E /* InspectorLSynth.xib */,
 				0B04E95F1093BB4200E201EE /* InspectorUnknownCommand.xib */,
 			);
 			name = Inspectors;
@@ -1595,7 +1595,7 @@
 				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
 				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
 				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
-				952AA8F6169D55690087919E /* InspectorLSynth.xib in Resources */,
+				0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1921,6 +1921,14 @@
 			name = ToolPalette.xib;
 			sourceTree = "<group>";
 		};
+		0B30C6BD16DC61000023B3A6 /* InspectorLSynth.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0B30C6BE16DC61000023B3A6 /* English */,
+			);
+			name = InspectorLSynth.xib;
+			sourceTree = "<group>";
+		};
 		0B34306508B2E93D00A06A40 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1951,14 +1959,6 @@
 				0BC6AACD0987296700505A88 /* English */,
 			);
 			name = Help;
-			sourceTree = "<group>";
-		};
-		952AA8F8169D55690087919E /* InspectorLSynth.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				952AA8F7169D55690087919E /* en */,
-			);
-			name = InspectorLSynth.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1992,6 +1992,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
+				SDKROOT = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2023,6 +2024,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
+				SDKROOT = macosx10.6;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};

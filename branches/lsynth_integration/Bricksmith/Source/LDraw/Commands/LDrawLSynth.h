@@ -42,6 +42,8 @@ typedef enum
 - (void) setLDrawColor:(LDrawColor *)color;
 
 - (TransformComponents) transformComponents;
+- (Matrix4) transformationMatrix;
+
 
 // Utilities
 - (void) synthesize;
