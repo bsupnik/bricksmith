@@ -344,11 +344,15 @@ PreferencesDialogController *preferencesDialog = nil;
 	[folderChooser setPrompt:NSLocalizedString(@"Choose", nil)];
 	
 	//Run the dialog.
-	if([folderChooser runModalForTypes:nil] == NSOKButton){
-		//Get the folder selected.
-		NSString		*folderPath		= [[folderChooser filenames] objectAtIndex:0];
+	if([folderChooser runModal] == NSOKButton)
+	{
+		// Get the folder selected.
+		NSURL	*folderURL	= [[folderChooser URLs] objectAtIndex:0];
 		
-		[self changeLDrawFolderPath:folderPath];
+		if([folderURL isFileURL])
+			[self changeLDrawFolderPath:[folderURL path]];
+		else
+			NSBeep(); // sanity check
 	}
 	
 }//end chooseLDrawFolder:

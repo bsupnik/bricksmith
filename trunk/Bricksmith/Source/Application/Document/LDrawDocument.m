@@ -1418,104 +1418,93 @@
 	NSString	*activeName		= [[[self documentContents] activeModel] modelName];
 	NSString	*nameFormat		= NSLocalizedString(@"ExportedStepsFolderFormat", nil);
 	
-//	[exportPanel setRequiredFileType:@"ldr"];
-//	[exportPanel setCanSelectHiddenExtension:YES];
+	[exportPanel setDirectoryURL:nil];
+	[exportPanel setNameFieldStringValue:[NSString stringWithFormat:nameFormat, activeName]];
 	
-	[exportPanel beginSheetForDirectory:nil
-								   file:[NSString stringWithFormat:nameFormat, activeName]
-						 modalForWindow:[self windowForSheet]
-						  modalDelegate:self
-						 didEndSelector:@selector(exportStepsPanelDidEnd:returnCode:contextInfo:)
-							contextInfo:NULL ];
-		
+	[exportPanel beginSheetModalForWindow:[self windowForSheet]
+						completionHandler:
+	 ^(NSInteger returnCode)
+	 {
+		 // Do the save
+		 
+		 NSFileManager	 *fileManager		 = [[[NSFileManager alloc] init] autorelease];
+		 NSURL			 *saveURL			 = nil;
+		 NSString		 *saveName			 = nil;
+		 NSString		 *modelName 		 = nil;
+		 NSString		 *folderName		 = nil;
+		 NSString		 *modelnameFormat	 = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
+		 NSString		 *filenameFormat	 = NSLocalizedString(@"ExportedStepsFileFormat", nil);
+		 NSString		 *fileString		 = nil;
+		 NSData 		 *fileOutputData	 = nil;
+		 NSString		 *outputName		 = nil;
+		 NSString		 *outputPath		 = nil;
+		 
+		 LDrawFile		 *fileCopy			 = nil;
+		 
+		 NSInteger		 modelCounter		 = 0;
+		 NSInteger		 counter			 = 0;
+		 
+		 if(returnCode == NSOKButton)
+		 {
+			 saveURL	= [exportPanel URL];
+			 saveName	= ([saveURL isFileURL] ? [saveURL path] : nil);
+			 
+			 // If we got this far, we need to replace any prexisting file.
+			 if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
+				 [fileManager removeItemAtPath:saveName error:NULL];
+			 
+			 [fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
+			 
+			 //Output all the steps for all the submodels.
+			 for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
+			 {
+				 fileCopy = [[self documentContents] copy];
+				 
+				 //Move the target model to the top of the file. That way L3P will know to
+				 // render it!
+				 LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
+				 [currentModel retain];
+				 [fileCopy removeDirective:currentModel];
+				 [fileCopy insertDirective:currentModel atIndex:0];
+				 [fileCopy setActiveModel:currentModel];
+				 [currentModel release];
+				 
+				 //Make a new folder for the model's steps.
+				 modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
+				 folderName	= [saveName stringByAppendingPathComponent:modelName];
+				 
+				 [fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
+				 
+				 //Write out each step!
+				 for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
+				 {
+					 fileString		= [fileCopy write];
+					 fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
+					 
+					 outputName = [NSString stringWithFormat: filenameFormat,
+								   [currentModel modelName],
+								   (long)counter+1 ];
+					 outputPath = [folderName stringByAppendingPathComponent:outputName];
+					 [fileManager createFileAtPath:outputPath
+										  contents:fileOutputData
+										attributes:nil ];
+					 
+					 //Remove the step we just wrote, so that the next cycle won't
+					 // include it. We can safely do this because we are working with
+					 // a copy of the file!
+					 [currentModel removeDirectiveAtIndex:counter];
+				 }
+				 
+				 
+				 [fileCopy release];
+				 
+			 }
+			 
+		 }
+	 }];
 
 }//end exportSteps:
 
-
-//========== exportStepsPanelDidEnd:returnCode:contextInfo: ====================
-//
-// Purpose:		The export steps dialog was closed. If OK was clicked, the 
-//				filename specified is the name of the folder we should create 
-//				to export the model.
-//
-//==============================================================================
-- (void)exportStepsPanelDidEnd:(NSSavePanel *)savePanel
-					returnCode:(NSInteger)returnCode
-				   contextInfo:(void *)contextInfo
-{
-	NSFileManager   *fileManager        = [[[NSFileManager alloc] init] autorelease];
-	NSString        *saveName           = nil;
-	NSString        *modelName          = nil;
-	NSString        *folderName         = nil;
-	NSString        *modelnameFormat    = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
-	NSString        *filenameFormat     = NSLocalizedString(@"ExportedStepsFileFormat", nil);
-	NSString        *fileString         = nil;
-	NSData          *fileOutputData     = nil;
-	NSString        *outputName         = nil;
-	NSString        *outputPath         = nil;
-		
-	LDrawFile       *fileCopy           = nil;
-	
-	NSInteger       modelCounter        = 0;
-	NSInteger       counter             = 0;
-	
-	if(returnCode == NSOKButton)
-	{
-		saveName	= [savePanel filename];
-		
-		//If we got this far, we need to replace any prexisting file.
-		if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
-			[fileManager removeItemAtPath:saveName error:NULL];
-		 
-		[fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
-		
-		//Output all the steps for all the submodels.
-		for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
-		{
-			fileCopy = [[self documentContents] copy];
-			
-			//Move the target model to the top of the file. That way L3P will know to 
-			// render it!
-			LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
-			[currentModel retain];
-			[fileCopy removeDirective:currentModel];
-			[fileCopy insertDirective:currentModel atIndex:0];
-			[fileCopy setActiveModel:currentModel];
-			[currentModel release];
-			
-			//Make a new folder for the model's steps.
-			modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
-			folderName	= [saveName stringByAppendingPathComponent:modelName];
-			
-			[fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
-			
-			//Write out each step!
-			for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
-			{
-				fileString		= [fileCopy write];
-				fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
-				
-				outputName = [NSString stringWithFormat: filenameFormat, 
-														 [currentModel modelName],
-														 (long)counter+1 ];
-				outputPath = [folderName stringByAppendingPathComponent:outputName];
-				[fileManager createFileAtPath:outputPath
-									 contents:fileOutputData
-								   attributes:nil ];
-				
-				//Remove the step we just wrote, so that the next cycle won't 
-				// include it. We can safely do this because we are working with 
-				// a copy of the file!
-				[currentModel removeDirectiveAtIndex:counter];
-			}
-			
-					
-			[fileCopy release];
-			
-		}
-		
-	}
-}//end exportStepsPanelDidEnd:returnCode:contextInfo:
 
 #pragma mark -
 #pragma mark Edit Menu
@@ -4297,7 +4286,7 @@
 	{
 		glView          = [viewports objectAtIndex:counter];
 		
-		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%d", counter]];
+		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%ld", (long)counter]];
 		
 		if(shouldRestore == YES)
 			[glView restoreConfiguration];
