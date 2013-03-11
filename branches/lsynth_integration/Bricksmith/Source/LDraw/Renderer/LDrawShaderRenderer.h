@@ -77,7 +77,7 @@ struct	LDrawDragHandleInstance;
 	struct LDrawDragHandleInstance *drag_handles;									// List of drag handles - deferred to draw at the end for perf and correct scaling.
 
 	GLfloat							scale;
-
+	
 }
 
 - (id) initWithScale:(float)scale;

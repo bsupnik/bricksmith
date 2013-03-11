@@ -197,7 +197,7 @@ static const float HandleDiameter	= 7.0;
 //================================================================================
 - (void) drawSelf:(id<LDrawRenderer>)renderer
 {
-	GLfloat xyz[3] = { position.x, position.y, position.z };
+	GLfloat xyz[3] = { position.x, position.y, position.z };	
 	[renderer drawDragHandle:xyz withSize:HandleDiameter/2];
 
 }//end drawSelf:

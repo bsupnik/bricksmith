@@ -870,7 +870,7 @@
      	       __block BOOL matches = TRUE;
         	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
     	            matches = matches && 
-                	        ([partNumber            containsString_AMS:word options:NSCaseInsensitiveSearch] ||
+                	        ([partNumber            containsString_AMS:word options:NSCaseInsensitiveSearch] ||	
             	             [partSansWhitespace    containsString_AMS:word options:NSCaseInsensitiveSearch]);
         	    }];            
 				if(matches)

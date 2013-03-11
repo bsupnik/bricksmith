@@ -1131,7 +1131,7 @@
 	//Need to check and make sure this step number is not overflowing the bounds.
 	NSInteger maximumIndex = [[self steps] count]-1;
 	
-	if(stepIndex > maximumIndex || stepIndex < 0)
+	if(stepIndex > maximumIndex)
 		[NSException raise:NSRangeException format:@"index (%ld) beyond maximum step index %ld", (long)stepIndex, (long)maximumIndex];
 	else
 	{
@@ -1144,16 +1144,16 @@
 
 //========== setRotationCenter: ================================================
 //
-// Purpose:		Returns the point around which the model should be spun while
-//				being viewed.
+// Purpose:		Returns the point around which the model should be spun while 
+//				being viewed. 
 //
 //==============================================================================
 - (void) setRotationCenter:(Point3)newPoint
 {
 	Point3 oldPoint = self->rotationCenter;
-
+	
 	self->rotationCenter = newPoint;
-
+	
 	NSDictionary *info = [NSDictionary dictionaryWithObject:[NSValue valueWithBytes:&oldPoint objCType:@encode(Point3)] forKey:@"oldRotationCenter"];
 	[[NSNotificationCenter defaultCenter] postNotificationName:LDrawModelRotationCenterDidChangeNotification object:[self enclosingFile] userInfo:info];
 }

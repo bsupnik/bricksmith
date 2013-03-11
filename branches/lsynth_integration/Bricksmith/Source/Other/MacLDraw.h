@@ -229,7 +229,7 @@ typedef enum MenuTags
 	orientationMenuTag				= 407,
 	useSelectionForSpinCenterMenuTag= 408,
 	resetSpinCenterMenuTag			= 409,
-
+	
 	// Piece Menu
 	pieceMenuTag					= 5,
 	hidePieceMenuTag				= 501,

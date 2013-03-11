@@ -26,7 +26,7 @@
 	NSString				*fileName;
 	NSString				*author;
 	Point3					rotationCenter;
-
+	
 	LDrawVertexes			*vertexes;
 	ColorLibrary			*colorLibrary;			// in-scope !COLOURS local to the model
 	BOOL					 stepDisplayActive;		// YES if we are only display steps 1-currentStepDisplayed

@@ -258,7 +258,7 @@
 	[savePanel setTitle:NSLocalizedString(@"PieceCountSaveDialogTitle", nil)];
 	[savePanel setMessage:NSLocalizedString(@"PieceCountSaveDialogMessage", nil)];
 	[savePanel setNameFieldStringValue:NSLocalizedString(@"untitled", nil)];
-
+	
 	//run it and export the file if needed
 	result = [savePanel runModal];
 	if(result == NSFileHandlingPanelOKButton)

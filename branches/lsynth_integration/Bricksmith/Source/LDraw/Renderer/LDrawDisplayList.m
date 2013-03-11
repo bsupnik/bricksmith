@@ -55,7 +55,7 @@
 #define WANT_STATS 0
 
 #define VERT_STRIDE 10								// Stride of our vertices - we always write X Y Z	NX NY NZ		R G B A
-#define INST_CUTOFF 5								// Minimum instances to use hw case, which has higher overhead to set up.
+#define INST_CUTOFF 5								// Minimum instances to use hw case, which has higher overhead to set up.  
 #define INST_MAX_COUNT (1024 * 128)					// Maximum instances to write per draw before going to immediate mode - avoids unbounded VRAM use.
 #define INST_RING_BUFFER_COUNT 4					// Number of VBOs to rotate for hw instancing - doesn't actually help, it turns out.
 #define MODE_FOR_INST_STREAM GL_DYNAMIC_STATIC		// VBO mode for instancing.
@@ -197,7 +197,7 @@ struct LDrawDLSession {
 	#if WANT_STATS
 	struct {
 		int								num_btch_imm;		// Immediate drawing batches and verts
-		int								num_vert_imm;
+		int								num_vert_imm;		
 		int								num_btch_srt;		// Sorted drawin batches and verts.
 		int								num_vert_srt;
 		int								num_btch_att;		// Attribute instancing: batches, verts, instances
@@ -486,8 +486,8 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	
 	#if WANT_STATS
 	dl->vert_count = total_vertices;
-	#endif
-
+	#endif	
+	
 	// Generate and map a VBO for our mesh data.
 	glGenBuffers(1,&dl->vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dl->vbo);
@@ -672,14 +672,14 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				cur_segment->inst_base = NULL; 
 				cur_segment->inst_base += (inst_data - inst_base);
 				cur_segment->inst_count = dl->instance_count;
-
+				
 				#if WANT_STATS
 					session->stats.num_btch_ins++;
 					session->stats.num_inst_ins += (dl->instance_count);
 					session->stats.num_vert_ins += (dl->instance_count * dl->vert_count);
 					session->stats.num_work_ins += dl->vert_count;
 				#endif
-
+			
 				// Now walk the instance list, copying the instances into the instance VBO one by one.
 			
 				for (inst = dl->instance_head; inst; inst = inst->next)
@@ -715,7 +715,7 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 					session->stats.num_vert_att += (dl->instance_count * dl->vert_count);
 					session->stats.num_work_att += dl->vert_count;
 				#endif
-
+			
 				// Immediate mode instancing - we draw now!  So bind up the mesh of this DL.
 				glBindBuffer(GL_ARRAY_BUFFER,dl->vbo);
 				float * p = NULL;
@@ -899,14 +899,14 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 		printf("Sorted drawing: %d batches, %d vertices.\n",session->stats.num_btch_srt, session->stats.num_vert_srt);
 		printf("Attribute instancing: %d batches, %d instances, %d (%d) vertices.\n", session->stats.num_btch_att, session->stats.num_inst_att, session->stats.num_work_att, session->stats.num_vert_att);
 		printf("Hardware instancing: %d batches, %d instances, %d (%d) vertices.\n", session->stats.num_btch_ins, session->stats.num_inst_ins, session->stats.num_work_ins, session->stats.num_vert_ins);
-		printf("Working set estimate (MB): %zd\n",
-					(session->stats.num_vert_srt +
-					 session->stats.num_vert_imm +
+		printf("Working set estimate (MB): %zd\n", 
+					(session->stats.num_vert_srt + 
+					 session->stats.num_vert_imm + 
 					 session->stats.num_work_ins +
 					 session->stats.num_work_att) * VERT_STRIDE * sizeof(GLfloat) / (1024 * 1024));
 	#endif
-
-	// Finally done - all allocations for session (including our own obj) come from a BDP, so cleanup is quick.
+	
+	// Finally done - all allocations for session (including our own obj) come from a BDP, so cleanup is quick.  
 	// Instance VBO remains to be reused.
 	// DLs themselves live on beyond session.
 	LDrawBDPDestroy(session->alloc);
@@ -949,7 +949,7 @@ void LDrawDLDraw(
 				session->stats.num_btch_srt++;
 				session->stats.num_vert_srt += dl->vert_count;
 			#endif
-
+		
 			// Build a sorted link, copy the instance data to it, and link it up to our session for later processing.
 			struct LDrawDLSortedInstanceLink * link = LDrawBDPAllocate(session->alloc, sizeof(struct LDrawDLSortedInstanceLink));
 			link->next = session->sorted_head;
@@ -1010,7 +1010,7 @@ void LDrawDLDraw(
 		session->stats.num_btch_imm++;
 		session->stats.num_vert_imm += dl->vert_count;
 	#endif
-
+	
 	// Push current transform & color into attribute state.
 	int i;
 	for(i = 0; i < 4; ++i)

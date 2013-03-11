@@ -342,7 +342,7 @@
 // Purpose:		Draw the synthesized part.
 //
 //==============================================================================
-- (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
+- (void) drawSelf:(id<LDrawRenderer>)renderer
 {
     NSArray         *constraints         = [self subdirectives];
     LDrawDirective  *currentDirective    = nil;
@@ -356,7 +356,7 @@
                 ) {
             for(currentDirective in constraints)
             {
-                [currentDirective draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
+                [currentDirective drawSelf:renderer];
             }
         }
 
@@ -372,16 +372,16 @@
         // Draw any synthesized parts as well
         for(currentDirective in synthesizedParts)
         {
-            [currentDirective draw:optionsMask viewScale:scaleFactor parentColor:color];
+            [currentDirective drawSelf:renderer];
         }
 
-    //        //  We've changed.  Picked up by e.g. the inspector
-    //        [[NSNotificationCenter defaultCenter]
-    //                postNotificationName:LDrawDirectiveDidChangeNotification
-    //                              object:self];
+        //        //  We've changed.  Picked up by e.g. the inspector
+        //        [[NSNotificationCenter defaultCenter]
+        //                postNotificationName:LDrawDirectiveDidChangeNotification
+        //                              object:self];
     }
 
-}//end draw:viewScale:parentColor:
+}//end drawSelf:
 
 //========== hitTest:transform:viewScale:boundsOnly:creditObject:hits: =======
 //
