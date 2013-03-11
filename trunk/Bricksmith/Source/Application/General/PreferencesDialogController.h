@@ -12,9 +12,9 @@
 
 //Toolbar Tab Identifiers
 #define PREFS_GENERAL_TAB_IDENTIFIER	@"PreferencesTabGeneral"
-#define PREFS_LDRAW_TAB_IDENTFIER		@"PreferencesTabLDraw"
-#define PREFS_STYLE_TAB_IDENTFIER		@"PreferencesTabStyles"
-
+#define PREFS_LDRAW_TAB_IDENTIFIER		@"PreferencesTabLDraw"
+#define PREFS_STYLE_TAB_IDENTIFIER		@"PreferencesTabStyles"
+#define PREFS_LSYNTH_TAB_IDENTIFIER     @"PreferencesTabLSynth"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,6 +29,7 @@
 	IBOutlet NSView			*generalTabContentView;
 	IBOutlet NSView			*stylesContentView;
 	IBOutlet NSView			*ldrawContentView;
+    IBOutlet NSView         *lsynthContentView;
 	
 	// General Tab
 	IBOutlet NSForm			*gridSpacingForm;
@@ -65,6 +66,7 @@
 - (void) setGeneralTabValues;
 - (void) setStylesTabValues;
 - (void) setLDrawTabValues;
+- (void) setLSynthTabValues;
 
 //Actions
 - (void)changeTab:(id)sender;

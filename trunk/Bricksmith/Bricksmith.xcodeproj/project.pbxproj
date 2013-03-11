@@ -291,6 +291,7 @@
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+		957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		95D893AC165532B100AA055B /* lsynthcp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
 		95D893AE1655334500AA055B /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
@@ -668,6 +669,7 @@
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
+		957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthIcon.tiff; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
 		95D893AD1655334500AA055B /* lsynth.mpd */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = lsynth.mpd; path = ../../ThirdParty/LSynth/LSynth/lsynth.mpd; sourceTree = "<group>"; };
@@ -1054,6 +1056,7 @@
 				0B9524771585873800F3EE79 /* Texture.pdf */,
 				0B30E08A0ED90D3000470615 /* Triangle.pdf */,
 				0B9FE5B208AD97770046511D /* Unknown.tiff */,
+				957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */,
 				73772C25D6D43398DCA3E163 /* LSynthPart.tiff */,
 				7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */,
 				73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */,
@@ -1596,6 +1599,7 @@
 				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
 				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
 				0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */,
+				957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

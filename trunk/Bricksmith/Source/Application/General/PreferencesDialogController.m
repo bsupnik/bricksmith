@@ -5,6 +5,31 @@
 // Purpose:		Handles the user interface between the application and its 
 //				preferences file.
 //
+// Notes:
+//
+// To add a new Preferences pane the following steps are required:
+//
+// Preferences.xib
+//   - Add a skeleton NSView, named appropriately.  Change the Document Label for
+//     the view and set its dimensions to e.g. 486 x height
+// 
+// Create an appropriate .tiff icon for the preference panel 'tab' in e.g.
+// Resources/Icon
+// 
+// PreferencesDialogController.h
+//   - #define a constant for the new panel
+//   - Add an IBOutlet for the new view and connect it to the view.
+//   - Add a declaration for a new -(void)setNewPanelTabValues method.
+// 
+// PreferencesDialogController.m
+//   - In -(void)setDialogValues add [self setNewPanelTabValues]
+//   - Add the -(void)setNewPanelTabValues method
+//   - Update -(NSArray *)toolbarAllowedItemIdentifiers:
+//   - Update -(void)selectPanelWithIdentifier:
+//   - Update -(NSToolbarItem *)toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
+// 
+// Add pref panel title to Resources/Localizable.strings in the Preferences section.
+//
 //  Created by Allen Smith on 2/14/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -50,7 +75,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	NSUserDefaults	*userDefaults = [NSUserDefaults standardUserDefaults];
 	NSString		*lastIdentifier = [userDefaults stringForKey:PREFERENCES_LAST_TAB_DISPLAYED];
 	if(lastIdentifier == nil)
-		lastIdentifier = PREFS_LDRAW_TAB_IDENTFIER;
+		lastIdentifier = PREFS_LDRAW_TAB_IDENTIFIER;
 	[self selectPanelWithIdentifier:lastIdentifier];
 	
 	// After the window has been resized for the tab, *then* restore the size.
@@ -123,6 +148,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	[self setGeneralTabValues];
 	[self setStylesTabValues];
 	[self setLDrawTabValues];
+    [self setLSynthTabValues];
 	
 }//end setDialogValues
 
@@ -216,6 +242,16 @@ PreferencesDialogController *preferencesDialog = nil;
 	
 }//end showPreferencesWindow
 
+//========== setLDrawTabValues =================================================
+//
+// Purpose:		Updates the data in the LSynth tab to match what is on the disk.
+//
+//==============================================================================
+- (void) setLSynthTabValues
+{
+    //noop
+    NSLog(@"---- IN setLSynthTabValues");
+}
 
 #pragma mark -
 #pragma mark ACTIONS
@@ -560,8 +596,9 @@ PreferencesDialogController *preferencesDialog = nil;
 {
 	return [NSArray arrayWithObjects:
 						PREFS_GENERAL_TAB_IDENTIFIER,
-						PREFS_LDRAW_TAB_IDENTFIER,
-						PREFS_STYLE_TAB_IDENTFIER,
+						PREFS_LDRAW_TAB_IDENTIFIER,
+						PREFS_STYLE_TAB_IDENTIFIER,
+                        PREFS_LSYNTH_TAB_IDENTIFIER,
 						nil ];
 }//end toolbarAllowedItemIdentifiers:
 
@@ -609,11 +646,14 @@ PreferencesDialogController *preferencesDialog = nil;
 	if([itemIdentifier isEqualToString:PREFS_GENERAL_TAB_IDENTIFIER])
 		[newItem setImage:[NSImage imageNamed:NSImageNamePreferencesGeneral]];
 	
-	else if([itemIdentifier isEqualToString:PREFS_LDRAW_TAB_IDENTFIER])
+	else if([itemIdentifier isEqualToString:PREFS_LDRAW_TAB_IDENTIFIER])
 		[newItem setImage:[NSImage imageNamed:@"LDrawLogo"]];
 	
-	else if([itemIdentifier isEqualToString:PREFS_STYLE_TAB_IDENTFIER])
+	else if([itemIdentifier isEqualToString:PREFS_STYLE_TAB_IDENTIFIER])
 		[newItem setImage:[NSImage imageNamed:@"SyntaxColoring"]];
+    
+    else if([itemIdentifier isEqualToString:PREFS_LSYNTH_TAB_IDENTIFIER])
+		[newItem setImage:[NSImage imageNamed:@"LSynthIcon"]];
 	
 	[newItem setTarget:self];
 	[newItem setAction:@selector(changeTab:)];
@@ -882,12 +922,15 @@ PreferencesDialogController *preferencesDialog = nil;
 	if([itemIdentifier isEqualToString:PREFS_GENERAL_TAB_IDENTIFIER])
 		newContentView = self->generalTabContentView;
 	
-	else if([itemIdentifier isEqualToString:PREFS_LDRAW_TAB_IDENTFIER])
+	else if([itemIdentifier isEqualToString:PREFS_LDRAW_TAB_IDENTIFIER])
 		newContentView = ldrawContentView;
 	
-	else if([itemIdentifier isEqualToString:PREFS_STYLE_TAB_IDENTFIER])
+	else if([itemIdentifier isEqualToString:PREFS_STYLE_TAB_IDENTIFIER])
 		newContentView = stylesContentView;
-	
+
+    else if([itemIdentifier isEqualToString:PREFS_LSYNTH_TAB_IDENTIFIER])
+		newContentView = lsynthContentView;
+    
 	//need content rect in screen coordinates
 	//Need find window frame with new content view.
 	newFrameRect = [preferencesWindow frameRectForContentSize:[newContentView frame].size];
