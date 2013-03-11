@@ -147,6 +147,37 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	
 }//end copyWithZone:
 
+//========== fullCopyWithZone: =====================================================
+//
+// Purpose:		Returns a duplicate of this color.  Used for creating transparent
+//              versions of a color on the fly
+//
+// Notes:		This method must be implemented in fussy ways to allow this
+//				object to serve as a key for NSDictionaries, which it does in
+//				LDrawVertexes.
+//
+//              This is probably not an efficient method
+//
+//==============================================================================
+- (id)fullCopyWithZone:(NSZone *)zone
+{
+	LDrawColor *copied = (LDrawColor *)[super copyWithZone:zone];
+
+	copied->colorCode				= self->colorCode;
+	memcpy(copied->colorRGBA,		  self->colorRGBA, sizeof(colorRGBA));
+	copied->edgeColorCode			= self->edgeColorCode;
+	memcpy(copied->edgeColorRGBA,	  self->edgeColorRGBA, sizeof(edgeColorRGBA));
+	copied->hasExplicitAlpha		= self->hasExplicitAlpha;
+	copied->hasLuminance			= self->hasLuminance;
+	copied->luminance				= self->luminance;
+	copied->material				= self->material;
+	[copied setMaterialParameters:[self materialParameters]];
+	[copied setName:[self name]];
+
+	return copied;
+
+}//end copyWithZone:
+
 
 //========== finishParsing: ====================================================
 //

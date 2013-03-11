@@ -525,8 +525,9 @@
 		   bestObject:(id *)bestObject 
 			bestDepth:(float *)bestDepth
 {
-	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) 
-		return;
+	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) {
+        return;
+    }
 
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];

@@ -10,6 +10,8 @@
 #import "LDrawRenderer.h"
 #import "LDrawBDPAllocator.h"
 #import "LDrawShaderRenderer.h"
+#import OPEN_GL_HEADER
+#import OPEN_GL_EXT_HEADER
 
 /*
 

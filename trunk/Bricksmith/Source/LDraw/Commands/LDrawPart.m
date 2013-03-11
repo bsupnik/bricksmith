@@ -49,6 +49,7 @@
 	self = [super init];
 	
 	[self setDisplayName:@""];
+    [self setIconName:@"Brick"];
 	[self setTransformComponents:IdentityComponents];
 	//	drawLock = [[NSLock alloc] init];
 	
@@ -194,7 +195,8 @@
 	self		= [super initWithCoder:decoder];
 	
 	[self setDisplayName:[decoder decodeObjectForKey:@"displayName"]];
-	
+    [self setIconName:@"Brick"];
+
 	//Decoding structures is a bit messy.
 	temporary	= [decoder decodeBytesForKey:@"glTransformation" returnedLength:NULL];
 	memcpy(glTransformation, temporary, sizeof(GLfloat)*16 );
@@ -642,20 +644,6 @@
 	
 }//end browsingDescription
 
-
-//========== iconName ==========================================================
-//
-// Purpose:		Returns the name of image file used to display this kind of 
-//				object, or nil if there is no icon.
-//
-//==============================================================================
-- (NSString *) iconName
-{
-	return @"Brick";
-	
-}//end iconName
-
-
 //========== inspectorClassName ================================================
 //
 // Purpose:		Returns the name of the class used to inspect this one.
@@ -1012,6 +1000,23 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end setTransformationMatrix
 
 
+//========== setSelected: ======================================================
+//
+// Purpose:		Somebody make this a protocol method.
+//
+//==============================================================================
+- (void) setSelected:(BOOL)flag
+{
+    [super setSelected:flag];
+
+    // would like LDrawContainer to be a protocol.  In its absence...
+    if ([[self enclosingDirective] respondsToSelector:@selector(setSubdirectiveSelected:)]) {
+        [[self enclosingDirective] setSubdirectiveSelected:flag];
+    }
+
+}//end setSelected:
+
+
 #pragma mark -
 #pragma mark MOVEMENT
 #pragma mark -
@@ -1211,6 +1216,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	transformationMatrix = Matrix4Translate(transformationMatrix, moveVector);
 	
 	[self setTransformationMatrix:&transformationMatrix];
+    [self sendMessageToObservers:MessageObservedChanged];
 	
 }//end moveBy:
 
@@ -1298,6 +1304,7 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	transform = Matrix4Translate(transform, displacement); //translate back to original position
 	
 	[self setTransformationMatrix:&transform];
+    [self sendMessageToObservers:MessageObservedChanged];
 	
 }//end rotateByDegrees:centerPoint:
 

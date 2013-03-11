@@ -13,6 +13,7 @@
 #import "ColorLibrary.h"
 #import "LDrawDirective.h"
 #import "MatrixMath.h"
+#import "LDrawMovableDirective.h"
 
 typedef struct
 {
@@ -22,13 +23,12 @@ typedef struct
 	
 } VBOVertexData;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // class LDrawDrawableElement
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawDrawableElement : LDrawDirective <LDrawColorable, NSCoding>
+@interface LDrawDrawableElement : LDrawDirective <LDrawColorable, NSCoding, LDrawMovableDirective>
 {
 	LDrawColor  *color;
 	BOOL        hidden;		//YES if we don't draw this.
@@ -50,8 +50,8 @@ typedef struct
 - (void) setHidden:(BOOL)flag;
 
 // Actions
-- (Vector3) displacementForNudge:(Vector3)nudgeVector;
-- (void) moveBy:(Vector3)moveVector;
+//- (Vector3) displacementForNudge:(Vector3)nudgeVector;
+//- (void) moveBy:(Vector3)moveVector;
 - (Point3) position:(Point3)position snappedToGrid:(float)gridSpacing;
 
 @end

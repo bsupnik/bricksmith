@@ -1,0 +1,250 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		95BE9C321609F65E004437E1 /* band.c in Sources */ = {isa = PBXBuildFile; fileRef = 95BE9C241609F65E004437E1 /* band.c */; };
+		95BE9C331609F65E004437E1 /* curve.c in Sources */ = {isa = PBXBuildFile; fileRef = 95BE9C261609F65E004437E1 /* curve.c */; };
+		95BE9C341609F65E004437E1 /* hose.c in Sources */ = {isa = PBXBuildFile; fileRef = 95BE9C281609F65E004437E1 /* hose.c */; };
+		95BE9C351609F65E004437E1 /* lsynthcp.c in Sources */ = {isa = PBXBuildFile; fileRef = 95BE9C2A1609F65E004437E1 /* lsynthcp.c */; };
+		95BE9C361609F65E004437E1 /* mathlib.c in Sources */ = {isa = PBXBuildFile; fileRef = 95BE9C2C1609F65E004437E1 /* mathlib.c */; };
+		95E2DB57160D06C500DCFEE3 /* lsynth.mpd in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95E2DB55160D06A500DCFEE3 /* lsynth.mpd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		95BE9C0F1609F609004437E1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				95E2DB57160D06C500DCFEE3 /* lsynth.mpd in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		73772C228B6956582AE876BB /* licence.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = licence.txt; sourceTree = "<group>"; };
+		95BE9C111609F609004437E1 /* lsynthcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lsynthcp; sourceTree = BUILT_PRODUCTS_DIR; };
+		95BE9C241609F65E004437E1 /* band.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = band.c; sourceTree = "<group>"; };
+		95BE9C251609F65E004437E1 /* band.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = band.h; sourceTree = "<group>"; };
+		95BE9C261609F65E004437E1 /* curve.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = curve.c; sourceTree = "<group>"; };
+		95BE9C271609F65E004437E1 /* curve.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = curve.h; sourceTree = "<group>"; };
+		95BE9C281609F65E004437E1 /* hose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hose.c; sourceTree = "<group>"; };
+		95BE9C291609F65E004437E1 /* hose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hose.h; sourceTree = "<group>"; };
+		95BE9C2A1609F65E004437E1 /* lsynthcp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsynthcp.c; sourceTree = "<group>"; };
+		95BE9C2B1609F65E004437E1 /* lsynthcp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lsynthcp.h; sourceTree = "<group>"; };
+		95BE9C2C1609F65E004437E1 /* mathlib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mathlib.c; sourceTree = "<group>"; };
+		95BE9C2D1609F65E004437E1 /* mathlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mathlib.h; sourceTree = "<group>"; };
+		95BE9C2E1609F65E004437E1 /* orient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = orient.c; sourceTree = "<group>"; };
+		95BE9C2F1609F65E004437E1 /* quat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quat.c; sourceTree = "<group>"; };
+		95BE9C301609F65E004437E1 /* strings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strings.c; sourceTree = "<group>"; };
+		95BE9C311609F65E004437E1 /* strings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = strings.h; sourceTree = "<group>"; };
+		95E2DB55160D06A500DCFEE3 /* lsynth.mpd */ = {isa = PBXFileReference; lastKnownFileType = text; path = lsynth.mpd; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		95BE9C0E1609F609004437E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		95BE9C061609F609004437E1 = {
+			isa = PBXGroup;
+			children = (
+				95BE9C141609F609004437E1 /* LSynth */,
+				95BE9C121609F609004437E1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		95BE9C121609F609004437E1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				95BE9C111609F609004437E1 /* lsynthcp */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		95BE9C141609F609004437E1 /* LSynth */ = {
+			isa = PBXGroup;
+			children = (
+				95BE9C241609F65E004437E1 /* band.c */,
+				95BE9C251609F65E004437E1 /* band.h */,
+				95BE9C261609F65E004437E1 /* curve.c */,
+				95BE9C271609F65E004437E1 /* curve.h */,
+				95BE9C281609F65E004437E1 /* hose.c */,
+				95BE9C291609F65E004437E1 /* hose.h */,
+				95BE9C2A1609F65E004437E1 /* lsynthcp.c */,
+				95BE9C2B1609F65E004437E1 /* lsynthcp.h */,
+				95BE9C2C1609F65E004437E1 /* mathlib.c */,
+				95BE9C2D1609F65E004437E1 /* mathlib.h */,
+				95BE9C2E1609F65E004437E1 /* orient.c */,
+				95BE9C2F1609F65E004437E1 /* quat.c */,
+				95BE9C301609F65E004437E1 /* strings.c */,
+				95BE9C311609F65E004437E1 /* strings.h */,
+				95E2DB55160D06A500DCFEE3 /* lsynth.mpd */,
+				73772C228B6956582AE876BB /* licence.txt */,
+			);
+			path = LSynth;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		95BE9C101609F609004437E1 /* LSynth */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95BE9C1B1609F609004437E1 /* Build configuration list for PBXNativeTarget "LSynth" */;
+			buildPhases = (
+				95BE9C0D1609F609004437E1 /* Sources */,
+				95BE9C0E1609F609004437E1 /* Frameworks */,
+				95BE9C0F1609F609004437E1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LSynth;
+			productName = LSynth;
+			productReference = 95BE9C111609F609004437E1 /* lsynthcp */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		95BE9C081609F609004437E1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = SM;
+			};
+			buildConfigurationList = 95BE9C0B1609F609004437E1 /* Build configuration list for PBXProject "LSynth" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 95BE9C061609F609004437E1;
+			productRefGroup = 95BE9C121609F609004437E1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				95BE9C101609F609004437E1 /* LSynth */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		95BE9C0D1609F609004437E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95BE9C351609F65E004437E1 /* lsynthcp.c in Sources */,
+				95BE9C321609F65E004437E1 /* band.c in Sources */,
+				95BE9C341609F65E004437E1 /* hose.c in Sources */,
+				95BE9C331609F65E004437E1 /* curve.c in Sources */,
+				95BE9C361609F65E004437E1 /* mathlib.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		95BE9C191609F609004437E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		95BE9C1A1609F609004437E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		95BE9C1C1609F609004437E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = lsynthcp;
+				SDKROOT = macosx10.7;
+			};
+			name = Debug;
+		};
+		95BE9C1D1609F609004437E1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = lsynthcp;
+				SDKROOT = macosx10.7;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		95BE9C0B1609F609004437E1 /* Build configuration list for PBXProject "LSynth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95BE9C191609F609004437E1 /* Debug */,
+				95BE9C1A1609F609004437E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		95BE9C1B1609F609004437E1 /* Build configuration list for PBXNativeTarget "LSynth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95BE9C1C1609F609004437E1 /* Debug */,
+				95BE9C1D1609F609004437E1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 95BE9C081609F609004437E1 /* Project object */;
+}

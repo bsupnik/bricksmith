@@ -1236,7 +1236,7 @@ static PartLibrary *SharedPartLibrary = nil;
 			// This requires GL_EXT_framebuffer_object, available on all renderers on 10.6.8 and beyond.
 			// Build mipmaps so we can use linear-mipmap-linear
 			glGenerateMipmapEXT(GL_TEXTURE_2D);
-			
+
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

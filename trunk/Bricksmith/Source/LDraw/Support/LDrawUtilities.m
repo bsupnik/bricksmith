@@ -22,6 +22,7 @@
 #import "LDrawTriangle.h"
 #import "LDrawVertexes.h"
 #import "PartLibrary.h"
+#import "LDrawLSynth.h"
 
 static LDrawVertexes        *boundingCube       = nil;
 static BOOL                 ColumnizesOutput    = NO;
@@ -113,14 +114,17 @@ static NSString				*defaultAuthor		= @"anonymous";
 	// always the first character in the line. 
 	switch(lineType)
 	{
-		case 0:
-		{
-			if([LDrawTexture lineIsTextureBeginning:line])
-				classForType = [LDrawTexture class];
-			else
-				classForType = [LDrawMetaCommand class];
-		}	break;
-			
+        case 0:
+            {
+                if([LDrawTexture lineIsTextureBeginning:line])
+                    classForType = [LDrawTexture class];
+                else if ([LDrawLSynth lineIsLSynthBeginning:line]) {
+                    classForType = [LDrawLSynth class];
+                }
+                else
+                    classForType = [LDrawMetaCommand class];
+            }
+            break;
 		case 1:
 			classForType = [LDrawPart class];
 			break;

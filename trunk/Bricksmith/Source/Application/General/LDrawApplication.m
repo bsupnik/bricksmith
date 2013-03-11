@@ -27,6 +27,7 @@
 #import "PartBrowserPanelController.h"
 #import "PartLibrary.h"
 #import "PartLibraryController.h"
+#import "LSynthConfiguration.h"
 #import "PreferencesDialogController.h"
 #import "ToolPalette.h"
 #import "TransformerIntMinus1.h"
@@ -188,6 +189,18 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	return partLibraryController;
 	
 }//end partLibraryController
+
+
+//========== lsynthConfiguration ===============================================
+//
+// Purpose:		Returns the local instance of the LSynth configuration.
+//
+//==============================================================================
+- (LSynthConfiguration *) lsynthConfiguration
+{
+	return lsynthConfiguration;
+	
+}//end lsynthConfiguration
 
 
 //========== sharedOpenGLContext ===============================================
@@ -408,6 +421,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	//Create shared objects.
 	self->inspector					= [Inspector new];
 	self->partLibraryController		= [[PartLibraryController alloc] init];
+    self->lsynthConfiguration       = [LSynthConfiguration sharedInstance];
 	self->sharedGLContext			= [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
 	
 	[sharedGLContext makeCurrentContext];
@@ -426,6 +440,12 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		// a new one.
 	}
 	
+    // Parse the LSynth config file, using the bundled lsynth.mpd
+    // TODO: make the location a preference
+    NSLog(@"Reading lsynth config");
+    NSString *lsynthConfigPath = [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];
+    [self->lsynthConfiguration parseLsynthConfig:lsynthConfigPath];
+
 	// Register for Notifications
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(partBrowserStyleDidChange:)
