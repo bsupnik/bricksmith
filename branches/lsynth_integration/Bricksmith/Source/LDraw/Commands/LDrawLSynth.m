@@ -123,7 +123,6 @@
                 // determine parser state
                 NSString    *strippedLine   = nil;
                 NSString    *field          = [LDrawUtilities readNextField:currentLine remainder:&strippedLine];
-                NSArray     *fields         = [currentLine componentsSeparatedByString:@" "];
 
                 //NSString *rowType = [[fields objectAtIndex:0] integerValue];
                 //NSString *synthIndicator = [fields objectAtIndex:1];
@@ -345,9 +344,6 @@
 //==============================================================================
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
 {
-    NSPasteboard	*pasteboard		     = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray			*archivedDirectives  = [pasteboard propertyListForType:LDrawDraggingPboardType];
-    NSData			*data				 = [archivedDirectives objectAtIndex:0];
     NSArray         *constraints         = [self subdirectives];
     LDrawDirective  *currentDirective    = nil;
 
@@ -1075,7 +1071,7 @@
     for (i=0; i<[mappedPoints count]; i++) {
         int j = (i+1) % [mappedPoints count]; // next constraint, cyclical (N+1 -> 0)
 
-        NSMutableArray *tangents = [ComputationalGeometry tangentBetweenCircle:[mappedPoints objectAtIndex:i]
+        NSArray *tangents = [ComputationalGeometry tangentBetweenCircle:[mappedPoints objectAtIndex:i]
                                                                      andCircle:[mappedPoints objectAtIndex:j]];
         if (tangents != nil) {
             // Tangents are between two circles (i.e. constraints)

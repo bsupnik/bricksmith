@@ -204,6 +204,7 @@
 - (BOOL) elementsAreSelectedOfVisibility:(BOOL)visibleFlag;
 - (NSAttributedString *) formatDirective:(LDrawDirective *)item withStringRepresentation:(NSString *)representation;
 - (void) loadDataIntoDocumentUI;
+- (void) populateLSynthModelMenus;
 - (LDrawContainer *) selectedContainer;
 - (NSArray *) selectedObjects;
 - (LDrawMPDModel *) selectedModel;

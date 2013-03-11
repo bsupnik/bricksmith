@@ -98,7 +98,9 @@ static LSynthConfiguration* instance = nil;
 //==============================================================================
 -(id)init
 {
-    if (self = [super init]) {
+	self = [super init];
+    if (self)
+	{
         parts                   = [[NSMutableArray alloc] init];
         hose_constraints        = [[NSMutableArray alloc] init];
         hose_types              = [[NSMutableArray alloc] init];

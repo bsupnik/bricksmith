@@ -60,7 +60,9 @@
 
 -(id)initWithX:(int)X Y:(int)Y R:(int)R
 {
-    if (self = [super init]) {
+	self = [super init];
+    if (self)
+	{
         self.x = X;
         self.y = Y;
         self.r = R;
@@ -142,7 +144,7 @@
  *  Finds tangent segments between two given circles.
  *
   */
-+(NSMutableArray *)tangentBetweenCircle:(NSMutableDictionary *)circle1 andCircle:(NSMutableDictionary *)circle2
++(NSArray *)tangentBetweenCircle:(NSMutableDictionary *)circle1 andCircle:(NSMutableDictionary *)circle2
 {
     // Recast the supplied dictionaries as Circles for clarity in the main algorithm
     Circle *c1 = [[[Circle alloc] initWithX:[[circle1 valueForKey:@"x"] integerValue]
@@ -225,7 +227,6 @@
 //==============================================================================
 +(void)doJarvisMarch:(NSMutableArray *)preparedData
 {
-    NSMutableDictionary *hullPoint;
     int leftmost;
 
     // Assign hull membership to the leftmost constraint as the seed point
@@ -257,7 +258,7 @@
 // Purpose:		Find the next point on the convex hull
 //
 //==============================================================================
-+(int)nextHullPointWithPoints:(NSMutableDictionary *)points andPointIndex:(int)pIndex
++(int)nextHullPointWithPoints:(NSArray *)points andPointIndex:(int)pIndex
 {
     int qIndex = pIndex;
     int rIndex;
@@ -290,14 +291,14 @@
 //                           /
 //                          /
 //              [P]----->[Q]--->[R]  (Straight)
-//                          \
-//                           \
-//                            \
+//                          \												| 
+//                           \												|
+//                            \												|
 //                            V
 //                            [R]    (Right)
 //
 //==============================================================================
-+(int)turnWithPoints:(NSMutableArray *)points P:(int)pIndex Q:(int)qIndex R:(int)rIndex
++(int)turnWithPoints:(NSArray *)points P:(int)pIndex Q:(int)qIndex R:(int)rIndex
 {
     //NSLog(@"PQR: %i, %i, %i", pIndex, qIndex, rIndex);
 
@@ -327,7 +328,7 @@
 //              an array.
 //
 //==============================================================================
-+(int)distanceBetweenPoints:(NSMutableArray *)points P:(int)pIndex Q:(int)qIndex
++(int)distanceBetweenPoints:(NSArray *)points P:(int)pIndex Q:(int)qIndex
 {
     int dx = [[[points objectAtIndex:qIndex] objectForKey:@"x"] integerValue] - [[[points objectAtIndex:pIndex] objectForKey:@"x"] integerValue];
     int dy = [[[points objectAtIndex:qIndex] objectForKey:@"y"] integerValue] - [[[points objectAtIndex:pIndex] objectForKey:@"y"] integerValue];
@@ -344,11 +345,12 @@
 //==============================================================================
 +(int)leftmost:(NSMutableArray *)points
 {
-    int *leftmost = nil;
+    int leftmost = 0;
     int i;
     for (i=0; i < [points count]; i++) {
         //NSLog(@"Leftmost: %i, %i, %@, %@", i, leftmost, [[points objectAtIndex:i] objectForKey:@"x"], [[points objectAtIndex:leftmost] objectForKey:@"x"]);
-        if (leftmost == nil || [[[points objectAtIndex:i] objectForKey:@"x"] integerValue] < [[[points objectAtIndex:leftmost] objectForKey:@"x"] integerValue]) {
+        if ([[[points objectAtIndex:i] objectForKey:@"x"] integerValue] < [[[points objectAtIndex:leftmost] objectForKey:@"x"] integerValue])
+		{
             leftmost = i;
         }
     }

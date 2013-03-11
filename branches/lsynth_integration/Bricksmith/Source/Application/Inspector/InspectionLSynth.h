@@ -36,4 +36,8 @@
 - (void) populateTypes:(int)lsynthClass;
 - (void) populateDefaultConstraint:(int)class;
 
+// Utilities
+- (NSArray *) typesForLSynthClass:(LSynthClassT)classTag;
+- (void) updateSynthTypeLabel:(LSynthClassT)tag;
+
 @end

@@ -12,7 +12,12 @@
 
 @interface ComputationalGeometry : NSObject
 
++(NSArray *)tangentBetweenCircle:(NSMutableDictionary *)c1 andCircle:(NSMutableDictionary *)c2;
+
 +(void)doJarvisMarch:(NSMutableArray *)preparedData;
-+(NSMutableArray *)tangentBetweenCircle:(NSMutableDictionary *)c1 andCircle:(NSMutableDictionary *)c2;
++(int)nextHullPointWithPoints:(NSArray *)points andPointIndex:(int)pIndex;
++(int)turnWithPoints:(NSArray *)points P:(int)pIndex Q:(int)qIndex R:(int)rIndex;
++(int)distanceBetweenPoints:(NSArray *)points P:(int)pIndex Q:(int)qIndex;
++(int)leftmost:(NSArray *)points;
 
 @end
