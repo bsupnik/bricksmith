@@ -1517,6 +1517,20 @@
 }//end exportSteps:
 
 
+//========== revealInFinder: ===================================================
+//
+// Purpose:             Open a Finder window with the current file selected.
+//
+//==============================================================================
+- (IBAction) revealInFinder:(id)sender
+{
+    // Cribbed directly from
+    // http://stackoverflow.com/questions/7652928/launch-osx-finder-window-with-specific-files-selected
+    NSArray *fileURLs = [NSArray arrayWithObjects:[self fileURL], nil];
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
+    
+}//end revealInFinder:
+
 #pragma mark -
 #pragma mark Edit Menu
 
