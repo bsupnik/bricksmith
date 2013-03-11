@@ -1992,7 +1992,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2024,7 +2024,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.7;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};

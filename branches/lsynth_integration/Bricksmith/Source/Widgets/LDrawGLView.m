@@ -231,6 +231,10 @@ static Size2 NSSizeToSize2(NSSize size)
 //	[[self openGLContext] setValues: &surfaceOrder
 //					   forParameter: NSOpenGLCPSurfaceOrder ];
 			
+	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
+	[renderer setDelegate:self];
+	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
+
 	[self setViewOrientation:ViewOrientation3D];
 	
 	

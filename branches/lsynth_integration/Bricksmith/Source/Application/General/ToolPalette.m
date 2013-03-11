@@ -300,7 +300,7 @@ ToolPalette *sharedToolPalette = nil;
 			break;
 			
 		case NSFlagsChanged:
-			self->currentKeyModifiers = [theEvent modifierFlags];
+			self->currentKeyModifiers = ([theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask);
 			break;
 		
 		default:
@@ -585,7 +585,7 @@ ToolPalette *sharedToolPalette = nil;
 										modifiers:&testModifiers ];
 	
 	//keys match exactly, modifiers must merely be present.
-	if(		[characters containsString:testCharacters options:0]
+	if(		[characters containsString_AMS:testCharacters options:0]
 		&&	(modifiers & testModifiers) == testModifiers )
 	{
 		matches = YES;

@@ -285,16 +285,16 @@ void complimentColor(const GLfloat *originalColor, GLfloat *complimentColor)
 	if(brightness > 0.5)
 	{
 		// Darken
-		complimentColor[0] = originalColor[0] - 0.40;
-		complimentColor[1] = originalColor[1] - 0.40;
-		complimentColor[2] = originalColor[2] - 0.40;
+		complimentColor[0] = MAX(originalColor[0] - 0.40, 0.0);
+		complimentColor[1] = MAX(originalColor[1] - 0.40, 0.0);
+		complimentColor[2] = MAX(originalColor[2] - 0.40, 0.0);
 	}
 	else
 	{
 		// Lighten
-		complimentColor[0] = originalColor[0] + 0.40;
-		complimentColor[1] = originalColor[1] + 0.40;
-		complimentColor[2] = originalColor[2] + 0.40;
+		complimentColor[0] = MIN(originalColor[0] + 0.40, 1.0);
+		complimentColor[1] = MIN(originalColor[1] + 0.40, 1.0);
+		complimentColor[2] = MIN(originalColor[2] + 0.40, 1.0);
 	}
 	
 	complimentColor[3] = originalColor[3];

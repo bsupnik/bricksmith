@@ -107,7 +107,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 															NSOpenGLPFADoubleBuffer,
 															NSOpenGLPFADepthSize,		32,
 															NSOpenGLPFASampleBuffers,	1, // enable line antialiasing
-															NSOpenGLPFASamples,			3, // antialiasing beauty
+															NSOpenGLPFASamples,			4, // antialiasing beauty
 															0};
 
 	pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes: pixelAttributes];
@@ -445,7 +445,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
     NSLog(@"Reading lsynth config");
     NSString *lsynthConfigPath = [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];
     [self->lsynthConfiguration parseLsynthConfig:lsynthConfigPath];
-    
+
 	// Register for Notifications
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(partBrowserStyleDidChange:)

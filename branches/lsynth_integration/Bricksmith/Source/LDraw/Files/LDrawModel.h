@@ -25,7 +25,8 @@
 	NSString				*modelDescription;
 	NSString				*fileName;
 	NSString				*author;
-	
+	Point3					rotationCenter;
+
 	LDrawVertexes			*vertexes;
 	ColorLibrary			*colorLibrary;			// in-scope !COLOURS local to the model
 	BOOL					 stepDisplayActive;		// YES if we are only display steps 1-currentStepDisplayed
@@ -57,6 +58,7 @@
 - (NSString *)author;
 - (NSUInteger) maximumStepIndexForStepDisplay;
 - (Tuple3) rotationAngleForStepAtIndex:(NSUInteger)stepNumber;
+- (Point3) rotationCenter;
 - (BOOL) stepDisplay;
 - (NSArray *) steps;
 - (LDrawVertexes *) vertexes;
@@ -66,6 +68,7 @@
 - (void) setModelDescription:(NSString *)newDescription;
 - (void) setFileName:(NSString *)newName;
 - (void) setAuthor:(NSString *)newAuthor;
+- (void) setRotationCenter:(Point3)newPoint;
 - (void) setStepDisplay:(BOOL)flag;
 - (void) setMaximumStepIndexForStepDisplay:(NSUInteger)stepIndex;
 
