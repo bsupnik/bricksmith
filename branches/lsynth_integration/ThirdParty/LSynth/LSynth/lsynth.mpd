@@ -103,7 +103,7 @@
 0 //                 STRETCH means that the synthesized result is made up of
 0 //                 cross sections that are scaled as needed.
 0 //                 FIXED means that the synthesized result is made up of
-0 //                 fixed size elements.  This may be conbined with a number
+0 //                 fixed size elements.  This may be combined with a number
 0 //                 to specify a total count of segments to use.  eg. FIXED21
 0 //    <diameter>   this describes the diameter of the hose, and is used
 0 //                 by STRETCH type hoses.  It is used only to determine how
@@ -366,7 +366,7 @@
 0 // Plate 2 x 2 Round
 1 0 0 0 0 -1 0 0 0 1 0 0 0 -1 4032.DAT
 0 SYNTH END
-0 
+0
 0
 0 FILE ELECTRIC_NXT_CABLE.ldr
 0 ELECTRIC_NXT_CABLE SYNTHESIS DEFINITION
