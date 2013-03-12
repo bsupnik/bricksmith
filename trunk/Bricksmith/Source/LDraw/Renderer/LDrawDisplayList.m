@@ -10,8 +10,17 @@
 #import "LDrawRenderer.h"
 #import "LDrawBDPAllocator.h"
 #import "LDrawShaderRenderer.h"
+#import "MeshSmooth.h"
 #import OPEN_GL_HEADER
 #import OPEN_GL_EXT_HEADER
+
+
+// This forces quads to be subdivided into tris at creation.
+// For unindexed geometry this is a loss - we end up pushing 50% more vertices for the quad data, which hurts vertex-bound big models.
+// To revisit: once we are indexed, will quads vs tris be a wash?
+#define ONLY_USE_TRIS 1
+#define WANT_SMOOTH 1
+#define TIME_SMOOTHING 0
 
 /*
 
@@ -373,8 +382,61 @@ void LDrawDLBuilderAddQuad(struct LDrawDLBuilder * ctx, const GLfloat v[12], GLf
 		 if(c[3] == 0.0f)	ctx->flags |= dl_has_meta;
 	else if(c[3] != 1.0f)	ctx->flags |= dl_has_alpha;
 
+	#if ONLY_USE_TRIS
+
 	int i;
-	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 4);
+	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 3);
+	nl->next = NULL;
+	nl->vcount = 3;
+	for(i = 0; i < 3; ++i)
+	{
+		copy_vec3(nl->data+VERT_STRIDE*i  ,v+i*3);	// Vertex data is per vertex.
+		copy_vec3(nl->data+VERT_STRIDE*i+3,n    );	// But color and norm are for the whole tri, for now.  So we replicate it out to get
+		copy_vec4(nl->data+VERT_STRIDE*i+6,c    );	// a uniform DL.
+	}
+	
+	if(ctx->cur->tri_tail)
+	{
+		ctx->cur->tri_tail->next = nl;
+		ctx->cur->tri_tail = nl;
+	}
+	else
+	{
+		ctx->cur->tri_head = nl;
+		ctx->cur->tri_tail = nl;
+	}
+
+
+	nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 3);
+	nl->next = NULL;
+	nl->vcount = 3;
+	for(i = 0; i < 3; ++i)
+	{
+		copy_vec3(nl->data+VERT_STRIDE*i+3,n    );	// But color and norm are for the whole tri, for now.  So we replicate it out to get
+		copy_vec4(nl->data+VERT_STRIDE*i+6,c    );	// a uniform DL.
+	}
+
+	copy_vec3(nl->data+VERT_STRIDE*0  ,v  );	// Vertex data is per vertex.
+	copy_vec3(nl->data+VERT_STRIDE*1  ,v+6);	// Vertex data is per vertex.
+	copy_vec3(nl->data+VERT_STRIDE*2  ,v+9);	// Vertex data is per vertex.
+	
+	if(ctx->cur->tri_tail)
+	{
+		ctx->cur->tri_tail->next = nl;
+		ctx->cur->tri_tail = nl;
+	}
+	else
+	{
+		ctx->cur->tri_head = nl;
+		ctx->cur->tri_tail = nl;
+	}
+
+	
+	#else
+
+	int i;
+	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(
+												ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 4);
 	nl->next = NULL;
 	nl->vcount = 4;
 	for(i = 0; i < 4; ++i)
@@ -394,6 +456,7 @@ void LDrawDLBuilderAddQuad(struct LDrawDLBuilder * ctx, const GLfloat v[12], GLf
 		ctx->cur->quad_head = nl;
 		ctx->cur->quad_tail = nl;
 	}
+	#endif
 }//end LDrawDLBuilderAddQuad
 
 
@@ -446,7 +509,9 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 {
 	int total_texes = 0;
 	int total_vertices = 0;
-	
+	#if WANT_SMOOTH
+	int total_tris = 0;
+	#endif
 	struct LDrawDLBuilderVertexLink * l;
 	struct LDrawDLBuilderPerTex * s;
 	
@@ -457,7 +522,12 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		if(s->tri_head || s->line_head || s->quad_head)
 			++total_texes;
 		for(l = s->tri_head; l; l = l->next)
+		{
+			#if WANT_SMOOTH
+			total_tris += l->vcount;
+			#endif
 			total_vertices += l->vcount;
+		}
 		for(l = s->quad_head; l; l = l->next)
 			total_vertices += l->vcount;
 		for(l = s->line_head; l; l = l->next)
@@ -522,6 +592,63 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 
 		cur_tex->tri_off = cur_v;
 		cur_tex->tri_count = 0;
+		
+		#if WANT_SMOOTH
+
+		{
+			#if TIME_SMOOTHING
+			NSTimeInterval startTime = [NSDate timeIntervalSinceReferenceDate];
+			#endif
+			struct Mesh * M = create_mesh(total_tris/3);
+			int i, f;
+			
+			for(l = s->tri_head; l; l = l->next)
+			{
+				add_face(M,
+					l->data, l->data+10,l->data+20,
+					l->data+3,l->data+6);
+			}
+			
+			finish_faces_and_sort(M);
+
+			for(l = s->line_head; l; l = l->next)
+			{
+				add_crease(M,l->data,l->data+10);
+			}
+			finish_creases_and_join(M);
+
+			smooth_vertices(M);
+
+			merge_vertices(M);
+			
+			for(f = 0; f < M->face_count; ++f)
+			for(i = 0; i < 3; ++i)
+			{
+				struct Vertex * v = M->faces[f].vertex[i];
+				
+//				printf("%f %f %f\t\t%f %f %f\n",
+//					v->location[0],
+//					v->location[1],
+//					v->location[2],
+//					v->normal[0],
+//					v->normal[1],
+//					v->normal[2]);
+				memcpy(buf_ptr,v,VERT_STRIDE * sizeof(GLfloat));
+				buf_ptr += VERT_STRIDE;
+			}
+			cur_tex->tri_count += M->vertex_count;
+			cur_v += M->vertex_count;
+
+			#if TIME_SMOOTHING
+			NSTimeInterval endTime = [NSDate timeIntervalSinceReferenceDate];			
+			printf("Optimize took %f seconds for %d tris.\n",  endTime - startTime, M->face_count);
+			#endif
+			destroy_mesh(M);
+			
+			
+		}
+
+		#else
 
 		for(l = s->tri_head; l; l = l->next)
 		{
@@ -530,6 +657,8 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			cur_v += l->vcount;
 			buf_ptr += (VERT_STRIDE * l->vcount);
 		}
+		
+		#endif
 
 		cur_tex->quad_off = cur_v;
 		cur_tex->quad_count = 0;
