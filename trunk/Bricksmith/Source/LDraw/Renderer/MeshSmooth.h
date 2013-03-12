@@ -13,10 +13,25 @@
 struct	Tri;
 struct	Vertex;
 
+//       2
+//      / \			Edge and vertex numbering scheme: 
+//     e2  e1		Vertices are numbered in counter-clockwise order.
+//    /     \		Edges are numbered by their source vertex - that is,
+//   /       \		the directed edge from 1 to 2 has index 1.
+//	0---e0----1
+
+//      2/2--------1
+//      / \	  B	  /		Adjacent triangles A and B.  A's neighbor 1 is B.
+//     / e1\e2   /		B's neigbhor 2 is A.
+//    /     \	/		The index of A's neighbor 1 is 2, and the index of
+//   /   A   \ /		B's neighbor 2 is 1.  Thus A can recover e2's position
+//	0--------1/0		in B without having to test 2/2 and 1/0 for equality.
+
 
 struct Face {
 	struct Vertex *		vertex  [3];		// Vertices - 0,1,2 is CCW traversal
-	struct Face *		neighbor[3];		// Neighbors - numbered _opposite_ vertices!
+	struct Face *		neighbor[3];		// Neighbors - numbered by SOURCE vertex
+	int					index	[3];		// Index of our neighbor edge's source in neighbor.
 
 	float				normal[3];			// Whole-face properties
 	float				color[4];

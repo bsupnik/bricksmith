@@ -17,7 +17,6 @@
 
 /*
 todo
-	- convert to "after vertex CCW" adjacency model, retest
 	- add quads to mesh model
 	- index faces and measure perf
 	- index lines too if faces are a win
@@ -199,19 +198,12 @@ static void range_for_point(struct Vertex * base, int count, struct Vertex ** be
 				len = half;
 			}
 		}
+
+		*begin = first;
 		
-		if(compare_points(first->location,p) != 0)
-		{
-			*begin = *end = base + count;
-		}
-		else
-		{		
-			*begin = first;
-			
-			while(first < stop && compare_points(first->location,p) == 0)
-				++first;
-			*end = first;
-		}
+		while(first < stop && compare_points(first->location,p) == 0)
+			++first;
+		*end = first;
 	}
 	
 //	assert(*begin == test_begin);
@@ -250,6 +242,7 @@ int is_crease(const float n1[3], const float n2[3])
 	return (dot < 0.5);
 }
 
+#if DEBUG
 // Given a point on a tri, return its index.  This routine works by a spatial comparison and thus
 // does not need a Vertex* struct (which is SPECIFIC to a given tri anyway.)
 int index_of(struct Face * f, const float p[3])
@@ -261,56 +254,43 @@ int index_of(struct Face * f, const float p[3])
 	assert(!"Vertex not found.");
 	return -1;
 }
+#endif
 
-int mirror(struct Face * f, int n)
-{
-	//	i------CW		Given edge "n", defined as the "ith" edge of triangle 1,
-	//   \     / \		how do we know the index in tri 2 ("M")?  The vertices are NOT shared
-	//    \ 1 N   \		So we recover the index of "CCW" relative to 2 and 
-	//	   \ /  2  \	go CCW again.
-	//	   CCW------M
-	
-	assert(f->neighbor[n]);
-	
-	struct Vertex * ccw_1 = f->vertex[CCW(n)];
-	int ccw_2 = index_of(f->neighbor[n],ccw_1->location);
-	return CCW(ccw_2);	
-}
+#define mirror(f,n) ((f)->index[(n)])
 
 struct Vertex *		circulate_ccw(struct Vertex * v)
 {
-	//	ccw-----V		ccw is the ccw vertex of V in tri 1, and defines the neighbor-edge that gets us to 2.
-	//   \     / \		buuuut once we get to 2, we need to recover that edge.  "M" defines that edge, and V
-	//    \ 1 /   \		(in tri 2) is the CCW of M.
-	//	   \ /  2  \	So....the total formula is ccw(mirror(ccw(v)))
-	//	    .-------M
-	
-	struct Face * face_1 = v->face;
-	int ccw = CCW(v->index);
-	struct Face * face_2 = face_1->neighbor[ccw];
-	assert(face_2 != UNKNOWN_FACE);
-	if(face_2 == NULL)					// Bail out - we are NOT guaranteed complete connectivity; if we _have_ no neighbor
-		return NULL;					// around V, bail out before we blow up.
-	int M = mirror(v->face, ccw);
-	return face_2->vertex[CCW(M)];	
-}
-
-struct Vertex *		circulate_cw(struct Vertex * v)
-{
-	//	 M------V		cw is the cw vertex of V in tri 1, and defines the neighbor-edge that gets us to 2.
-	//   \     / \		buuuut once we get to 2, we need to recover that edge.  "M" defines that edge, and V
-	//    \ 2 /   \		(in tri 2) is the CW of M.
-	//	   \ /  1  \	So....the total formula is cw(mirror(cw(v)))
-	//	    .------CW
+	//	.------V,M		We use "leading neighbor" syntax, so (2) is the cw(v) neighbor of 1.
+	//   \     / \		Conveniently, "M" is the defining vertex for edge X as defined by 2.
+	//    \ 1 x   \		So 1->neigbhor(cw(v)) is M's index.
+	//	   \ /  2  \	...
+	//	   cw-------.	
 	
 	struct Face * face_1 = v->face;
 	int cw = CW(v->index);
 	struct Face * face_2 = face_1->neighbor[cw];
 	assert(face_2 != UNKNOWN_FACE);
-	if(face_2 == NULL)					// Bail out - we are NOT guaranteed complete connectivity; if we _have_ no neighbor
-		return NULL;					// around V, bail out before we blow up.
+	if(face_2 == NULL)					
+		return NULL;					
 	int M = mirror(v->face, cw);
-	return face_2->vertex[CW(M)];	
+	return face_2->vertex[M];	
+}
+
+struct Vertex *		circulate_cw(struct Vertex * v)
+{
+	//	.-------V		V itself defines the edge we want to traverse, but M is out of position - to 
+	//   \     / \		recover V we want CCW(M).
+	//    \ 2 x   \		...
+	//	   \ /  1  \	...
+	//	    M-------.
+	
+	struct Face * face_1 = v->face;
+	struct Face * face_2 = face_1->neighbor[v->index];
+	assert(face_2 != UNKNOWN_FACE);
+	if(face_2 == NULL)					
+		return NULL;					
+	int M = mirror(v->face, v->index);
+	return face_2->vertex[CCW(M)];	
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -362,14 +342,17 @@ void validate_neighbors(struct Mesh * mesh)
 		if(face->neighbor[i] && face->neighbor[i] != UNKNOWN_FACE)
 		{
 			struct Face * n = face->neighbor[i];
-			struct Vertex * p1 = face->vertex[CCW(i)];
-			struct Vertex * p2 = face->vertex[ CW(i)];
+			int ni = face->index[i];
+			assert(n->neighbor[ni] == face);
 			
-			int n1 = index_of(n,p1->location);
-			int n2 = index_of(n,p2->location);
+			struct Vertex * p1 = face->vertex[    i ];
+			struct Vertex * p2 = face->vertex[CCW(i)];
+
+			struct Vertex * n1 = n->vertex[    ni ];
+			struct Vertex * n2 = n->vertex[CCW(ni)];
+			assert(compare_points(n1->location,p2->location) == 0);
+			assert(compare_points(n2->location,p1->location) == 0);
 			
-			assert(n2==CW(n1));
-			assert(n->neighbor[CCW(n1)] == face);
 		}
 	}
 }
@@ -408,6 +391,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	else {
 		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = UNKNOWN_FACE;		
 	}
+	f->index[0] = f->index[1] = f->index[2] = -1;
 
 	for(i = 0; i < 4; ++i)
 	{
@@ -486,8 +470,8 @@ void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 	{
 		struct Face * f = v->face;
 		
-		//       CCW		The index of neighbor "A" is cw; the index of neighbor c is CCW.
-		//      /   \		Neighbor B _cannot_ be p1/p2 because p1 is index.
+		//       CCW		The index of neighbor "A" is index; the index of neighbor b is CCW.
+		//      /   \		The index of neighbor C is CW.
 		//     b     a		So...if CW=p2 we found c; 
 		//	  /       \		if CCW=p2 we found a.
 		//	CW---c---INDEX
@@ -499,12 +483,16 @@ void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 		
 		if(compare_points(f->vertex[cw]->location,pp2)==0)
 		{
-			f->neighbor[ccw] = NULL;
+			// We found "C" - nuke at 'cw'
+			f->neighbor[cw] = NULL;
+			f->index[cw] = -1;
 		}
 
 		if(compare_points(f->vertex[ccw]->location,pp2)==0)
 		{
-			f->neighbor[cw] = NULL;
+			// We fond "A" - nuke at 'index'
+			f->neighbor[v->index] = NULL;
+			f->index[v->index] = -1;
 		}
 	}
 
@@ -522,23 +510,29 @@ void				finish_creases_and_join(struct Mesh * mesh)
 		{
 			if(f->neighbor[i] == UNKNOWN_FACE)
 			{
-				//       P2
-				//      /   \		The directed edge we want goes FROM ccw TO cw.
-				//     i     \		So p2 = ccw, p1 = cw, that is, we want our OTHER
+				//     CCW(i)/P2
+				//      /   \		The directed edge we want goes FROM i TO ccw.
+				//     /     i		So p2 = ccw, p1 = i, that is, we want our OTHER
 				//	  /       \		neighbor to go FROM cw TO CCW
-				//	P1---------i
+				//	 .---------i/P1
+
+				//       i/P2
+				//      /   \		The directed edge we want goes FROM i TO ccw.
+				//     i     0		So p1 = ccw, p2 = i, that is, we want our OTHER
+				//	  /       \		neighbor to go FROM ccw TO i
+				//	CCW/P1-----.
 				
-				struct Vertex * p1 = f->vertex[CW (i)];
-				struct Vertex * p2 = f->vertex[CCW(i)];
+				struct Vertex * p1 = f->vertex[CCW(i)];
+				struct Vertex * p2 = f->vertex[    i ];
 				struct Vertex * begin, * end, * v;
 				range_for_point(mesh->vertices,mesh->vertex_count,&begin,&end,p1->location);
 				for(v = begin; v != end; ++v)
 				{
-					//       dst
+					//    CCW(V)/P2
 					//      /   \		Here is our neighbor - P2 must be CCW from P1,
-					//     /     x		and the edge X that connects us is CW of P1.
+					//     /     v		and the edge X that connects us is named by P1.
 					//	  /       \		One search and we know exactly who we are.
-					//	CW---------v
+					//	CW-------V/P1
 					
 					assert(compare_points(p1->location,v->location)==0);
 					
@@ -546,7 +540,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 					struct Vertex * dst = n->vertex[CCW(v->index)];
 					if(compare_points(dst->location,p2->location)==0)
 					{
-						int ni = CW(v->index);
+						int ni = v->index;
 						assert(f->neighbor[i] == UNKNOWN_FACE);
 						if(n->neighbor[ni] == UNKNOWN_FACE)
 						{		
@@ -554,7 +548,9 @@ void				finish_creases_and_join(struct Mesh * mesh)
 							if(is_crease(f->normal,n->normal))
 							{
 								f->neighbor[i] = NULL;
-								n->neighbor[CW(v->index)] = NULL;
+								n->neighbor[ni] = NULL;
+								f->index[i] = -1;
+								n->index[ni] = -1;
 								//printf("WARNING: crease angle?!?\n");
 							}
 							else
@@ -564,6 +560,8 @@ void				finish_creases_and_join(struct Mesh * mesh)
 								// Store both - avoid half the work when we get to our neighbor.
 								f->neighbor[i] = n;
 								n->neighbor[ni] = f;
+								f->index[i] = ni;
+								n->index[ni] = i;
 							}
 							
 							// Bail out, avoid needless searching of incident vertices...
@@ -575,6 +573,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 			if(f->neighbor[i] == UNKNOWN_FACE)
 			{
 				f->neighbor[i] = NULL;
+				f->index[i] = -1;
 			}
 		}
 	}
