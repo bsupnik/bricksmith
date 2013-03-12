@@ -29,9 +29,10 @@ struct	Vertex;
 
 
 struct Face {
-	struct Vertex *		vertex  [3];		// Vertices - 0,1,2 is CCW traversal
-	struct Face *		neighbor[3];		// Neighbors - numbered by SOURCE vertex
-	int					index	[3];		// Index of our neighbor edge's source in neighbor.
+	int					degree	   ;
+	struct Vertex *		vertex  [4];		// Vertices - 0,1,2 is CCW traversal
+	struct Face *		neighbor[4];		// Neighbors - numbered by SOURCE vertex
+	int					index	[4];		// Index of our neighbor edge's source in neighbor.
 
 	float				normal[3];			// Whole-face properties
 	float				color[4];
@@ -56,9 +57,9 @@ struct Mesh {
 };
 
 
-struct Mesh *		create_mesh(int face_count);
+struct Mesh *		create_mesh(int tri_count, int quad_count);
 
-void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float normal[3], const float color[4]);
+void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float normal[3], const float color[4]);
 void				finish_faces_and_sort(struct Mesh * mesh);
 
 void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3]);

@@ -233,8 +233,23 @@ void normalize_normal(float N[3])
 	}
 }
 
-int CCW(int i) { return (i+1)%3; }
-int CW (int i) { return (i+2)%3; }
+inline void vec3f_copy(float * __restrict d, const float * __restrict s)
+{
+	d[0] = s[0];
+	d[1] = s[1];
+	d[2] = s[2];
+}
+
+inline void vec4f_copy(float * __restrict d, const float * __restrict s)
+{
+	d[0] = s[0];
+	d[1] = s[1];
+	d[2] = s[2];
+	d[3] = s[3];
+}
+
+int CCW(const struct Face * f, int i) { assert(i >= 0 && i < f->degree); return (i          +1)%f->degree; }
+int CW (const struct Face * f, int i) { assert(i >= 0 && i < f->degree); return (i+f->degree-1)%f->degree; }
 
 int is_crease(const float n1[3], const float n2[3])
 {
@@ -248,7 +263,7 @@ int is_crease(const float n1[3], const float n2[3])
 int index_of(struct Face * f, const float p[3])
 {
 	int r;
-	for(r = 0; r < 3; ++r)
+	for(r = 0; r < f->degree; ++r)
 	if(compare_points(f->vertex[r]->location,p) == 0)
 		return r;
 	assert(!"Vertex not found.");
@@ -267,7 +282,7 @@ struct Vertex *		circulate_ccw(struct Vertex * v)
 	//	   cw-------.	
 	
 	struct Face * face_1 = v->face;
-	int cw = CW(v->index);
+	int cw = CW(face_1,v->index);
 	struct Face * face_2 = face_1->neighbor[cw];
 	assert(face_2 != UNKNOWN_FACE);
 	if(face_2 == NULL)					
@@ -290,7 +305,7 @@ struct Vertex *		circulate_cw(struct Vertex * v)
 	if(face_2 == NULL)					
 		return NULL;					
 	int M = mirror(v->face, v->index);
-	return face_2->vertex[CCW(M)];	
+	return face_2->vertex[CCW(face_2,M)];	
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -326,7 +341,7 @@ void validate_vertex_links(struct Mesh * mesh)
 		assert(mesh->vertices[i].face->vertex[mesh->vertices[i].index] == mesh->vertices+i);
 	}
 	for(i = 0; i < mesh->face_count; ++i)
-	for(j = 0; j < 3; ++j)
+	for(j = 0; j < mesh->faces[i].degree; ++j)
 	{
 		assert(mesh->faces[i].vertex[j]->face == mesh->faces+i);
 	}	
@@ -336,7 +351,7 @@ void validate_neighbors(struct Mesh * mesh)
 {
 	int f,i;
 	for(f = 0; f < mesh->face_count; ++f)
-	for(i = 0; i < 3; ++i)
+	for(i = 0; i < mesh->faces[f].degree; ++i)
 	{
 		struct Face * face = mesh->faces+f;
 		if(face->neighbor[i] && face->neighbor[i] != UNKNOWN_FACE)
@@ -345,11 +360,11 @@ void validate_neighbors(struct Mesh * mesh)
 			int ni = face->index[i];
 			assert(n->neighbor[ni] == face);
 			
-			struct Vertex * p1 = face->vertex[    i ];
-			struct Vertex * p2 = face->vertex[CCW(i)];
+			struct Vertex * p1 = face->vertex[         i ];
+			struct Vertex * p2 = face->vertex[CCW(face,i)];
 
-			struct Vertex * n1 = n->vertex[    ni ];
-			struct Vertex * n2 = n->vertex[CCW(ni)];
+			struct Vertex * n1 = n->vertex[      ni ];
+			struct Vertex * n2 = n->vertex[CCW(n,ni)];
 			assert(compare_points(n1->location,p2->location) == 0);
 			assert(compare_points(n2->location,p1->location) == 0);
 			
@@ -360,77 +375,96 @@ void validate_neighbors(struct Mesh * mesh)
 
 // ------------------------------------------------------------------------------------------------------------
 
-struct Mesh *		create_mesh(int face_count)
+struct Mesh *		create_mesh(int tri_count, int quad_count)
 {
 	struct Mesh * ret = (struct Mesh *) malloc(sizeof(struct Mesh));
 	ret->vertex_count = 0;
-	ret->vertex_capacity = face_count*3;
+	ret->vertex_capacity = tri_count*3+quad_count*4;
 	ret->vertices = (struct Vertex *) malloc(sizeof(struct Vertex) * ret->vertex_capacity);
 	
 	ret->face_count = 0;
-	ret->face_capacity = face_count;
+	ret->face_capacity = tri_count+quad_count;
 	ret->faces = (struct Face *) malloc(sizeof(struct Face) * ret->face_capacity);
 	return ret;
 }
 
-void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float normal[3], const float color[4])
+void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float normal[3], const float color[4])
 {
 	int i;
 	// grab a new face, grab verts for it
 	struct Face * f = mesh->faces + mesh->face_count++;
+	f->degree = p4 ? 4 : 3;
+	
 	f->vertex[0] = mesh->vertices + mesh->vertex_count++;
 	f->vertex[1] = mesh->vertices + mesh->vertex_count++;
 	f->vertex[2]  = mesh->vertices + mesh->vertex_count++;
+	f->vertex[3] = p4 ? (mesh->vertices + mesh->vertex_count++) : NULL;
 
 	if (compare_points(p1,p2)==0 ||
 		compare_points(p2,p3)==0 ||
 		compare_points(p1,p3)==0)
 	{
-		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = NULL;		
+		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
 	}
 	else {
-		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = UNKNOWN_FACE;		
+		if(p4)
+		{
+			if(
+				compare_points(p3,p4)==0 ||
+				compare_points(p2,p4)==0 ||
+				compare_points(p1,p4)==0)
+			{
+				f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
+			}
+			else
+			{
+				f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
+			}
+		}
+		else
+		{
+			f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
+		}
 	}
-	f->index[0] = f->index[1] = f->index[2] = -1;
 
-	for(i = 0; i < 4; ++i)
-	{
-		f->vertex[0]->color[i] = 
-		f->vertex[1]->color[i] = 
-		f->vertex[2]->color[i] = 
-		f->color[i] =
-		color[i];
-	}
-	
-	for(i = 0; i < 3; ++i)
-		f->normal[i] = normal[i];
+	f->index[0] = f->index[1] = f->index[2] = f->index[3] = -1;
+
+	vec3f_copy(f->normal, normal);
+	vec4f_copy(f->color, color);
+
 	normalize_normal(f->normal);
 
-	for(i = 0; i < 3; ++i)
+	for(i = 0; i < f->degree; ++i)
 	{
-		f->vertex[0]->normal[i] = 
-		f->vertex[1]->normal[i] = 
-		f->vertex[2]->normal[i] = 
-		f->normal[i];
-		
-		f->vertex[0]->location[i] = p1[i];
-		f->vertex[1]->location[i] = p2[i];
-		f->vertex[2]->location[i] = p3[i];
-	}
-	
+		vec3f_copy(f->vertex[i]->normal,f->normal);
+		vec4f_copy(f->vertex[i]->color,color);
+	}	
+
+	vec3f_copy(f->vertex[0]->location,p1);
+	vec3f_copy(f->vertex[1]->location,p2);
+	vec3f_copy(f->vertex[2]->location,p3);
+	if(p4)
+	vec3f_copy(f->vertex[3]->location,p4);
+
 	#if WANT_SNAP
 	snap_position(f->vertex[0]->location);
 	snap_position(f->vertex[1]->location);
 	snap_position(f->vertex[2]->location);
+	if(f->vertex[3])
+	snap_position(f->vertex[3]->location);
 	#endif
 
 	f->vertex[0]->index = 0;
 	f->vertex[1]->index = 1;
 	f->vertex[2]->index = 2;
+	if(f->vertex[3])
+	f->vertex[3]->index = 3;
 
 	f->vertex[0]->face = 
 	f->vertex[1]->face = 
 	f->vertex[2]->face = f;
+	if(f->vertex[3])
+	f->vertex[3]->face = f;
 }
 
 
@@ -478,8 +512,8 @@ void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 		//
 		//
 		// 		// 		// 		
-		int ccw = CCW(v->index);
-		int cw = CW(v->index);
+		int ccw = CCW(f,v->index);
+		int cw  = CW (f,v->index);
 		
 		if(compare_points(f->vertex[cw]->location,pp2)==0)
 		{
@@ -506,7 +540,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 	for(fi = 0; fi < mesh->face_count; ++fi)
 	{
 		f = mesh->faces+fi;
-		for(i = 0; i < 3; ++i)
+		for(i = 0; i < f->degree; ++i)
 		{
 			if(f->neighbor[i] == UNKNOWN_FACE)
 			{
@@ -522,8 +556,8 @@ void				finish_creases_and_join(struct Mesh * mesh)
 				//	  /       \		neighbor to go FROM ccw TO i
 				//	CCW/P1-----.
 				
-				struct Vertex * p1 = f->vertex[CCW(i)];
-				struct Vertex * p2 = f->vertex[    i ];
+				struct Vertex * p1 = f->vertex[CCW(f,i)];
+				struct Vertex * p2 = f->vertex[      i ];
 				struct Vertex * begin, * end, * v;
 				range_for_point(mesh->vertices,mesh->vertex_count,&begin,&end,p1->location);
 				for(v = begin; v != end; ++v)
@@ -537,7 +571,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 					assert(compare_points(p1->location,v->location)==0);
 					
 					struct Face * n = v->face;
-					struct Vertex * dst = n->vertex[CCW(v->index)];
+					struct Vertex * dst = n->vertex[CCW(n,v->index)];
 					if(compare_points(dst->location,p2->location)==0)
 					{
 						int ni = v->index;
@@ -588,7 +622,7 @@ void				smooth_vertices(struct Mesh * mesh)
 	int f;
 	int i;
 	for(f = 0; f < mesh->face_count; ++f)
-	for(i = 0; i < 3; ++i)
+	for(i = 0; i < mesh->faces[f].degree; ++i)
 	{
 		// For each vertex, we are going to circulate around attached faces, averaging up our normals.
 	
@@ -660,6 +694,7 @@ void				merge_vertices(struct Mesh * mesh)
 	
 	int v;
 
+	int unique = 0;
 	struct Vertex * first_of_equals = mesh->vertices;
 
 	// Resort according ot our xyz + normal + color
@@ -669,13 +704,17 @@ void				merge_vertices(struct Mesh * mesh)
 	for(v = 0; v < mesh->vertex_count; ++v)
 	{
 		if(compare_vertices(first_of_equals, mesh->vertices+v) != 0)
+		{
 			first_of_equals = mesh->vertices+v;
+			++unique;
+		}
 		mesh->vertices[v].face->vertex[mesh->vertices[v].index] = first_of_equals;
 	}
 
 	#if DEBUG
 	validate_vertex_sort_10(mesh);
 	#endif
+	//printf("Before: %d vertices, after: %d\n", mesh->vertex_count, unique);
 }
 
 void				destroy_mesh(struct Mesh * mesh)

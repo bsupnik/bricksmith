@@ -18,7 +18,7 @@
 // This forces quads to be subdivided into tris at creation.
 // For unindexed geometry this is a loss - we end up pushing 50% more vertices for the quad data, which hurts vertex-bound big models.
 // To revisit: once we are indexed, will quads vs tris be a wash?
-#define ONLY_USE_TRIS 1
+#define ONLY_USE_TRIS 0
 #define WANT_SMOOTH 1
 #define TIME_SMOOTHING 0
 
@@ -511,6 +511,7 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	int total_vertices = 0;
 	#if WANT_SMOOTH
 	int total_tris = 0;
+	int total_quads = 0;
 	#endif
 	struct LDrawDLBuilderVertexLink * l;
 	struct LDrawDLBuilderPerTex * s;
@@ -529,7 +530,12 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			total_vertices += l->vcount;
 		}
 		for(l = s->quad_head; l; l = l->next)
+		{
+			#if WANT_SMOOTH
+			total_quads += l->vcount;
+			#endif		
 			total_vertices += l->vcount;
+		}
 		for(l = s->line_head; l; l = l->next)
 			total_vertices += l->vcount;
 	}
@@ -596,16 +602,25 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		#if WANT_SMOOTH
 
 		{
+			total_tris /= 3;
+			total_quads /= 4;
 			#if TIME_SMOOTHING
 			NSTimeInterval startTime = [NSDate timeIntervalSinceReferenceDate];
 			#endif
-			struct Mesh * M = create_mesh(total_tris/3);
-			int i, f;
+			struct Mesh * M = create_mesh(total_tris,total_quads);
+			int i, f, idx;
 			
 			for(l = s->tri_head; l; l = l->next)
 			{
 				add_face(M,
-					l->data, l->data+10,l->data+20,
+					l->data, l->data+10,l->data+20,NULL,
+					l->data+3,l->data+6);
+			}
+
+			for(l = s->quad_head; l; l = l->next)
+			{
+				add_face(M,
+					l->data, l->data+10,l->data+20,l->data+30,
 					l->data+3,l->data+6);
 			}
 			
@@ -621,27 +636,39 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 
 			merge_vertices(M);
 			
-			for(f = 0; f < M->face_count; ++f)
+			idx = 0;
+			for(f = 0; f < total_tris; ++f, ++idx)
 			for(i = 0; i < 3; ++i)
 			{
-				struct Vertex * v = M->faces[f].vertex[i];
-				
-//				printf("%f %f %f\t\t%f %f %f\n",
-//					v->location[0],
-//					v->location[1],
-//					v->location[2],
-//					v->normal[0],
-//					v->normal[1],
-//					v->normal[2]);
+				assert(M->faces[idx].degree == 3);
+				struct Vertex * v = M->faces[idx].vertex[i];				
 				memcpy(buf_ptr,v,VERT_STRIDE * sizeof(GLfloat));
 				buf_ptr += VERT_STRIDE;
 			}
-			cur_tex->tri_count += M->vertex_count;
-			cur_v += M->vertex_count;
+			cur_tex->tri_count += (total_tris*3);
+			cur_v += (total_tris*3);
+
+			cur_tex->quad_off = cur_v;
+			cur_tex->quad_count = 0;
+
+			for(f = 0; f < total_quads; ++f, ++idx)
+			for(i = 0; i < 4; ++i)
+			{
+				assert(M->faces[idx].degree == 4);
+				struct Vertex * v = M->faces[idx].vertex[i];				
+				memcpy(buf_ptr,v,VERT_STRIDE * sizeof(GLfloat));
+				buf_ptr += VERT_STRIDE;
+			}
+			cur_tex->quad_count += (total_quads*4);
+			cur_v += (total_quads*4);
+
+			assert(idx == M->face_count);
+			
+
 
 			#if TIME_SMOOTHING
 			NSTimeInterval endTime = [NSDate timeIntervalSinceReferenceDate];			
-			printf("Optimize took %f seconds for %d tris.\n",  endTime - startTime, M->face_count);
+			printf("Optimize took %f seconds for %d faces, %d vertices.\n",  endTime - startTime, M->face_count, M->vertex_count);
 			#endif
 			destroy_mesh(M);
 			
@@ -658,8 +685,6 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			buf_ptr += (VERT_STRIDE * l->vcount);
 		}
 		
-		#endif
-
 		cur_tex->quad_off = cur_v;
 		cur_tex->quad_count = 0;
 
@@ -670,6 +695,8 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			cur_v += l->vcount;
 			buf_ptr += (VERT_STRIDE * l->vcount);
 		}
+
+		#endif
 
 		++cur_tex;
 	}
