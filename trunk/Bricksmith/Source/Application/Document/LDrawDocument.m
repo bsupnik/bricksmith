@@ -2430,7 +2430,7 @@
 //========== insertSynthesizableDirective: =====================================
 //
 // Purpose:		Insert a synthesizable directive into the model.  This is a
-//              hose or band.
+//              hose, band or part.
 //
 // Parameters:	sender: an NSMenuItem representing the model to make active.
 //
@@ -2445,13 +2445,28 @@
     // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
     //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
     // Allow for no color selected
-    LDrawColor          *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
-    
+    LDrawColor *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+    NSString *type = [[sender representedObject] objectForKey:@"LSYNTH_TYPE"];
+
     //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
     [synthesizedObject setLDrawColor:selectedColor];
-    [synthesizedObject setLsynthType:[[sender representedObject] objectForKey:@"LSYNTH_TYPE"]];
-    [synthesizedObject setLsynthClass:[[sender representedObject] integerForKey:@"LSYNTH_CLASS"]]; // band or hose
-    
+    [synthesizedObject setLsynthType:type];
+
+    // The represented object passed in from the menu click indicates whether it's a band or a hose.
+    // All well and good, and useful when e.g. deciding how and whether to display constraints.
+    // However we also have to consider Parts, which can be either Band Parts or Hose Parts, and
+    // need to retain their Part-ness.  To this end we must do a manual lookup of the actual class.
+    // TODO: another place that config should provide a convenience method for this
+    if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
+        [synthesizedObject setLsynthClass:LSYNTH_HOSE];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_BAND];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_PART];
+    }
+
     // Check we're being called sensibly (i.e. from a menu)
     if (sender != nil && [sender representedObject] != nil) {
 
