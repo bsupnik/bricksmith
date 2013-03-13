@@ -109,6 +109,7 @@ static LSynthConfiguration* instance = nil;
 
         quickRefBands           = [[NSMutableArray alloc] init];
         quickRefHoses           = [[NSMutableArray alloc] init];
+        quickRefParts           = [[NSMutableArray alloc] init];
         quickRefBandConstraints = [[NSMutableArray alloc] init];
         quickRefHoseConstraints = [[NSMutableArray alloc] init];
     }
@@ -140,7 +141,7 @@ static LSynthConfiguration* instance = nil;
     
     // LSynth sscanf()-specific line scanning variables
     char        product[126],
-                nickname[128],
+                title[128],
                 method[128],
                 type[128],
                 stretch[128],
@@ -150,35 +151,18 @@ static LSynthConfiguration* instance = nil;
     float       t,             // twist
                 scale,
                 thresh;
-    
+    NSMutableArray *tmp_parts = [[NSMutableArray alloc] init];
+
     while(lineIndex < NSMaxRange(range)) {
         currentLine = [lines objectAtIndex:lineIndex];
         if([currentLine length] > 0) {
             
-            // SYNTH PART lines, e.g.
-            //
-            // 0 SYNTH PART 4297187.dat PLI_ELECTRIC_NXT_CABLE_20CM   ELECTRIC_NXT_CABLE
-            
-            if (sscanf([currentLine UTF8String],"0 SYNTH PART %s %s %s\n", product, nickname, method) == 3) {
-                NSDictionary *part = [NSDictionary
-                    dictionaryWithObjects:[NSArray arrayWithObjects:[NSString stringWithCString:product encoding:NSUTF8StringEncoding],
-                                                                    [[[NSString stringWithCString:nickname encoding:NSUTF8StringEncoding]
-                                                                        stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString],
-                                                                    [NSString stringWithCString:method encoding:NSUTF8StringEncoding],
-                                                                    nil]
-                                  forKeys:[NSArray arrayWithObjects:@"product", @"nickname", @"method", nil]];
-
-                
-                [parts addObject:part];
-            } // END PART
-            
-
             // HOSE CONSTRAINTS, e.g.
             //
             // 0 // LSynth Constraint Part - Type 1 - "Hose"
             // 1 0 0 0 0 1 0 0 0 1 0 0 0 1 LS01.dat
             
-            else if ([[lines objectAtIndex:lineIndex] isEqualToString:@"0 SYNTH BEGIN DEFINE HOSE CONSTRAINTS"]) {
+            if ([[lines objectAtIndex:lineIndex] isEqualToString:@"0 SYNTH BEGIN DEFINE HOSE CONSTRAINTS"]) {
                 lineIndex++;
                 
                 // Local block line-parsing variables.  TODO: move to top 
@@ -348,7 +332,28 @@ static LSynthConfiguration* instance = nil;
                 }
             } // END BAND CONSTRAINTS
 
-            
+            // SYNTH PART lines, e.g.
+            //
+            // 0 SYNTH PART 4297187.dat PLI_ELECTRIC_NXT_CABLE_20CM   ELECTRIC_NXT_CABLE
+
+            else if (sscanf([currentLine UTF8String],"0 SYNTH PART %s %s %s\n", product, title, type) == 3) {
+                NSMutableDictionary *part = [NSMutableDictionary
+                        dictionaryWithObjects:[NSArray arrayWithObjects:[NSString stringWithCString:product encoding:NSUTF8StringEncoding],
+                                        [[[NSString stringWithCString:title encoding:NSUTF8StringEncoding]
+                                                stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString],
+                                                                        [NSString stringWithCString:type encoding:NSUTF8StringEncoding],
+                                                                        [NSString stringWithCString:title encoding:NSUTF8StringEncoding],
+                                                                        @"",
+                                                                        nil]
+                                      forKeys:[NSArray arrayWithObjects:@"product", @"title", @"method", @"LSYNTH_TYPE", @"LSYNTH_CLASS", nil]];
+
+
+                [tmp_parts addObject:part];
+                // This (& the two below) feel a little hacky.  Better to have them as class methods on the config.
+                [quickRefParts addObject:[NSString stringWithCString:title encoding:NSUTF8StringEncoding]];
+
+            } // END PART
+
             // HOSE DEFINITIONS, e.g.
             //
             // 0 SYNTH BEGIN DEFINE BRICK_ARC HOSE FIXED 1 100 0
@@ -366,8 +371,6 @@ static LSynthConfiguration* instance = nil;
                     forKeys:[NSArray arrayWithObjects:@"title", @"LSYNTH_TYPE", @"LSYNTH_CLASS", nil]];
 
                 [hose_types addObject:hose_def];
-
-                // This (& the one below) feel a little hacky.  Better to have them as class emthods on the config.
                 [quickRefHoses addObject:[NSString stringWithCString:type encoding:NSUTF8StringEncoding]];
             }
             
@@ -394,7 +397,18 @@ static LSynthConfiguration* instance = nil;
         lineIndex++;
     }
 
-    //[previousLine release];
+    // Now we've read in all the config we can go back over our SYNTH PARTs and apply the correct class to them,
+    // based on a matching band or hose type.  Not performant, but run only once at startup.
+
+    for (NSMutableDictionary *part in tmp_parts) {
+        if ([[self getQuickRefBands] containsObject:[part objectForKey:@"method"]]) {
+            [part setValue:[NSNumber numberWithInt:LSYNTH_BAND] forKey:@"LSYNTH_CLASS"];
+        }
+        else if ([[self getQuickRefHoses] containsObject:[part objectForKey:@"method"]]) {
+            [part setValue:[NSNumber numberWithInt:LSYNTH_HOSE] forKey:@"LSYNTH_CLASS"];
+        }
+        [parts addObject:part];
+    }
 }
 
 //========== isLSynthConstraint: ===============================================
@@ -454,6 +468,10 @@ static LSynthConfiguration* instance = nil;
     return self->quickRefHoses;
 }
 
+- (NSMutableArray *)getQuickRefParts
+{
+    return self->quickRefParts;
+}
 - (NSMutableArray *)getQuickRefBandContstraints
 {
     return self->quickRefBandConstraints;

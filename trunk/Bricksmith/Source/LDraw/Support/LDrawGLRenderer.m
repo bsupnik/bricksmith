@@ -217,7 +217,7 @@
 - (void) draw
 {
 	NSDate			*startTime			= nil;
-//	NSUInteger		options 			= DRAW_NO_OPTIONS;
+	NSUInteger		options 			= DRAW_NO_OPTIONS;
 	NSTimeInterval	drawTime			= 0;
 	BOOL			considerFastDraw	= NO;
 	

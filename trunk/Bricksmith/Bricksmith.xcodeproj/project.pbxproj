@@ -668,7 +668,6 @@
 		73772E30A6856B15E73A951A /* ComputationalGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ComputationalGeometry.h; sourceTree = "<group>"; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		950703DF1678C72D0045A811 /* relink_symlinks.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = relink_symlinks.sh; sourceTree = "<group>"; };
 		957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthIcon.tiff; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
@@ -1228,7 +1227,6 @@
 				0B9FE56408AD97280046511D /* Credits.rtf */,
 				0B9FE54E08AD971E0046511D /* InfoPlist.strings */,
 				0B040CD6164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem */,
-				950703DF1678C72D0045A811 /* relink_symlinks.sh */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
