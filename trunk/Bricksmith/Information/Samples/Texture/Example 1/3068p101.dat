@@ -1,0 +1,15 @@
+0 Flat tile 2x2 with SW Rebel Mechanical Pattern
+0 Name: 3068p101.dat
+0 !LDRAW_ORG Unofficial_Part
+0 !CMDLINE c19
+
+0 BFC CERTIFY CW
+
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 s\3068bs01.dat
+
+0 !TEXMAP START PLANAR -20 0 -20  20 0 -20  -20 0 20  rebel_tile.png
+0 !: 4 16 -20 0 20  20 0 20  20 0 -20  -20 0 -20
+0 !TEXMAP FALLBACK
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 s\3068s101.dat
+0 !TEXMAP END
+0

@@ -29,6 +29,7 @@ typedef enum
 
     NSMutableArray *quickRefHoses;
     NSMutableArray *quickRefBands;
+    NSMutableArray *quickRefParts;
     NSMutableArray *quickRefHoseConstraints;
     NSMutableArray *quickRefBandConstraints;
 }
@@ -66,6 +67,7 @@ typedef enum
 -(NSMutableArray *) getBandConstraints;
 -(NSMutableArray *) getQuickRefBands;
 -(NSMutableArray *) getQuickRefHoses;
+-(NSMutableArray *) getQuickRefParts;
 -(NSMutableArray *) getQuickRefBandContstraints;
 -(NSMutableArray *) getQuickRefHoseConstraints;
 -(NSDictionary *)   constraintDefinitionForPart:(LDrawPart *)directive;

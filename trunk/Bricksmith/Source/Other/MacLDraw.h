@@ -251,6 +251,8 @@ typedef enum MenuTags
     lsynthInvertINSIDEOUTSIDETag    = 631,
     lsynthInsertINSIDETag           = 632,
     lsynthInsertOUTSIDETag          = 633,
+    lsynthInsertCROSSTag            = 634,
+
 
 	// Window Menu
 	windowMenuTag					= 7,

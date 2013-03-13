@@ -2427,24 +2427,10 @@
 
 #pragma mark Models Menu - LSynth Submenu
 
-//========== InsertLSynthPart: =================================================
-//
-// Purpose:		Insert a synthesizable part directive into the model.
-//
-// Parameters:	sender: an NSMenuItem representing the model to make active.
-//
-//==============================================================================
--(void) InsertLSynthPart:(id)sender
-{
-    NSLog(@"InsertLSynthPart: NOT IMPLEMENTED");
-    NSLog(@"Part to be inserted: %@", sender);
-    NSLog(@"object: %@", [sender representedObject]);
-}//end InsertLSynthPart:
-
 //========== insertSynthesizableDirective: =====================================
 //
 // Purpose:		Insert a synthesizable directive into the model.  This is a
-//              hose or band.
+//              hose, band or part.
 //
 // Parameters:	sender: an NSMenuItem representing the model to make active.
 //
@@ -2459,13 +2445,28 @@
     // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
     //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
     // Allow for no color selected
-    LDrawColor          *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
-    
+    LDrawColor *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+    NSString *type = [[sender representedObject] objectForKey:@"LSYNTH_TYPE"];
+
     //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
     [synthesizedObject setLDrawColor:selectedColor];
-    [synthesizedObject setLsynthType:[[sender representedObject] objectForKey:@"LSYNTH_TYPE"]];
-    [synthesizedObject setLsynthClass:[[sender representedObject] integerForKey:@"LSYNTH_CLASS"]]; // band or hose
-    
+    [synthesizedObject setLsynthType:type];
+
+    // The represented object passed in from the menu click indicates whether it's a band or a hose.
+    // All well and good, and useful when e.g. deciding how and whether to display constraints.
+    // However we also have to consider Parts, which can be either Band Parts or Hose Parts, and
+    // need to retain their Part-ness.  To this end we must do a manual lookup of the actual class.
+    // TODO: another place that config should provide a convenience method for this
+    if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
+        [synthesizedObject setLsynthClass:LSYNTH_HOSE];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_BAND];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_PART];
+    }
+
     // Check we're being called sensibly (i.e. from a menu)
     if (sender != nil && [sender representedObject] != nil) {
 
@@ -2618,6 +2619,9 @@
         }
         else if ([(NSMenuItem *)sender tag] == lsynthInsertOUTSIDETag) {
             [direction setStringValue:@"OUTSIDE"];
+        }
+        else if ([(NSMenuItem *)sender tag] == lsynthInsertCROSSTag) {
+            [direction setStringValue:@"CROSS"];
         }
         LDrawContainer *parent = nil;
         NSInteger index = NSNotFound;
@@ -5107,7 +5111,7 @@
 	[attributes setObject:obliqueness		forKey:NSObliquenessAttributeName];
 	
 	//Create the attributed string.
-    	styledString = [[NSAttributedString alloc]
+    styledString = [[NSAttributedString alloc]
 							initWithString:representation
 								attributes:attributes ];
 	
@@ -5159,8 +5163,6 @@
     NSMenu           *mainMenu       = [NSApp mainMenu];
     NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
 
-    NSLog(@"populateLSynthModelMenus");
-
     // We recreate this menu each time we're called since the
     // target potentially changes (different window/document)
     // TODO: make this once per document?
@@ -5177,9 +5179,9 @@
         // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
         NSArray *menus = [NSArray arrayWithObjects:
                           [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"nickname", @"InsertLSynthPart:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
-                                                      forKeys:
-                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
+                                  forKeys:
+                                          [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
                           [NSDictionary dictionaryWithObjects:
                            [NSArray arrayWithObjects:@"Add Hose", @"getHoseTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
                                                       forKeys:
@@ -5270,6 +5272,12 @@
         [addOutsideItem setTag:lsynthInsertOUTSIDETag];
         [insideOutsideMenu addItem:addOutsideItem];
 
+        NSMenuItem *addCrossItem = [[[NSMenuItem alloc] init] autorelease];
+        [addCrossItem setTitle:@"Insert CROSS"];
+        [addCrossItem setTarget:self];
+        [addCrossItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addCrossItem setTag:lsynthInsertCROSSTag];
+        [insideOutsideMenu addItem:addCrossItem];
 
         // Add in the main LSynth menu to the Model menu
         NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];

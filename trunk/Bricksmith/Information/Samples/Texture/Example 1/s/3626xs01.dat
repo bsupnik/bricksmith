@@ -1,0 +1,16 @@
+0 !LDRAW_ORG Unofficial_Subpart
+
+0 BFC CERTIFY CW
+
+0 // 1999-03-??  CWD      Modified
+0 // 2004-02-29  CWD      Name change
+0 // 2004-03-14  Steffen  BFCed
+0 // 2004-07-13  AJW      changed to use torus primitives
+
+0 // replacing s\3626bs00.dat
+ 1 16  0  4 0  13 0 0  0 13   0   0 0 -13  2-4cyli.dat
+ 1 16  0  4 0  8 0  0  0 -6.4 0   0 0  -8  t04o6250.dat
+ 1 16  0 17 0  0 0  8  0  6.4 0  -8 0   0  t04o6250.dat
+ 1 16 0 4 0 0 0 -8 0 -6.4 0 -8 0 0 t04o6250.dat
+ 1 16 0 17 0 -8 0 0 0 6.4 0 0 0 -8 t04o6250.dat
+0

@@ -1,0 +1,11 @@
+0 Flat tile 2x2 "no. 139"
+0 Name: 3068px01.dat
+
+0 BFC CERTIFY CW
+
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 s\3068bs01.dat
+
+0 !TEXMAP START PLANAR  -20 0 20  20 0 20  -20 0 -20  map.png
+ 4 16 -20 0 20  20 0 20  20 0 -20  -20 0 -20
+0 !TEXMAP END
+0

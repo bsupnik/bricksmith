@@ -188,6 +188,21 @@
         defaultConstraint = [LSynthConfiguration defaultHoseConstraint];
     }
 
+    // For a complete Part the constraints depend on the part class.  Handily we worked this
+    // out when we read in the LSynth config.
+    else if (classTag == LSYNTH_PART) {
+        NSArray *types = [self typesForLSynthClass:classTag];
+        LSynthClassT partClass = [[[types objectAtIndex:[typePopup indexOfSelectedItem]] valueForKey:@"LSYNTH_CLASS"] integerValue];
+        if (partClass == LSYNTH_BAND) {
+            constraints = [[LSynthConfiguration sharedInstance] getBandConstraints];
+            defaultConstraint = [LSynthConfiguration defaultBandConstraint];
+        }
+        else if (partClass == LSYNTH_HOSE) {
+            constraints = [[LSynthConfiguration sharedInstance] getHoseConstraints];
+            defaultConstraint = [LSynthConfiguration defaultHoseConstraint];
+        }
+    }
+
     [constraintDefaultPopup removeAllItems];
 
     if (constraints != nil) {
@@ -318,7 +333,7 @@
     // Parts
     if (classTag == LSYNTH_PART) {
         //types = [lsynthConfig getParts];  // TODO: enable this
-        return nil;
+        return [lsynthConfig getParts];
     }
 
     // Hoses

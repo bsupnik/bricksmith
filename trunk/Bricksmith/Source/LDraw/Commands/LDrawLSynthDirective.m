@@ -48,6 +48,9 @@
     else if ([[self stringValue] isEqualToString:@"OUTSIDE"]) {
         return @"Outside";
     }
+    else if ([[self stringValue] isEqualToString:@"CROSS"]) {
+        return @"Cross";
+    }
 
     return @"Unknown LSynth Direction";
 }//end browsingDescription

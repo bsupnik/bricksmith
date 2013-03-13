@@ -71,8 +71,6 @@
              inRange:(NSRange)range
          parentGroup:(dispatch_group_t)parentGroup
 {
-    NSLog(@"========================================================================\n");
-
     NSString          *currentLine         = nil;
     Class              CommandClass        = Nil;
     NSRange            commandRange        = range;
@@ -93,14 +91,17 @@
         [self setLsynthType:[fields objectAtIndex:3]];
         [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [[fields objectAtIndex:4] integerValue]]];
 
-        // Determine the class - hose or band
+        // Determine the class - hose, band or part
         // TODO: make lsynthconfiguration have class methods to do this
         //[self setLsynthClass:[LSynthConfiguration classForType:lsynthType]];
         if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
             [self setLsynthClass:LSYNTH_HOSE];
         }
-        else {
+        else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
             [self setLsynthClass:LSYNTH_BAND];
+        }
+        else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
+            [self setLsynthClass:LSYNTH_PART];
         }
 
         // Parse out the END command
@@ -124,17 +125,6 @@
                 NSString    *strippedLine   = nil;
                 NSString    *field          = [LDrawUtilities readNextField:currentLine remainder:&strippedLine];
 
-                //NSString *rowType = [[fields objectAtIndex:0] integerValue];
-                //NSString *synthIndicator = [fields objectAtIndex:1];
-
-//                if (rowType == LSYNTH_ROW_DIRECTIVE) {
-//                    if ([synthIndicator isEqualToString:@"SYNTH"]) {
-//                        if ([fields objectAtIndex:1]) {
-//
-//                        }
-//                    }
-//                }
-
                 if ([field isEqualToString:@"0"]) {
                     field = [LDrawUtilities readNextField:strippedLine remainder:&strippedLine];
                     if ([field isEqualToString:@"SYNTH"]) {
@@ -151,8 +141,9 @@
                                 parserState = -1;
                             }
                         }
-                        else if ([field isEqualToString:@"INSIDE"] ||
-                                [field isEqualToString:@"OUTSIDE"]) {
+                        else if ([field isEqualToString:@"INSIDE"]  ||
+                                 [field isEqualToString:@"OUTSIDE"] ||
+                                 [field isEqualToString:@"CROSS"]) {
                             LDrawLSynthDirective *directive = [[LDrawLSynthDirective alloc] init];
                             [directive setStringValue:field];
                             [[self subdirectives] addObject:directive];
@@ -290,8 +281,6 @@
                                      inLines:(NSArray *)lines
                                     maxIndex:(NSUInteger)maxIndex
 {
-    NSLog(@"rangeOfDirectiveBeginningAtIndex");
-
     NSString	*currentLine	= nil;
     NSUInteger	counter 		= 0;
     NSRange 	testRange		= NSMakeRange(index, maxIndex - index + 1);
@@ -352,7 +341,9 @@
         // Draw each constraint, if:
         if ([self isSelected] == YES ||               // We're selected
                 self->subdirectiveSelected != NO ||   // A subdirective (constraint) is selected
-                self->lsynthClass == LSYNTH_BAND      // We're a Band, so show constraints regardless
+                self->lsynthClass == LSYNTH_BAND ||   // We're a Band, so show constraints regardless
+                (self->lsynthClass == LSYNTH_PART &&  // We're a Band PART
+                 [self partClass] == LSYNTH_BAND)
                 ) {
             for(currentDirective in constraints)
             {
@@ -364,7 +355,7 @@
         // This is the only place we invoke synthesis.  While it may incur a small delay in drawing
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
-            NSLog(@"invalid container");
+            NSLog(@"invalidated lsynth container");
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
         }
@@ -1144,6 +1135,16 @@
         return @"LSynthBandConstraint";
     }
 
+    // Part
+    else if (self->lsynthClass == LSYNTH_PART) {
+        if ([self partClass] == LSYNTH_HOSE) {
+            return @"LSynthHoseConstraint";
+        }
+        else if ([self partClass] == LSYNTH_BAND) {
+            return @"LSynthBandConstraint";
+        }
+    }
+
     // Other?
     return @"Brick";
 }//end determineIconName:
@@ -1286,7 +1287,7 @@
     return isEnd;
 } //end lineIsLSynthTerminator:
 
-//========== synthesizedPartsCount ==========================================
+//========== synthesizedPartsCount =============================================
 //
 // Purpose:		Returns the number of parts synthesized to create the shape.
 //
@@ -1294,6 +1295,34 @@
 -(int)synthesizedPartsCount
 {
     return [synthesizedParts count];
+}
+
+//========== partClass =========================================================
+//
+// Purpose:		Returns the class of a part
+//              TODO: Optimise part class determination into a config dict and
+//              remove the loops.
+//
+//==============================================================================
+-(LSynthClassT)partClass
+{
+    if (self->lsynthClass == LSYNTH_PART) {
+        NSArray *partTypes = [[LSynthConfiguration sharedInstance] getParts];
+
+        // Loop over the parts from config, and when we find one matching ourselves
+        // use that part's class.
+        for (NSDictionary *part in partTypes) {
+            if ([[self lsynthType] isEqualToString:[part valueForKey:@"LSYNTH_TYPE"]]) {
+                return [[part valueForKey:@"LSYNTH_CLASS"] integerValue];
+            }
+        }
+    }
+
+    // For some reason we've been called when we're not a Part so trust that
+    // we have the correct class.
+    else {
+        return self->lsynthClass;
+    }
 }
 
 
