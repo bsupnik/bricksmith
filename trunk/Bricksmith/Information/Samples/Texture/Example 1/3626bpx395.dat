@@ -1,0 +1,18 @@
+0 Mini head no. 516 "Indy"
+0 Name: 3626bpx1.dat
+0 Author: Joshua Delahunty [texture work]
+0 !LDRAW_ORG Unofficial_Part
+0 !CMDLINE c78
+
+0 BFC CERTIFY CW
+
+ 1 16 0 0 0 1 0 0 0 1 0 0 0 1 s/3626bs02.dat
+ 
+0 !TEXMAP START  PLANAR  -12 1 0  12 1 0  -12 19 0  indy_face.png
+0 !: 1 16 0 0 0 1 0 0 0 1 0 0 0 1 s/3626xs01.dat
+0 !TEXMAP FALLBACK
+1 4  0 0 0  1 0 0  0 1 0  0 0 1  s/3626xs01.dat
+0 !TEXMAP END
+
+ 1 16 0 0 0 -1 0 0 0 1 0 0 0 -1 s/3626xs01.dat
+0
