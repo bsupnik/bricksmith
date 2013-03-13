@@ -13,7 +13,17 @@
 
 #define WANT_SNAP 0
 #define SNAP_PRECISION 64.0
+
 #define WANT_CREASE 1
+
+// This causes us to smooth normals against BFC-flipped tris.
+// An app like BrickSmith that ignores BFC and just draws two-sided
+// pretty much has to 
+#define WANT_INVERTS 1
+
+// This puts the normals into the color of each part - useful for
+// visualizing normal bugs.
+#define DEBUG_SHOW_NORMALS_AS_COLOR 0
 
 /*
 todo
@@ -248,13 +258,31 @@ inline void vec4f_copy(float * __restrict d, const float * __restrict s)
 	d[3] = s[3];
 }
 
+inline float vec3f_dot(const float * __restrict v1, const float * __restrict v2)
+{
+	return v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
+}
+
+inline void vec3_cross(float * __restrict dst, const float * __restrict v1, const float * __restrict v2)
+{
+	dst[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
+	dst[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
+	dst[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);	
+}
+
+
 int CCW(const struct Face * f, int i) { assert(i >= 0 && i < f->degree); return (i          +1)%f->degree; }
 int CW (const struct Face * f, int i) { assert(i >= 0 && i < f->degree); return (i+f->degree-1)%f->degree; }
 
-int is_crease(const float n1[3], const float n2[3])
+int is_crease(const float n1[3], const float n2[3], int flip)
 {
-	float dot = n1[0]*n2[0]+n1[1]*n2[1]+n1[2]*n2[2];
-	return (dot < 0.5);
+	float dot = vec3f_dot(n1,n2);
+	if(flip)
+	{
+		return (dot > -0.5);
+	}
+	else	
+		return (dot < 0.5);
 }
 
 #if DEBUG
@@ -273,12 +301,12 @@ int index_of(struct Face * f, const float p[3])
 
 #define mirror(f,n) ((f)->index[(n)])
 
-struct Vertex *		circulate_ccw(struct Vertex * v)
+static struct Vertex *		circulate_ccw(struct Vertex * v, int * did_reverse)
 {
 	//	.------V,M		We use "leading neighbor" syntax, so (2) is the cw(v) neighbor of 1.
 	//   \     / \		Conveniently, "M" is the defining vertex for edge X as defined by 2.
 	//    \ 1 x   \		So 1->neigbhor(cw(v)) is M's index.
-	//	   \ /  2  \	...
+	//	   \ /  2  \	One special case: if we are flipped, we need to go CCW from 'M'.
 	//	   cw-------.	
 	
 	struct Face * face_1 = v->face;
@@ -288,24 +316,48 @@ struct Vertex *		circulate_ccw(struct Vertex * v)
 	if(face_2 == NULL)					
 		return NULL;					
 	int M = mirror(v->face, cw);
-	return face_2->vertex[M];	
+	
+	*did_reverse = face_1->flip[cw];
+	struct Vertex * ret = (face_1->flip[cw]) ? face_2->vertex[CCW(face_2,M)] : face_2->vertex[M];	
+	assert(compare_points(v->location,ret->location)==0);
+	assert(ret != v);
+	return ret;
 }
 
-struct Vertex *		circulate_cw(struct Vertex * v)
+static struct Vertex *		circulate_cw(struct Vertex * v, int * did_reverse)
 {
 	//	.-------V		V itself defines the edge we want to traverse, but M is out of position - to 
-	//   \     / \		recover V we want CCW(M).
+	//   \     / \		recover V we want CCW(M).  But if we are flipped, we just need M itself.
 	//    \ 2 x   \		...
 	//	   \ /  1  \	...
 	//	    M-------.
 	
 	struct Face * face_1 = v->face;
 	struct Face * face_2 = face_1->neighbor[v->index];
-	assert(face_2 != UNKNOWN_FACE);
+	assert(face_2 != UNKNOWN_FACE);	
 	if(face_2 == NULL)					
 		return NULL;					
 	int M = mirror(v->face, v->index);
-	return face_2->vertex[CCW(face_2,M)];	
+	*did_reverse = face_1->flip[v->index];
+	struct Vertex * ret = (face_1->flip[v->index]) ? face_2->vertex[M] : face_2->vertex[CCW(face_2,M)];	
+	assert(compare_points(v->location,ret->location)==0);
+	assert(ret != v);
+	return ret;
+}
+
+static struct Vertex * circulate_any(struct Vertex * v, int * dir)
+{
+	int did_reverse = 0;
+	struct Vertex * ret;
+
+	assert(*dir == -1 || *dir == 1);
+	if(*dir > 0)
+		ret = circulate_ccw(v,&did_reverse);
+	else
+		ret = circulate_cw(v,&did_reverse);
+	if(did_reverse)
+		*dir *= -1;
+	return ret;		
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -355,19 +407,35 @@ void validate_neighbors(struct Mesh * mesh)
 	{
 		struct Face * face = mesh->faces+f;
 		if(face->neighbor[i] && face->neighbor[i] != UNKNOWN_FACE)
-		{
+		{			
 			struct Face * n = face->neighbor[i];
-			int ni = face->index[i];
+			int ni = face->index[i];			
 			assert(n->neighbor[ni] == face);
-			
+		
+			assert(face->flip[i] == n->flip[ni]);
+					
 			struct Vertex * p1 = face->vertex[         i ];
 			struct Vertex * p2 = face->vertex[CCW(face,i)];
 
 			struct Vertex * n1 = n->vertex[      ni ];
 			struct Vertex * n2 = n->vertex[CCW(n,ni)];
-			assert(compare_points(n1->location,p2->location) == 0);
-			assert(compare_points(n2->location,p1->location) == 0);
 			
+			int okay_fwd = 			
+				(compare_points(n1->location,p2->location) == 0) &&
+				(compare_points(n2->location,p1->location) == 0);
+
+			int okay_rev = 			
+				(compare_points(n1->location,p1->location) == 0) &&
+				(compare_points(n2->location,p2->location) == 0);
+			
+			assert(!okay_fwd || face->flip[i] == 0);
+			assert(!okay_rev || face->flip[i] == 1);
+			
+			assert(okay_fwd != okay_rev);
+			#if WANT_CREASE
+			assert(!okay_fwd || vec3f_dot(face->normal,n->normal) > 0.0);
+			assert(!okay_rev || vec3f_dot(face->normal,n->normal) < 0.0);
+			#endif
 		}
 	}
 }
@@ -388,11 +456,19 @@ struct Mesh *		create_mesh(int tri_count, int quad_count)
 	return ret;
 }
 
-void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float normal[3], const float color[4])
+void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4])
 {
 	int i;
+	
+	float	v1[3] = { p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]};
+	float	v2[3] = { p3[0]-p1[0],p3[1]-p1[1],p3[2]-p1[2]};
+	
 	// grab a new face, grab verts for it
 	struct Face * f = mesh->faces + mesh->face_count++;
+
+	vec3_cross(f->normal,v1,v2);
+	normalize_normal(f->normal);
+	
 	f->degree = p4 ? 4 : 3;
 	
 	f->vertex[0] = mesh->vertices + mesh->vertex_count++;
@@ -428,11 +504,10 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	}
 
 	f->index[0] = f->index[1] = f->index[2] = f->index[3] = -1;
+	f->flip[0] = f->flip[1] = f->flip[2] = f->flip[3] = -1;
 
-	vec3f_copy(f->normal, normal);
 	vec4f_copy(f->color, color);
 
-	normalize_normal(f->normal);
 
 	for(i = 0; i < f->degree; ++i)
 	{
@@ -493,7 +568,7 @@ void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 	
 	float pp1[3] = { p1[0], p1[1],p1[2] };
 	float pp2[3] = { p2[0], p2[1],p2[2] };
-	
+
 	#if WANT_SNAP
 	snap_position(pp1);
 	snap_position(pp2);
@@ -544,48 +619,55 @@ void				finish_creases_and_join(struct Mesh * mesh)
 		{
 			if(f->neighbor[i] == UNKNOWN_FACE)
 			{
-				//     CCW(i)/P2
+				//     CCW(i)/P1
 				//      /   \		The directed edge we want goes FROM i TO ccw.
 				//     /     i		So p2 = ccw, p1 = i, that is, we want our OTHER
 				//	  /       \		neighbor to go FROM cw TO CCW
-				//	 .---------i/P1
+				//	 .---------i/P2
 
-				//       i/P2
-				//      /   \		The directed edge we want goes FROM i TO ccw.
-				//     i     0		So p1 = ccw, p2 = i, that is, we want our OTHER
-				//	  /       \		neighbor to go FROM ccw TO i
-				//	CCW/P1-----.
-				
 				struct Vertex * p1 = f->vertex[CCW(f,i)];
 				struct Vertex * p2 = f->vertex[      i ];
 				struct Vertex * begin, * end, * v;
 				range_for_point(mesh->vertices,mesh->vertex_count,&begin,&end,p1->location);
 				for(v = begin; v != end; ++v)
 				{
-					//    CCW(V)/P2
-					//      /   \		Here is our neighbor - P2 must be CCW from P1,
-					//     /     v		and the edge X that connects us is named by P1.
-					//	  /       \		One search and we know exactly who we are.
-					//	CW-------V/P1
+					if(v->face == f)
+						continue;
+						
+					//	P1/v-----x		Normal case - Since p1->p2 is the ideal direction of our
+					//    \     /		neighbor, p2 = ccw(v).  Thus p1(v) names our edge.
+					//     v   /		
+					//      \ /
+					//     P2/CCW(V)
+					
+					//	P1/v-----x		Backward winding case - thus p2 is CW from P1,
+					//    \     /		and P2 (cw(v) names our edge.
+					//   cw(v) /		
+					//      \ /
+					//     P2/CW(V)
+
 					
 					assert(compare_points(p1->location,v->location)==0);
 					
 					struct Face * n = v->face;
 					struct Vertex * dst = n->vertex[CCW(n,v->index)];
+					#if WANT_INVERTS
+					struct Vertex * inv = n->vertex[ CW(n,v->index)];
+					#endif
 					if(compare_points(dst->location,p2->location)==0)
 					{
 						int ni = v->index;
 						assert(f->neighbor[i] == UNKNOWN_FACE);
 						if(n->neighbor[ni] == UNKNOWN_FACE)
-						{		
+						{	
 							#if WANT_CREASE
-							if(is_crease(f->normal,n->normal))
+							if(is_crease(f->normal,n->normal,false))
 							{
 								f->neighbor[i] = NULL;
 								n->neighbor[ni] = NULL;
 								f->index[i] = -1;
 								n->index[ni] = -1;
-								//printf("WARNING: crease angle?!?\n");
+								break;
 							}
 							else
 							#endif
@@ -596,12 +678,45 @@ void				finish_creases_and_join(struct Mesh * mesh)
 								n->neighbor[ni] = f;
 								f->index[i] = ni;
 								n->index[ni] = i;
-							}
-							
-							// Bail out, avoid needless searching of incident vertices...
-							break;
+								f->flip[i] = 0;
+								n->flip[ni] = 0;
+								break;
+							}							
 						}
 					}				
+					#if WANT_INVERTS
+					if(compare_points(inv->location,p2->location)==0)
+					{
+						int ni = CW(v->face,v->index);
+						assert(f->neighbor[i] == UNKNOWN_FACE);
+						if(n->neighbor[ni] == UNKNOWN_FACE)
+						{	
+							#if WANT_CREASE
+							if(is_crease(f->normal,n->normal,true))
+							{
+								f->neighbor[i] = NULL;
+								n->neighbor[ni] = NULL;
+								f->index[i] = -1;
+								n->index[ni] = -1;
+								break;
+							}
+							else
+							#endif
+							{
+								// v->dst matches p1->p2.  We have neighbors.
+								// Store both - avoid half the work when we get to our neighbor.
+								f->neighbor[i] = n;
+								n->neighbor[ni] = f;
+								f->index[i] = ni;
+								n->index[ni] = i;
+								f->flip[i] = 1;
+								n->flip[ni] = 1;
+								break;
+							}							
+						} 
+					}				
+					#endif
+
 				}			
 			}
 			if(f->neighbor[i] == UNKNOWN_FACE)
@@ -634,14 +749,25 @@ void				smooth_vertices(struct Mesh * mesh)
 		struct Vertex * c = v;
 		float N[3] = { 0 };
 		int ctr = 0;
+		int circ_dir = -1;
 		do {
 			++ctr;
 			//printf("\tAdd: %f,%f,%f\n",c->normal[0],c->normal[1],c->normal[2]);
-			N[0] += c->face->normal[0];
-			N[1] += c->face->normal[1];
-			N[2] += c->face->normal[2];
+			
+			if(vec3f_dot(v->face->normal,c->face->normal) > 0.0)
+			{
+				N[0] += c->face->normal[0];
+				N[1] += c->face->normal[1];
+				N[2] += c->face->normal[2];
+			}
+			else
+			{
+				N[0] -= c->face->normal[0];
+				N[1] -= c->face->normal[1];
+				N[2] -= c->face->normal[2];
+			}
 		
-			c = circulate_cw(c);
+			c = circulate_any(c,&circ_dir);
 
 		} while(c != NULL && c != v);
 		
@@ -651,16 +777,26 @@ void				smooth_vertices(struct Mesh * mesh)
 		
 		if(c != v)
 		{
-			c = circulate_ccw(v);
+			circ_dir = 1;
+			c = circulate_any(v,&circ_dir);
 			while(c)
 			{
 				++ctr;
 				//printf("\tAdd: %f,%f,%f\n",c->normal[0],c->normal[1],c->normal[2]);
-				N[0] += c->face->normal[0];
-				N[1] += c->face->normal[1];
-				N[2] += c->face->normal[2];
+				if(vec3f_dot(v->face->normal,c->face->normal) > 0.0)
+				{
+					N[0] += c->face->normal[0];
+					N[1] += c->face->normal[1];
+					N[2] += c->face->normal[2];
+				}
+				else
+				{
+					N[0] -= c->face->normal[0];
+					N[1] -= c->face->normal[1];
+					N[2] -= c->face->normal[2];
+				}
 		
-				c = circulate_ccw(c);		
+				c = circulate_any(c,&circ_dir);		
 				
 				// Invariant: if we did NOT close-loop up top, we should NOT close-loop down here - that would imply
 				// a triangulation where our neighbor info was assymetric, which would be "bad".
@@ -673,6 +809,12 @@ void				smooth_vertices(struct Mesh * mesh)
 		v->normal[0] = N[0];
 		v->normal[1] = N[1];
 		v->normal[2] = N[2];
+		#if DEBUG_SHOW_NORMALS_AS_COLOR
+		v->color[0] = N[0] * 0.5 + 0.5;
+		v->color[1] = N[1] * 0.5 + 0.5;
+		v->color[2] = N[2] * 0.5 + 0.5;
+		v->color[3] = 1.0f;
+		#endif
 		
 	}
 }

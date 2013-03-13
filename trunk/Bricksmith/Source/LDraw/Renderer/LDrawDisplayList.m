@@ -19,8 +19,16 @@
 // For unindexed geometry this is a loss - we end up pushing 50% more vertices for the quad data, which hurts vertex-bound big models.
 // To revisit: once we are indexed, will quads vs tris be a wash?
 #define ONLY_USE_TRIS 0
+
+// This turns on normal smoothing.
 #define WANT_SMOOTH 1
+
+// This times smoothing of parts.
 #define TIME_SMOOTHING 0
+
+// This causes each tri to be encoded twice with opposite winding - which lets us run with BFC on.  Why you'd want to do this is beyond me;
+// it's only in here for testing.
+#define DOUBLE_SIDED_GEO 0
 
 /*
 
@@ -526,6 +534,9 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		{
 			#if WANT_SMOOTH
 			total_tris += l->vcount;
+			#if DOUBLE_SIDED_GEO
+			total_vertices += l->vcount;
+			#endif
 			#endif
 			total_vertices += l->vcount;
 		}
@@ -533,7 +544,10 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		{
 			#if WANT_SMOOTH
 			total_quads += l->vcount;
+			#if DOUBLE_SIDED_GEO
+			total_vertices += l->vcount;
 			#endif		
+			#endif
 			total_vertices += l->vcount;
 		}
 		for(l = s->line_head; l; l = l->next)
@@ -604,6 +618,12 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		{
 			total_tris /= 3;
 			total_quads /= 4;
+			
+			#if DOUBLE_SIDED_GEO
+			total_tris *= 2;
+			total_quads *= 2;
+			
+			#endif
 			#if TIME_SMOOTHING
 			NSTimeInterval startTime = [NSDate timeIntervalSinceReferenceDate];
 			#endif
@@ -614,14 +634,24 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			{
 				add_face(M,
 					l->data, l->data+10,l->data+20,NULL,
-					l->data+3,l->data+6);
+					l->data+6);
+				#if DOUBLE_SIDED_GEO
+				add_face(M,
+					l->data+20, l->data+10,l->data,NULL,
+					l->data+6);
+				#endif
 			}
 
 			for(l = s->quad_head; l; l = l->next)
 			{
 				add_face(M,
 					l->data, l->data+10,l->data+20,l->data+30,
-					l->data+3,l->data+6);
+					l->data+6);
+				#if DOUBLE_SIDED_GEO
+				add_face(M,
+					l->data+30, l->data+20,l->data+10,l->data,
+					l->data+6);
+				#endif
 			}
 			
 			finish_faces_and_sort(M);
