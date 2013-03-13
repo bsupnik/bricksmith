@@ -27,17 +27,15 @@
 
 /*
 todo
-	- add quads to mesh model
 	- index faces and measure perf
 	- index lines too if faces are a win
 */
 
 
-int compare_points(const float * __restrict p1, const float * __restrict p2)
+static int compare_points(const float * __restrict p1, const float * __restrict p2)
 {
 	// The std c lib rule is that we are fundamentally returning p1-p2.
 	// So when p1 < p2, we return a negative number, etc.
-//	return memcmp(p1,p2,3*sizeof(float));
 	if(p1[0] < p2[0])	return -1;
 	if(p1[0] > p2[0])	return  1;
 
@@ -50,10 +48,8 @@ int compare_points(const float * __restrict p1, const float * __restrict p2)
 	return 0;
 }
 
-int compare_vertices(const struct Vertex * __restrict v1, const struct Vertex * __restrict v2)
+static int compare_vertices(const struct Vertex * __restrict v1, const struct Vertex * __restrict v2)
 {
-//	return memcmp(v1,v1,sizeof(struct Vertex));
-
 	if(v1->location[0] < v2->location[0])	return -1;
 	if(v1->location[0] > v2->location[0])	return  1;
 	if(v1->location[1] < v2->location[1])	return -1;
@@ -81,7 +77,7 @@ int compare_vertices(const struct Vertex * __restrict v1, const struct Vertex * 
 	
 }
 
-void swap_blocks(void * __restrict a, void * __restrict b, int num_words)
+static void swap_blocks(void * __restrict a, void * __restrict b, int num_words)
 {
 	assert(a != b);
 	int * __restrict aa = (int *) a;
@@ -115,11 +111,10 @@ static void bubble_sort_10(struct Vertex * items, int count)
 
 static void sort_vertices_10(struct Vertex * base, int count)
 {
-//	qsort(base,count,sizeof(struct Vertex),compare_vertices);
 	bubble_sort_10(base,count);
 }
 
-void quickSort_3(struct Vertex * arr, int left, int right) 
+static void quickSort_3(struct Vertex * arr, int left, int right) 
 {
 	int i = left, j = right;
 
@@ -157,81 +152,47 @@ void quickSort_3(struct Vertex * arr, int left, int right)
 static void sort_vertices_3(struct Vertex * base, int count)
 {
 	quickSort_3(base,0,count-1);
-//	qsort(base,count,sizeof(struct Vertex),compare_points);
 }
-
-
 
 static void range_for_point(struct Vertex * base, int count, struct Vertex ** begin, struct Vertex ** end, const float p[3])
 {
-#if 0
-	struct Vertex * test_begin, * test_end;
+	int len = count;
+	struct Vertex * first = base;
+	struct Vertex * stop = base + count;
+	while(len > 0)
 	{
-	// Stupid linear-time search for testing.	
-		int v;
-		for(v = 0; v < count; ++v)
-		{
-			if(compare_points(p,base+v)==0)
-				break;
-		}
-		test_begin = base+v;
-
-		while(v < count && compare_points(p,base+v) == 0)
-			++v;
-		test_end = base+v;
-	}
-#endif
-
-//	*begin = test_begin;
-//	*end= test_end;
-//	return;
-//
-#if 1
-
-	{
-		int len = count;
-		struct Vertex * first = base;
-		struct Vertex * stop = base + count;
-		while(len > 0)
-		{
-			int half = len >> 1;
-			struct Vertex * middle = first + half;
-			
-			int res = compare_points(middle->location,p);
-
-			if(res < 0)
-			{
-				first = middle + 1;
-				len = len - half - 1;
-			}
-			else {
-				len = half;
-			}
-		}
-
-		*begin = first;
+		int half = len >> 1;
+		struct Vertex * middle = first + half;
 		
-		while(first < stop && compare_points(first->location,p) == 0)
-			++first;
-		*end = first;
-	}
-	
-//	assert(*begin == test_begin);
-//	assert(*end == test_end);
-#endif	
+		int res = compare_points(middle->location,p);
 
+		if(res < 0)
+		{
+			first = middle + 1;
+			len = len - half - 1;
+		}
+		else {
+			len = half;
+		}
+	}
+
+	*begin = first;
+	
+	while(first < stop && compare_points(first->location,p) == 0)
+		++first;
+	*end = first;
 }
 
 // ------------------------------------------------------------------------------------------------------------
 
-void snap_position(float p[3])
+inline void snap_position(float p[3])
 {
 	p[0] = round(p[0] * SNAP_PRECISION) / SNAP_PRECISION;
 	p[1] = round(p[1] * SNAP_PRECISION) / SNAP_PRECISION;
 	p[2] = round(p[2] * SNAP_PRECISION) / SNAP_PRECISION;
 }
 
-void normalize_normal(float N[3])
+inline void vec3f_normalize(float N[3])
 {
 	float len = sqrt(N[0]*N[0]+N[1]*N[1]+N[2]*N[2]);
 	if(len)
@@ -467,7 +428,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	struct Face * f = mesh->faces + mesh->face_count++;
 
 	vec3_cross(f->normal,v1,v2);
-	normalize_normal(f->normal);
+	vec3f_normalize(f->normal);
 	
 	f->degree = p4 ? 4 : 3;
 	
@@ -804,7 +765,7 @@ void				smooth_vertices(struct Mesh * mesh)
 			}
 		}
 		
-		normalize_normal(N);
+		vec3f_normalize(N);
 		//printf("Final: %f %f %f\t%f %f %f (%d)\n",v->location[0],v->location[1], v->location[2], N[0],N[1],N[2], ctr);
 		v->normal[0] = N[0];
 		v->normal[1] = N[1];
