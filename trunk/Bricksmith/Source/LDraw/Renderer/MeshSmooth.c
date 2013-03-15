@@ -27,6 +27,9 @@
 
 /*
 todo
+	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
+	- try indexing lines and see if it improves line-find time.
+
 	- index faces and measure perf
 	- index lines too if faces are a win
 */
@@ -181,6 +184,23 @@ static void range_for_point(struct Vertex * base, int count, struct Vertex ** be
 	while(first < stop && compare_points(first->location,p) == 0)
 		++first;
 	*end = first;
+}
+
+
+static void range_for_vertex(struct Vertex * base, struct Vertex * stop, struct Vertex ** begin, struct Vertex ** end, struct Vertex * q)
+{
+	struct Vertex *b = q, *e = q;
+	while(b >= base && compare_points(b->location,q->location) == 0)
+		--b;
+	++b;
+	while(e < stop && compare_points(e->location,q->location) == 0)
+		++e;
+	assert(b < e);
+	assert(b <= q);
+	assert(e > q);
+	*begin = b;
+	*end = e;	
+
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -589,7 +609,8 @@ void				finish_creases_and_join(struct Mesh * mesh)
 				struct Vertex * p1 = f->vertex[CCW(f,i)];
 				struct Vertex * p2 = f->vertex[      i ];
 				struct Vertex * begin, * end, * v;
-				range_for_point(mesh->vertices,mesh->vertex_count,&begin,&end,p1->location);
+//				range_for_point(mesh->vertices,mesh->vertex_count,&begin,&end,p1->location);
+				range_for_vertex(mesh->vertices,mesh->vertices + mesh->vertex_count,&begin,&end,p1);
 				for(v = begin; v != end; ++v)
 				{
 					if(v->face == f)
