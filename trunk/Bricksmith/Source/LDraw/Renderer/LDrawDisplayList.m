@@ -21,7 +21,7 @@
 #define ONLY_USE_TRIS 0
 
 // This turns on normal smoothing.
-#define WANT_SMOOTH 0
+#define WANT_SMOOTH 1
 
 // This times smoothing of parts.
 #define TIME_SMOOTHING 1
@@ -667,13 +667,16 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 			prim_starts,
 			prim_counts);
 		
+		vertex_ptr += (VERT_STRIDE * M[ti]->unique_vertex_count);
+		index_ptr += M[ti]->vertex_count;
+		
 		vert_base += M[ti]->unique_vertex_count;
 		
 		memcpy(&cur_tex->spec, &s->spec, sizeof(struct LDrawTextureSpec));
 		
-		cur_tex->quad_off = idx_base = prim_starts[4];
-		cur_tex->line_off = idx_base = prim_starts[2];
-		cur_tex->tri_off = idx_base = prim_starts[3];
+		cur_tex->quad_off = idx_base + prim_starts[4];
+		cur_tex->line_off = idx_base + prim_starts[2];
+		cur_tex->tri_off = idx_base + prim_starts[3];
 		cur_tex->quad_count = prim_counts[4];
 		cur_tex->line_count = prim_counts[2];
 		cur_tex->tri_count = prim_counts[3];
@@ -1382,7 +1385,14 @@ void LDrawDLDraw(
 				glDrawElements(GL_TRIANGLES,tptr->tri_count,GL_UNSIGNED_INT,idx_null+tptr->tri_off);
 			if(tptr->quad_count)
 				glDrawElements(GL_QUADS,tptr->quad_count,GL_UNSIGNED_INT,idx_null+tptr->quad_off);
-			#endif
+			#else
+			if(tptr->line_count)
+				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
+			if(tptr->tri_count)
+				glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
+			if(tptr->quad_count)
+				glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
+			#endif		
 		}
 
 		setup_tex_spec(spec);
