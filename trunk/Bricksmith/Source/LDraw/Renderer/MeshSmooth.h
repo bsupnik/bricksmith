@@ -50,25 +50,40 @@ struct Vertex {
 struct Mesh {
 	int					vertex_count;
 	int					vertex_capacity;
+	int					unique_vertex_count;
 	struct Vertex *		vertices;
 	
 	int					face_count;
+	int					tri_count;
+	int					quad_count;
+	int					poly_count;
+	int					line_count;
 	int					face_capacity;
 	struct Face *		faces;	
 };
 
 
-struct Mesh *		create_mesh(int tri_count, int quad_count);
+struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count);
 
 void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4]);
 void				finish_faces_and_sort(struct Mesh * mesh);
 
-void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3]);
+//void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3]);
 void				finish_creases_and_join(struct Mesh * mesh);
 
 void				smooth_vertices(struct Mesh * mesh);
 
-void				merge_vertices(struct Mesh * mesh);
+int					merge_vertices(struct Mesh * mesh);	// Returns the number of unique vertices after merging.
+
+void				write_indexed_mesh(
+							struct Mesh *			mesh,
+							int						vertex_table_size,
+							volatile float *		io_vertex_table,							
+							int						index_table_size,
+							volatile unsigned int *	io_index_table,
+							int						index_base,
+							int						out_prim_starts[5],
+							int						out_prim_counts[5]);
 
 void				destroy_mesh(struct Mesh * mesh);
 

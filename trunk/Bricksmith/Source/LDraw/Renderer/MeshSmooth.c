@@ -29,6 +29,20 @@
 todo
 	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
 	- try indexing lines and see if it improves line-find time.
+		indexing alg:
+			for each of degree 2,3,4
+				for each vertex
+					if it is the unique one
+						if this vertex has NOT been written out
+							assign an index and write it.
+					if my face matches the degree we are looking at
+						for each vertex in my face
+							if it has NOT been written out
+								assign an index and write it out
+							write out the face
+							mark face degree as 0
+					
+			
 
 	- index faces and measure perf
 	- index lines too if faces are a win
@@ -424,15 +438,20 @@ void validate_neighbors(struct Mesh * mesh)
 
 // ------------------------------------------------------------------------------------------------------------
 
-struct Mesh *		create_mesh(int tri_count, int quad_count)
+struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count)
 {
 	struct Mesh * ret = (struct Mesh *) malloc(sizeof(struct Mesh));
 	ret->vertex_count = 0;
-	ret->vertex_capacity = tri_count*3+quad_count*4;
+	ret->vertex_capacity = tri_count*3+quad_count*4+line_count*2;
 	ret->vertices = (struct Vertex *) malloc(sizeof(struct Vertex) * ret->vertex_capacity);
 	
 	ret->face_count = 0;
-	ret->face_capacity = tri_count+quad_count;
+	ret->face_capacity = tri_count+quad_count+line_count;
+	ret->poly_count = tri_count + quad_count;
+	ret->line_count = line_count;
+	ret->tri_count = tri_count;
+	ret->quad_count = quad_count;
+	
 	ret->faces = (struct Face *) malloc(sizeof(struct Face) * ret->face_capacity);
 	return ret;
 }
@@ -441,49 +460,64 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 {
 	int i;
 	
-	float	v1[3] = { p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]};
-	float	v2[3] = { p3[0]-p1[0],p3[1]-p1[1],p3[2]-p1[2]};
 	
 	// grab a new face, grab verts for it
 	struct Face * f = mesh->faces + mesh->face_count++;
 
-	vec3_cross(f->normal,v1,v2);
-	vec3f_normalize(f->normal);
+	if(p3)
+	{
+		float	v1[3] = { p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]};
+		float	v2[3] = { p3[0]-p1[0],p3[1]-p1[1],p3[2]-p1[2]};
+		vec3_cross(f->normal,v1,v2);
+		vec3f_normalize(f->normal);
+	}
+	else
+	{
+		f->normal[0] = f->normal[2] = 0.0f;
+		f->normal[1] = 1.0f;
+	}
 	
-	f->degree = p4 ? 4 : 3;
+	f->degree = p4 ? 4 : (p3 ? 3 : 2);
 	
 	f->vertex[0] = mesh->vertices + mesh->vertex_count++;
 	f->vertex[1] = mesh->vertices + mesh->vertex_count++;
-	f->vertex[2]  = mesh->vertices + mesh->vertex_count++;
+	f->vertex[2] = p3 ? mesh->vertices + mesh->vertex_count++ : NULL;
 	f->vertex[3] = p4 ? (mesh->vertices + mesh->vertex_count++) : NULL;
 
-	if (compare_points(p1,p2)==0 ||
-		compare_points(p2,p3)==0 ||
-		compare_points(p1,p3)==0)
+	if(p3)
 	{
-		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
-	}
-	else {
-		if(p4)
+		if (compare_points(p1,p2)==0 ||
+			compare_points(p2,p3)==0 ||
+			compare_points(p1,p3)==0)
 		{
-			if(
-				compare_points(p3,p4)==0 ||
-				compare_points(p2,p4)==0 ||
-				compare_points(p1,p4)==0)
+			f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
+		}
+		else {
+			if(p4)
 			{
-				f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
+				if(
+					compare_points(p3,p4)==0 ||
+					compare_points(p2,p4)==0 ||
+					compare_points(p1,p4)==0)
+				{
+					f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
+				}
+				else
+				{
+					f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
+				}
 			}
 			else
 			{
 				f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
 			}
 		}
-		else
-		{
-			f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
-		}
 	}
-
+	else
+	{
+		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;				
+	}
+	
 	f->index[0] = f->index[1] = f->index[2] = f->index[3] = -1;
 	f->flip[0] = f->flip[1] = f->flip[2] = f->flip[3] = -1;
 
@@ -498,6 +532,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 
 	vec3f_copy(f->vertex[0]->location,p1);
 	vec3f_copy(f->vertex[1]->location,p2);
+	if(p3)
 	vec3f_copy(f->vertex[2]->location,p3);
 	if(p4)
 	vec3f_copy(f->vertex[3]->location,p4);
@@ -505,6 +540,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	#if WANT_SNAP
 	snap_position(f->vertex[0]->location);
 	snap_position(f->vertex[1]->location);
+	if(f->vertex[2])
 	snap_position(f->vertex[2]->location);
 	if(f->vertex[3])
 	snap_position(f->vertex[3]->location);
@@ -512,12 +548,14 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 
 	f->vertex[0]->index = 0;
 	f->vertex[1]->index = 1;
+	if(f->vertex[2])
 	f->vertex[2]->index = 2;
 	if(f->vertex[3])
 	f->vertex[3]->index = 3;
 
 	f->vertex[0]->face = 
-	f->vertex[1]->face = 
+	f->vertex[1]->face = f;
+	if(f->vertex[2])
 	f->vertex[2]->face = f;
 	if(f->vertex[3])
 	f->vertex[3]->face = f;
@@ -543,7 +581,7 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 	#endif
 }
 
-void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
+static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 {
 	struct Vertex * begin, * end, *v;
 	
@@ -593,9 +631,18 @@ void				finish_creases_and_join(struct Mesh * mesh)
 	int fi;
 	int i;
 	struct Face * f;
-	for(fi = 0; fi < mesh->face_count; ++fi)
+	
+	for(fi = mesh->poly_count; fi < mesh->face_count; ++fi)
 	{
 		f = mesh->faces+fi;
+		assert(f->degree == 2);
+		add_crease(mesh, f->vertex[0]->location, f->vertex[1]->location);		
+	}
+	
+	for(fi = 0; fi < mesh->poly_count; ++fi)
+	{
+		f = mesh->faces+fi;
+		assert(f->degree >= 3);
 		for(i = 0; i < f->degree; ++i)
 		{
 			if(f->neighbor[i] == UNKNOWN_FACE)
@@ -636,6 +683,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 					#if WANT_INVERTS
 					struct Vertex * inv = n->vertex[ CW(n,v->index)];
 					#endif
+					if(dst->face->degree > 2)
 					if(compare_points(dst->location,p2->location)==0)
 					{
 						int ni = v->index;
@@ -667,6 +715,7 @@ void				finish_creases_and_join(struct Mesh * mesh)
 						}
 					}				
 					#if WANT_INVERTS
+					if(inv->face->degree > 2)
 					if(compare_points(inv->location,p2->location)==0)
 					{
 						int ni = CW(v->face,v->index);
@@ -718,7 +767,7 @@ void				smooth_vertices(struct Mesh * mesh)
 {
 	int f;
 	int i;
-	for(f = 0; f < mesh->face_count; ++f)
+	for(f = 0; f < mesh->poly_count; ++f)
 	for(i = 0; i < mesh->faces[f].degree; ++i)
 	{
 		// For each vertex, we are going to circulate around attached faces, averaging up our normals.
@@ -801,7 +850,7 @@ void				smooth_vertices(struct Mesh * mesh)
 	}
 }
 
-void				merge_vertices(struct Mesh * mesh)
+int				merge_vertices(struct Mesh * mesh)
 {
 	// Once smoothing is done, indexing the mesh is actually pretty easy:
 	// First, we re-sort the vertex list; now that our normals and colors
@@ -830,15 +879,23 @@ void				merge_vertices(struct Mesh * mesh)
 		if(compare_vertices(first_of_equals, mesh->vertices+v) != 0)
 		{
 			first_of_equals = mesh->vertices+v;
-			++unique;
 		}
 		mesh->vertices[v].face->vertex[mesh->vertices[v].index] = first_of_equals;
+		if(mesh->vertices+v == first_of_equals)
+		{
+			mesh->vertices[v].index = -1;
+			++unique;
+		}
+		else
+			mesh->vertices[v].index = -2;
 	}
 
 	#if DEBUG
 	validate_vertex_sort_10(mesh);
 	#endif
+	mesh->unique_vertex_count = unique;
 	//printf("Before: %d vertices, after: %d\n", mesh->vertex_count, unique);
+	return unique;
 }
 
 void				destroy_mesh(struct Mesh * mesh)
@@ -846,4 +903,90 @@ void				destroy_mesh(struct Mesh * mesh)
 	free(mesh->vertices);
 	free(mesh->faces);
 	free(mesh);
+}
+
+void				write_indexed_mesh(
+							struct Mesh *			mesh,
+							int						vertex_table_size,
+							volatile float *		io_vertex_table,							
+							int						index_table_size,
+							volatile unsigned int *	io_index_table,
+							int						index_base,
+							int						out_prim_starts[5],
+							int						out_prim_counts[5])
+{
+	volatile float * vert_ptr = io_vertex_table;
+	volatile float * vert_stop = io_vertex_table + (vertex_table_size * 10);
+	volatile unsigned int * index_ptr = io_index_table;
+	volatile unsigned int * index_stop = io_index_table + index_table_size;
+	
+	int cur_idx = index_base;
+	
+	int d, i, vi;
+	struct Vertex * v, *vv;
+	struct Face * f;
+
+	// Outer loop: we are going to make one pass over the vertex array
+	// for each depth of primitive - in other words, we are going to
+	// 'fish out' all lines first, then all tris, then all quads.
+	for(d = 2; d <= 4; ++d)
+	{
+		out_prim_starts[d] = index_ptr - io_index_table;
+		
+		for(vi = 0; vi < mesh->vertex_count; ++vi)
+		{
+			v = mesh->vertices+vi;
+			f = v->face;
+
+			// For each vertex, we look at its face if it qualifies.
+			// This way we write the faces in sorted vertex order.
+			if(f->degree == d)
+			{
+				for(i = 0; i < d; ++i)
+				{
+					vv = f->vertex[i];
+					assert(vv->index != -2);
+					// To write out our vertices, we MAY need to
+					// write out the vertex if it is first used.
+					// Thus the vertices go down in approximate usage
+					// order, which is good.
+					if(vv->index == -1)
+					{
+						vv->index = cur_idx++;
+						
+						*vert_ptr++ = vv->location[0];
+						*vert_ptr++ = vv->location[1];
+						*vert_ptr++ = vv->location[2];
+
+						*vert_ptr++ = vv->normal[0];
+						*vert_ptr++ = vv->normal[1];
+						*vert_ptr++ = vv->normal[2];
+
+						*vert_ptr++ = vv->color[0];
+						*vert_ptr++ = vv->color[1];
+						*vert_ptr++ = vv->color[2];
+						*vert_ptr++ = vv->color[3];						
+					}
+					
+					assert(vv->index >= 0);
+					
+					*index_ptr++ = vv->index;
+				}
+				
+				// when the face is done, we mark it via degree = 0 so we 
+				// don't hit it again when we hit one of its vertices due to
+				// sharing.
+				f->degree = 0;
+
+			} // end of face write-out for matched faces
+			
+		} // end of linear vertex walk
+
+		out_prim_counts[d] = (index_ptr - io_index_table) - out_prim_starts[d];
+	
+
+	} // end of primitve sort
+	
+	assert(vert_ptr == vert_stop);
+	assert(index_ptr == index_stop);
 }
