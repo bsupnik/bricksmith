@@ -24,6 +24,7 @@
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
 
+#define NO_LINES 0
 
 @implementation LDrawLine
 
@@ -236,6 +237,7 @@
 	[self revalCache:DisplayList];
 	if(self->hidden == NO)
 	{
+		#if !NO_LINES
 		GLfloat	v[6] = { 
 			vertex1.x, vertex1.y, vertex1.z,
 			vertex2.x, vertex2.y, vertex2.z };
@@ -251,6 +253,7 @@
 			[self->color getColorRGBA:rgba];
 			[renderer drawLine:v normal:n color:rgba];
 		}
+		#endif
 	}
 }//end collectSelf:
 

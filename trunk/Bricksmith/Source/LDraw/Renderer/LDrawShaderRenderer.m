@@ -294,7 +294,7 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 //			bounding cube (in MV coordinates) is now entirely out of clip bounds.
 //
 //================================================================================
-- (BOOL) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ
+- (int) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ
 {
 	int     counter     = 0;
 	GLfloat  vin[32] = {	
@@ -334,11 +334,73 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	   minb[0] > 1.0f ||
 	   minb[1] > 1.0f)
 	{
-		return FALSE;
+		return cull_skip;
 	}
 	
-	return TRUE;
+	int x_pix = (maxb[0] - minb[0]) * 512.0;
+	int y_pix = (maxb[1] - minb[1]) * 384.0;
+	int dim = MAX(x_pix,y_pix);
+	
+	if(dim < 1)
+		return cull_skip;
+	if(dim < 10)
+		return cull_box;
+	
+	return cull_draw;
 }//end pushMatrix:to:
+
+- (void) drawBoxFrom:(GLfloat *)minXyz to:(GLfloat *)maxXyz
+{
+	static struct LDrawDL * unit_cube = NULL;
+	if(!unit_cube)
+	{
+		struct LDrawDLBuilder * builder = LDrawDLBuilderCreate();
+
+		#define LBR 0,0,0
+		#define RBR 1,0,0
+		#define LTR 0,1,0
+		#define RTR 1,1,0
+		#define LBF 0,0,1
+		#define RBF 1,0,1
+		#define LTF 0,1,1
+		#define RTF 1,1,1
+
+		GLfloat top[12] = { LTF,RTF,RTR,LTR };
+		GLfloat bot[12] = { LBF,LBR,RBR,RBF };
+		GLfloat lft[12] = { LBR,LBF,LTF,LTR };
+		GLfloat rgt[12] = { RBF,RBR,RTR,RTF };
+		GLfloat frt[12] = { LBF,RBF,RTF,LTF };
+		GLfloat bak[12] = { RBR,LBR,LTR,RTR };
+		
+		GLfloat c[4] = { 0 };
+		GLfloat n[3] = { 0, 1, 0 };
+		
+		LDrawDLBuilderAddQuad(builder,top,n,c);
+		LDrawDLBuilderAddQuad(builder,bot,n,c);
+		LDrawDLBuilderAddQuad(builder,lft,n,c);
+		LDrawDLBuilderAddQuad(builder,rgt,n,c);
+		LDrawDLBuilderAddQuad(builder,frt,n,c);
+		LDrawDLBuilderAddQuad(builder,bak,n,c);
+
+		unit_cube = LDrawDLBuilderFinish(builder);
+		
+	}
+	
+	GLfloat	dim[3] = { 
+					maxXyz[0] - minXyz[0],
+					maxXyz[1] - minXyz[1],
+					maxXyz[2] - minXyz[2] };
+	
+	GLfloat rescale[16] = { dim[0], 0, 0, 0,
+							0,dim[1], 0, 0,
+							0,0,dim[2], 0,
+							minXyz[0],minXyz[1],minXyz[2],1};
+	[self pushMatrix:rescale];	
+	[self drawDL:unit_cube];
+	[self popMatrix];	
+				
+}
+
 
 
 //========== popMatrix: ==========================================================

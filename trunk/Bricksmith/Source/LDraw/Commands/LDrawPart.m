@@ -33,6 +33,9 @@
 #import "PartReport.h"
 #import "ModelManager.h"
 
+#define SHRINK_SEAMS 0
+#define SHRINK_AMOUNT 0.125
+
 @implementation LDrawPart
 
 #pragma mark -
@@ -357,11 +360,48 @@
 			if([self isSelected] == YES)
 				[renderer pushWireFrame];
 			
-			[renderer pushMatrix:glTransformation];
+			#if SHRINK_SEAMS
+			
+			Box3 bbox = [cacheModel boundingBox3];
+			int i;
+			GLfloat dim[3] = {	bbox.max.x - bbox.min.x,
+								bbox.max.y - bbox.min.y,
+								bbox.max.z - bbox.min.z };
 
+			GLfloat ctr[3] = {	(bbox.max.x + bbox.min.x) * 0.5f,
+								(bbox.max.y + bbox.min.y) * 0.5f,
+								(bbox.max.z + bbox.min.z) * 0.5f };
+
+			GLfloat	shrinkMatrix[16] = { 0 };
+			shrinkMatrix[15] = 1.0f;
+			
+			for(i = 0; i < 3; ++i)
+			{
+				if(dim[i] > SHRINK_AMOUNT)
+				{
+					shrinkMatrix[i*4+i] = 1.0f - SHRINK_AMOUNT / dim[i];
+					shrinkMatrix[12 + i] = SHRINK_AMOUNT / dim[i] * ctr[i];
+				} 
+				else
+				{
+					shrinkMatrix[i*4+i] = 1.0f;
+				}
+			}
+
+			[renderer pushMatrix:glTransformation];			
+			[renderer pushMatrix:shrinkMatrix];
+			
+			#else
+			
+			[renderer pushMatrix:glTransformation];
+			#endif
+			
 			[cacheModel drawSelf:renderer];
 
 			[renderer popMatrix];
+			#if SHRINK_SEAMS
+			[renderer popMatrix];
+			#endif
 			if([self->color colorCode] != LDrawCurrentColor)
 				[renderer popColor];
 				

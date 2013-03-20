@@ -68,7 +68,7 @@ static const GLuint * idx_null = NULL;
 
 */
 
-#define WANT_STATS 1
+#define WANT_STATS 0
 
 #define VERT_STRIDE 10								// Stride of our vertices - we always write X Y Z	NX NY NZ		R G B A
 #define INST_CUTOFF 5								// Minimum instances to use hw case, which has higher overhead to set up.  

@@ -21,6 +21,13 @@ enum {
 	tex_proj_planar = 0
 };
 
+enum {
+	cull_skip,
+	cull_box,
+	cull_draw 
+};
+
+
 struct	LDrawTextureSpec {
 	int		projection;
 	GLuint	tex_obj;
@@ -100,7 +107,8 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 
 // Returns true if the AABB between the points is on screen, false if it is entirely off-screen.
 // Useful for culling parts.
-- (BOOL) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ;
+- (int) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ;
+- (void) drawBoxFrom:(GLfloat *)minXyz to:(GLfloat *)maxXyz;
 
 // Color stack.  Pushing a color overrides the current color.  If no one ever sets the current color we get
 // that generic beige that is the RGBA of color 16.
