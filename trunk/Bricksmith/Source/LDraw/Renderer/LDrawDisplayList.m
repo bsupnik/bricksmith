@@ -705,9 +705,13 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	// Release the BDP that contains all of the build-related junk.
 	LDrawBDPDestroy(ctx->alloc);
 
-	#if TIME_SMOOTHING && WANT_STATS
+	#if TIME_SMOOTHING
 	NSTimeInterval endTime = [NSDate timeIntervalSinceReferenceDate];			
+	#if WANT_STATS
 	printf("Optimize took %f seconds for %d indices, %d vertices.\n",  endTime - startTime, dl->idx_count, dl->vrt_count);
+	#else
+	printf("Optimize took %f seconds.\n",  endTime - startTime);
+	#endif
 	#endif
 	
 	return dl;
