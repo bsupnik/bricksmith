@@ -38,7 +38,7 @@
 {
 	//Select all the objects which have been added.
 	id                  currentObject       = nil;
-	NSUInteger          indexOfObject       = 0;
+	NSInteger           indexOfObject       = 0;
 	NSMutableIndexSet   *indexesToSelect    = [NSMutableIndexSet indexSet];
 	NSInteger           counter             = 0;
 	
@@ -47,7 +47,8 @@
 	{
 		currentObject = [objects objectAtIndex:counter];
 		indexOfObject = [self rowForItem:currentObject];
-		[indexesToSelect addIndex:indexOfObject];
+		if(indexOfObject != -1)
+			[indexesToSelect addIndex:indexOfObject];
 	}
 	[self selectRowIndexes:indexesToSelect byExtendingSelection:NO];
 
