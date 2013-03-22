@@ -45,7 +45,29 @@ struct Vertex {
 	float			color[4];
 	int				index;
 	struct Face *	face;
+	struct Vertex *	next;
+	struct Vertex * prev;
 };
+
+#define LEAF_DIM 8
+
+struct RTree_node {
+	float min_bounds[3];
+	float max_bounds[3];
+	struct RTree_node *	left;
+	struct RTree_node * right;
+};
+
+struct RTree_leaf {
+	float min_bounds[3];
+	float max_bounds[3];
+	int count;
+	struct Vertex * vertices[LEAF_DIM];
+};
+
+#define IS_LEAF(n) (((intptr_t) (n) & 1) != 0)
+#define GET_LEAF(n) ((struct RTree_leaf*) (((intptr_t) (n)) & ~1))
+#define GET_CLEAN(n) ((struct RTree_node*) (((intptr_t) (n)) & ~1))
 
 struct Mesh {
 	int					vertex_count;
@@ -60,6 +82,8 @@ struct Mesh {
 	int					line_count;
 	int					face_capacity;
 	struct Face *		faces;	
+	
+	struct RTree_node *	index;
 };
 
 

@@ -9,6 +9,22 @@
 
 #include "MeshSmooth.h"
 
+// 1/100th of an LDU causes the 6x6 webbed dishes to become flat shaded around their rim at the 'joins' between the sections.
+// Since an LDU is about 0.4 mm we're talking about 1/50th of a mm.  I CAN'T SEE THAT KIND OF DETAIL!  MY EYES ARE OLD.  MY BACK
+// HURTS! WHEN I WAS A KID WE WALKED TO SCHOOL IN THE SNOW UP HILL BOTH WAYS and binary only had 0, the 1 hadn't been invented,
+// and all of our programs seg faulted...and we liked it, because it's all there was!
+#define EPSI 0.05
+#define EPSI2 (EPSI*EPSI)
+
+#if !defined(MIN)
+    #define MIN(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
+#endif
+
+#if !defined(MAX)
+    #define MAX(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
+#endif
+
+
 #define UNKNOWN_FACE ((struct Face *) -1)
 
 #define WANT_SNAP 0
@@ -27,25 +43,11 @@
 
 /*
 todo
-	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
-	- try indexing lines and see if it improves line-find time.
-		indexing alg:
-			for each of degree 2,3,4
-				for each vertex
-					if it is the unique one
-						if this vertex has NOT been written out
-							assign an index and write it.
-					if my face matches the degree we are looking at
-						for each vertex in my face
-							if it has NOT been written out
-								assign an index and write it out
-							write out the face
-							mark face degree as 0
-					
-			
 
-	- index faces and measure perf
-	- index lines too if faces are a win
+	T junctions?
+
+	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
+
 */
 
 
@@ -92,6 +94,13 @@ static int compare_vertices(const struct Vertex * __restrict v1, const struct Ve
 	
 	return 0;
 	
+}
+
+static int compare_nth(const struct Vertex * __restrict v1, const struct Vertex * __restrict v2, int n)
+{
+	if(v1->location[n] < v2->location[n]) return -1;
+	if(v1->location[n] > v2->location[n]) return  1;
+	return 0;
 }
 
 static void swap_blocks(void * __restrict a, void * __restrict b, int num_words)
@@ -166,6 +175,48 @@ static void quickSort_3(struct Vertex * arr, int left, int right)
 
 }
 
+static void quickSort_n(struct Vertex ** arr, int left, int right, int n) 
+{
+	int i = left, j = right;
+
+	struct Vertex ** pivot_ptr = arr + (left + right) / 2;
+	struct Vertex * pivot = *pivot_ptr;
+	
+	/* partition */
+
+	while (i <= j) 
+	{
+
+		while(compare_nth(arr[i],pivot,n) < 0)
+			++i;
+
+		while(compare_nth(arr[j],pivot,n) > 0)
+			--j;
+
+		if (i <= j) 
+		{
+			if(i != j)
+			{
+				struct Vertex * t = arr[i];
+				arr[i] = arr[j];
+				arr[j] = t;
+			}
+			++i;
+			--j;
+		}
+	}
+
+	if (left < j)
+		quickSort_n(arr, left, j,n);
+
+	if (i < right)
+		quickSort_n(arr, i, right,n);
+
+}
+
+
+
+
 static void sort_vertices_3(struct Vertex * base, int count)
 {
 	quickSort_3(base,0,count-1);
@@ -215,6 +266,144 @@ static void range_for_vertex(struct Vertex * base, struct Vertex * stop, struct 
 	*begin = b;
 	*end = e;	
 
+}
+
+// ------------------------------------------------------------------------------------------------------------
+
+struct RTree_node * index_vertices_recursive(struct Vertex ** begin, struct Vertex ** end, int depth)
+{
+	int i;
+	int count = end - begin;
+	if(count <= LEAF_DIM)
+	{
+		struct RTree_leaf * l = (struct RTree_leaf *) malloc(sizeof(struct RTree_leaf));
+		l->min_bounds[0] = l->max_bounds[0] = (*begin)->location[0];
+		l->min_bounds[1] = l->max_bounds[1] = (*begin)->location[1];
+		l->min_bounds[2] = l->max_bounds[2] = (*begin)->location[2];
+
+		l->count = count;
+		for(i = 0; i < count; ++i, ++begin)
+		{
+			l->min_bounds[0] = MIN(l->min_bounds[0],(*begin)->location[0]);
+			l->max_bounds[0] = MAX(l->max_bounds[0],(*begin)->location[0]);
+			l->min_bounds[1] = MIN(l->min_bounds[1],(*begin)->location[1]);
+			l->max_bounds[1] = MAX(l->max_bounds[1],(*begin)->location[1]);
+			l->min_bounds[2] = MIN(l->min_bounds[2],(*begin)->location[2]);
+			l->max_bounds[2] = MAX(l->max_bounds[2],(*begin)->location[2]);
+		
+			l->vertices[i] = *begin;
+		}
+		return (struct RTree_node *) ((intptr_t) l| 1);
+	}
+	else
+	{
+		if(depth > 0)
+			quickSort_n(begin,0,end-begin-1,depth%3);
+		int split = count / 2;
+		struct RTree_node * left = index_vertices_recursive(begin,begin+split,depth+1);
+		struct RTree_node * right = index_vertices_recursive(begin+split,end,depth+1);
+		
+		struct RTree_node * n = (struct RTree_node *) malloc(sizeof(struct RTree_node));
+		n->left = left;
+		n->right = right;
+		left = GET_CLEAN(left);
+		right = GET_CLEAN(right);
+		for(i = 0; i < 3; ++i)
+		{
+			n->min_bounds[i] = MIN(left->min_bounds[i],right->min_bounds[i]);
+			n->max_bounds[i] = MAX(left->max_bounds[i],right->max_bounds[i]);
+		}
+		return n;
+	}		
+}
+
+
+struct RTree_node * index_vertices(struct Vertex * base, int count)
+{
+	struct Vertex ** arr = (struct Vertex **) malloc(count * sizeof(struct Vertex *));
+	int i;
+	struct RTree_node * return_node;
+	
+	struct Vertex ** p = arr;
+	
+	// We only R-tree the FIRST of a RANGE of points that are mathematically equal.
+	// Code doing the query can re-construct the rest of the range by walking forward.
+	// This cuts our R-tree down a LOT - in the case of the 48x48 baseplate as a whole,
+	// this cuts vertex count by 80% (!).  Since the R-tree build is O(NlogNlogN) - that
+	// is, THE most time-complexity-expensive operation in the algo, this is sort of a
+	// big deal.
+	for(i = 0; i < count; ++i)
+	if(i == 0 || compare_points(base[i-1].location,base[i].location) != 0)
+	{
+		*p++ = base+i;
+	}
+//	printf("Of %d pts, %zd were pre-unique.\n", count, p - arr);
+	
+	return_node = index_vertices_recursive(arr,p,0);
+
+	free(arr);
+	
+	return return_node;
+}
+
+void destroy_rtree(struct RTree_node * n)
+{
+	if(IS_LEAF(n))
+	{
+		free(GET_LEAF(n));
+	}
+	else
+	{
+		destroy_rtree(n->left);
+		destroy_rtree(n->right);
+		free(n);		
+	}
+}
+
+inline int overlap(float b1_min[3], float b1_max[3], float b2_min[3], float b2_max[3])
+{
+	if(b1_min[0] > b2_max[0])			return 0;
+	if(b2_min[0] > b1_max[0])			return 0;
+	if(b1_min[1] > b2_max[1])			return 0;
+	if(b2_min[1] > b1_max[1])			return 0;
+	if(b1_min[2] > b2_max[2])			return 0;
+	if(b2_min[2] > b1_max[2])			return 0;
+
+	return 1;
+}
+
+inline int inside(float b1_min[3], float b1_max[3], float p[3])
+{
+	if(p[0] >= b1_min[0] && p[0] <= b1_max[0])
+	if(p[1] >= b1_min[1] && p[1] <= b1_max[1])
+	if(p[2] >= b1_min[2] && p[2] <= b1_max[2])
+		return 1;
+	return 0;
+}
+
+void scan_rtree(struct RTree_node * n, float min_bounds[3], float max_bounds[3], void (* visitor)(struct Vertex *v, void * ref), void * ref)
+{
+	if(IS_LEAF(n))
+	{
+		struct RTree_leaf * l = (GET_LEAF(n));
+		if(overlap(l->min_bounds,l->max_bounds,min_bounds,max_bounds))
+		{
+			int i;
+			for(i = 0; i < l->count; ++i)
+			if(inside(min_bounds,max_bounds,l->vertices[i]->location))
+			{
+				visitor(l->vertices[i], ref);
+			}
+		}
+	}
+	else
+	{
+		if(overlap(n->min_bounds,n->max_bounds,min_bounds,max_bounds))
+		{
+			scan_rtree(n->left, min_bounds,max_bounds, visitor, ref);
+			scan_rtree(n->right, min_bounds,max_bounds, visitor, ref);
+		}
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -484,40 +673,8 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	f->vertex[2] = p3 ? mesh->vertices + mesh->vertex_count++ : NULL;
 	f->vertex[3] = p4 ? (mesh->vertices + mesh->vertex_count++) : NULL;
 
-	if(p3)
-	{
-		if (compare_points(p1,p2)==0 ||
-			compare_points(p2,p3)==0 ||
-			compare_points(p1,p3)==0)
-		{
-			f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
-		}
-		else {
-			if(p4)
-			{
-				if(
-					compare_points(p3,p4)==0 ||
-					compare_points(p2,p4)==0 ||
-					compare_points(p1,p4)==0)
-				{
-					f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;		
-				}
-				else
-				{
-					f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
-				}
-			}
-			else
-			{
-				f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
-			}
-		}
-	}
-	else
-	{
-		f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = NULL;				
-	}
-	
+	f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
+
 	f->index[0] = f->index[1] = f->index[2] = f->index[3] = -1;
 	f->flip[0] = f->flip[1] = f->flip[2] = f->flip[3] = -1;
 
@@ -528,6 +685,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	{
 		vec3f_copy(f->vertex[i]->normal,f->normal);
 		vec4f_copy(f->vertex[i]->color,color);
+		f->vertex[i]->prev = f->vertex[i]->next = NULL;
 	}	
 
 	vec3f_copy(f->vertex[0]->location,p1);
@@ -561,12 +719,138 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	f->vertex[3]->face = f;
 }
 
+static void print_vertex(struct Vertex * v, void * ref)
+{
+	struct Vertex * o = (struct Vertex *) ref;
+	struct Vertex * p, * n;
+	if(o != v)
+	{
+		float d[3] = {
+			o->location[0] - v->location[0],
+			o->location[1] - v->location[1],
+			o->location[2] - v->location[2] };
+		if(d[0] == 0.0f && d[1] == 0.0f && d[2] == 0.0f)
+		{
+			assert(!"Colocated vertices were found by near-search.");
+		}
+		
+		if(vec3f_dot(d,d) < EPSI2)
+		{
+			
+			// Check if o is already in v's sybling list BEFORE v.  If so, bail.
+			for(n = v->prev; n; n = n->prev)
+			if(n == o)
+				return;
+			
+			// Scan forward to find last node in v's list.  
+			n = v;
+			assert(n != o);
+			while(n->next)
+			{
+				n = n->next;
+				if(n == o)		// Already connected to o?  Eject!
+					return;	
+			}
+			
+			p = o;
+			assert(p != v);
+			while(p->prev)
+			{
+				p = p->prev;
+				assert(p != v);	// this would imply our linkage is not doubly linked.
+			}
+			
+			assert(n->next == NULL);
+			assert(p->prev == NULL);
+			n->next = p;
+			p->prev = n;		
+		}
+	}
+}
 
 void				finish_faces_and_sort(struct Mesh * mesh)
 {
-	int v;
+	int v, f;
+	int total_before = 0, total_after = 0;
 
 	// sort vertices by 10 params
+	sort_vertices_3(mesh->vertices,mesh->vertex_count);
+
+	// then re-build ptr indices into faces since we moved vertices
+//	for(v = 0; v < mesh->vertex_count; ++v)
+//	{
+//		mesh->vertices[v].face->vertex[mesh->vertices[v].index] = mesh->vertices+v;
+//	}
+
+	mesh->index = index_vertices(mesh->vertices,mesh->vertex_count);
+	
+	#if DEBUG
+	validate_vertex_sort_3(mesh);
+	#endif
+	
+	
+	for(v = 0; v < mesh->vertex_count; ++v)
+	{
+		if(v == 0 || compare_points(mesh->vertices[v-1].location,mesh->vertices[v].location) != 0)
+		{
+			++total_before;
+			struct Vertex * vi = mesh->vertices + v;
+			float mib[3] = { vi->location[0] - EPSI, vi->location[1] - EPSI, vi->location[2] - EPSI };
+			float mab[3] = { vi->location[0] + EPSI, vi->location[1] + EPSI, vi->location[2] + EPSI };
+			scan_rtree(mesh->index, mib, mab, print_vertex, vi);
+		}
+	}
+	
+	for(v = 0; v < mesh->vertex_count; ++v)
+	if(v == 0 || compare_points(mesh->vertices[v-1].location,mesh->vertices[v].location) != 0)
+	if(mesh->vertices[v].prev == NULL)
+	{
+		if(mesh->vertices[v].next != NULL)
+		{
+			struct Vertex * i;
+			float count = 0.0f;
+			float p[3] = { 0 };
+			for(i=mesh->vertices+v;i;i=i->next)
+			{
+				count += 1.0f;
+				p[0] += i->location[0];
+				p[1] += i->location[1];
+				p[2] += i->location[2];
+			}
+			
+			assert(count > 0.0f);
+			count = 1.0f / count;
+			p[0] *= count;
+			p[1] *= count;
+			p[2] *= count;
+			
+			i = mesh->vertices+v;
+			while(i)
+			{
+				int has_more = 0;
+				struct Vertex * k = i;
+				i = i->next;
+				do
+				{
+					has_more = 
+						k < mesh->vertices+mesh->vertex_count &&
+							compare_points(k->location,(k+1)->location) == 0;
+										
+					k->location[0] = p[0];
+					k->location[1] = p[1];
+					k->location[2] = p[2];
+					k->prev = NULL;
+					k->next = NULL;			
+					++k;
+				} while(has_more);
+
+			}
+		}
+		
+		++total_after;
+	}
+	printf("BEFORE: %d, AFTER: %d\n", total_before, total_after);
+
 	sort_vertices_3(mesh->vertices,mesh->vertex_count);
 
 	// then re-build ptr indices into faces since we moved vertices
@@ -575,10 +859,51 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 		mesh->vertices[v].face->vertex[mesh->vertices[v].index] = mesh->vertices+v;
 	}
 	
+	for(f = 0; f < mesh->face_count; ++f)
+	{
+		if(mesh->faces[f].degree == 3)
+		{
+			float * p1 = mesh->faces[f].vertex[0]->location;
+			float * p2 = mesh->faces[f].vertex[1]->location;
+			float * p3 = mesh->faces[f].vertex[2]->location;
+			if (compare_points(p1,p2)==0 ||
+				compare_points(p2,p3)==0 ||
+				compare_points(p1,p3)==0)
+			{
+				mesh->faces[f].neighbor[0] = 
+				mesh->faces[f].neighbor[1] = 
+				mesh->faces[f].neighbor[2] = 
+				mesh->faces[f].neighbor[3] = NULL;
+			}
+
+		}
+		if(mesh->faces[f].degree == 4)
+		{
+			float * p1 = mesh->faces[f].vertex[0]->location;
+			float * p2 = mesh->faces[f].vertex[1]->location;
+			float * p3 = mesh->faces[f].vertex[2]->location;
+			float * p4 = mesh->faces[f].vertex[3]->location;
+
+			if (compare_points(p1,p2)==0 ||
+				compare_points(p2,p3)==0 ||
+				compare_points(p1,p3)==0 ||
+				compare_points(p3,p4)==0 ||
+				compare_points(p2,p4)==0 ||
+				compare_points(p1,p4)==0)
+			{
+				mesh->faces[f].neighbor[0] = 
+				mesh->faces[f].neighbor[1] = 
+				mesh->faces[f].neighbor[2] = 
+				mesh->faces[f].neighbor[3] = NULL;
+			}
+		}
+	}
+
 	#if DEBUG
 	validate_vertex_sort_3(mesh);
 	validate_vertex_links(mesh);
 	#endif
+	
 }
 
 static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
@@ -900,6 +1225,7 @@ int				merge_vertices(struct Mesh * mesh)
 
 void				destroy_mesh(struct Mesh * mesh)
 {
+	destroy_rtree(mesh->index);
 	free(mesh->vertices);
 	free(mesh->faces);
 	free(mesh);
@@ -916,9 +1242,13 @@ void				write_indexed_mesh(
 							int						out_prim_counts[5])
 {
 	volatile float * vert_ptr = io_vertex_table;
+	#if DEBUG
 	volatile float * vert_stop = io_vertex_table + (vertex_table_size * 10);
+	#endif
 	volatile unsigned int * index_ptr = io_index_table;
+	#if DEBUG	
 	volatile unsigned int * index_stop = io_index_table + index_table_size;
+	#endif
 	
 	int cur_idx = index_base;
 	
