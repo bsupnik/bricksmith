@@ -84,6 +84,9 @@ struct Mesh {
 	struct Face *		faces;	
 	
 	struct RTree_node *	index;
+	#if DEBUG
+	int					flags;
+	#endif
 };
 
 

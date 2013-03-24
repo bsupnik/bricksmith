@@ -16,6 +16,19 @@
 #define EPSI 0.05
 #define EPSI2 (EPSI*EPSI)
 
+// check 32495.dat
+
+#define SLOW_CHECKING 0
+
+#if SLOW_CHECKING
+
+#define TINY_INITIAL_TRIANGLE 1
+#define TINY_RESULTING_GEOM 2
+
+#define CHECK_EPSI 0.045
+#define CHECK_EPSI2 (CHECK_EPSI*CHECK_EPSI)
+#endif
+
 #if !defined(MIN)
     #define MIN(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
 #endif
@@ -447,6 +460,17 @@ inline float vec3f_dot(const float * __restrict v1, const float * __restrict v2)
 	return v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
 }
 
+inline float vec3f_length2(const float * __restrict p1, const float * __restrict p2)
+{
+	float d[3] = { p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2] };
+	return vec3f_dot(d,d);
+}
+
+inline int vec3f_eq(const float * __restrict p1, const float * __restrict p2)
+{
+	return p1[0] == p2[0] && p1[1] == p2[1] && p1[2] == p2[2];
+}
+
 inline void vec3_cross(float * __restrict dst, const float * __restrict v1, const float * __restrict v2)
 {
 	dst[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
@@ -642,11 +666,28 @@ struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count)
 	ret->quad_count = quad_count;
 	
 	ret->faces = (struct Face *) malloc(sizeof(struct Face) * ret->face_capacity);
+	#if DEBUG
+	ret->flags = 0;
+	#endif
 	return ret;
 }
 
 void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4])
 {
+	#if SLOW_CHECKING
+	if(vec3f_length2(p1,p2) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+	if(p3)
+	{
+		if(vec3f_length2(p1,p3) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+		if(vec3f_length2(p2,p3) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+	}
+	if(p4)
+	{
+		if(vec3f_length2(p1,p4) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+		if(vec3f_length2(p2,p4) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+		if(vec3f_length2(p3,p4) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
+	}
+	#endif
 	int i;
 	
 	
@@ -725,16 +766,9 @@ static void print_vertex(struct Vertex * v, void * ref)
 	struct Vertex * p, * n;
 	if(o != v)
 	{
-		float d[3] = {
-			o->location[0] - v->location[0],
-			o->location[1] - v->location[1],
-			o->location[2] - v->location[2] };
-		if(d[0] == 0.0f && d[1] == 0.0f && d[2] == 0.0f)
-		{
-			assert(!"Colocated vertices were found by near-search.");
-		}
+		assert(!vec3f_eq(o->location,v->location));
 		
-		if(vec3f_dot(d,d) < EPSI2)
+		if(vec3f_length2(o->location, v->location) < EPSI2)
 		{
 			
 			// Check if o is already in v's sybling list BEFORE v.  If so, bail.
@@ -902,6 +936,22 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 	#if DEBUG
 	validate_vertex_sort_3(mesh);
 	validate_vertex_links(mesh);
+	
+	#if SLOW_CHECKING
+	{
+		int i, j;
+		for(i = 0; i < mesh->vertex_count; ++i)
+		for(j = 0; j < i; ++j)
+		{
+			if(!vec3f_eq(mesh->vertices[i].location,mesh->vertices[j].location))
+			{
+				if(vec3f_length2(mesh->vertices[i].location,mesh->vertices[j].location) <= CHECK_EPSI2)
+					mesh->flags |= TINY_RESULTING_GEOM;					
+			}
+		}
+	}
+	#endif
+	
 	#endif
 	
 }
@@ -1225,6 +1275,15 @@ int				merge_vertices(struct Mesh * mesh)
 
 void				destroy_mesh(struct Mesh * mesh)
 {
+	#if DEBUG
+	#if SLOW_CHECKING
+		if(mesh->flags & TINY_INITIAL_TRIANGLE)	
+			printf("ERROR: TINY INITIAL TRIANGLE.\n");
+		if(mesh->flags & TINY_RESULTING_GEOM)		
+			printf("ERROR: TINY RESULTING GEOMETRY.\n");
+	#endif
+	#endif
+
 	destroy_rtree(mesh->index);
 	free(mesh->vertices);
 	free(mesh->faces);
