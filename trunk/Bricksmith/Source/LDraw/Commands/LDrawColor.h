@@ -176,3 +176,6 @@ typedef enum LDrawColorMaterial
 - (id)fullCopyWithZone:(NSZone *)zone;
 
 @end
+
+extern void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
+extern void HSVtoRGB( float h, float s, float v, float *r, float *g, float *b );
