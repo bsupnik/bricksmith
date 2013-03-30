@@ -197,6 +197,7 @@
 {
 	self = [super initWithCoder:decoder];
 	self->cachedBounds = InvalidBox;
+	[self invalCache:CacheFlagBounds];	
 	
 	modelDescription	= [[decoder decodeObjectForKey:@"modelDescription"] retain];
 	fileName			= [[decoder decodeObjectForKey:@"fileName"] retain];
