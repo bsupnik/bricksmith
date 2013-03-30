@@ -285,7 +285,7 @@ static ModelManager *SharedModelManager = nil;
 // Purpose:		Begin providing model-finding services for a new file.
 //
 // Notes:		This is the public sign-in method.  It will close the file if 
-//				it is open to someone else, then swap in teh user's doc.
+//				it is open to someone else, then swap in the user's doc.
 //
 //==============================================================================
 - (void) documentSignIn:(NSString *) docPath withFile:(LDrawFile *) file

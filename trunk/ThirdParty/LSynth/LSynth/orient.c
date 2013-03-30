@@ -39,7 +39,7 @@ void orient(
     up[1] = start_up[1]*(1-cur_length) + end_up[1]*cur_length;
     up[2] = start_up[2]*(1-cur_length) + end_up[2]*cur_length;
 
-    r = sqrt(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
+    r = sqrtf(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
     up[0] /= r;
     up[1] /= r;
     up[2] /= r;
@@ -49,7 +49,7 @@ void orient(
     front[1] = segments[i+1].offset[1] - segments[i].offset[1];
     front[2] = segments[i+1].offset[2] - segments[i].offset[2];
 
-    r = sqrt(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
+    r = sqrtf(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
 
     front[0] /= r;
     front[1] /= r;

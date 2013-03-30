@@ -55,6 +55,14 @@
 #define TOOL_PALETTE_HIDDEN							@"Tool Palette Hidden"
 #define VIEWPORTS_EXPAND_TO_AVAILABLE_SIZE			@"ViewportsExpandToAvailableSize"
 
+// LSynth
+#define LSYNTH_EXECUTABLE_PATH_KEY                  @"LSynth Executable Path"
+#define LSYNTH_CONFIGURATION_PATH_KEY               @"LSynth Configuration Path"
+#define LSYNTH_SELECTION_TRANSPARENCY_KEY           @"LSynth Selection Transparency"
+#define LSYNTH_SELECTION_COLOR_KEY                  @"LSynth Selection Color"
+#define LSYNTH_SELECTION_MODE_KEY                   @"LSynth Selection Mode"
+#define LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY           @"LSynth Save Synthesized Parts"
+
 #define MINIFIGURE_HAS_HAT							@"Minifigure Has Hat"
 #define MINIFIGURE_HAS_HEAD							@"Minifigure Has Head"
 #define MINIFIGURE_HAS_NECK							@"Minifigure Has Neck"
@@ -170,8 +178,6 @@
 // Object is the new color. No userInfo.
 #define LDrawViewBackgroundColorDidChangeNotification	@"LDrawViewBackgroundColorDidChangeNotification"
 
-
-
 //A model was added to a document.  Note that the object
 // for this notification is the LDrawFile that was edited!
 #define LDrawMPDSubModelAdded							@"LDrawMPDSubModelAdded"
@@ -179,6 +185,10 @@
 //The library was reloaded.  Documents need to tell their parts
 // to re-resolve their references.
 #define LDrawPartLibraryReloaded						@"LDrawPartLibraryReloaded"
+
+// The LSynth selection criteria changed.  Selected LSynth
+// parts need to update to reflect this
+#define LSynthSelectionDisplayDidChangeNotification    @"LSynthSelectionDisplayDidChangeNotification"
 
 ////////////////////////////////////////////////////////////////////////////////
 //

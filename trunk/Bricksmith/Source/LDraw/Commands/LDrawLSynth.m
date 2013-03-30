@@ -19,6 +19,9 @@
 #import "ComputationalGeometry.h"
 #import "MatrixMath.h"
 #import "MacLDraw.h"
+#import "RegexKitLite.h"
+#import "PreferencesDialogController.h"
+#import "UserDefaultsCategory.h"
 
 @implementation LDrawLSynth
 
@@ -42,7 +45,11 @@
         color            = [[LDrawColor alloc] init];
     }
 
-    //[self addObserver:self];
+    // Observe changes in selection display options
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(selectionDisplayOptionsDidChange:)
+                                                 name:LSynthSelectionDisplayDidChangeNotification
+                                               object:nil ];
 
     return self;
 }//end init
@@ -57,7 +64,6 @@
 // 0 SYNTH SHOW
 // 1 <CONSTRAINT PART>
 // ...
-//
 //
 // <OPTIONALLY:>
 // 0 SYNTH SYNTHESIZED BEGIN
@@ -75,123 +81,121 @@
     Class              CommandClass        = Nil;
     NSRange            commandRange        = range;
     NSUInteger         lineIndex           = 0;
-    LSynthParserStateT parserState         = PARSER_READY;
+    LSynthParserStateT parserState         = PARSER_READY_TO_PARSE;
 
+    self = [self init]; // Basic initialisation, not related to parsing
     self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 
     if(self)
     {
+        lineIndex = range.location;
 
-        currentLine = [lines objectAtIndex:range.location];
-
-        // 0 SYNTH BEGIN <SYNTH_TYPE> <COLOR>
-
-        NSArray *fields = [currentLine componentsSeparatedByString:@" "];
-        NSString *type = [fields objectAtIndex:3];
-        [self setLsynthType:[fields objectAtIndex:3]];
-        [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [[fields objectAtIndex:4] integerValue]]];
-
-        // Determine the class - hose, band or part
-        // TODO: make lsynthconfiguration have class methods to do this
-        //[self setLsynthClass:[LSynthConfiguration classForType:lsynthType]];
-        if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
-            [self setLsynthClass:LSYNTH_HOSE];
-        }
-        else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
-            [self setLsynthClass:LSYNTH_BAND];
-        }
-        else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
-            [self setLsynthClass:LSYNTH_PART];
-        }
-
-        // Parse out the END command
-        if(range.length > 0) {
-            currentLine = [lines objectAtIndex:(NSMaxRange(range) - 1)];
-
-            if([[self class] lineIsLSynthTerminator:currentLine]) {
-                range.length -= 1;
-            }
-        }
-
-        //---------- synthed stuff -----------------------------------------
-
-        lineIndex = range.location + 1;
         while(lineIndex < NSMaxRange(range))
         {
             currentLine = [lines objectAtIndex:lineIndex];
-            if([currentLine length] > 0)
-            {
-                // determine parser state
-                NSString    *strippedLine   = nil;
-                NSString    *field          = [LDrawUtilities readNextField:currentLine remainder:&strippedLine];
 
-                if ([field isEqualToString:@"0"]) {
-                    field = [LDrawUtilities readNextField:strippedLine remainder:&strippedLine];
-                    if ([field isEqualToString:@"SYNTH"]) {
-                        field = [LDrawUtilities readNextField:strippedLine remainder:&strippedLine];
-                        if ([field isEqualToString:@"SHOW"] || [field isEqualToString:@"HIDE"]) {
-                            parserState = 0;
-                        }
-                        else if ([field isEqualToString:@"SYNTHESIZED"]) {
-                            field = [LDrawUtilities readNextField:strippedLine remainder:&strippedLine];
-                            if ([field isEqualToString:@"BEGIN"]) {
-                                parserState = 1;
-                            }
-                            else if ([field isEqualToString:@"END"]) {
-                                parserState = -1;
-                            }
-                        }
-                        else if ([field isEqualToString:@"INSIDE"]  ||
-                                 [field isEqualToString:@"OUTSIDE"] ||
-                                 [field isEqualToString:@"CROSS"]) {
-                            LDrawLSynthDirective *directive = [[LDrawLSynthDirective alloc] init];
-                            [directive setStringValue:field];
-                            [[self subdirectives] addObject:directive];
-                            //[self addDirective:directive];
-                            [directive setEnclosingDirective:self];
-                            [directive addObserver:self];
-                            [directive release];
-                        }
-                    }
-                }
+            //
+            // '0 SYNTH' directives
+            //
 
-                // read parts into the correct array
-                else if ([field isEqualToString:@"1"]) {
+            // 0 SYNTH BEGIN <SYNTH_TYPE> <COLOR>
+            if ([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+BEGIN\\s+(\\S+?)\\s+(\\S+)"] &&
+                parserState == PARSER_READY_TO_PARSE)  {
 
-                    CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:currentLine];
-                    commandRange = [CommandClass rangeOfDirectiveBeginningAtIndex:lineIndex
-                                                                          inLines:lines
-                                                                         maxIndex:NSMaxRange(range) - 1];
+                NSArray *paramMatches = [currentLine arrayOfCaptureComponentsMatchedByRegex:@"0\\s+SYNTH\\s+BEGIN\\s+(\\S+?)\\s+(\\S+)"];
 
-                    LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:lines inRange:commandRange parentGroup:parentGroup];
-                    [newDirective setEnclosingDirective:self];
-                    [newDirective addObserver:self];
+                NSString *type = [[paramMatches objectAtIndex:0] objectAtIndex:1];
+                NSString *synthColor = [[paramMatches objectAtIndex:0] objectAtIndex:2];
 
-                    // constraint
-                    if (parserState == 0) {
-                        // TODO: can this be reinstated?
-                        //[self addDirective:newDirective];
+                [self setLsynthType:type];
+                [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [synthColor integerValue]]];
 
-                        // Pick a badge icon depending on the LSynth class (band or hose)
-                        [newDirective setIconName:[self determineIconName:newDirective]];
-
-
-                        [[self subdirectives] addObject:newDirective];
-                    }
-
-                    // synthesised part
-                    else if (parserState == 1) {
-                        [synthesizedParts addObject:newDirective];
-                    }
-                    else {
-                        // TODO: deal with these better.  Should be lossless, the user knows what they're doing
-                        // poss. use LDrawLSynthDirective?
-                        NSLog(@"Discarding invalid part in LSynth");
-                    }
-                    [newDirective release];
-                }
-                lineIndex += 1;
+                [[[NSApp delegate] lsynthConfiguration] setLSynthClassForDirective:self withType:type];
+                parserState = PARSER_PARSING_BEGUN;
             }
+
+            // 0 SYNTH END - Synthesized parts may or may not be present
+            else if ([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+END"] &&
+                    (parserState == PARSER_PARSING_CONSTRAINTS ||
+                     parserState == PARSER_SYNTHESIZED_FINISHED)) {
+                parserState = PARSER_FINISHED;
+            }
+
+            // 0 SYNTH SHOW or
+            // 0 SYNTH HIDE
+            else if([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+(?:SHOW|HIDE)"] &&
+               parserState == PARSER_PARSING_BEGUN) {
+                parserState = PARSER_PARSING_CONSTRAINTS;
+            }
+
+            // 0 SYNTH SYNTHESIZED BEGIN - start of synthesized constraints
+            else if ([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+SYNTHESIZED\\s+BEGIN"] &&
+                    parserState == PARSER_PARSING_CONSTRAINTS) {
+                parserState = PARSER_PARSING_SYNTHESIZED;
+            }
+
+            // 0 SYNTH SYNTHESIZED BEGIN - end of synthesized constraints
+            else if ([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+SYNTHESIZED\\s+END"] &&
+                    parserState == PARSER_PARSING_SYNTHESIZED) {
+                parserState = PARSER_SYNTHESIZED_FINISHED;
+            }
+
+            // 0 SYNTH INSIDE or
+            // 0 SYNTH OUTSIDE or
+            // 0 SYNTH CROSS
+            else if (parserState == PARSER_PARSING_CONSTRAINTS &&
+                [currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+(INSIDE|OUTSIDE|CROSS)"]) {
+
+                NSString *direction = [[currentLine arrayOfCaptureComponentsMatchedByRegex:@"(INSIDE|OUTSIDE|CROSS)"] objectAtIndex:1];
+                LDrawLSynthDirective *directive = [[LDrawLSynthDirective alloc] init];
+                [directive setStringValue:direction];
+                [[self subdirectives] addObject:directive];
+                [directive setEnclosingDirective:self];
+                [directive addObserver:self];
+                [directive release];
+            }
+
+            //
+            // '1 XXX' Part directives - constraints or synthesized parts
+            //
+
+            else if ([currentLine isMatchedByRegex:@"^1\\s+"] &&
+                     (parserState == PARSER_PARSING_BEGUN ||
+                      parserState == PARSER_PARSING_CONSTRAINTS ||
+                      parserState == PARSER_PARSING_SYNTHESIZED)) {
+
+                // Either way, create a part
+                CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:currentLine];
+                commandRange = [CommandClass rangeOfDirectiveBeginningAtIndex:lineIndex
+                                                                      inLines:lines
+                                                                     maxIndex:NSMaxRange(range) - 1];
+
+                LDrawDirective *newDirective = [[CommandClass alloc] initWithLines:lines inRange:commandRange parentGroup:parentGroup];
+                [newDirective setEnclosingDirective:self];
+                [newDirective addObserver:self];
+
+                // Add our part in the correct place
+                if (parserState == PARSER_PARSING_CONSTRAINTS) {
+                    [newDirective setIconName:[self determineIconName:newDirective]];
+                    [[self subdirectives] addObject:newDirective];
+                }
+
+                else if (parserState == PARSER_PARSING_SYNTHESIZED) {
+                    [synthesizedParts addObject:newDirective];
+                }
+
+                [newDirective release];
+            }
+
+            //
+            // Unrecognized or inappropriate directive at this point
+            //
+
+            else {
+                NSLog(@"Unexpected line in LSynth definition at line %i: %@", lineIndex, currentLine);
+            }
+
+            lineIndex += 1;
         }
     }
 
@@ -204,9 +208,130 @@
             postNotificationName:LDrawDirectiveDidChangeNotification
                           object:self];
 
+
+
     return self;
 
 }//end initWithLines:inRange:
+
+//========== lineIsLSynthBeginning: ===========================================
+//
+// Purpose:		Returns if line is a 0 SYNTH START
+//
+//==============================================================================
++ (BOOL) lineIsLSynthBeginning:(NSString*)line
+{
+    if ([line isMatchedByRegex:@"0\\s+SYNTH\\s+BEGIN\\s+\\S+?\\s+\\S+"]) {
+        return YES;
+    }
+    return NO;
+} //end lineIsLSynthBeginning:
+
+//========== lineIsLSynthTerminator: ==========================================
+//
+// Purpose:		Returns if line is a 0 SYNTH END or 0 SYNTH PART (which are single
+//              line directives)
+//
+//==============================================================================
++ (BOOL) lineIsLSynthTerminator:(NSString*)line
+{
+    if ([line isMatchedByRegex:@"0\\s+SYNTH\\s+END"]) {
+        return YES;
+    }
+    return NO;
+} //end lineIsLSynthTerminator:
+
+//---------- rangeOfDirectiveBeginningAtIndex:inLines:maxIndex: ------[static]--
+//
+// Purpose:		Returns the range from the beginning to the end of the step.
+//              i.e. 0 SYNTH END
+//
+//------------------------------------------------------------------------------
++ (NSRange) rangeOfDirectiveBeginningAtIndex:(NSUInteger)index
+                                     inLines:(NSArray *)lines
+                                    maxIndex:(NSUInteger)maxIndex
+{
+    NSString	*currentLine;
+    NSUInteger	counter      = 0;
+    NSRange 	testRange    = NSMakeRange(index, maxIndex - index + 1);
+    NSInteger	synthLength	 = 0;
+    NSRange 	synthRange;
+
+    currentLine = [lines objectAtIndex:index];
+    if ([currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+BEGIN\\s+\\S+?\\s+\\S+"]) {
+
+        // Find the last line in the synth definition: 0 SYNTH END
+        for(counter = testRange.location + 1; counter < NSMaxRange(testRange); counter++)
+        {
+            currentLine = [lines objectAtIndex:counter];
+            synthLength += 1;
+
+            if([self lineIsLSynthTerminator:currentLine])
+            {
+                // Nothing more to parse. Stop.
+                synthLength += 1;
+                break;
+            }
+        }
+    }
+
+    synthRange = NSMakeRange(index, synthLength);
+
+    return synthRange;
+}//end rangeOfDirectiveBeginningAtIndex:inLines:maxIndex:
+
+//========== initWithCoder: ====================================================
+//
+// Purpose:		Reads a representation of this object from the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to
+//				read and write LDraw objects as NSData.
+//
+//==============================================================================
+- (id) initWithCoder:(NSCoder *)decoder
+{
+    // Initialize the object.  We'll have somewhere to synthesize into.
+    [self init];
+
+    // Container Coder initialization.  This repopulates our contained objects
+    self = [super initWithCoder:decoder];
+
+    // Reinitialize LSynth-specific attributes
+    [self setLsynthClass:[decoder decodeIntForKey:@"lsynthClass"]];
+    [self setLsynthType:[decoder decodeObjectForKey:@"synthType"]];
+    [self setLDrawColor:[decoder decodeObjectForKey:@"color"]];
+
+    // Constraints' icons should have been encoded/decoded correctly so we do
+    // nothing in that respect.
+
+    // Ask for resynthesis since we don't preserve synthesized parts during a copy/paste
+    [self invalCache:ContainerInvalid];
+
+    return self;
+
+}//end initWithCoder:
+
+
+//========== encodeWithCoder: ==================================================
+//
+// Purpose:		Writes a representation of this object to the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to
+//				read and write LDraw objects as NSData.
+//
+//              We don't store synthesized parts since they'll be recreated when
+//              we initWithCoder.
+//
+//==============================================================================
+- (void)encodeWithCoder:(NSCoder *)encoder
+{
+    // Encode container-related stuff: containedObjects etc.
+    [super encodeWithCoder:encoder];
+
+    [encoder encodeInt:lsynthClass forKey:@"lsynthClass"];
+    [encoder encodeObject:synthType forKey:@"synthType"];
+    [encoder encodeObject:color forKey:@"color"];
+
+}//end encodeWithCoder:
+
 
 #pragma mark -
 #pragma mark DISPLAY
@@ -256,8 +381,6 @@
 //==============================================================================
 - (void) removeDirective:(LDrawDirective *)doomedDirective
 {
-    NSLog(@"REMOVE FROM LSYNTH");
-
     // We can leave removal to the base class
     [super removeDirective:doomedDirective];
 
@@ -270,61 +393,6 @@
             postNotificationName:LDrawDirectiveDidChangeNotification
                           object:self];
 }
-
-//---------- rangeOfDirectiveBeginningAtIndex:inLines:maxIndex: ------[static]--
-//
-// Purpose:		Returns the range from the beginning to the end of the step.
-//              i.e. 0 SYNTH END
-//
-//------------------------------------------------------------------------------
-+ (NSRange) rangeOfDirectiveBeginningAtIndex:(NSUInteger)index
-                                     inLines:(NSArray *)lines
-                                    maxIndex:(NSUInteger)maxIndex
-{
-    NSString	*currentLine	= nil;
-    NSUInteger	counter 		= 0;
-    NSRange 	testRange		= NSMakeRange(index, maxIndex - index + 1);
-    NSInteger	synthLength	    = 0;
-    NSRange 	synthRange;
-
-    NSString	*parsedField	= nil;
-    NSString	*workingLine	= nil;
-
-    currentLine = [lines objectAtIndex:index];
-    parsedField = [LDrawUtilities readNextField:currentLine remainder:&currentLine];
-
-    if([parsedField isEqualToString:@"0"])
-    {
-        parsedField = [LDrawUtilities readNextField:currentLine remainder:&currentLine];
-
-        if([parsedField isEqualToString:LSYNTH_COMMAND])
-        {
-            parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
-            {
-                // 0 SYNTH END
-                //
-                // Find the last line in the synth definition
-                for(counter = testRange.location + 1; counter < NSMaxRange(testRange); counter++)
-                {
-                    currentLine = [lines objectAtIndex:counter];
-                    synthLength += 1;
-
-                    if([self lineIsLSynthTerminator:currentLine])
-                    {
-                        // Nothing more to parse. Stop.
-                        synthLength += 1;
-                        break;
-                    }
-                }
-            }
-
-        }
-    }
-
-    synthRange = NSMakeRange(index, synthLength);
-
-    return synthRange;
-}//end rangeOfDirectiveBeginningAtIndex:inLines:maxIndex:
 
 //========== draw:viewScale:parentColor: =======================================
 //
@@ -355,7 +423,6 @@
         // This is the only place we invoke synthesis.  While it may incur a small delay in drawing
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
-            NSLog(@"invalidated lsynth container");
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
         }
@@ -365,11 +432,6 @@
         {
             [currentDirective drawSelf:renderer];
         }
-
-        //        //  We've changed.  Picked up by e.g. the inspector
-        //        [[NSNotificationCenter defaultCenter]
-        //                postNotificationName:LDrawDirectiveDidChangeNotification
-        //                              object:self];
     }
 
 }//end drawSelf:
@@ -490,16 +552,13 @@
 
 }//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
-////========== write =============================================================
-////
-//// Purpose:		Write out all the commands in the step, prefaced by the line
-////				0 STEP
-////
-////==============================================================================
+//========== write =============================================================
+//
+// Purpose:		Write out all the commands in the part
+//
+//==============================================================================
 - (NSString *) write
 {
-    NSLog(@"write lsynth");
-
     NSMutableString *written        = [NSMutableString string];
     NSString        *CRLF           = [NSString CRLF];
     NSString        *lsynthVisibility = @"SHOW";
@@ -769,7 +828,6 @@
 //==============================================================================
 - (Vector3) displacementForNudge:(Vector3)nudgeVector
 {
-    NSLog(@"lsynth displacementForNudge");
     for (id directive in [self subdirectives]) {
          if ([directive isKindOfClass:[LDrawDrawableElement class]] &&
              [directive conformsToProtocol:@protocol(LDrawMovableDirective)]) {
@@ -1157,18 +1215,47 @@
 //==============================================================================
 - (void)colorSynthesizedPartsTranslucent:(BOOL)yesNo
 {
-    LDrawColor *theColor;
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    LSynthSelectionModeT selectionMode = [userDefaults integerForKey:LSYNTH_SELECTION_MODE_KEY];
+    GLfloat rgba[4]; // a temporary RGBA color we create and manipulate
+    LDrawColor *theColor = [[[LDrawColor alloc] init] autorelease]; // an LDrawColor to set the part's color with
+
+    // Is the part selected?
     if (yesNo == YES) {
-        theColor = [color fullCopyWithZone:nil];
-        GLfloat rgba[4];
-        [theColor getColorRGBA:rgba];
-        rgba[3] = 0.2; // Adjust the alpha.  TODO: make this globally configurable
+
+        // Modify the transparency, but use the object's existing color
+        if (selectionMode == TransparentSelection) {
+            [color getColorRGBA:rgba];
+            rgba[3] = ((float)[userDefaults integerForKey:LSYNTH_SELECTION_TRANSPARENCY_KEY]) / 100;
+        }
+
+        // Modify the color, with full opacity/no transparency
+        else if (selectionMode == ColoredSelection) {
+            NSColor *selectionColor = [userDefaults colorForKey:LSYNTH_SELECTION_COLOR_KEY];
+            rgba[0] = [selectionColor redComponent];
+            rgba[1] = [selectionColor greenComponent];
+            rgba[2] = [selectionColor blueComponent];
+            rgba[3] = 1.0; // fully opaque
+        }
+
+        // Modify both color and transparency
+        else if (selectionMode == TransparentColoredSelection) {
+            NSColor *selectionColor = [userDefaults colorForKey:LSYNTH_SELECTION_COLOR_KEY];
+            rgba[0] = [selectionColor redComponent];
+            rgba[1] = [selectionColor greenComponent];
+            rgba[2] = [selectionColor blueComponent];
+            rgba[3] = ((float)[userDefaults integerForKey:LSYNTH_SELECTION_TRANSPARENCY_KEY]) / 100;
+        }
+
         [theColor setColorRGBA:rgba];
     }
+
+    // The part's not selected so use its actual color
     else {
         theColor = color;
     }
 
+    // Recolor the synthesized parts
     for (LDrawPart *part in self->synthesizedParts) {
         [part setLDrawColor:theColor];
     }
@@ -1199,11 +1286,15 @@
 //========== acceptsDroppedDirective: ==========================================
 //
 // Purpose:		Returns YES if this container will accept a directive dropped on
-//              it.  Intended to be overridden by subclasses
+//              it.
 //
 //==============================================================================
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
 {
+    // We only accept constraints
+    if ([directive isKindOfClass:[LDrawPart class]]) {
+        return YES; // TODO: make more discriminatory and only accept appropriate constraints
+    }
     return NO;
 }
 
@@ -1226,66 +1317,6 @@
         [self setSelected:YES];
     }
 } //end cleanupAfterDrop
-
-//========== lineIsLSynthBeginning: ===========================================
-//
-// Purpose:		Returns if line is a 0 SYNTH START
-//
-//==============================================================================
-+ (BOOL) lineIsLSynthBeginning:(NSString*)line
-{
-    NSString	*parsedField	= nil;
-    NSString	*workingLine	= line;
-    BOOL		isStart			= NO;
-
-    parsedField = [LDrawUtilities readNextField:  workingLine
-                                      remainder: &workingLine ];
-    if([parsedField isEqualToString:@"0"])
-    {
-        parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
-
-        if([parsedField isEqualToString:LSYNTH_COMMAND])
-        {
-//			parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
-//			if(		[parsedField isEqualToString:LSYNTH_BEGIN])
-//			{
-            isStart = YES;
-//			}
-        }
-    }
-
-    return isStart;
-} //end lineIsLSynthBeginning:
-
-//========== lineIsLSynthTerminator: ==========================================
-//
-// Purpose:		Returns if line is a 0 SYNTH END or 0 SYNTH PART (which are single
-//              line directives)
-//
-//==============================================================================
-+ (BOOL) lineIsLSynthTerminator:(NSString*)line
-{
-    NSString	*parsedField	= nil;
-    NSString	*workingLine	= line;
-    BOOL		isEnd			= NO;
-
-    parsedField = [LDrawUtilities readNextField:  workingLine
-                                      remainder: &workingLine ];
-    if([parsedField isEqualToString:@"0"])
-    {
-        parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
-
-        if([parsedField isEqualToString:LSYNTH_COMMAND])
-        {
-            parsedField = [LDrawUtilities readNextField:workingLine remainder:&workingLine];
-            if([parsedField isEqualToString:LSYNTH_END] || [parsedField isEqualToString:@"PART"]) {
-                isEnd = YES;
-            }
-        }
-    }
-
-    return isEnd;
-} //end lineIsLSynthTerminator:
 
 //========== synthesizedPartsCount =============================================
 //
@@ -1338,12 +1369,24 @@
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
-    NSLog(@"LSynth receive message %i", msg);
-
+    // Typically if one of our child constraints changed we need to resynthesize
     if (msg == MessageObservedChanged) {
         [self invalCache:ContainerInvalid];
     }
 } //end receiveMessage:who:
+
+//========== selectionDisplayOptionsDidChange: =================================
+//
+// Purpose:		The selection style has changed, so we may need to redraw.
+//              We get here via a LSynthSelectionDisplayDidChangeNotification
+//              probably sent from the preferences controller.
+//
+//==============================================================================
+-(void)selectionDisplayOptionsDidChange:(id)sender
+{
+    [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected)];
+    [self noteNeedsDisplay];
+}
 
 #pragma mark -
 #pragma mark DESTRUCTOR

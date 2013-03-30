@@ -8,6 +8,13 @@
 //				display of the specialized inspectors for each kind of editable 
 //				component.
 //
+//              InspectionXXX classes should implement, at a minimum
+//                - (id) init  // should load the .xib
+//                - (void) commitChanges:(id)sender
+//                - (IBAction) revert:(id)sender
+//
+//              ...in addition to any methods to handle editing in the inspector.
+//
 //  Created by Allen Smith on 2/25/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -76,7 +83,7 @@
 //
 // Purpose:		Displays an object with its own special inspection panel.
 //
-//				This method takes an array in order to easily accomodate a 
+//				This method takes an array in order to easily accommodate a
 //				"multiple selection" error message. If you actually want 
 //				anything inspected, you should pass an array with a single 
 //				element.

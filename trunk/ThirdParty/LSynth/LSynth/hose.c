@@ -118,7 +118,7 @@ line_angle(
     if (theta >= 1 || theta <= -1) {
         theta = 0;
     } else {
-        theta = acos(theta);
+        theta = acosf(theta);
     }
     return theta;
 }
@@ -208,7 +208,7 @@ merge_segments_angular(
             normalized = next_up[0]*next_up[0] +
             next_up[1]*next_up[1] +
             next_up[2]*next_up[2];
-            normalized = sqrt(normalized);
+            normalized = sqrtf(normalized);
             next_up[0] /= normalized;
             next_up[1] /= normalized;
             next_up[2] /= normalized;
@@ -313,7 +313,7 @@ merge_segments_count(
         lenE = hose->end.attrib;
         lenM = hose->mid.attrib;
         len = len - (lenS + lenE);
-        printf("Net segment len = %.3f (S=%d, M=%d, E= %d)\n", len, lenS, lenM, lenE);
+        printf("Net segment len = %.3f (S=%f, M=%f, E= %f)\n", len, lenS, lenM, lenE);
         len = len / (PRECISION)(count-1); //len /= (count);
     }
     else
@@ -455,7 +455,7 @@ render_hose_segment(
                     part_t         *constraint)
 {
     int i,j,k;
-    PRECISION pi = 2*atan2(1,0);
+    PRECISION pi = 2*atan2f(1,0);
     PRECISION m1[3][3];
     PRECISION m2[3][3];
     PRECISION offset[3];
@@ -484,7 +484,7 @@ render_hose_segment(
                 PRECISION phi;
                 
                 phi = line_angle3(i+1,i,segments);
-                phi = sin(phi)*(hose->diameter);
+                phi = sinf(phi)*(hose->diameter);
                 
                 l += phi + phi;
             }
@@ -564,10 +564,10 @@ render_hose_segment(
                 //       the other way because orient() only works in the XY plane.
                 //       But that's better than the 90 degrees wrong without this hack.
             }
-            m1[0][0] =   cos(angle);
-            m1[0][2] =   sin(angle);
-            m1[2][0] =  -sin(angle);
-            m1[2][2] =   cos(angle);
+            m1[0][0] =   cosf(angle);
+            m1[0][2] =   sinf(angle);
+            m1[2][0] =  -sinf(angle);
+            m1[2][2] =   cosf(angle);
         }
         matrixmult(m1,m2);
         matrixmult3(m2,segments[i].orient,m1);

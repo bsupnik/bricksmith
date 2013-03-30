@@ -10,6 +10,8 @@
 #include "band.h"
 #include "hose.h"
 
+extern int normalize(PRECISION v[3]);
+
 /*
  * 0 SYNTH BEGIN DEFINE BAND <fill> RUBBER_BAND "Descr" <scale> <thresh>
  * 1 <len>  a b c  d e f  g h i  j k l "name"
@@ -128,7 +130,7 @@ calc_crosses(
   if (fabs(det) < ACCY) {
     /* parallel lines */
   } else {
-    PRECISION detinv = 1.0/det;
+    PRECISION detinv = 1.0f/det;
     PRECISION s = (xnm*ymk - ynm*xmk)*detinv;
     PRECISION t = (xlk*ymk - ylk*xmk)*detinv;
     if (s >= 0 && s <= 1.0 && t >= 0 && t <= 1.0) {
@@ -174,7 +176,7 @@ calc_angles(
   PRECISION angle,ta;
   int i;
   float n;
-  PRECISION pi = 2*atan2(1,0);
+  PRECISION pi = 2*atan2f(1,0);
 
   if (k->cross || ! k->inside) {
     first_x = k->end_angle[0];
@@ -195,14 +197,14 @@ calc_angles(
 
   // Warning!!  acos() will give NAN if we give it badly normalized numbers.
   if (dx > 1.0) 
-    dx = 1.0;
+    dx = 1.0f;
   if (dx < -1.0) 
-    dx = -1.0;
+    dx = -1.0f;
 
   if (dy > 0) {
-    angle = acos(dx);
+    angle = acosf(dx);
   } else {
-    angle = -acos(dx);
+    angle = -acosf(dx);
   }
 
 #define REORIENT_TREAD 1
@@ -243,12 +245,12 @@ calc_angles(
     r = dotprod(b, a);
     // Warning!!  acos() will give NAN if we give it badly normalized numbers.
     if (r > 1.0) 
-      r = 1.0;
+      r = 1.0f;
     if (r < -1.0) 
-      r = -1.0;
+      r = -1.0f;
 
     ta = r;
-    r = acos(r);
+    r = acosf(r);
 
     // Check crossprod(b, a) to see if r is CW or CCW.
     i = turn_vector(b, a); 
@@ -331,14 +333,14 @@ calc_angles(
     // Do not round up the number of arc steps.  Stretch the tangent lines instead.
     k->n_steps = circ*type->scale;
 #else
-    k->n_steps = circ*type->scale+0.5;
+    k->n_steps = circ*type->scale+0.5f;
 #endif
   } else if (type->fill == FIXED) {
 
 #ifdef USE_TURN_ANGLE 
     PRECISION circ;
     circ = ta*k->radius;
-    k->n_steps = circ*type->scale + 0.5;
+    k->n_steps = circ*type->scale + 0.5f;
     k->n_steps++; // Not really steps, but segment endpoints?  So add 1 more point.
     printf("nsteps = %d = (%.2f / %.2f\n", k->n_steps, circ, 1.0 / type->scale);
 #else
@@ -352,7 +354,7 @@ calc_angles(
       ta = angle - 2*pi*(1-f);
       dx = k->radius*cos(ta) + k->part.offset[0] - last_x;
       dy = k->radius*sin(ta) + k->part.offset[1] - last_y;
-      if (sqrt(dx*dx+dy*dy) < type->thresh) {
+      if (sqrtf(dx*dx+dy*dy) < type->thresh) {
         break;
       }
     }
@@ -360,7 +362,7 @@ calc_angles(
 #endif
   } else { // (type->fill == STRETCH)
 
-    n =  2 * pi * k->radius/band_res + 0.5;
+    n =  2 * pi * k->radius/band_res + 0.5f;
 
     // circumference
     for (i = 0; i < n; i++) {
@@ -368,9 +370,9 @@ calc_angles(
       f = i;
       f /= n;
       ta = angle - 2*pi*(1-f);
-      dx = k->radius*cos(ta) + k->part.offset[0] - last_x;
-      dy = k->radius*sin(ta) + k->part.offset[1] - last_y;
-      if (sqrt(dx*dx+dy*dy) < type->thresh) {
+      dx = k->radius*cosf(ta) + k->part.offset[0] - last_x;
+      dy = k->radius*sinf(ta) + k->part.offset[1] - last_y;
+      if (sqrtf(dx*dx+dy*dy) < type->thresh) {
         break;
       }
     }
@@ -445,9 +447,9 @@ int calc_tangent_line(
   PRECISION rl,rk,rlk;
   PRECISION xlk,xlksq,ylk,ylksq;
   PRECISION denom;
-  PRECISION radius;
-  PRECISION angle;
-  PRECISION rx,ry;
+//  PRECISION radius;
+//  PRECISION angle;
+//  PRECISION rx,ry;
 
   inside1 = k->inside;
   inside2 = l->inside;
@@ -515,8 +517,8 @@ int calc_tangent_line(
       if (root < 0) {
         root = 0;
       }
-      root = sqrt(root);
-      deninv = 1.0/denom;
+      root = sqrtf(root);
+      deninv = 1.0f/denom;
       a = (-rlk*xlk - ylk*root)*deninv;
       b = (-rlk*ylk + xlk*root)*deninv;
       c = -(rk + a*k->part.offset[0] + b*k->part.offset[1]);
@@ -524,12 +526,12 @@ int calc_tangent_line(
       /* we have the normalized form of the tangent line */
 
       /* now we map the line to parametric form */
-      root = 1.0/(a * a + b * b);
+      root = 1.0f/(a * a + b * b);
       factor = -c*root;
       xo = a*factor;
       yo = b*factor;
 
-      root = sqrt(root);
+      root = sqrtf(root);
 
       f =  b*root;
       g = -a*root;
@@ -603,8 +605,8 @@ int draw_arc_line(
       dy = constraint->crossings[j+1][1] - constraint->crossings[j][1];
       dz = constraint->crossings[j+1][2] - constraint->crossings[j][2];
 
-      L1 = sqrt(dx*dx + dy*dy);
-      L2 = sqrt(dx*dx + dy*dy + dz*dz);
+      L1 = sqrtf(dx*dx + dy*dy);
+      L2 = sqrtf(dx*dx + dy*dy + dz*dz);
 #ifdef DEBUGGING_FIXED3_BANDS
       printf("Direction = (%.3f, %.3f, %.3f) => %.3f_L1, %.3f_L2)\n", dx, dy, dz, L1, L2);
       // ******************************
@@ -646,13 +648,13 @@ int draw_arc_line(
         n = 1;
         steps = 0;
       } else if (type->fill == FIXED3) {
-        n = L2*type->scale+0.5;
+        n = L2*type->scale+0.5f;
         steps = 1;
       } else if (type->fill > FIXED) {
-        n = L2*type->scale+0.5;
+        n = L2*type->scale+0.5f;
         steps = 1;
       } else { // FIXED
-        n = L2*type->scale+0.5;
+        n = L2*type->scale+0.5f;
         steps = 0;
       }
       
@@ -789,7 +791,7 @@ int draw_arc_line(
   // Create the arc
 
   {
-    PRECISION pi = 2*atan2(1,0);
+    PRECISION pi = 2*atan2f(1,0);
     PRECISION f[3];
 
     /* now for the arc */
@@ -802,8 +804,8 @@ int draw_arc_line(
 
     // vector for the first arc part
 
-    f[0] = constraint->radius * cos(constraint->s_angle);
-    f[1] = constraint->radius * sin(constraint->s_angle);
+    f[0] = constraint->radius * cosf(constraint->s_angle);
+    f[1] = constraint->radius * sinf(constraint->s_angle);
     f[2] = 0;
 
     if ((type->fill == FIXED3) || (type->fill > FIXED)) {
@@ -840,16 +842,16 @@ int draw_arc_line(
 
       // rotate the arc part so it hugs the current constraint
 
-      s[0] = constraint->radius * cos(constraint->s_angle + 2*pi*i/n);
-      s[1] = constraint->radius * sin(constraint->s_angle + 2*pi*i/n);
+      s[0] = constraint->radius * cosf(constraint->s_angle + 2*pi*i/n);
+      s[1] = constraint->radius * sinf(constraint->s_angle + 2*pi*i/n);
       s[2] = 0;
 
       dx = s[0] - f[0];
       dy = s[1] - f[1];
       dz = s[2] - f[2];
 
-      L1 = sqrt(dx*dx + dy*dy);
-      L2 = sqrt(dx*dx + dy*dy + dz*dz);
+      L1 = sqrtf(dx*dx + dy*dy);
+      L2 = sqrtf(dx*dx + dy*dy + dz*dz);
 
       if (L1 == 0) {
         orient[0][0] =  1;
@@ -876,7 +878,7 @@ int draw_arc_line(
       if (type->fill == STRETCH) {
         PRECISION scale[3][3];
         PRECISION angle = 2 * pi / n;
-        PRECISION l = type->scale*sin(angle);
+        PRECISION l = type->scale*sinf(angle);
         int k,j;
 
         if (i + 1 == steps) {

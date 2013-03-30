@@ -75,7 +75,7 @@ vectorlen(
     len += vect[i]*vect[i];
   }
 
-  return sqrt(len);
+  return sqrtf(len);
 }
 
 void
@@ -191,7 +191,7 @@ matrixmult3(
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
-      res[i][j] = 0.0;
+      res[i][j] = 0.0f;
     }
   }
 
@@ -273,14 +273,14 @@ matrixinv(
   matrixcp(a,src);
 
   for (k = 0; k < 3; k++) {
-    sup = 0.0;
+    sup = 0.0f;
     p[k] = 0;
     for (i = k; i < 3; i++) {
-      s = 0.0;
+      s = 0.0f;
       for (j = k; j < 3; j++) {
-        s += fabs(a[i][j]);
+        s += fabsf(a[i][j]);
       }
-      q = fabs(a[i][k])/s;
+      q = fabsf(a[i][k])/s;
       if (sup < q) {
         sup = q;
         p[k] = i;

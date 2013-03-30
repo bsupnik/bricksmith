@@ -8,6 +8,7 @@
 #import "LDrawUtilities.h"
 #import "MacLDraw.h"
 #import "LDrawPart.h"
+#import "LDrawLSynth.h"
 
 @implementation LSynthConfiguration
 
@@ -526,5 +527,27 @@ static LSynthConfiguration* instance = nil;
     }
     return nil;
 }//end typeForTypeName:
+
+//========== setLSynthClassForDirective:withType: ==============================
+//
+// Purpose:		Set the class of an LSynthDirective based on the part type name
+//
+//==============================================================================
+-(void) setLSynthClassForDirective:(LDrawLSynth *)directive withType:(NSString *)type
+{
+        // Determine the class - hose, band or part
+        if ([[self getQuickRefHoses] containsObject:type]) {
+            [directive setLsynthClass:LSYNTH_HOSE];
+        }
+        else if ([[self getQuickRefBands] containsObject:type]){
+            [directive setLsynthClass:LSYNTH_BAND];
+        }
+        else if ([[self getQuickRefParts] containsObject:type]){
+            [directive setLsynthClass:LSYNTH_PART];
+        }
+        else {
+            NSLog(@"Unknown LSynth type");
+        }
+}
 
 @end

@@ -239,6 +239,7 @@
 
 	self = [super initWithCoder:decoder];
 	cachedBounds = InvalidBox;
+	[self invalCache:CacheFlagBounds];	
 	
 	temporary = [decoder decodeBytesForKey:@"rotationAngle" returnedLength:NULL];
 	memcpy(&rotationAngle, temporary, sizeof(Tuple3));

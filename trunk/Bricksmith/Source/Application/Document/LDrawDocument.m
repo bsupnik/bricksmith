@@ -2491,7 +2491,7 @@
         // - Parent is the LDrawLSynth's parent step
         else if ([self->lastSelectedPart isMemberOfClass:[LDrawLSynth class]]) {
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            LDrawLSynth *synthPart = self->lastSelectedPart;
+            LDrawLSynth *synthPart = (LDrawLSynth *)self->lastSelectedPart;
             index = [[parent subdirectives] indexOfObject:synthPart] + 1;
         }
         
@@ -2548,9 +2548,9 @@
 
         // LDrawLSynth part selected, add at the end
         if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
-            parent = self->lastSelectedPart;
+            parent = (LDrawLSynth *)self->lastSelectedPart;
             index = [[parent subdirectives] count];
-            synthesizablePart = parent;
+            synthesizablePart = (LDrawLSynth *)parent;
 
             //  Add our constraint, resynthesize and mark as needing display
             [constraint setEnclosingDirective:parent];
@@ -2571,7 +2571,7 @@
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
             int row = [parent indexOfDirective:self->lastSelectedPart];
             index = row + 1;
-            synthesizablePart = parent;
+            synthesizablePart = (LDrawLSynth *)parent;
 
             //  Add our constraint, resynthesize and mark as needing display
             [constraint addObserver:parent];
@@ -2628,7 +2628,7 @@
 
         // LDrawLSynth part selected, add at the end
         if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
-            parent = self->lastSelectedPart;
+            parent = (LDrawLSynth *)self->lastSelectedPart;
             index = [[parent subdirectives] count];
 
         }
@@ -3200,6 +3200,12 @@
         else if (   [currentObject	isKindOfClass:[LDrawPart class]]
                  && [newParent isKindOfClass:[LDrawLSynth class]]
                  && ![[LSynthConfiguration sharedInstance] isLSynthConstraint:currentObject]) {
+            dragOperation	= NSDragOperationNone;
+        }
+
+        // Prohibit dragging things onto a container that it's not happy to accept
+        else if (   [newParent isKindOfClass:[LDrawContainer class]]
+                 && ![(LDrawContainer *)newParent acceptsDroppedDirective:currentObject]) {
             dragOperation	= NSDragOperationNone;
         }
 	}

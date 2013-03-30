@@ -17,7 +17,7 @@ mult_point(PRECISION r[3], PRECISION lhs[3], PRECISION rhs[3])
   r[1] = lhs[2]*rhs[0] - lhs[0]*rhs[2];
   r[2] = lhs[0]*rhs[1] - lhs[1]*rhs[0];
 
-  tt = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
+  tt = sqrtf(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
 
   r[0] /= tt;
   r[1] /= tt;
@@ -87,7 +87,7 @@ orient2(
     front[1] = segments[i+1].offset[1] - segments[i].offset[1];
     front[2] = segments[i+1].offset[2] - segments[i].offset[2];
 
-    r = sqrt(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
+    r = sqrtf(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
 
     front[0] /= r;
     front[1] /= r;
@@ -159,7 +159,7 @@ orient(
     up[1] = start_up[1]*(1-cur_length) + end_up[1]*cur_length;
     up[2] = start_up[2]*(1-cur_length) + end_up[2]*cur_length;
 
-    r = sqrt(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
+    r = sqrtf(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
     up[0] /= r;
     up[1] /= r;
     up[2] /= r;
@@ -168,7 +168,7 @@ orient(
     front[1] = segments[i+1].offset[1] - segments[i].offset[1];
     front[2] = segments[i+1].offset[2] - segments[i].offset[2];
 
-    r = sqrt(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
+    r = sqrtf(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
 
     front[0] /= r;
     front[1] /= r;
@@ -258,7 +258,7 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x*x + y*y + z*z);
+    ptp = sqrtf(x*x + y*y + z*z);
     ptp_sum += ptp;
   }
 
@@ -272,7 +272,7 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x*x + y*y + z*z);
+    ptp = sqrtf(x*x + y*y + z*z);
 
     ratio = ptp*n_segments/ptp_sum;
     if (ratio == 0) {
@@ -292,7 +292,7 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x * x + y * y + z * z);  /* E */
+    ptp = sqrtf(x * x + y * y + z * z);  /* E */
     ratio = ptp*n_segments/ptp_sum;     /* F */
     if (ratio == 0) {
       ratio = 1e-20;
@@ -369,7 +369,7 @@ void normalizequat(PRECISION q[4])
 {
   PRECISION L;
 
-  L = sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+  L = sqrtf(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
 
   q[0] /= L;
   q[1] /= L;
@@ -382,7 +382,7 @@ void normalize(PRECISION v[3])
 {
   PRECISION L;
 
-  L = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  L = sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 
   v[0] /= L;
   v[1] /= L;
@@ -422,7 +422,7 @@ void matrix2quat(
   T = 1 + m[0][0] + m[1][1] + m[2][2];
   if ( T > 0.00000001 )
   {
-    S = sqrt(T) * 2;
+    S = sqrtf(T) * 2;
     q[0] = ( m[2][1] - m[1][2] ) / S;
     q[1] = ( m[0][2] - m[2][0] ) / S;
     q[2] = ( m[1][0] - m[0][1] ) / S;
@@ -432,19 +432,19 @@ void matrix2quat(
   // which major diagonal element has the greatest value.
   // Depending on this, calculate the following:
   else if ( m[0][0] > m[1][1] && m[0][0] > m[2][2] )  {	// Column 0: 
-    S  = sqrt( 1.0 + m[0][0] - m[1][1] - m[2][2] ) * 2;
+    S  = sqrtf( 1.0 + m[0][0] - m[1][1] - m[2][2] ) * 2;
     q[0] = 0.25 * S;
     q[1] = ( m[1][0] + m[0][1] ) / S;
     q[2] = ( m[0][2] + m[2][0] ) / S;
     q[3] = ( m[2][1] - m[1][2] ) / S;
   } else if ( m[1][1] > m[2][2] ) {			// Column 1: 
-    S  = sqrt( 1.0 + m[1][1] - m[0][0] - m[2][2] ) * 2;
+    S  = sqrtf( 1.0 + m[1][1] - m[0][0] - m[2][2] ) * 2;
     q[0] = ( m[1][0] + m[0][1] ) / S;
     q[1] = 0.25 * S;
     q[2] = ( m[2][1] + m[1][2] ) / S;
     q[3] = ( m[0][2] - m[2][0] ) / S;
   } else {						// Column 2:
-    S  = sqrt( 1.0 + m[2][2] - m[0][0] - m[1][1] ) * 2;
+    S  = sqrtf( 1.0 + m[2][2] - m[0][0] - m[1][1] ) * 2;
     q[0] = ( m[0][2] + m[2][0] ) / S;
     q[1] = ( m[2][1] + m[1][2] ) / S;
     q[2] = 0.25 * S;
@@ -494,7 +494,7 @@ PRECISION quat2axisangle(
 
   cos_angle  = q[3];
   *a          = acos( cos_angle ) * 2;
-  sin_angle  = sqrt( 1.0 - cos_angle * cos_angle );
+  sin_angle  = sqrtf( 1.0 - cos_angle * cos_angle );
 
   if ( fabs( sin_angle ) < 0.0005 )
     sin_angle = 1;
