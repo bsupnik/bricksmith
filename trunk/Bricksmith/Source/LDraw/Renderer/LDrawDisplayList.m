@@ -529,6 +529,10 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	#endif
 
 	int total_texes = 0;
+	int total_tris = 0;
+	int total_quads = 0;
+	int total_lines = 0;
+
 
 	struct LDrawDLBuilderVertexLink * l;
 	struct LDrawDLBuilderPerTex * s;
@@ -539,6 +543,18 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	{
 		if(s->tri_head || s->line_head || s->quad_head)
 			++total_texes;
+		for(l = s->tri_head; l; l = l->next)
+		{
+			total_tris += l->vcount;
+		}
+		for(l = s->quad_head; l; l = l->next)
+		{
+			total_quads += l->vcount;
+		}
+		for(l = s->line_head; l; l = l->next)
+		{
+			total_lines += l->vcount;
+		}
 	}
 	
 	// No non-empty textures?  Bail out early - nuke our
@@ -560,20 +576,20 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	dl->instance_count = 0;
 	
 	dl->tex_count = total_texes;
-	
-	struct Mesh ** M = (struct Mesh **) LDrawBDPAllocate(ctx->alloc,sizeof(struct Mesh *) * total_texes);
-	
-	// M is an array of meshes...
 
 	struct LDrawDLPerTex * cur_tex = dl->texes;	
 	dl->flags = ctx->flags;
-	int ti = 0;
-	
-	int total_vertices = 0;
-	int total_indices = 0;
-	
+
+	total_tris /= 3;
+	total_quads /= 4;
+	total_lines /= 2;
+
+	struct Mesh * M = create_mesh(total_tris,total_quads,total_lines);
+
+
 	// Now: walk our building textures - for each non-empty one, we will copy it into
 	// the tex array and push its vertices.
+	int ti = 0;
 	for(s = ctx->head; s; s = s->next)
 	{
 		if(s->tri_head == NULL && s->line_head == NULL && s->quad_head == NULL)
@@ -581,62 +597,52 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 		if(s->spec.tex_obj != 0)
 			dl->flags |= dl_has_tex;
 
-		int total_tris = 0;
-		int total_quads = 0;
-		int total_lines = 0;
-
 		for(l = s->tri_head; l; l = l->next)
 		{
-			total_tris += l->vcount;
-		}
-		for(l = s->quad_head; l; l = l->next)
-		{
-			total_quads += l->vcount;
-		}
-		for(l = s->line_head; l; l = l->next)
-		{
-			total_lines += l->vcount;
-		}
-		
-		total_indices += total_tris;
-		total_indices += total_quads;
-		total_indices += total_lines;
-
-		total_tris /= 3;
-		total_quads /= 4;
-		total_lines /= 2;
-
-		M[ti] = create_mesh(total_tris,total_quads,total_lines);
-		
-		for(l = s->tri_head; l; l = l->next)
-		{
-			add_face(M[ti],
+			add_face(M,
 				l->data, l->data+10,l->data+20,NULL,
-				l->data+6);
+				l->data+6,ti);
 		}
 
 		for(l = s->quad_head; l; l = l->next)
 		{
-			add_face(M[ti],
+			add_face(M,
 				l->data, l->data+10,l->data+20,l->data+30,
-				l->data+6);
+				l->data+6,ti);
 		}
-		
-		for(l = s->line_head; l; l = l->next)
-		{
-			add_face(M[ti],l->data,l->data+10,NULL,NULL,l->data+6);
-		}
-		
-		finish_faces_and_sort(M[ti]);
-
-		finish_creases_and_join(M[ti]);
-
-		smooth_vertices(M[ti]);
-
-		total_vertices += merge_vertices(M[ti]);
 
 		++ti;
 	}
+
+	ti = 0;
+	for(s = ctx->head; s; s = s->next)
+	{
+		if(s->tri_head == NULL && s->line_head == NULL && s->quad_head == NULL)
+			continue;
+		if(s->spec.tex_obj != 0)
+			dl->flags |= dl_has_tex;
+
+		for(l = s->line_head; l; l = l->next)
+		{
+			add_face(M,l->data,l->data+10,NULL,NULL,l->data+6,ti);
+		}
+		
+		++ti;
+	}
+
+
+	finish_faces_and_sort(M);
+
+	add_creases(M);
+
+	find_and_remove_t_junctions(M);
+
+	finish_creases_and_join(M);
+
+	smooth_vertices(M);
+
+	int total_vertices = merge_vertices(M);
+	int total_indices = M->tri_count * 3 + M->quad_count * 4 + M->line_count * 2;
 
 	glGenBuffers(1,&dl->geo_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dl->geo_vbo);
@@ -649,48 +655,45 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, total_indices * sizeof(GLuint), NULL, GL_STATIC_DRAW);
 	volatile GLuint * index_ptr = (volatile GLuint *) glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
 	
+	int * line_start	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * line_count	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * tri_start		= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * tri_count		= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * quad_start	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * quad_count	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+
+	write_indexed_mesh(
+		M,
+		M->unique_vertex_count,
+		vertex_ptr,
+		M->vertex_count,
+		index_ptr,
+		0,
+		line_start,
+		line_count,
+		tri_start,
+		tri_count,
+		quad_start,
+		quad_count);
+
 	ti = 0;
-	int vert_base = 0;
-	int idx_base = 0;
 	
 	for(s = ctx->head; s; s = s->next)
 	{
-		int prim_starts[5], prim_counts[5];
-		
-		write_indexed_mesh(
-			M[ti],
-			M[ti]->unique_vertex_count,
-			vertex_ptr,
-			M[ti]->vertex_count,
-			index_ptr,
-			vert_base,
-			prim_starts,
-			prim_counts);
-		
-		vertex_ptr += (VERT_STRIDE * M[ti]->unique_vertex_count);
-		index_ptr += M[ti]->vertex_count;
-		
-		vert_base += M[ti]->unique_vertex_count;
-		
 		memcpy(&cur_tex->spec, &s->spec, sizeof(struct LDrawTextureSpec));
 		
-		cur_tex->quad_off = idx_base + prim_starts[4];
-		cur_tex->line_off = idx_base + prim_starts[2];
-		cur_tex->tri_off = idx_base + prim_starts[3];
-		cur_tex->quad_count = prim_counts[4];
-		cur_tex->line_count = prim_counts[2];
-		cur_tex->tri_count = prim_counts[3];
+		cur_tex->quad_off = quad_start[ti];
+		cur_tex->line_off = line_start[ti];
+		cur_tex->tri_off = tri_start[ti];
+		cur_tex->quad_count = quad_count[ti];
+		cur_tex->line_count = line_count[ti];
+		cur_tex->tri_count = tri_count[ti];
 		
-		idx_base += prim_counts[2];
-		idx_base += prim_counts[3];
-		idx_base += prim_counts[4];
-		
-		destroy_mesh(M[ti]);
 		++ti;
-		
 		++cur_tex;
-	
 	}
+
+	destroy_mesh(M);
 
 	#if WANT_STATS
 	dl->vrt_count = total_vertices;

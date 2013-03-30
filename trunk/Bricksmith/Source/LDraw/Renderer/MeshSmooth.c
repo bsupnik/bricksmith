@@ -57,9 +57,10 @@
 /*
 todo
 
-	T junctions?
+	put a TID texture ID on each face so we can do ONE big smooth of ALL textures
+	and then extract in texture order.
 
-	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
+ 	- switch to "binary seek" (e.g. +8 -4 + 2 -1 to get to a vertex)
 
 */
 
@@ -460,9 +461,17 @@ inline float vec3f_dot(const float * __restrict v1, const float * __restrict v2)
 	return v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
 }
 
+inline void vec3f_diff(float * __restrict dst, const float * __restrict a, const float * __restrict b)
+{
+	dst[0] = b[0] - a[0];
+	dst[1] = b[1] - a[1];
+	dst[2] = b[2] - a[2];
+}
+
 inline float vec3f_length2(const float * __restrict p1, const float * __restrict p2)
 {
-	float d[3] = { p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2] };
+	float d[3];
+	vec3f_diff(d, p1,p2);
 	return vec3f_dot(d,d);
 }
 
@@ -477,6 +486,27 @@ inline void vec3_cross(float * __restrict dst, const float * __restrict v1, cons
 	dst[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
 	dst[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);	
 }
+
+inline int in_between_line(const float * __restrict a, const float * __restrict b, const float * __restrict c)
+{
+	float ab[3], ac[3], cb[3];
+	vec3f_diff(ab,a,b);
+	vec3f_diff(ac,a,c);
+	vec3f_diff(cb,c,b);
+	return vec3f_dot(ab,ac) > 0.0f && vec3f_dot(cb, ac) < 0.0f;
+}
+
+inline void proj_onto_line(float * __restrict proj, const float * __restrict o, const float * __restrict v, const float * __restrict p)
+{
+	float op[3];
+	vec3f_diff(op,o,p);
+	float scalar = vec3f_dot(op,v) / vec3f_dot(v,v);
+	
+	proj[0] = o[0] + scalar * v[0];
+	proj[1] = o[1] + scalar * v[1];
+	proj[2] = o[2] + scalar * v[2];	
+}
+
 
 
 int CCW(const struct Face * f, int i) { assert(i >= 0 && i < f->degree); return (i          +1)%f->degree; }
@@ -669,10 +699,11 @@ struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count)
 	#if DEBUG
 	ret->flags = 0;
 	#endif
+	ret->highest_tid = 0;
 	return ret;
 }
 
-void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4])
+void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4], int tid)
 {
 	#if SLOW_CHECKING
 	if(vec3f_length2(p1,p2) <= EPSI2) mesh->flags |= TINY_INITIAL_TRIANGLE;
@@ -693,7 +724,9 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	
 	// grab a new face, grab verts for it
 	struct Face * f = mesh->faces + mesh->face_count++;
-
+	f->tid = tid;
+	if(tid > mesh->highest_tid) 
+		mesh->highest_tid = tid;
 	if(p3)
 	{
 		float	v1[3] = { p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]};
@@ -715,6 +748,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	f->vertex[3] = p4 ? (mesh->vertices + mesh->vertex_count++) : NULL;
 
 	f->neighbor[0] = f->neighbor[1] = f->neighbor[2] = f->neighbor[3] = UNKNOWN_FACE;		
+	f->t_list[0] = f->t_list[1] = f->t_list[2] = f->t_list[3] = NULL;
 
 	f->index[0] = f->index[1] = f->index[2] = f->index[3] = -1;
 	f->flip[0] = f->flip[1] = f->flip[2] = f->flip[3] = -1;
@@ -760,7 +794,7 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	f->vertex[3]->face = f;
 }
 
-static void print_vertex(struct Vertex * v, void * ref)
+static void visit_vertex_to_snap(struct Vertex * v, void * ref)
 {
 	struct Vertex * o = (struct Vertex *) ref;
 	struct Vertex * p, * n;
@@ -831,7 +865,7 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 			struct Vertex * vi = mesh->vertices + v;
 			float mib[3] = { vi->location[0] - EPSI, vi->location[1] - EPSI, vi->location[2] - EPSI };
 			float mab[3] = { vi->location[0] + EPSI, vi->location[1] + EPSI, vi->location[2] + EPSI };
-			scan_rtree(mesh->index, mib, mab, print_vertex, vi);
+			scan_rtree(mesh->index, mib, mab, visit_vertex_to_snap, vi);
 		}
 	}
 	
@@ -956,6 +990,7 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 	
 }
 
+
 static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 {
 	struct Vertex * begin, * end, *v;
@@ -1001,10 +1036,9 @@ static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[
 
 }
 
-void				finish_creases_and_join(struct Mesh * mesh)
+void add_creases(struct Mesh * mesh)
 {
 	int fi;
-	int i;
 	struct Face * f;
 	
 	for(fi = mesh->poly_count; fi < mesh->face_count; ++fi)
@@ -1013,6 +1047,251 @@ void				finish_creases_and_join(struct Mesh * mesh)
 		assert(f->degree == 2);
 		add_crease(mesh, f->vertex[0]->location, f->vertex[1]->location);		
 	}
+}
+
+struct t_finder_info_t { 
+	int split_quads;
+	int inserted_pts;
+	struct Vertex * v1;
+	struct Vertex * v2;
+	struct Face * f;
+	int i;
+	float line_dir[3];
+};
+
+void visit_possible_t_junc(struct Vertex * v, void * ref)
+{
+	struct t_finder_info_t * info = (struct t_finder_info_t *) ref;
+	assert(!vec3f_eq(info->v1->location,info->v2->location));
+	if(!vec3f_eq(v->location,info->v1->location) && !vec3f_eq(v->location,info->v2->location))
+	if(in_between_line(info->v1->location,v->location,info->v2->location))
+	{
+		float proj_p[3];
+		proj_onto_line(proj_p, info->v1->location,info->line_dir, v->location);
+
+		float dist2_lat = vec3f_length2(v->location, proj_p);
+		float dist2_lon = vec3f_length2(v->location, info->v1->location);
+					
+		if (dist2_lat < EPSI2)
+		{
+			assert(info->f->degree == 4 || info->f->degree == 3);
+			if(info->f->degree == 4)
+			if(info->f->t_list[0] == NULL &&
+				info->f->t_list[1] == NULL &&
+				info->f->t_list[2] == NULL &&
+				info->f->t_list[3] == NULL)
+			++info->split_quads;
+			++info->inserted_pts;
+			struct VertexInsert ** prev = &info->f->t_list[info->i];
+			
+			while(*prev && (*prev)->dist < dist2_lon)
+				prev = &(*prev)->next;
+				
+			struct VertexInsert * vi = (struct VertexInsert *) malloc(sizeof(struct VertexInsert));
+			vi->dist = dist2_lon;
+			vi->vert = v;
+			vi->next = *prev;
+			*prev = vi;
+			
+//			printf("possible T %f: %f,%f,%f (%f,%f,%f -> %f,%f,%f)\n",
+//				sqrtf(dist2_lon),
+//				v->location[0],v->location[1],v->location[2],
+//				info->v1->location[0],info->v1->location[1],info->v1->location[2],
+//				info->v2->location[0],info->v2->location[1],info->v2->location[2]);
+		}
+	}
+}
+
+void add_ear_and_remove(float * poly, int pt_count, struct Mesh * target_mesh, const float * color, int tid)
+{
+	int i, p, n, b = -1;
+	float best_dot = -99.0;
+
+	for(i = 0; i < pt_count; ++i)
+	{
+		float * p1, * p2, * p3;
+		float v1[3], v2[3];
+		float dot;
+		
+		p = (i + pt_count - 1) % pt_count;
+		n = (i + 1) % pt_count;
+		p1 = poly + 3 * p;
+		p2 = poly + 3 * i;
+		p3 = poly + 3 * n;
+		
+		vec3f_diff(v1,p2,p1);
+		vec3f_diff(v2,p2,p3);
+		vec3f_normalize(v1);
+		vec3f_normalize(v2);
+		
+		dot = vec3f_dot(v1,v2);
+		if(dot > best_dot || b == -1)
+		{
+			best_dot = dot;
+			b = i;
+		}
+	}
+	
+	assert(b >= 0);
+	assert(b < pt_count);
+	
+	p = (b + pt_count - 1) % pt_count;
+	n = (b + 1) % pt_count;
+	
+	add_face(target_mesh,poly+3*p,poly+3*b,poly+3*n,NULL,color,tid);
+	
+	if(b != pt_count-1)
+	{
+		memmove(poly+3*b,poly+3*b+3,(pt_count-b-1)*3*sizeof(float));
+	}
+	
+}
+
+
+void find_and_remove_t_junctions(struct Mesh * mesh)
+{
+	assert(mesh->vertex_count == mesh->vertex_capacity);
+	assert(mesh->face_count == mesh->face_capacity);
+	struct t_finder_info_t	info;
+	int fi;
+	info.inserted_pts = 0;
+	info.split_quads = 0;
+
+	
+	for(fi = 0; fi < mesh->poly_count; ++fi)
+	{
+		info.f = mesh->faces+fi;
+		if(info.f->degree > 2)
+		for(info.i = 0; info.i < info.f->degree; ++info.i)
+		{
+			// Sad -- this is not a win - this info is not yet available. :-(
+			if(info.f->neighbor[info.i] == NULL)
+				continue;
+				
+			info.v1 = info.f->vertex[ info.i					 ];
+			info.v2 = info.f->vertex[(info.i+1)%info.f->degree];
+			
+			if(vec3f_eq(info.v1->location,info.v2->location))
+				continue;
+			
+			info.line_dir[0] = info.v2->location[0] - info.v1->location[0];
+			info.line_dir[1] = info.v2->location[1] - info.v1->location[1];
+			info.line_dir[2] = info.v2->location[2] - info.v1->location[2];
+//			vec3f_normalize(info.line_dir);
+			
+			float mib[3] = { 
+								MIN(info.v1->location[0],info.v2->location[0]) - EPSI,
+								MIN(info.v1->location[1],info.v2->location[1]) - EPSI,
+								MIN(info.v1->location[2],info.v2->location[2]) - EPSI };
+
+			float mab[3] = { 
+								MAX(info.v1->location[0],info.v2->location[0]) + EPSI,
+								MAX(info.v1->location[1],info.v2->location[1]) + EPSI,
+								MAX(info.v1->location[2],info.v2->location[2]) + EPSI };
+								
+			scan_rtree(mesh->index, mib, mab, visit_possible_t_junc, &info);
+		}
+	}
+
+
+	printf("Subdivided %d quads and added %d pts.\n", info.split_quads,info.inserted_pts);
+	if(info.inserted_pts > 0)
+	{
+		int f;
+		struct Mesh * new_mesh;
+		assert(info.split_quads <= mesh->quad_count);
+		new_mesh = create_mesh(
+							mesh->tri_count + info.inserted_pts + 2 * info.split_quads,
+							mesh->quad_count - info.split_quads,
+							mesh->line_count);
+
+		for(f = 0; f < mesh->face_count; ++f)
+		{
+			struct Face * fp = mesh->faces+f;
+			if(fp->t_list[0] == NULL &&
+				fp->t_list[1] == NULL &&
+				fp->t_list[2] == NULL &&
+				fp->t_list[3] == NULL)
+			{
+				switch(fp->degree) {
+				case 2:
+					add_face(new_mesh,fp->vertex[0]->location,fp->vertex[1]->location,NULL,NULL,fp->color,fp->tid);
+					break;
+				case 3:
+					add_face(new_mesh,fp->vertex[0]->location,fp->vertex[1]->location,fp->vertex[2]->location,NULL,fp->color,fp->tid);
+					break;
+				case 4:
+					add_face(new_mesh,fp->vertex[0]->location,fp->vertex[1]->location,fp->vertex[2]->location,fp->vertex[3]->location,fp->color,fp->tid);
+					break;
+				default:
+					assert(!"bad degree.");
+				}
+			}
+			else
+			{
+				int i;
+				int total_pts = 0;
+				struct VertexInsert * vp;
+				float * poly, * write_ptr;
+				for(i = 0; i < fp->degree; ++i)
+				{
+					++total_pts;
+					for(vp = fp->t_list[i]; vp; vp = vp->next)
+						++total_pts;
+				}
+				
+				poly = (float *) malloc(sizeof(float) * 3 * total_pts);
+				write_ptr = poly;
+
+				for(i = 0; i < fp->degree; ++i)
+				{
+					memcpy(write_ptr, fp->vertex[i]->location,3*sizeof(float));
+					write_ptr += 3;
+
+					for(vp = fp->t_list[i]; vp; vp = vp->next)
+					{
+						memcpy(write_ptr, vp->vert->location,3*sizeof(float));
+						write_ptr += 3;
+					}
+				}
+				
+				while(total_pts > 3)
+				{
+					add_ear_and_remove(poly,total_pts,new_mesh,fp->color, fp->tid);
+					--total_pts;
+				}
+				
+				add_face(new_mesh,poly,poly+3,poly+6,NULL,fp->color, fp->tid);
+				free(poly);				
+			}
+		}
+
+		assert(new_mesh->vertex_count == new_mesh->vertex_capacity);
+		assert(new_mesh->face_count == new_mesh->face_capacity);
+
+		finish_faces_and_sort(new_mesh);
+		add_creases(new_mesh);
+		
+		struct Mesh temp;
+		
+		memcpy(&temp,mesh,sizeof(struct Mesh));
+		memcpy(mesh,new_mesh,sizeof(struct Mesh));
+		memcpy(new_mesh,&temp,sizeof(struct Mesh));
+		
+		destroy_mesh(new_mesh);
+		
+		
+	}
+}
+
+
+
+
+void				finish_creases_and_join(struct Mesh * mesh)
+{
+	int fi;
+	int i;
+	struct Face * f;
 	
 	for(fi = 0; fi < mesh->poly_count; ++fi)
 	{
@@ -1138,6 +1417,23 @@ void				finish_creases_and_join(struct Mesh * mesh)
 	#endif
 }
 
+static float weight_for_vertex(struct Vertex * v)
+{
+	return 1.0f;
+	struct Vertex * prev = v->face->vertex[CCW(v->face,v->index)];
+	struct Vertex * next = v->face->vertex[CW (v->face,v->index)];
+	float v1[3],v2[3], d;
+	vec3f_diff(v1,v->location,prev->location);
+	vec3f_diff(v2,v->location,next->location);
+	vec3f_normalize(v1);
+	vec3f_normalize(v2);
+	
+	d=vec3f_dot(v1,v2);
+	if(d > 1.0f) d = 1.0f;
+	if(d < -1.0f) d = -1.0f;
+	return acos(d);
+}
+
 void				smooth_vertices(struct Mesh * mesh)
 {
 	int f;
@@ -1156,21 +1452,24 @@ void				smooth_vertices(struct Mesh * mesh)
 		float N[3] = { 0 };
 		int ctr = 0;
 		int circ_dir = -1;
+		float w;
 		do {
 			++ctr;
 			//printf("\tAdd: %f,%f,%f\n",c->normal[0],c->normal[1],c->normal[2]);
 			
+			w = weight_for_vertex(c);
+			
 			if(vec3f_dot(v->face->normal,c->face->normal) > 0.0)
 			{
-				N[0] += c->face->normal[0];
-				N[1] += c->face->normal[1];
-				N[2] += c->face->normal[2];
+				N[0] += w*c->face->normal[0];
+				N[1] += w*c->face->normal[1];
+				N[2] += w*c->face->normal[2];
 			}
 			else
 			{
-				N[0] -= c->face->normal[0];
-				N[1] -= c->face->normal[1];
-				N[2] -= c->face->normal[2];
+				N[0] -= w*c->face->normal[0];
+				N[1] -= w*c->face->normal[1];
+				N[2] -= w*c->face->normal[2];
 			}
 		
 			c = circulate_any(c,&circ_dir);
@@ -1189,17 +1488,18 @@ void				smooth_vertices(struct Mesh * mesh)
 			{
 				++ctr;
 				//printf("\tAdd: %f,%f,%f\n",c->normal[0],c->normal[1],c->normal[2]);
+				w = weight_for_vertex(c);
 				if(vec3f_dot(v->face->normal,c->face->normal) > 0.0)
 				{
-					N[0] += c->face->normal[0];
-					N[1] += c->face->normal[1];
-					N[2] += c->face->normal[2];
+					N[0] += w*c->face->normal[0];
+					N[1] += w*c->face->normal[1];
+					N[2] += w*c->face->normal[2];
 				}
 				else
 				{
-					N[0] -= c->face->normal[0];
-					N[1] -= c->face->normal[1];
-					N[2] -= c->face->normal[2];
+					N[0] -= w*c->face->normal[0];
+					N[1] -= w*c->face->normal[1];
+					N[2] -= w*c->face->normal[2];
 				}
 		
 				c = circulate_any(c,&circ_dir);		
@@ -1275,6 +1575,7 @@ int				merge_vertices(struct Mesh * mesh)
 
 void				destroy_mesh(struct Mesh * mesh)
 {
+	int f,i;
 	#if DEBUG
 	#if SLOW_CHECKING
 		if(mesh->flags & TINY_INITIAL_TRIANGLE)	
@@ -1285,6 +1586,23 @@ void				destroy_mesh(struct Mesh * mesh)
 	#endif
 
 	destroy_rtree(mesh->index);
+	
+	for(f = 0; f < mesh->face_count; ++f)
+	{
+		struct Face * fp = mesh->faces+f;
+		for(i = 0; i < fp->degree; ++i)
+		{
+			struct VertexInsert * tj, *k;
+			tj = fp->t_list[i];
+			while(tj)
+			{
+				k = tj;
+				tj = tj->next;
+				free(k);
+			}
+		}
+	}
+	
 	free(mesh->vertices);
 	free(mesh->faces);
 	free(mesh);
@@ -1297,9 +1615,16 @@ void				write_indexed_mesh(
 							int						index_table_size,
 							volatile unsigned int *	io_index_table,
 							int						index_base,
-							int						out_prim_starts[5],
-							int						out_prim_counts[5])
+							int						out_line_starts[],
+							int						out_line_counts[],
+							int						out_tri_starts[],
+							int						out_tri_counts[],
+							int						out_quad_starts[],
+							int						out_quad_counts[])
 {
+	int * starts[5] = { NULL, NULL, out_line_starts, out_tri_starts, out_quad_starts };
+	int * counts[5] = { NULL, NULL, out_line_counts, out_tri_counts, out_quad_counts };
+
 	volatile float * vert_ptr = io_vertex_table;
 	#if DEBUG
 	volatile float * vert_stop = io_vertex_table + (vertex_table_size * 10);
@@ -1311,16 +1636,17 @@ void				write_indexed_mesh(
 	
 	int cur_idx = index_base;
 	
-	int d, i, vi;
+	int d, i, vi, ti;
 	struct Vertex * v, *vv;
 	struct Face * f;
 
 	// Outer loop: we are going to make one pass over the vertex array
 	// for each depth of primitive - in other words, we are going to
 	// 'fish out' all lines first, then all tris, then all quads.
+	for(ti = 0; ti <= mesh->highest_tid; ++ti)
 	for(d = 2; d <= 4; ++d)
 	{
-		out_prim_starts[d] = index_ptr - io_index_table;
+		starts[d][ti] = index_ptr - io_index_table;
 		
 		for(vi = 0; vi < mesh->vertex_count; ++vi)
 		{
@@ -1330,6 +1656,7 @@ void				write_indexed_mesh(
 			// For each vertex, we look at its face if it qualifies.
 			// This way we write the faces in sorted vertex order.
 			if(f->degree == d)
+			if(f->tid == ti)
 			{
 				for(i = 0; i < d; ++i)
 				{
@@ -1371,7 +1698,7 @@ void				write_indexed_mesh(
 			
 		} // end of linear vertex walk
 
-		out_prim_counts[d] = (index_ptr - io_index_table) - out_prim_starts[d];
+		counts[d][ti] = (index_ptr - io_index_table) - starts[d][ti];
 	
 
 	} // end of primitve sort

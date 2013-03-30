@@ -27,6 +27,11 @@ struct	Vertex;
 //   /   A   \ /		B's neighbor 2 is 1.  Thus A can recover e2's position
 //	0--------1/0		in B without having to test 2/2 and 1/0 for equality.
 
+struct VertexInsert {
+	struct VertexInsert *	next;
+	float					dist;
+	struct Vertex *			vert;
+};
 
 struct Face {
 	int					degree	   ;
@@ -34,9 +39,11 @@ struct Face {
 	struct Face *		neighbor[4];		// Neighbors - numbered by SOURCE vertex
 	int					index	[4];		// Index of our neighbor edge's source in neighbor.
 	int					flip	[4];		// Indicates that our neighbor is winding-flipped from us!
+	struct VertexInsert*t_list	[4];
 
 	float				normal[3];			// Whole-face properties
 	float				color[4];
+	int					tid;
 };
 
 struct Vertex {
@@ -87,15 +94,19 @@ struct Mesh {
 	#if DEBUG
 	int					flags;
 	#endif
+	int					highest_tid;
 };
 
 
 struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count);
 
-void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4]);
+void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4], int tid);
 void				finish_faces_and_sort(struct Mesh * mesh);
 
-//void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3]);
+void				find_and_remove_t_junctions(struct Mesh * mesh);
+
+void				add_creases(struct Mesh * mesh);
+
 void				finish_creases_and_join(struct Mesh * mesh);
 
 void				smooth_vertices(struct Mesh * mesh);
@@ -109,8 +120,12 @@ void				write_indexed_mesh(
 							int						index_table_size,
 							volatile unsigned int *	io_index_table,
 							int						index_base,
-							int						out_prim_starts[5],
-							int						out_prim_counts[5]);
+							int						out_line_starts[],
+							int						out_line_counts[],
+							int						out_tri_starts[],
+							int						out_tri_counts[],
+							int						out_quad_starts[],
+							int						out_quad_counts[]);
 
 void				destroy_mesh(struct Mesh * mesh);
 
