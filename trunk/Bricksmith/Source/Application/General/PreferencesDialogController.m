@@ -16,19 +16,32 @@
 // Create an appropriate .tiff icon for the preference panel 'tab' in e.g.
 // Resources/Icon
 // 
-// PreferencesDialogController.h
+// PreferencesDialogController.h:
 //   - #define a constant for the new panel
 //   - Add an IBOutlet for the new view and connect it to the view.
 //   - Add a declaration for a new -(void)setNewPanelTabValues method.
-// 
-// PreferencesDialogController.m
-//   - In -(void)setDialogValues add [self setNewPanelTabValues]
+//
+// PreferencesDialogController.m:
+//   - In -(void)setDialogValues add setNewPanelTabValues
 //   - Add the -(void)setNewPanelTabValues method
 //   - Update -(NSArray *)toolbarAllowedItemIdentifiers:
 //   - Update -(void)selectPanelWithIdentifier:
 //   - Update -(NSToolbarItem *)toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
-// 
+//
 // Add pref panel title to Resources/Localizable.strings in the Preferences section.
+//
+// Run it up and check it's there.  Hopefully you're good to go.  So, flesh out your .xib:
+//   - Add controls
+//   - Hook up Actions and Outlets in PreferencesDialogController.h as you build up your .xib
+//   - Flesh-out the Actions defined in the header in PreferencesDialogController.m
+//   - Add preference key #defines to MacLDraw.h
+//   - Make sure that your controls have sensible initial defaults set in
+//     PreferencesDialogController.m/+(void)ensureDefaults
+//
+// File open dialogs:  Add code to e.g. a button action to open a file selection system
+// dialog.  Search for 'folderChooser' for examples.  You'll also need to update
+// Localizable.strings.  Accessory views can be added to the .xib to inform the user.  These
+// need to be linked up as outlets.
 //
 //  Created by Allen Smith on 2/14/05.
 //  Copyright 2005. All rights reserved.
@@ -249,8 +262,37 @@ PreferencesDialogController *preferencesDialog = nil;
 //==============================================================================
 - (void) setLSynthTabValues
 {
-    //noop
-    NSLog(@"---- IN setLSynthTabValues");
+    // Get preference values
+    NSUserDefaults *userDefaults          = [NSUserDefaults standardUserDefaults];
+    NSString       *executablePath        = [userDefaults stringForKey:LSYNTH_EXECUTABLE_PATH_KEY];
+    NSString       *configurationPath     = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
+    int             selectionTransparency = [userDefaults integerForKey:LSYNTH_SELECTION_TRANSPARENCY_KEY]; // Stored as an int but interpreted as a percentage
+    NSColor        *selectionColor        = [userDefaults colorForKey:LSYNTH_SELECTION_COLOR_KEY];
+    LSynthSelectionModeT selectionMode    = [userDefaults integerForKey:LSYNTH_SELECTION_MODE_KEY];
+
+    // Set control values
+    [lsynthExecutablePath      setStringValue:executablePath];
+    [lsynthSelectionModeMatrix selectCellWithTag:selectionMode];
+    [lsynthSelectionColorWell  setColor:selectionColor];
+    [lsynthTransparencySlider  setIntegerValue:selectionTransparency];
+    [lsynthTransparencyText    setStringValue:[NSString stringWithFormat:@"%i", selectionTransparency]];
+
+    // Enable the correct bits of the selection section
+    if (selectionMode == TransparentSelection) {
+        [lsynthTransparencySlider setEnabled:YES];
+        [lsynthTransparencyText setEnabled:YES];
+        [lsynthSelectionColorWell setEnabled:NO];
+    }
+    else if (selectionMode == ColoredSelection) {
+        [lsynthTransparencySlider setEnabled:NO];
+        [lsynthTransparencyText setEnabled:NO];
+        [lsynthSelectionColorWell setEnabled:YES];
+    }
+    else if (selectionMode == TransparentColoredSelection) {
+        [lsynthTransparencySlider setEnabled:YES];
+        [lsynthTransparencyText setEnabled:YES];
+        [lsynthSelectionColorWell setEnabled:YES];
+    }
 }
 
 #pragma mark -
@@ -575,11 +617,118 @@ PreferencesDialogController *preferencesDialog = nil;
 	
 	[userDefaults setColor:newColor forKey:SYNTAX_COLOR_UNKNOWN_KEY];
 	
-	[[NSNotificationCenter defaultCenter] 
+	[[NSNotificationCenter defaultCenter]
 			postNotificationName:LDrawSyntaxColorsDidChangeNotification
 						  object:NSApp ];
 						  
 }//end unknownColorWellChanged:
+
+#pragma mark -
+#pragma mark LSynth Tab
+#pragma mark -
+
+//========== lsynthChooseExecutable: ==========================================
+//
+// Purpose:		The user wishes to choose their own LSynth executable.
+//
+//==============================================================================
+- (IBAction)lsynthChooseExecutable:(id)sender
+{
+    //Create a standard "Choose" dialog.
+    NSOpenPanel *lsynthExecutableChooser = [NSOpenPanel openPanel];
+    [lsynthExecutableChooser setCanChooseFiles:YES];
+    [lsynthExecutableChooser setCanChooseDirectories:NO];
+
+    //Tell the poor user what this dialog does!
+    [lsynthExecutableChooser setTitle:NSLocalizedString(@"Choose an LSynth executable", nil)];
+    [lsynthExecutableChooser setMessage:NSLocalizedString(@"lsynthExecutableChooserMessage", nil)];
+    [lsynthExecutableChooser setAccessoryView:lsynthExecutableChooserAccessoryView];
+    [lsynthExecutableChooser setPrompt:NSLocalizedString(@"Choose", nil)];
+
+    //Run the dialog.
+    if([lsynthExecutableChooser runModal] == NSOKButton)
+    {
+        // Get the file selected.
+        NSURL	*lsynthExecutableURL = [[lsynthExecutableChooser URLs] objectAtIndex:0];
+
+        // TODO: validation?
+        if([lsynthExecutableURL isFileURL]) {
+            [lsynthExecutablePath setStringValue:[lsynthExecutableURL path]];
+            NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+            [userDefaults setObject:[lsynthExecutableURL path] forKey:LSYNTH_EXECUTABLE_PATH_KEY];
+        }
+        else
+            NSBeep(); // sanity check
+    }
+}
+
+//========== lsynthTransparencySliderChanged: ==================================
+//
+// Purpose:		The user has changed the LSynth selection transparency
+//
+//==============================================================================
+- (IBAction)lsynthTransparencySliderChanged:(id)sender
+{
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+    [userDefaults setInteger:[sender integerValue] forKey:LSYNTH_SELECTION_TRANSPARENCY_KEY];
+    [lsynthTransparencyText setIntegerValue:[sender integerValue]];
+    [self lsynthRequiresRedisplay];
+}
+
+//========== lsynthTransparencyTextChanged: ====================================
+//
+// Purpose:		The user has changed the LSynth selection transparency
+//
+//==============================================================================
+- (IBAction)lsynthTransparencyTextChanged:(id)sender
+{
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+    [userDefaults setInteger:[sender integerValue] forKey:LSYNTH_SELECTION_TRANSPARENCY_KEY];
+    [lsynthTransparencySlider setIntegerValue:[sender integerValue]];
+    [self lsynthRequiresRedisplay];
+}
+
+//========== lsynthTransparencyTextChanged: ====================================
+//
+// Purpose:		The user has changed the LSynth selection color
+//
+//==============================================================================
+- (IBAction)lsynthSelectionColorWellClicked:(id)sender
+{
+    NSColor			*newColor		= [sender color];
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+
+    [userDefaults setColor:newColor forKey:LSYNTH_SELECTION_COLOR_KEY];
+    [self lsynthRequiresRedisplay];
+}
+
+//========== lsynthSelectionModeChanged: =======================================
+//
+// Purpose:		User has chosen between transparency, color or both
+//
+//==============================================================================
+- (IBAction)lsynthSelectionModeChanged:(id)sender
+{
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+
+    [userDefaults setInteger:[[sender selectedCell] tag] forKey:LSYNTH_SELECTION_MODE_KEY];
+
+    [self setLSynthTabValues];
+    [self lsynthRequiresRedisplay];
+}
+
+//========== lsynthRequiresRedisplay ===========================================
+//
+// Purpose:		Convenience method to notify LSynth parts that they may need
+//              redisplay if the selection highlighting has changed
+//
+//==============================================================================
+- (void) lsynthRequiresRedisplay
+{
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName:LSynthSelectionDisplayDidChangeNotification
+                          object:NSApp ];
+}
 
 
 #pragma mark -
@@ -795,7 +944,17 @@ PreferencesDialogController *preferencesDialog = nil;
 	// Tool Palette
 	//
 	[initialDefaults setObject:[NSNumber numberWithBool:NO]				forKey:TOOL_PALETTE_HIDDEN];
-	
+
+    //
+    // LSynth Palette
+    //
+    NSColor *lsynthSelectionColor = [NSColor redColor];
+    [initialDefaults setObject:@"" forKey:LSYNTH_EXECUTABLE_PATH_KEY];
+    [initialDefaults setObject:@"" forKey:LSYNTH_CONFIGURATION_PATH_KEY];
+    [initialDefaults setObject:[NSNumber numberWithInt:20] forKey:LSYNTH_SELECTION_TRANSPARENCY_KEY];
+    [initialDefaults setObject:[NSNumber numberWithInt:0] forKey:LSYNTH_SELECTION_MODE_KEY];
+    [initialDefaults setObject:[NSArchiver archivedDataWithRootObject:lsynthSelectionColor] forKey:LSYNTH_SELECTION_COLOR_KEY];
+
 	//
 	// Minifigure Generator
 	//
@@ -967,6 +1126,5 @@ PreferencesDialogController *preferencesDialog = nil;
 	[super dealloc];
 	
 }//end dealloc
-
 
 @end

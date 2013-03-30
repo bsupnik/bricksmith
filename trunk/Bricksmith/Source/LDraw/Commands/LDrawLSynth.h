@@ -14,7 +14,10 @@
 
 // The LSynth LDraw format extensions have several mandatory and several optional directives.
 // The following state diagram illustrates the order that directives could occur.
-// The initWithLines: parser in this class impliments this state machine.
+// The initWithLines: parser in this class implements this state machine.
+
+// TODO: need a transition between PARSER_PARSING_BEGUN and PARSER_FINISHED on 0 SYNTH END
+
 //
 //     State                                         Transitions
 //     ---------------------------------------------------------------------------------------

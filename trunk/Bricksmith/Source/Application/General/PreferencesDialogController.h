@@ -16,6 +16,14 @@
 #define PREFS_STYLE_TAB_IDENTIFIER		@"PreferencesTabStyles"
 #define PREFS_LSYNTH_TAB_IDENTIFIER     @"PreferencesTabLSynth"
 
+// The different LSynth selection modes
+typedef enum {
+    TransparentSelection        = 0,
+    ColoredSelection		    = 1,
+    TransparentColoredSelection = 2
+} LSynthSelectionModeT;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // class PreferencesDialogController
@@ -54,9 +62,18 @@
 	IBOutlet NSColorWell	*commentsColorWell;
 	IBOutlet NSColorWell	*unknownColorWell;
 	
+    // LSynth Tab
+    IBOutlet NSTextField    *lsynthExecutablePath;
+    IBOutlet NSTextField    *lsynthConfigurationPath;
+    IBOutlet NSMatrix       *lsynthSelectionModeMatrix;
+    IBOutlet NSSlider       *lsynthTransparencySlider;
+    IBOutlet NSTextField    *lsynthTransparencyText;
+    IBOutlet NSColorWell    *lsynthSelectionColorWell;
+    
 	// Miscellaneous
 	IBOutlet NSView			*folderChooserAccessoryView;
-	
+    IBOutlet NSView         *lsynthExecutableChooserAccessoryView;
+    NSTextField             *lsynthTransparencyNumberChanged;
 }
 //Initialization
 + (void) doPreferences;
@@ -78,8 +95,6 @@
 - (IBAction) rotateModeChanged:(id)sender;
 - (IBAction) mouseWheelChanged:(id)sender;
 
-
-
 // - Styles Tab
 - (IBAction) backgroundColorWellChanged:(id)sender;
 - (IBAction) modelsColorWellChanged:(id)sender;
@@ -95,6 +110,15 @@
 - (IBAction) pathTextFieldChanged:(id)sender;
 - (IBAction) reloadParts:(id)sender;
 - (IBAction) partBrowserStyleChanged:(id)sender;
+
+// - LSynth Tab
+- (IBAction)lsynthChooseExecutable:(id)sender;
+- (IBAction)lsynthTransparencySliderChanged:(id)sender;
+- (IBAction)lsynthTransparencyTextChanged:(id)sender;
+- (IBAction)lsynthSelectionColorWellClicked:(id)sender;
+- (IBAction)lsynthSelectionModeChanged:(id)sender;
+
+
 
 //Utilities
 + (void) ensureDefaults;

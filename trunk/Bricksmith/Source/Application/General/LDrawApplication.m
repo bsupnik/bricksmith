@@ -442,7 +442,6 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	
     // Parse the LSynth config file, using the bundled lsynth.mpd
     // TODO: make the location a preference
-    NSLog(@"Reading lsynth config");
     NSString *lsynthConfigPath = [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];
     [self->lsynthConfiguration parseLsynthConfig:lsynthConfigPath];
 

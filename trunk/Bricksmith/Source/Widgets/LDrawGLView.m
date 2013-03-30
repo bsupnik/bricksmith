@@ -1995,12 +1995,11 @@ static Size2 NSSizeToSize2(NSSize size)
 			
 			//---------- Reset event tracking flags ----------------------------
 
-            NSLog(@"DO UPDATE IN dragAndDropDragged");
+            //NSLog(@"DO UPDATE IN dragAndDropDragged");
             for (LDrawDirective *directive in [delegate selectedObjects]) {
-                NSLog(@"directive: %@", directive);
+                //NSLog(@"directive: %@", directive);
                 [directive sendMessageToObservers:MessageObservedChanged];
             }
-
 
 			[self->renderer setDraggingOffset:displacement];
 			
@@ -2444,7 +2443,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	[self->renderer updateDragWithPosition:V2Make(viewPoint.x, viewPoint.y)
 							 constrainAxis:constrainDragAxis];
 
-    NSLog(@"SHOULD UPDATE CONTAINER");
     // this doesn't cause a redraw.  Would be nice if it did.
     for (LDrawDirective *directive in [delegate selectedObjects]) {
         NSLog(@"directive: %@", directive);
