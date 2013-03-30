@@ -170,8 +170,6 @@
 // Object is the new color. No userInfo.
 #define LDrawViewBackgroundColorDidChangeNotification	@"LDrawViewBackgroundColorDidChangeNotification"
 
-
-
 //A model was added to a document.  Note that the object
 // for this notification is the LDrawFile that was edited!
 #define LDrawMPDSubModelAdded							@"LDrawMPDSubModelAdded"

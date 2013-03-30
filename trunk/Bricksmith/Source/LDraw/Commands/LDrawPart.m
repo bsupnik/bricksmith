@@ -195,7 +195,9 @@
 	self		= [super initWithCoder:decoder];
 	
 	[self setDisplayName:[decoder decodeObjectForKey:@"displayName"]];
-    [self setIconName:@"Brick"];
+
+    // Parts may have icons other than the standard "Brick", i.e. LSynth constraints
+    [self setIconName:[decoder decodeObjectForKey:@"iconName"]];
 
 	//Decoding structures is a bit messy.
 	temporary	= [decoder decodeBytesForKey:@"glTransformation" returnedLength:NULL];
@@ -218,6 +220,9 @@
 	[super encodeWithCoder:encoder];
 	
 	[encoder encodeObject:displayName	forKey:@"displayName"];
+
+    // Parts may have icons other than the standard "Brick", i.e. LSynth constraints
+	[encoder encodeObject:[self iconName] forKey:@"iconName"];
 	[encoder encodeBytes:(void *)glTransformation
 				  length:sizeof(GLfloat)*16
 				  forKey:@"glTransformation"];

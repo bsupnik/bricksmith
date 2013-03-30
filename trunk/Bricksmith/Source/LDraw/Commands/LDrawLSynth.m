@@ -42,8 +42,6 @@
         color            = [[LDrawColor alloc] init];
     }
 
-    //[self addObserver:self];
-
     return self;
 }//end init
 
@@ -87,6 +85,12 @@
         // 0 SYNTH BEGIN <SYNTH_TYPE> <COLOR>
 
         NSArray *fields = [currentLine componentsSeparatedByString:@" "];
+
+//        // hack to accept dodgy data - parser needs rewritten to be MUCH more robust
+//        if ([fields count] != 5) {
+//            return self;
+//        }
+
         NSString *type = [fields objectAtIndex:3];
         [self setLsynthType:[fields objectAtIndex:3]];
         [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [[fields objectAtIndex:4] integerValue]]];
@@ -102,6 +106,9 @@
         }
         else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
             [self setLsynthClass:LSYNTH_PART];
+        }
+        else {
+            NSLog(@"Unknown LSynth type");
         }
 
         // Parse out the END command
@@ -208,6 +215,60 @@
 
 }//end initWithLines:inRange:
 
+
+//========== initWithCoder: ====================================================
+//
+// Purpose:		Reads a representation of this object from the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to
+//				read and write LDraw objects as NSData.
+//
+//==============================================================================
+- (id) initWithCoder:(NSCoder *)decoder
+{
+    // Initialize the object.  We'll have somewhere to synthesize into.
+    [self init];
+
+    // Container Coder initialization.  This repopulates our contained objects
+    self = [super initWithCoder:decoder];
+
+    // Reinitialize LSynth-specific attributes
+    [self setLsynthClass:[decoder decodeIntForKey:@"lsynthClass"]];
+    [self setLsynthType:[decoder decodeObjectForKey:@"synthType"]];
+    [self setLDrawColor:[decoder decodeObjectForKey:@"color"]];
+
+    // Constraints' icons should have been encoded/decoded correctly so we do
+    // nothing in that respect.
+
+    // Ask for resynthesis since we don't preserve synthesized parts during a copy/paste
+    [self invalCache:ContainerInvalid];
+
+    return self;
+
+}//end initWithCoder:
+
+
+//========== encodeWithCoder: ==================================================
+//
+// Purpose:		Writes a representation of this object to the given coder,
+//				which is assumed to always be a keyed decoder. This allows us to
+//				read and write LDraw objects as NSData.
+//
+//              We don't store synthesized parts since they'll be recreated when
+//              we initWithCoder.
+//
+//==============================================================================
+- (void)encodeWithCoder:(NSCoder *)encoder
+{
+    // Encode container-related stuff: containedObjects etc.
+    [super encodeWithCoder:encoder];
+
+    [encoder encodeInt:lsynthClass forKey:@"lsynthClass"];
+    [encoder encodeObject:synthType forKey:@"synthType"];
+    [encoder encodeObject:color forKey:@"color"];
+
+}//end encodeWithCoder:
+
+
 #pragma mark -
 #pragma mark DISPLAY
 #pragma mark -
@@ -256,8 +317,6 @@
 //==============================================================================
 - (void) removeDirective:(LDrawDirective *)doomedDirective
 {
-    NSLog(@"REMOVE FROM LSYNTH");
-
     // We can leave removal to the base class
     [super removeDirective:doomedDirective];
 
@@ -355,7 +414,6 @@
         // This is the only place we invoke synthesis.  While it may incur a small delay in drawing
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
-            NSLog(@"invalidated lsynth container");
             [self synthesize];
             [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
         }
@@ -365,11 +423,6 @@
         {
             [currentDirective drawSelf:renderer];
         }
-
-        //        //  We've changed.  Picked up by e.g. the inspector
-        //        [[NSNotificationCenter defaultCenter]
-        //                postNotificationName:LDrawDirectiveDidChangeNotification
-        //                              object:self];
     }
 
 }//end drawSelf:
@@ -490,16 +543,13 @@
 
 }//end depthTest:inBox:transform:creditObject:bestObject:bestDepth:
 
-////========== write =============================================================
-////
-//// Purpose:		Write out all the commands in the step, prefaced by the line
-////				0 STEP
-////
-////==============================================================================
+//========== write =============================================================
+//
+// Purpose:		Write out all the commands in the part
+//
+//==============================================================================
 - (NSString *) write
 {
-    NSLog(@"write lsynth");
-
     NSMutableString *written        = [NSMutableString string];
     NSString        *CRLF           = [NSString CRLF];
     NSString        *lsynthVisibility = @"SHOW";
@@ -769,7 +819,6 @@
 //==============================================================================
 - (Vector3) displacementForNudge:(Vector3)nudgeVector
 {
-    NSLog(@"lsynth displacementForNudge");
     for (id directive in [self subdirectives]) {
          if ([directive isKindOfClass:[LDrawDrawableElement class]] &&
              [directive conformsToProtocol:@protocol(LDrawMovableDirective)]) {
@@ -1199,11 +1248,15 @@
 //========== acceptsDroppedDirective: ==========================================
 //
 // Purpose:		Returns YES if this container will accept a directive dropped on
-//              it.  Intended to be overridden by subclasses
+//              it.
 //
 //==============================================================================
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
 {
+    // We only accept constraints
+    if ([directive isKindOfClass:[LDrawPart class]]) {
+        return YES; // TODO: make more discriminatory and only accept appropriate constraints
+    }
     return NO;
 }
 
@@ -1338,8 +1391,7 @@
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable
 {
-    NSLog(@"LSynth receive message %i", msg);
-
+    // Typically if one of our child constraints changed we need to resynthesize
     if (msg == MessageObservedChanged) {
         [self invalCache:ContainerInvalid];
     }

@@ -3202,6 +3202,12 @@
                  && ![[LSynthConfiguration sharedInstance] isLSynthConstraint:currentObject]) {
             dragOperation	= NSDragOperationNone;
         }
+
+        // Prohibit dragging things onto a container that it's not happy to accept
+        else if (   [newParent isKindOfClass:[LDrawContainer class]]
+                 && ![(LDrawContainer *)newParent acceptsDroppedDirective:currentObject]) {
+            dragOperation	= NSDragOperationNone;
+        }
 	}
 	return dragOperation;
 
