@@ -268,14 +268,16 @@ PreferencesDialogController *preferencesDialog = nil;
     NSString       *configurationPath     = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
     int             selectionTransparency = [userDefaults integerForKey:LSYNTH_SELECTION_TRANSPARENCY_KEY]; // Stored as an int but interpreted as a percentage
     NSColor        *selectionColor        = [userDefaults colorForKey:LSYNTH_SELECTION_COLOR_KEY];
+    BOOL            saveSynthesizedParts  = [userDefaults boolForKey:LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY];
     LSynthSelectionModeT selectionMode    = [userDefaults integerForKey:LSYNTH_SELECTION_MODE_KEY];
 
     // Set control values
-    [lsynthExecutablePath      setStringValue:executablePath];
-    [lsynthSelectionModeMatrix selectCellWithTag:selectionMode];
-    [lsynthSelectionColorWell  setColor:selectionColor];
-    [lsynthTransparencySlider  setIntegerValue:selectionTransparency];
-    [lsynthTransparencyText    setStringValue:[NSString stringWithFormat:@"%i", selectionTransparency]];
+    [lsynthExecutablePath       setStringValue:executablePath];
+    [lsynthSelectionModeMatrix  selectCellWithTag:selectionMode];
+    [lsynthSelectionColorWell   setColor:selectionColor];
+    [lsynthTransparencySlider   setIntegerValue:selectionTransparency];
+    [lsynthTransparencyText     setStringValue:[NSString stringWithFormat:@"%i", selectionTransparency]];
+    [lsynthSaveSynthesizedParts setState:saveSynthesizedParts];
 
     // Enable the correct bits of the selection section
     if (selectionMode == TransparentSelection) {
@@ -717,6 +719,17 @@ PreferencesDialogController *preferencesDialog = nil;
     [self lsynthRequiresRedisplay];
 }
 
+//========== lsynthSaveSynthesizedPartsChanged: ================================
+//
+// Purpose:		User has toggled the 'Save synthesized parts' checkbox
+//
+//==============================================================================
+- (IBAction)lsynthSaveSynthesizedPartsChanged:(id)sender {
+    NSLog(@"lsynthSaveSynthesizedPartsChanged");
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:[lsynthSaveSynthesizedParts state] forKey:LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY];
+}
+
 //========== lsynthRequiresRedisplay ===========================================
 //
 // Purpose:		Convenience method to notify LSynth parts that they may need
@@ -954,6 +967,7 @@ PreferencesDialogController *preferencesDialog = nil;
     [initialDefaults setObject:[NSNumber numberWithInt:20] forKey:LSYNTH_SELECTION_TRANSPARENCY_KEY];
     [initialDefaults setObject:[NSNumber numberWithInt:0] forKey:LSYNTH_SELECTION_MODE_KEY];
     [initialDefaults setObject:[NSArchiver archivedDataWithRootObject:lsynthSelectionColor] forKey:LSYNTH_SELECTION_COLOR_KEY];
+    [initialDefaults setObject:[NSNumber numberWithBool:YES] forKey:LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY];
 
 	//
 	// Minifigure Generator

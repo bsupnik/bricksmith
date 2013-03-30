@@ -69,8 +69,9 @@ typedef enum {
     IBOutlet NSSlider       *lsynthTransparencySlider;
     IBOutlet NSTextField    *lsynthTransparencyText;
     IBOutlet NSColorWell    *lsynthSelectionColorWell;
-    
-	// Miscellaneous
+    IBOutlet NSButton       *lsynthSaveSynthesizedParts;
+	
+    // Miscellaneous
 	IBOutlet NSView			*folderChooserAccessoryView;
     IBOutlet NSView         *lsynthExecutableChooserAccessoryView;
     NSTextField             *lsynthTransparencyNumberChanged;
@@ -117,8 +118,7 @@ typedef enum {
 - (IBAction)lsynthTransparencyTextChanged:(id)sender;
 - (IBAction)lsynthSelectionColorWellClicked:(id)sender;
 - (IBAction)lsynthSelectionModeChanged:(id)sender;
-
-
+- (IBAction)lsynthSaveSynthesizedPartsChanged:(id)sender;
 
 //Utilities
 + (void) ensureDefaults;
