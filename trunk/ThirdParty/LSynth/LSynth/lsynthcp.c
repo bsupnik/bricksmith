@@ -440,7 +440,7 @@ parse_descr(char *fullpath_progname)
             if (L3fgets(line,sizeof(line),mpd)) {
                 if (strcasecmp(line,"0 SYNTH END\n") != 0) {
                     printf("Error: Expected SYNTH END, got this instead\n");
-                    printf(line);
+                    printf("%s", line);
                     fclose(mpd);
                     return -1;
                 }
@@ -511,7 +511,7 @@ parse_descr(char *fullpath_progname)
             if (L3fgets(line,sizeof(line),mpd)) {
                 if (strcasecmp(line,"0 SYNTH END\n") != 0) {
                     printf("Error: Expected SYNTH END, got this instead\n");
-                    printf(line);
+                    printf("%s", line);
                     fclose(mpd);
                     return -1;
                 }
@@ -583,7 +583,7 @@ parse_descr(char *fullpath_progname)
             if (L3fgets(line,sizeof(line),mpd)) {
                 if (strcasecmp(line,"0 SYNTH END\n") != 0) {
                     printf("Error: Expected SYNTH END, got this instead\n");
-                    printf(line);
+                    printf("%s", line);
                     fclose(mpd);
                     return -1;
                 }
@@ -701,7 +701,7 @@ product_nickname(char *type)
 
 int skip_synthesized(FILE *dat, char *line, int sizeof_line)
 {
-    int rc;
+//    int rc;
     char *nonwhite;
     
     while (L3fgets(line,sizeof(line),dat)) {
@@ -940,8 +940,8 @@ int synth_band_class(
     return 0;
 }
 
-PRECISION max_bend = 0.05;
-PRECISION max_twist = 0.0174;
+PRECISION max_bend = 0.05f;
+PRECISION max_twist = 0.0174f;
 PRECISION band_res = 1;
 
 //---------------------------------------------------------------------------
@@ -949,7 +949,7 @@ PRECISION band_res = 1;
 char * stripquotes(char *s)
 {
     char *p;
-    int i;
+//    int i;
     
     // Strip away leading whitespace (spaces and tabs).
     s += strspn(s, " \t");
@@ -1045,7 +1045,7 @@ int main(int argc, char* argv[])
     }
     
     if (argc == 2 && strcasecmp(argv[1],"-p") == 0) {
-        printf(argv[0]);
+        printf("%s", argv[0]);
         exit(0);
     }
     
@@ -1136,7 +1136,7 @@ int main(int argc, char* argv[])
      */
     
     while (L3fgets(line,sizeof(line), dat)) {
-        int t1;
+//        int t1;
         
         nonwhite = line + strspn(line, " \t");
         strclean(nonwhite);

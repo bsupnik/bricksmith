@@ -22,7 +22,7 @@ mult_point(PRECISION r[3], PRECISION lhs[3], PRECISION rhs[3])
  
   if (tt > 0.0)
   {
-    tt = sqrt(tt);
+    tt = sqrtf(tt);
 
     r[0] /= tt;
     r[1] /= tt;
@@ -94,7 +94,7 @@ orient2(
     front[1] = segments[i+1].offset[1] - segments[i].offset[1];
     front[2] = segments[i+1].offset[2] - segments[i].offset[2];
 
-    r = sqrt(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
+    r = sqrtf(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
 
     front[0] /= r;
     front[1] /= r;
@@ -181,7 +181,7 @@ orient(
     up[1] = start_up[1]*(1-cur_length) + end_up[1]*cur_length;
     up[2] = start_up[2]*(1-cur_length) + end_up[2]*cur_length;
 
-    r = sqrt(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
+    r = sqrtf(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
 #ifdef DEBUG_ORIENT_MATH
     printf("UP length = %.3f\n", r);
 #endif
@@ -194,7 +194,7 @@ orient(
     front[1] = segments[i+1].offset[1] - segments[i].offset[1];
     front[2] = segments[i+1].offset[2] - segments[i].offset[2];
 
-    r = sqrt(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
+    r = sqrtf(front[0]*front[0] + front[1]*front[1] + front[2]*front[2]);
 
     front[0] /= r;
     front[1] /= r;
@@ -279,7 +279,7 @@ synth_curve(
   //printf("attrib = %.3f, dist = %.3f, dotprod = %.3f\n)",attrib, x, y);
   if ((x < attrib*2) && (y <= 0.001))
   {  
-    attrib = x/2.0;
+    attrib = x/2.0f;
     //printf("newattrib = %.3f, dist = %.3f, dotprod = %.3f\n)",attrib, x, y);
     start_speed_v[0] = stop_speed_v[0] = 0;
     start_speed_v[1] = attrib;
@@ -321,7 +321,7 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x*x + y*y + z*z);
+    ptp = sqrtf(x*x + y*y + z*z);
     ptp_sum += ptp;
   }
 
@@ -335,13 +335,13 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x*x + y*y + z*z);
+    ptp = sqrtf(x*x + y*y + z*z);
 
     ratio = ptp*n_segments/ptp_sum;
     if (ratio == 0) {
-      ratio = 1e-20;
+      ratio = 1e-20f;
     }
-    i_time = 1.0/(n_segments*ratio);
+    i_time = 1.0f/(n_segments*ratio);
     i_time_sum += i_time;
   }
 
@@ -355,15 +355,15 @@ synth_curve(
     y = segments[i + 1].offset[1] - segments[i].offset[1];
     z = segments[i + 1].offset[2] - segments[i].offset[2];
 
-    ptp = sqrt(x * x + y * y + z * z);  /* E */
+    ptp = sqrtf(x * x + y * y + z * z);  /* E */
     ratio = ptp*n_segments/ptp_sum;     /* F */
     if (ratio == 0) {
-      ratio = 1e-20;
+      ratio = 1e-20f;
     }
-    i_time = 1.0/(n_segments*ratio);    /* G */
+    i_time = 1.0f/(n_segments*ratio);    /* G */
     i_time_sum2 += i_time;
 
-    foo = 1.0/n_segments;
+    foo = 1.0f/n_segments;
     foo /= ratio;
     foo /= i_time_sum;
 
@@ -432,7 +432,7 @@ int normalizequat(PRECISION q[4])
 {
   PRECISION L;
 
-  L = sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+  L = sqrtf(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
 
   if (L == 0.0)
     return 0;  // Uh Oh, the magnitude is zero.
@@ -450,7 +450,7 @@ int normalize(PRECISION v[3])
 {
   PRECISION L;
 
-  L = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  L = sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 
   if (L == 0.0)
     return 0;  // Uh Oh, the magnitude is zero.
@@ -465,7 +465,7 @@ int normalize(PRECISION v[3])
 /***************************************************************/
 /* returns det(m), m is 3x3 (3x4) matrix */
 /***************************************************************/
-PRECISION M3Det(PRECISION m[3][4]) /* Note argument type !            */
+PRECISION M3Det(PRECISION m[3][3]) /* Note argument type !            */
 {
    return (m[0][0] * (m[1][1] * m[2][2] - m[2][1] * m[1][2]) +
            m[1][0] * (m[2][1] * m[0][2] - m[0][1] * m[2][2]) +
@@ -481,9 +481,9 @@ void axisangle2quat(
 {
   PRECISION sina,cosa;
   
-  a = a / 2.0;
-  sina = sin(a);
-  cosa = cos(a);
+  a = a / 2.0f;
+  sina = sinf(a);
+  cosa = cosf(a);
   q[0] = v[0] * sina;
   q[1] = v[1] * sina;
   q[2] = v[2] * sina;
@@ -513,10 +513,10 @@ void matrix2quat(
 #ifdef SPEEDY_WAY
 #define max(a,b) ((a > b) ? (a) : (b))
 
-  q[0] = sqrt( max( 0, 1 + m[0][0] - m[1][1] - m[2][2] ) ) / 2; 
-  q[1] = sqrt( max( 0, 1 - m[0][0] + m[1][1] - m[2][2] ) ) / 2; 
-  q[2] = sqrt( max( 0, 1 - m[0][0] - m[1][1] + m[2][2] ) ) / 2; 
-  q[3] = sqrt( max( 0, 1 + m[0][0] + m[1][1] + m[2][2] ) ) / 2; 
+  q[0] = sqrtf( max( 0, 1 + m[0][0] - m[1][1] - m[2][2] ) ) / 2; 
+  q[1] = sqrtf( max( 0, 1 - m[0][0] + m[1][1] - m[2][2] ) ) / 2; 
+  q[2] = sqrtf( max( 0, 1 - m[0][0] - m[1][1] + m[2][2] ) ) / 2; 
+  q[3] = sqrtf( max( 0, 1 + m[0][0] + m[1][1] + m[2][2] ) ) / 2; 
   q[0] = _copysign( q[0], m[2][1] - m[1][2] );
   q[1] = _copysign( q[1], m[0][2] - m[2][0] );
   q[2] = _copysign( q[2], m[1][0] - m[0][1] );
@@ -527,32 +527,32 @@ void matrix2quat(
   T = 1 + m[0][0] + m[1][1] + m[2][2];
   if ( T > 0.00000001 )
   {
-    S = sqrt(T) * 2;
+    S = sqrtf(T) * 2;
     q[0] = ( m[2][1] - m[1][2] ) / S;
     q[1] = ( m[0][2] - m[2][0] ) / S;
     q[2] = ( m[1][0] - m[0][1] ) / S;
-    q[3] = 0.25 * S;
+    q[3] = 0.25f * S;
   }
   // If the trace of the matrix is equal to zero then identify
   // which major diagonal element has the greatest value.
   // Depending on this, calculate the following:
   else if ( (m[0][0] > m[1][1]) && (m[0][0] > m[2][2]) )  {	// Column 0: 
-    S  = sqrt( 1.0 + m[0][0] - m[1][1] - m[2][2] ) * 2;
-    q[0] = 0.25 * S;
+    S  = sqrtf( 1.0f + m[0][0] - m[1][1] - m[2][2] ) * 2;
+    q[0] = 0.25f * S;
     q[1] = ( m[1][0] + m[0][1] ) / S;
     q[2] = ( m[0][2] + m[2][0] ) / S;
     q[3] = ( m[1][2] - m[2][1] ) / S; //    q[3] = ( m[2][1] - m[1][2] ) / S;
   } else if ( m[1][1] > m[2][2] ) {			// Column 1: 
-    S  = sqrt( 1.0 + m[1][1] - m[0][0] - m[2][2] ) * 2;
+    S  = sqrtf( 1.0f + m[1][1] - m[0][0] - m[2][2] ) * 2;
     q[0] = ( m[1][0] + m[0][1] ) / S;
-    q[1] = 0.25 * S;
+    q[1] = 0.25f * S;
     q[2] = ( m[2][1] + m[1][2] ) / S;
     q[3] = ( m[0][2] - m[2][0] ) / S;
   } else {						// Column 2:
-    S  = sqrt( 1.0 + m[2][2] - m[0][0] - m[1][1] ) * 2;
+    S  = sqrtf( 1.0f + m[2][2] - m[0][0] - m[1][1] ) * 2;
     q[0] = ( m[0][2] + m[2][0] ) / S;
     q[1] = ( m[2][1] + m[1][2] ) / S;
-    q[2] = 0.25 * S;
+    q[2] = 0.25f * S;
     q[3] = ( m[0][1] - m[1][0] ) / S; //    q[3] = ( m[1][0] - m[0][1] ) / S;
   }
 }
@@ -598,8 +598,8 @@ PRECISION quat2axisangle(
   normalizequat( q );
 
   cos_angle  = q[3];
-  *a          = acos( cos_angle ) * 2;
-  sin_angle  = sqrt( 1.0 - cos_angle * cos_angle );
+  *a          = acosf( cos_angle ) * 2;
+  sin_angle  = sqrtf( 1.0f - cos_angle * cos_angle );
 
   if ( fabs( sin_angle ) < 0.0005 )
     sin_angle = 1;
@@ -634,10 +634,10 @@ PRECISION get_turn_mat(PRECISION M[3][3],PRECISION a[3],PRECISION b[3],PRECISION
     r = dotprod(b, a);
     // Warning!!  acos() will give NAN if we give it badly normalized numbers.
     if (r > 1.0) 
-      r = 1.0;
+      r = 1.0f;
     if (r < -1.0) 
-      r = -1.0;
-    r = acos(r);
+      r = -1.0f;
+    r = acosf(r);
 
     //Cross product gives turn axis.
     mult_point(t, a, b);
@@ -716,8 +716,8 @@ orientq(
   int i;
 
 //#ifdef DEBUG_QUAT_MATH
-  PRECISION pi = 2*atan2(1,0);
-  PRECISION degrees = 180.0 / pi;
+  PRECISION pi = 2*atan2f(1,0);
+  PRECISION degrees = 180.0f / pi;
 //#endif      
 
 #if 0
@@ -924,10 +924,10 @@ orientq(
   r = dotprod(up, end_up);
   // Warning!!  acos() will give NAN if we give it badly normalized numbers.
   if (r > 1.0) 
-    r = 1.0;
+    r = 1.0f;
   if (r < -1.0) 
-    r = -1.0;
-  r = acos(r);
+    r = -1.0f;
+  r = acosf(r);
 
   //Cross product gives turn axis.
   mult_point(t, up, end_up);
@@ -987,10 +987,10 @@ orientq(
       m[2][1] = 0;
       m[2][2] = 1;
 
-      m[0][0] =   cos(a);
-      m[0][2] =   sin(a);
-      m[2][0] =  -sin(a);
-      m[2][2] =   cos(a);
+      m[0][0] =   cosf(a);
+      m[0][2] =   sinf(a);
+      m[2][0] =  -sinf(a);
+      m[2][2] =   cosf(a);
 
       matrixmult(segments[i-1].orient, m);
     }

@@ -210,16 +210,19 @@
 		95BE9C1C1609F609004437E1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
 				PRODUCT_NAME = lsynthcp;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
 		95BE9C1D1609F609004437E1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_UNUSED_VARIABLE = NO;
 				PRODUCT_NAME = lsynthcp;
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};
