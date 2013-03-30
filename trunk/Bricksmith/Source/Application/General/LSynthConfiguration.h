@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @class LDrawPart;
+@class LDrawLSynth;
 
 // The class of a synthesis object
 typedef enum
@@ -72,5 +73,7 @@ typedef enum
 -(NSMutableArray *) getQuickRefHoseConstraints;
 -(NSDictionary *)   constraintDefinitionForPart:(LDrawPart *)directive;
 -(NSDictionary *)   typeForTypeName:(NSString *)typeName;
+
+-(void) setLSynthClassForDirective:(LDrawLSynth *)directive withType:(NSString *)type;
 
 @end

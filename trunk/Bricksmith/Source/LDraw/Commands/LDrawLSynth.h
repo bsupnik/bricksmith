@@ -12,12 +12,45 @@
 #import "LDrawMovableDirective.h"
 #import "LSynthConfiguration.h"
 
+// The LSynth LDraw format extensions have several mandatory and several optional directives.
+// The following state diagram illustrates the order that directives could occur.
+// The initWithLines: parser in this class impliments this state machine.
+//
+//     State                                         Transitions
+//     ---------------------------------------------------------------------------------------
+//
+//     PARSER_READY_TO_PARSE                         o
+//                                                   |
+//                                                   |    0 SYNTH BEGIN X X
+//                                                   V
+//     PARSER_PARSING_BEGUN                          o
+//                                                   |    0 SYNTH SHOW or
+//                                                   |    1 X X X ...
+//                                                   V
+//     PARSER_PARSING_CONSTRAINTS                  /\o
+//                                    1 X X X ... |_/|
+//                                                   |    0 SYNTH SYNTHESIZED BEGIN
+//                                                   V
+//     PARSER_PARSING_SYNTHESIZED                  /\o
+//                                    1 X X X ... |_/|
+//                                                   |    0 SYNTH SYNTHESIZED END
+//                                                   V
+//     PARSER_SYNTHESIZED_FINISHED                   o
+//                                                   |    0 SYNTH END
+//                                                   |
+//                                                   V
+//     PARSER_FINISHED                               o
+//
+
 // Lsynth block parser states
 typedef enum
 {
-    PARSER_READY             = 1,
-    PARSER_CONSTRAINTS       = 2,
-    PARSER_SYNTHESIZED_PARTS = 3,
+    PARSER_READY_TO_PARSE       = 1, // Idle state - we've not found a SYNTH BEGIN <TYPE> <COLOR> line
+    PARSER_PARSING_BEGUN        = 2, // SYNTH BEGIN has been found
+    PARSER_PARSING_CONSTRAINTS  = 3, // Parsing constraints
+    PARSER_PARSING_SYNTHESIZED  = 4, // Parsing synthesized parts
+    PARSER_SYNTHESIZED_FINISHED = 5, // Looking for SYNTH END
+    PARSER_FINISHED             = 6, // All finished.
     PARSER_STATE_COUNT
 } LSynthParserStateT;
 
