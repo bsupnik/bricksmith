@@ -147,6 +147,37 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	
 }//end copyWithZone:
 
+//========== fullCopyWithZone: =====================================================
+//
+// Purpose:		Returns a duplicate of this color.  Used for creating transparent
+//              versions of a color on the fly
+//
+// Notes:		This method must be implemented in fussy ways to allow this
+//				object to serve as a key for NSDictionaries, which it does in
+//				LDrawVertexes.
+//
+//              This is probably not an efficient method
+//
+//==============================================================================
+- (id)fullCopyWithZone:(NSZone *)zone
+{
+	LDrawColor *copied = (LDrawColor *)[super copyWithZone:zone];
+
+	copied->colorCode				= self->colorCode;
+	memcpy(copied->colorRGBA,		  self->colorRGBA, sizeof(colorRGBA));
+	copied->edgeColorCode			= self->edgeColorCode;
+	memcpy(copied->edgeColorRGBA,	  self->edgeColorRGBA, sizeof(edgeColorRGBA));
+	copied->hasExplicitAlpha		= self->hasExplicitAlpha;
+	copied->hasLuminance			= self->hasLuminance;
+	copied->luminance				= self->luminance;
+	copied->material				= self->material;
+	[copied setMaterialParameters:[self materialParameters]];
+	[copied setName:[self name]];
+
+	return copied;
+
+}//end copyWithZone:
+
 
 //========== finishParsing: ====================================================
 //
@@ -991,5 +1022,68 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v )
 	*h *= 60;				// degrees
 	if( *h < 0 )
 		*h += 360;
+}
+
+
+//========== HSVtoRGB ==========================================================
+//
+// Purpose:		Converts an HSV color into Red-Green-Blue
+//
+// Parameters:	r,g,b values are from 0 to 1
+//				h = [0,360], s = [0,1], v = [0,1]
+//					if s == 0, then h = -1 (undefined)
+//
+// Notes:		from http://www.cs.rit.edu/~ncs/color/t_convert.html
+//
+//==============================================================================
+void HSVtoRGB( float h, float s, float v, float *r, float *g, float *b )
+{
+	int i;
+	float f, p, q, t;
 	
+	if( s == 0 ) {
+		// achromatic (grey)
+		*r = *g = *b = v;
+		return;
+	}
+	
+	h /= 60;			// sector 0 to 5
+	i = floor( h );
+	f = h - i;			// factorial part of h
+	p = v * ( 1 - s );
+	q = v * ( 1 - s * f );
+	t = v * ( 1 - s * ( 1 - f ) );
+	
+	switch( i ) {
+		case 0:
+			*r = v;
+			*g = t;
+			*b = p;
+			break;
+		case 1:
+			*r = q;
+			*g = v;
+			*b = p;
+			break;
+		case 2:
+			*r = p;
+			*g = v;
+			*b = t;
+			break;
+		case 3:
+			*r = p;
+			*g = q;
+			*b = v;
+			break;
+		case 4:
+			*r = t;
+			*g = p;
+			*b = v;
+			break;
+		default:		// case 5:
+			*r = v;
+			*g = p;
+			*b = q;
+			break;
+	}
 }

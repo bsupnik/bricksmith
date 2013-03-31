@@ -9,6 +9,7 @@
 #import "Suggestions.h"
 #import "LDrawUtilities.h"
 #import "StringCategory.h"
+#import "PartLibrary.h"
 
 @implementation PartSuggestion
 
@@ -29,9 +30,6 @@
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
 		self->child = [parsedField retain];
 
-		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		self->role = [parsedField retain];
-		
 		// Matrix XYZ
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
 		transform[12] = [parsedField floatValue];
@@ -67,8 +65,11 @@
 		transform[7]  = 0.0f;
 		transform[11] = 0.0f;		
 		transform[15] = 1.0f;
+
+		self->role = [[line stringByTrimmingCharactersInSet:whitespaceCharacterSet] retain];
 		
-		childName = [[line stringByTrimmingCharactersInSet:whitespaceCharacterSet] retain];
+		self->childName = [[[PartLibrary sharedPartLibrary] descriptionForPartName:self->child] retain];
+
 	}
 	@catch (NSException * e) {
 		NSLog(@"a suggestion line '%@' was fatally invalid", orig);

@@ -559,6 +559,8 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 
 }//end drawDragHandle:withSize:
 
+//	GLfloat handle_local[4] = { xyz[0], xyz[1], xyz[2], 1.0f };
+//	GLfloat handle_world[4];
 
 //========== drawDragHandle:withSize: ============================================
 //

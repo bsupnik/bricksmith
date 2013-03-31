@@ -149,6 +149,8 @@
 - (IBAction) toggleStepDisplay:(id)sender;
 - (IBAction) advanceOneStep:(id)sender;
 - (IBAction) backOneStep:(id)sender;
+- (IBAction) useSelectionForRotationCenter:(id)sender;
+- (IBAction) clearRotationCenter:(id)sender;
 
 // - Piece menu
 - (IBAction) showParts:(id)sender;
@@ -204,6 +206,7 @@
 - (BOOL) elementsAreSelectedOfVisibility:(BOOL)visibleFlag;
 - (NSAttributedString *) formatDirective:(LDrawDirective *)item withStringRepresentation:(NSString *)representation;
 - (void) loadDataIntoDocumentUI;
+- (void) populateLSynthModelMenus;
 - (LDrawContainer *) selectedContainer;
 - (NSArray *) selectedObjects;
 - (LDrawMPDModel *) selectedModel;

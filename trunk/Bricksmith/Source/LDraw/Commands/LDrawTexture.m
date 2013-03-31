@@ -38,6 +38,8 @@
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	if(self)
 	{
+		self->cachedBounds = InvalidBox;
+
 		currentLine = [lines objectAtIndex:range.location];
 		[self parsePlanarTextureFromLine:currentLine parentGroup:parentGroup];
 	
@@ -136,6 +138,8 @@
 	const uint8_t *temporary = NULL; //pointer to a temporary buffer returned by the decoder.
 	
 	self = [super initWithCoder:decoder];
+	self->cachedBounds = InvalidBox;
+	[self invalCache:CacheFlagBounds];	
 	
 	[self setImageDisplayName:[decoder decodeObjectForKey:@"imageDisplayName"]];
 	[self setGlossmapName:[decoder decodeObjectForKey:@"glossmapName"]];
@@ -193,6 +197,7 @@
 	copied->planePoint1 = self->planePoint1;
 	copied->planePoint2 = self->planePoint2;
 	copied->planePoint3 = self->planePoint3;
+	copied->cachedBounds = self->cachedBounds;
 	
 	return copied;
 	
@@ -420,7 +425,7 @@
 //				The collector protocol passed in is some object capable of 
 //				remembering the collectable data.
 //
-// Notes:		LDrawTextur is a collection of sub-directives that all receive
+// Notes:		LDrawTexture is a collection of sub-directives that all receive
 //				projective texturing.  So we first push our texture state to the
 //				collector and then recurse.
 //

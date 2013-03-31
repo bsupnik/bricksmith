@@ -12,8 +12,16 @@
 
 //Toolbar Tab Identifiers
 #define PREFS_GENERAL_TAB_IDENTIFIER	@"PreferencesTabGeneral"
-#define PREFS_LDRAW_TAB_IDENTFIER		@"PreferencesTabLDraw"
-#define PREFS_STYLE_TAB_IDENTFIER		@"PreferencesTabStyles"
+#define PREFS_LDRAW_TAB_IDENTIFIER		@"PreferencesTabLDraw"
+#define PREFS_STYLE_TAB_IDENTIFIER		@"PreferencesTabStyles"
+#define PREFS_LSYNTH_TAB_IDENTIFIER     @"PreferencesTabLSynth"
+
+// The different LSynth selection modes
+typedef enum {
+    TransparentSelection        = 0,
+    ColoredSelection		    = 1,
+    TransparentColoredSelection = 2
+} LSynthSelectionModeT;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +37,7 @@
 	IBOutlet NSView			*generalTabContentView;
 	IBOutlet NSView			*stylesContentView;
 	IBOutlet NSView			*ldrawContentView;
+    IBOutlet NSView         *lsynthContentView;
 	
 	// General Tab
 	IBOutlet NSForm			*gridSpacingForm;
@@ -53,9 +62,19 @@
 	IBOutlet NSColorWell	*commentsColorWell;
 	IBOutlet NSColorWell	*unknownColorWell;
 	
-	// Miscellaneous
-	IBOutlet NSView			*folderChooserAccessoryView;
+    // LSynth Tab
+    IBOutlet NSTextField    *lsynthExecutablePath;
+    IBOutlet NSTextField    *lsynthConfigurationPath;
+    IBOutlet NSMatrix       *lsynthSelectionModeMatrix;
+    IBOutlet NSSlider       *lsynthTransparencySlider;
+    IBOutlet NSTextField    *lsynthTransparencyText;
+    IBOutlet NSColorWell    *lsynthSelectionColorWell;
+    IBOutlet NSButton       *lsynthSaveSynthesizedParts;
 	
+    // Miscellaneous
+	IBOutlet NSView			*folderChooserAccessoryView;
+    IBOutlet NSView         *lsynthExecutableChooserAccessoryView;
+    NSTextField             *lsynthTransparencyNumberChanged;
 }
 //Initialization
 + (void) doPreferences;
@@ -65,6 +84,7 @@
 - (void) setGeneralTabValues;
 - (void) setStylesTabValues;
 - (void) setLDrawTabValues;
+- (void) setLSynthTabValues;
 
 //Actions
 - (void)changeTab:(id)sender;
@@ -75,8 +95,6 @@
 - (IBAction) rightButtonChanged:(id)sender;
 - (IBAction) rotateModeChanged:(id)sender;
 - (IBAction) mouseWheelChanged:(id)sender;
-
-
 
 // - Styles Tab
 - (IBAction) backgroundColorWellChanged:(id)sender;
@@ -93,6 +111,14 @@
 - (IBAction) pathTextFieldChanged:(id)sender;
 - (IBAction) reloadParts:(id)sender;
 - (IBAction) partBrowserStyleChanged:(id)sender;
+
+// - LSynth Tab
+- (IBAction)lsynthChooseExecutable:(id)sender;
+- (IBAction)lsynthTransparencySliderChanged:(id)sender;
+- (IBAction)lsynthTransparencyTextChanged:(id)sender;
+- (IBAction)lsynthSelectionColorWellClicked:(id)sender;
+- (IBAction)lsynthSelectionModeChanged:(id)sender;
+- (IBAction)lsynthSaveSynthesizedPartsChanged:(id)sender;
 
 //Utilities
 + (void) ensureDefaults;

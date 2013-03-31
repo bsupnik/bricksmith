@@ -10,7 +10,7 @@
 // Threading:	The LDrawFile encapsulated in this class is a shared resource. 
 //				We must take care not to edit it while it is being drawn in 
 //				another thread. As such, all the calls in the "Undoable 
-//				Activities" section are bracketed with the approriate locking 
+//				Activities" section are bracketed with the appropriate locking
 //				calls. (ANY edit of the document should be undoable.)
 //
 //  Created by Allen Smith on 2/14/05.
@@ -32,6 +32,7 @@
 #import "LDrawPart.h"
 #import "LDrawQuadrilateral.h"
 #import "LDrawTriangle.h"
+#import "LDrawLSynth.h"
 
 #import <AMSProgressBar/AMSProgressBar.h>
 
@@ -61,6 +62,10 @@
 #import "UserDefaultsCategory.h"
 #import "ViewportArranger.h"
 #import "WindowCategory.h"
+#import "LSynthConfiguration.h"
+#import "LDrawDragHandle.h"
+#import "LDrawContainer.h"
+#import "LDrawLSynthDirective.h"
 #import "Suggestions.h"
 
 void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray * subs, int want_role)
@@ -146,7 +151,9 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 
     [super windowControllerDidLoadNib:aController];
 	
-	
+    // Create and populate the Model->LSynth menus
+    [self populateLSynthModelMenus];
+
 	// Create the toolbar.
 	toolbar = [[[NSToolbar alloc] initWithIdentifier:@"LDrawDocumentToolbar"] autorelease];
 	[toolbar setAutosavesConfiguration:YES];
@@ -792,7 +799,8 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	{
 		currentObject = [selectedObjects objectAtIndex:counter];
 		
-		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+//		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+        if([currentObject conformsToProtocol:@protocol(LDrawMovableDirective)])
 			[self moveDirective: (LDrawDrawableElement*)currentObject
 					inDirection: movementVector];
 	}
@@ -822,20 +830,23 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	nudgeVector.y *= nudgeMagnitude;
 	nudgeVector.z *= nudgeMagnitude;
 	
-	//find the first selected item that can acutally be moved.
+	//find the first selected item that can actually be moved.
 	for(counter = 0; counter < [selectedObjects count] && firstNudgable == nil; counter++)
 	{
 		currentObject = [selectedObjects objectAtIndex:counter];
 		
-		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
-			firstNudgable = currentObject;
+//		if([currentObject isKindOfClass:[LDrawDrawableElement class]])
+//			firstNudgable = currentObject;
+        if([currentObject conformsToProtocol:@protocol(LDrawMovableDirective)])
+            firstNudgable = currentObject;
+
 	}
 	
 	if(firstNudgable != nil)
 	{
 		//compute the absolute movement for the relative nudge. The actual 
 		// movement for a nudge is dependent on the axis along which the 
-		// nudge is occuring (because Lego follows different vertical and 
+		// nudge is occurring (because Lego follows different vertical and
 		// horizontal scales). But we must move all selected parts by the 
 		// SAME AMOUNT, otherwise they would get oriented all over the place.
 		nudgeVector = [firstNudgable displacementForNudge:nudgeVector];
@@ -1004,7 +1015,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 //				selection to be these and only these directives, deselecting
 //				all others in the process.
 //
-//				This is used for marquee selection - when changinga lot of
+//				This is used for marquee selection - when changing a lot of
 //				selection it's more CPU efficient to change them all at once. 
 //
 // Notes:		This routine will perform multiple disclosures of items in the
@@ -1046,7 +1057,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 			if([indices containsIndex:indexToSelect])
 			{
 				// Allen says don't do "toggle" behavior with shift-marquee select.  
-				// If we did wanta toggle, we'd enable this.
+				// If we did want a toggle, we'd enable this.
 				//[indices removeIndex:indexToSelect];			
 			}
 			else
@@ -1443,104 +1454,107 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	NSString	*activeName		= [[[self documentContents] activeModel] modelName];
 	NSString	*nameFormat		= NSLocalizedString(@"ExportedStepsFolderFormat", nil);
 	
-//	[exportPanel setRequiredFileType:@"ldr"];
-//	[exportPanel setCanSelectHiddenExtension:YES];
+	[exportPanel setDirectoryURL:nil];
+	[exportPanel setNameFieldStringValue:[NSString stringWithFormat:nameFormat, activeName]];
 	
-	[exportPanel beginSheetForDirectory:nil
-								   file:[NSString stringWithFormat:nameFormat, activeName]
-						 modalForWindow:[self windowForSheet]
-						  modalDelegate:self
-						 didEndSelector:@selector(exportStepsPanelDidEnd:returnCode:contextInfo:)
-							contextInfo:NULL ];
-		
+	[exportPanel beginSheetModalForWindow:[self windowForSheet]
+						completionHandler:
+	 ^(NSInteger returnCode)
+	 {
+		 // Do the save
+		 
+		 NSFileManager	 *fileManager		 = [[[NSFileManager alloc] init] autorelease];
+		 NSURL			 *saveURL			 = nil;
+		 NSString		 *saveName			 = nil;
+		 NSString		 *modelName 		 = nil;
+		 NSString		 *folderName		 = nil;
+		 NSString		 *modelnameFormat	 = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
+		 NSString		 *filenameFormat	 = NSLocalizedString(@"ExportedStepsFileFormat", nil);
+		 NSString		 *fileString		 = nil;
+		 NSData 		 *fileOutputData	 = nil;
+		 NSString		 *outputName		 = nil;
+		 NSString		 *outputPath		 = nil;
+		 
+		 LDrawFile		 *fileCopy			 = nil;
+		 
+		 NSInteger		 modelCounter		 = 0;
+		 NSInteger		 counter			 = 0;
+		 
+		 if(returnCode == NSOKButton)
+		 {
+			 saveURL	= [exportPanel URL];
+			 saveName	= ([saveURL isFileURL] ? [saveURL path] : nil);
+			 
+			 // If we got this far, we need to replace any prexisting file.
+			 if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
+				 [fileManager removeItemAtPath:saveName error:NULL];
+			 
+			 [fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
+			 
+			 //Output all the steps for all the submodels.
+			 for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
+			 {
+				 fileCopy = [[self documentContents] copy];
+				 
+				 //Move the target model to the top of the file. That way L3P will know to
+				 // render it!
+				 LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
+				 [currentModel retain];
+				 [fileCopy removeDirective:currentModel];
+				 [fileCopy insertDirective:currentModel atIndex:0];
+				 [fileCopy setActiveModel:currentModel];
+				 [currentModel release];
+				 
+				 //Make a new folder for the model's steps.
+				 modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
+				 folderName	= [saveName stringByAppendingPathComponent:modelName];
+				 
+				 [fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
+				 
+				 //Write out each step!
+				 for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
+				 {
+					 fileString		= [fileCopy write];
+					 fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
+					 
+					 outputName = [NSString stringWithFormat: filenameFormat,
+								   [currentModel modelName],
+								   (long)counter+1 ];
+					 outputPath = [folderName stringByAppendingPathComponent:outputName];
+					 [fileManager createFileAtPath:outputPath
+										  contents:fileOutputData
+										attributes:nil ];
+					 
+					 //Remove the step we just wrote, so that the next cycle won't
+					 // include it. We can safely do this because we are working with
+					 // a copy of the file!
+					 [currentModel removeDirectiveAtIndex:counter];
+				 }
+				 
+				 
+				 [fileCopy release];
+				 
+			 }
+			 
+		 }
+	 }];
 
 }//end exportSteps:
 
 
-//========== exportStepsPanelDidEnd:returnCode:contextInfo: ====================
+//========== revealInFinder: ===================================================
 //
-// Purpose:		The export steps dialog was closed. If OK was clicked, the 
-//				filename specified is the name of the folder we should create 
-//				to export the model.
+// Purpose:             Open a Finder window with the current file selected.
 //
 //==============================================================================
-- (void)exportStepsPanelDidEnd:(NSSavePanel *)savePanel
-					returnCode:(NSInteger)returnCode
-				   contextInfo:(void *)contextInfo
+- (IBAction) revealInFinder:(id)sender
 {
-	NSFileManager   *fileManager        = [[[NSFileManager alloc] init] autorelease];
-	NSString        *saveName           = nil;
-	NSString        *modelName          = nil;
-	NSString        *folderName         = nil;
-	NSString        *modelnameFormat    = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
-	NSString        *filenameFormat     = NSLocalizedString(@"ExportedStepsFileFormat", nil);
-	NSString        *fileString         = nil;
-	NSData          *fileOutputData     = nil;
-	NSString        *outputName         = nil;
-	NSString        *outputPath         = nil;
-		
-	LDrawFile       *fileCopy           = nil;
-	
-	NSInteger       modelCounter        = 0;
-	NSInteger       counter             = 0;
-	
-	if(returnCode == NSOKButton)
-	{
-		saveName	= [savePanel filename];
-		
-		//If we got this far, we need to replace any prexisting file.
-		if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
-			[fileManager removeItemAtPath:saveName error:NULL];
-		 
-		[fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
-		
-		//Output all the steps for all the submodels.
-		for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
-		{
-			fileCopy = [[self documentContents] copy];
-			
-			//Move the target model to the top of the file. That way L3P will know to 
-			// render it!
-			LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
-			[currentModel retain];
-			[fileCopy removeDirective:currentModel];
-			[fileCopy insertDirective:currentModel atIndex:0];
-			[fileCopy setActiveModel:currentModel];
-			[currentModel release];
-			
-			//Make a new folder for the model's steps.
-			modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
-			folderName	= [saveName stringByAppendingPathComponent:modelName];
-			
-			[fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
-			
-			//Write out each step!
-			for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
-			{
-				fileString		= [fileCopy write];
-				fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
-				
-				outputName = [NSString stringWithFormat: filenameFormat, 
-														 [currentModel modelName],
-														 (long)counter+1 ];
-				outputPath = [folderName stringByAppendingPathComponent:outputName];
-				[fileManager createFileAtPath:outputPath
-									 contents:fileOutputData
-								   attributes:nil ];
-				
-				//Remove the step we just wrote, so that the next cycle won't 
-				// include it. We can safely do this because we are working with 
-				// a copy of the file!
-				[currentModel removeDirectiveAtIndex:counter];
-			}
-			
-					
-			[fileCopy release];
-			
-		}
-		
-	}
-}//end exportStepsPanelDidEnd:returnCode:contextInfo:
+    // Cribbed directly from
+    // http://stackoverflow.com/questions/7652928/launch-osx-finder-window-with-specific-files-selected
+    NSArray *fileURLs = [NSArray arrayWithObjects:[self fileURL], nil];
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
+    
+}//end revealInFinder:
 
 #pragma mark -
 #pragma mark Edit Menu
@@ -2475,11 +2489,238 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		
 }//end modelSelected
 
+#pragma mark Models Menu - LSynth Submenu
 
+//========== insertSynthesizableDirective: =====================================
+//
+// Purpose:		Insert a synthesizable directive into the model.  This is a
+//              hose, band or part.
+//
+// Parameters:	sender: an NSMenuItem representing the model to make active.
+//
+//==============================================================================
+- (void) insertSynthesizableDirective:(id)sender
+{
+    LDrawLSynth         *synthesizedObject = [[[LDrawLSynth alloc] init] autorelease];
+    //NSUndoManager       *undoManager   = [self undoManager];
+
+    // TODO: fixup colour choice for synthesizable parts
+    // from partbrowserdatasource:
+    // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
+    //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
+    // Allow for no color selected
+    LDrawColor *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+    NSString *type = [[sender representedObject] objectForKey:@"LSYNTH_TYPE"];
+
+    //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
+    [synthesizedObject setLDrawColor:selectedColor];
+    [synthesizedObject setLsynthType:type];
+
+    // The represented object passed in from the menu click indicates whether it's a band or a hose.
+    // All well and good, and useful when e.g. deciding how and whether to display constraints.
+    // However we also have to consider Parts, which can be either Band Parts or Hose Parts, and
+    // need to retain their Part-ness.  To this end we must do a manual lookup of the actual class.
+    // TODO: another place that config should provide a convenience method for this
+    if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
+        [synthesizedObject setLsynthClass:LSYNTH_HOSE];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_BAND];
+    }
+    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
+        [synthesizedObject setLsynthClass:LSYNTH_PART];
+    }
+
+    // Check we're being called sensibly (i.e. from a menu)
+    if (sender != nil && [sender representedObject] != nil) {
+
+        // NEW
+        LDrawContainer *parent = nil;
+        NSInteger index = 0;
+
+        // Step selected
+        if ([[fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]] isMemberOfClass:[LDrawStep class]]) {
+            parent = [fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]];
+            index = [[parent subdirectives] count];
+        }
+
+        // No selection, add it at the bottom
+        else if (self->lastSelectedPart == nil) {
+            parent = nil;       // leave it up to the addStepComponent: method to add our Synth step correctly
+            index = NSNotFound; // add at the end
+        }
+        
+        // LDrawLSynth is selected
+        // - Add it after
+        // - Parent is the LDrawLSynth's parent step
+        else if ([self->lastSelectedPart isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            LDrawLSynth *synthPart = (LDrawLSynth *)self->lastSelectedPart;
+            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
+        }
+        
+        // Constraint is selected, add it after the containing LDrawLSynth
+        else if ([self->lastSelectedPart isMemberOfClass:[LDrawPart class]] &&
+                 [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:[fileContentsOutline parentForItem:self->lastSelectedPart]];
+            LDrawLSynth *synthPart = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
+        }
+
+        // Don't know what it is.  Probably a part.
+        else {
+            NSLog(@"no idea");
+            parent = nil;
+            index = NSNotFound;
+        }
+
+        // tidy up to conform to other addStepComponent: calls and do the same with constraint adding to open up the tree
+        //[self addStepComponent:synthesizedObject parent:nil index:NSNotFound];
+
+        [self addStepComponent:synthesizedObject
+                        parent:parent
+                         index:index];
+    }
+    
+}//end insertSynthesizedDirective:
+
+
+//========== InsertLSynthConstraint: =======================================
+//
+// Purpose:		Insert a synthesizable directive constraint into the model.
+//              We don't distinguish between hose or band constraints since
+//              both types can be used for either synthesizable type.
+//
+// Parameters:	sender: an NSMenuItem representing the constraint to insert
+//
+//==============================================================================
+-(void) InsertLSynthConstraint:(id)sender
+{
+    // We are fussier than for synthesizable containers; we can *only* be added to them.
+    // We just have to worry about the relative position
+
+    if(self->lastSelectedPart != nil) {
+        LDrawPart *constraint = [[LDrawPart alloc] init];
+        [constraint setDisplayName:[[sender representedObject] objectForKey:@"partName"]];
+        [constraint setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]]; // parent's colour
+
+        LDrawContainer *parent = nil;
+        NSInteger index = NSNotFound;
+        LDrawLSynth *synthesizablePart = nil;
+        TransformComponents transformation = [lastSelectedPart transformComponents];
+        [constraint setTransformComponents:transformation];
+
+        // LDrawLSynth part selected, add at the end
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+            parent = (LDrawLSynth *)self->lastSelectedPart;
+            index = [[parent subdirectives] count];
+            synthesizablePart = (LDrawLSynth *)parent;
+
+            //  Add our constraint, resynthesize and mark as needing display
+            [constraint setEnclosingDirective:parent];
+            [constraint addObserver:parent];
+            [parent insertDirective:constraint atIndex:index];
+            [synthesizablePart synthesize];
+            [[self documentContents] noteNeedsDisplay];
+
+            // Show the new element
+            [fileContentsOutline expandItem:parent];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
+            [constraint setSelected:YES];
+        }
+
+        // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
+        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
+                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            int row = [parent indexOfDirective:self->lastSelectedPart];
+            index = row + 1;
+            synthesizablePart = (LDrawLSynth *)parent;
+
+            //  Add our constraint, resynthesize and mark as needing display
+            [constraint addObserver:parent];
+            [parent insertDirective:constraint atIndex:index];
+            [self updateInspector];
+            [synthesizablePart synthesize];
+            [[self documentContents] noteNeedsDisplay];
+            [fileContentsOutline expandItem:parent];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
+            [constraint setSelected:YES];
+        }
+
+        else {
+            NSLog(@"BIG FAT CONSTRAINT ADDING ERROR");
+        }
+        [constraint release];
+    }
+} // end InsertLSynthConstraint
+
+-(void) surroundLSynthConstraints:(id)sender
+{
+    NSLog(@"surroundLSynthConstraints");
+}
+
+-(void) invertLSynthConstraintSelection:(id)sender
+{
+    NSLog(@"invertLSynthConstraintSelection");
+}
+
+//========== insertINSIDEOUTSIDELSynthDirective: ===============================
+//
+// Purpose:		Insert an LSynth direction directive, INSIDE or OUTSIDE, which
+//              causes a constraint to switch the side the band passes it.
+//
+//==============================================================================
+-(void) insertINSIDEOUTSIDELSynthDirective:(id)sender
+{
+    NSLog(@"addINSIDEOUTSIDELSynthDirective");
+    if(self->lastSelectedPart != nil) {
+        LDrawLSynthDirective *direction = [[LDrawLSynthDirective alloc] init];
+
+        // Set direction based on menuItem tag
+        if ([(NSMenuItem *)sender tag] == lsynthInsertINSIDETag) {
+            [direction setStringValue:@"INSIDE"];
+        }
+        else if ([(NSMenuItem *)sender tag] == lsynthInsertOUTSIDETag) {
+            [direction setStringValue:@"OUTSIDE"];
+        }
+        else if ([(NSMenuItem *)sender tag] == lsynthInsertCROSSTag) {
+            [direction setStringValue:@"CROSS"];
+        }
+        LDrawContainer *parent = nil;
+        NSInteger index = NSNotFound;
+
+        // LDrawLSynth part selected, add at the end
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+            parent = (LDrawLSynth *)self->lastSelectedPart;
+            index = [[parent subdirectives] count];
+
+        }
+
+        // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
+        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
+                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+            int row = [parent indexOfDirective:self->lastSelectedPart];
+            index = row + 1;
+        }
+
+        [direction setEnclosingDirective:parent];
+        [direction addObserver:parent];
+        [parent insertDirective:direction atIndex:index];
+        [(LDrawLSynth *)parent synthesize];
+        [[self documentContents] noteNeedsDisplay];
+        [fileContentsOutline expandItem:parent];
+        [fileContentsOutline selectObjects:[NSArray arrayWithObject:direction]];
+        [direction setSelected:YES];
+        [direction release];
+    }
+}//end insertINSIDEOUTSIDELSynthDirective:
 
 #pragma mark -
 #pragma mark UNDOABLE ACTIVITIES
 #pragma mark -
+
 //these are *low-level* calls which provide support for the Undo architecture.
 // all of these are wrapped by high-level calls, which are all application-level 
 // code should ever need to use.
@@ -2873,14 +3114,14 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	
 	//an LDraw directive; thank goodness! It knows how to describe itself.
 	// The description will form the basis of the attributed text for the cell.
-	if([item isKindOfClass:[LDrawDirective class]]){
+	if([item isKindOfClass:[LDrawDirective class]]) {
 		representation = [item browsingDescription];
 		
 		//Apply formatting to our little string.
 		representation = [self formatDirective:item
 					  withStringRepresentation:representation];
-	}
-		
+    }
+
 	return representation;
 
 }//end outlineView:objectValueForTableColumn:byItem:
@@ -3018,8 +3259,19 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 //			NSLog(@"killing thingy-not-in-step");
 			dragOperation	= NSDragOperationNone;
 		}
-		
-		
+
+        // Prohibit dragging non-constraint objects onto an LDrawLSynth part
+        else if (   [currentObject	isKindOfClass:[LDrawPart class]]
+                 && [newParent isKindOfClass:[LDrawLSynth class]]
+                 && ![[LSynthConfiguration sharedInstance] isLSynthConstraint:currentObject]) {
+            dragOperation	= NSDragOperationNone;
+        }
+
+        // Prohibit dragging things onto a container that it's not happy to accept
+        else if (   [newParent isKindOfClass:[LDrawContainer class]]
+                 && ![(LDrawContainer *)newParent acceptsDroppedDirective:currentObject]) {
+            dragOperation	= NSDragOperationNone;
+        }
 	}
 	return dragOperation;
 
@@ -3078,8 +3330,17 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		// When rearranging models within a file, don't do "copy X" renaming.
 		renameDuplicateModels = NO;
 	}
-	
-	// Do The Move.
+
+    // Gather up (unique) parents that are donating child nodes to this move
+    // If the parents support tidying up they'll be given a chance later.
+    // This is intended for e.g. containers such as LDrawSynth that may need
+    // to take action if their subdirectives change.
+    NSMutableSet *donatingParents = [[NSMutableSet alloc] init];
+    for (LDrawPart *part in doomedObjects) {
+        [donatingParents addObject:[sourceView parentForItem:part]];
+    }
+
+    // Do The Move.
 	pastedObjects = [self pasteFromPasteboard:pasteboard
 						preventNameCollisions:renameDuplicateModels
 									   parent:newParent
@@ -3094,10 +3355,24 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		
 		[undoManager setActionName:NSLocalizedString(@"UndoReorder", nil)];
 	}
-	
-	//And lastly, select the dragged objects.
+
+    // Ask the source and target parents to cleanup if they can e.g. used for
+    // updating container selection state
+    for (LDrawDirective *parent in [donatingParents allObjects]) {
+        if ([parent isKindOfClass:[LDrawContainer class]] &&
+            [parent respondsToSelector:@selector(cleanupAfterDropIsDonor:)]) {
+            [parent performSelector:@selector(cleanupAfterDropIsDonor:) withObject:[NSNumber numberWithBool:YES]];
+        }
+    }
+
+    if ([newParent respondsToSelector:@selector(cleanupAfterDropIsDonor:)]) {
+        [newParent performSelector:@selector(cleanupAfterDropIsDonor:) withObject:[NSNumber numberWithBool:NO]];
+    }
+
+    //And lastly, select the dragged objects.
 	[(LDrawFileOutlineView*)outlineView selectObjects:pastedObjects];
 
+    [donatingParents release];
 	return YES;
 	
 }//end outlineView:acceptDrop:item:childIndex:
@@ -3195,7 +3470,8 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	[[self documentContents] noteNeedsDisplay];
 	
 	//See if we just selected a new part; if so, we must remember it.
-	if([lastSelectedItem isKindOfClass:[LDrawPart class]])
+	if ([lastSelectedItem isKindOfClass:[LDrawPart class]] ||
+        [lastSelectedItem isKindOfClass:[LDrawLSynth class]])
 		[self setLastSelectedPart:lastSelectedItem];
 
 	[self buildSuggestionMenus];
@@ -3476,7 +3752,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	if(markedSelection)
 	{
 		// Since we are going to do a bulk selection, calculate 
-		// the union of the past selcetion and this one if we are
+		// the union of the past selection and this one if we are
 		// extending.  Otherwise we only want the new selection.
 		NSMutableArray * all;
 		NSArray * sel = (all = (selectionMode != SelectionReplace)
@@ -3860,8 +4136,13 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		{
 			[[self documentContents] noteNeedsDisplay];
 		}
-		[fileContentsOutline reloadData];
-		
+
+        // Ensure that even if the outline contents have changed (for instance a
+        // container that inserts directives automatically) the original selection
+        // is maintained
+        [fileContentsOutline selectObjects:selectedDirectives];
+        [fileContentsOutline reloadData];
+
 		//Model menu needs to change if:
 		//	*model list changes (in the file)
 		//	*model name changes (in the model)
@@ -3907,7 +4188,9 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 - (void) windowDidBecomeMain:(NSNotification *)aNotification
 {
 	[self updateInspector];
-	
+
+    [self populateLSynthModelMenus];
+
 	[self addModelsToMenus];
 	
 }//end windowDidBecomeMain:
@@ -3991,9 +4274,21 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	NSPasteboard    *pasteboard     = [NSPasteboard generalPasteboard];
 	LDrawMPDModel   *activeModel    = [[self documentContents] activeModel];
 	BOOL            enable          = NO;
-	
+
 	switch(tag)
 	{
+        ////////////////////////////////////////
+        //
+        // File Menu
+        //
+        ////////////////////////////////////////
+
+        case revealInFinderTag:
+            enable = YES;
+            if ([self fileURL] == nil) {
+                enable = NO;
+            }
+            break;
 
 		////////////////////////////////////////
 		//
@@ -4100,8 +4395,60 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 			// That would be an inifinite loop.
 			enable = (activeModel != [menuItem representedObject]);
 			break;
-		
-		
+
+
+        case lsynthSynthesizableMenuTag:
+            // We can only add synthesizable parts below a step so ensure we've not selected a model
+            enable = (selectedPart != nil) && (![selectedPart isKindOfClass:[LDrawMPDModel class]]);
+            break;
+
+        case lsynthConstraintMenuTag:
+            // We can only insert a constraint into an LDrawLSynth part.
+            // Ensure it (or a constraint) is selected
+            enable = ([selectedPart isKindOfClass:[LDrawLSynth class]] ||
+                      [[fileContentsOutline parentForItem:selectedPart] isKindOfClass:[LDrawLSynth class]]);
+            break;
+
+// TODO: add these in later
+//        case lsynthSurroundINSIDEOUTSIDETag:
+//            // INSIDE/OUTSIDE pairs can only surround constraints under a single LSynth part
+//            // Valid selections are therefore an LSynth part, a single constraint or multiple
+//            // contiguous constraints.
+//            enable = NO;
+//
+//            // Single object selected, and is constraint or LSynth part
+//            if ([selectedItems count] == 1) {
+//                if ([[selectedItems objectAtIndex:0] isKindOfClass:[LDrawLSynth class]] ||
+//                    [[fileContentsOutline parentForItem:[selectedItems objectAtIndex:0]] isKindOfClass:[LDrawLSynth class]]) {
+//                    enable = YES;
+//                }
+//            }
+//
+//            // More than one thing selected.  Check they are direct siblings and contiguous
+//            else {
+//                NSMutableSet *parents = [[NSMutableSet alloc] init];
+//                for (LDrawDirective *directive in selectedItems) {
+//                    [parents addObject:[fileContentsOutline parent]];
+//
+//                }
+//            }
+//
+//            break;
+//
+//        case lsynthInvertINSIDEOUTSIDETag:
+//            enable = YES;
+//            break;
+
+        case lsynthInsertINSIDETag:
+            enable = YES;
+            break;
+
+        case lsynthInsertOUTSIDETag:
+            enable = YES;
+            break;
+
+
+
 		////////////////////////////////////////
 		//
 		// Something else.
@@ -4422,7 +4769,8 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	{
 		glView          = [viewports objectAtIndex:counter];
 		
-		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%d", counter]];
+		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%ld", (long)counter]];
+		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%ld", (long)counter]];
 		
 		if(shouldRestore == YES)
 			[glView restoreConfiguration];
@@ -4700,13 +5048,14 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		if(		selectedContainer != nil
 		   &&	[selectedContainer isKindOfClass:[LDrawFile class]] == NO
 		   &&	[selectedContainer isKindOfClass:[LDrawModel class]] == NO
-		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO )
+		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO
+           &&   [selectedContainer acceptsDroppedDirective:newDirective] == YES)
 		{
 			// If we have an "interesting" container selected -- like a texture 
-			// -- add directives to it instead of at the end of the model. The 
-			// theory here is that these special containers are kind of their 
-			// own little world, and as long as you have one selected, you 
-			// should continue working within it. 
+			// -- that accepts the dropped directive add directives to it instead
+			// of at the end of the model. The theory here is that these special
+			// containers are kind of their  own little world, and as long as you
+			// have one selected, you should continue working within it.
 			targetContainer = selectedContainer;
 		}
 		else
@@ -4850,7 +5199,6 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	// truncate, we achieve the desired effect.
 	[paragraphStyle setLineBreakMode:NSLineBreakByTruncatingTail];
 	
-	
 	//Find the specified syntax color for the directive.
 	if([item isKindOfClass:[LDrawModel class]])
 		colorKey = SYNTAX_COLOR_MODELS_KEY;
@@ -4863,7 +5211,11 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 		
 	else if([item isKindOfClass:[LDrawPart class]])
 		colorKey = SYNTAX_COLOR_PARTS_KEY;
-	
+
+    else if ([item isKindOfClass:[LDrawLSynth class]] ||
+             [item isKindOfClass:[LDrawLSynthDirective class]])
+        colorKey = SYNTAX_COLOR_PARTS_KEY;
+
 	else if([item isKindOfClass:[LDrawLine				class]] ||
 	        [item isKindOfClass:[LDrawTriangle			class]] ||
 			[item isKindOfClass:[LDrawQuadrilateral		class]] ||
@@ -4890,7 +5242,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	[attributes setObject:obliqueness		forKey:NSObliquenessAttributeName];
 	
 	//Create the attributed string.
-	styledString = [[NSAttributedString alloc]
+    styledString = [[NSAttributedString alloc]
 							initWithString:representation
 								attributes:attributes ];
 	
@@ -4928,6 +5280,146 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 	[self addModelsToMenus];
 
 }//end loadDataIntoDocumentUI
+
+
+//========== populateLSynthModelMenus ==========================================
+//
+// Purpose:		Populate the LSynth Model menus. We guard against creating
+//              more than one menu.
+//
+//==============================================================================
+- (void) populateLSynthModelMenus
+{
+    LDrawApplication *appDelegate    = [NSApp delegate];
+    NSMenu           *mainMenu       = [NSApp mainMenu];
+    NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+
+    // We recreate this menu each time we're called since the
+    // target potentially changes (different window/document)
+    // TODO: make this once per document?
+
+    if ([modelMenu itemWithTag:lsynthMenuTag]) {
+        [modelMenu removeItemAtIndex:[modelMenu indexOfItemWithTag:lsynthMenuTag]];
+    }
+
+    if (! [modelMenu itemWithTag:lsynthMenuTag])
+	{
+        NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
+
+        // A declarative encoding of our LSynth menus
+        // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
+        NSArray *menus = [NSArray arrayWithObjects:
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
+                                  forKeys:
+                                          [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose", @"getHoseTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose Constraint", @"getHoseConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band", @"getBandTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band Constraint", @"getBandConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+
+                          nil];
+
+        for (NSDictionary *menuSpec in menus) {
+            NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
+
+            // Retrieve the appropriate data for each menu entry, based on the getter given above
+            // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
+            // for an alternative that could avoid the use of NSSelectorFromString by storing the selectors
+            // directly in a dictionary.
+
+            for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])]) {
+                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
+                [entryMenuItem setRepresentedObject:entry];
+                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
+                [entryMenuItem setTarget:self];
+                // Should these be unique, i.e. add a loop index to a base value? Don't need them to be, yet.
+                [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
+                [menu addItem:entryMenuItem];
+            }
+            NSMenuItem *subMenu = [[[NSMenuItem alloc] init] autorelease];
+            [subMenu setTitle:[menuSpec objectForKey:@"title"]];
+            [subMenu setSubmenu:menu];
+
+            [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
+            //[menu setDelegate:self];
+
+            [lsynthMenu addItem:subMenu]; // a menuItem
+        }
+
+        //
+        // Add INSIDE/OUTSIDE menus
+        //
+
+        // Main menu and menuItem
+
+        NSMenu *insideOutsideMenu = [[[NSMenu alloc] init] autorelease];
+        NSMenuItem *insideOutsideMenuItem = [[[NSMenuItem alloc] init] autorelease];
+        [insideOutsideMenuItem setTitle:@"Inside/Outside"];
+        [lsynthMenu setSubmenu:insideOutsideMenu forItem:insideOutsideMenuItem];
+        [lsynthMenu addItem:insideOutsideMenuItem];
+
+        // Menu entries
+
+// TODO: Add these in later
+//        NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [surroundSelectionItem setTitle:@"Surround Selection"];
+//        [surroundSelectionItem setTarget:self];
+//        [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
+//        [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:surroundSelectionItem];
+//
+//        NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [invertSelectionItem setTitle:@"Invert Selection"];
+//        [invertSelectionItem setTarget:self];
+//        [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
+//        [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:invertSelectionItem];
+
+        NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addInsideItem setTitle:@"Insert INSIDE"];
+        [addInsideItem setTarget:self];
+        [addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addInsideItem setTag:lsynthInsertINSIDETag];
+        [insideOutsideMenu addItem:addInsideItem];
+
+        NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addOutsideItem setTitle:@"Insert OUTSIDE"];
+        [addOutsideItem setTarget:self];
+        [addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addOutsideItem setTag:lsynthInsertOUTSIDETag];
+        [insideOutsideMenu addItem:addOutsideItem];
+
+        NSMenuItem *addCrossItem = [[[NSMenuItem alloc] init] autorelease];
+        [addCrossItem setTitle:@"Insert CROSS"];
+        [addCrossItem setTarget:self];
+        [addCrossItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addCrossItem setTag:lsynthInsertCROSSTag];
+        [insideOutsideMenu addItem:addCrossItem];
+
+        // Add in the main LSynth menu to the Model menu
+        NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
+        [lsynthSubMenu setTitle:@"LSynth"];
+        [lsynthSubMenu setTag:lsynthMenuTag];
+        [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
+        // Add it at the top.  Should it go at the bottom?  It's my favourite
+        // feature but may not be everyone's
+        [modelMenu insertItem:lsynthSubMenu atIndex:0];
+    }
+}//end populateLSynthModelMenus
 
 
 //========== selectedContainer =================================================
@@ -5252,7 +5744,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 			
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
-				[self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
+                [self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];
 			else if([currentObject isKindOfClass:[LDrawStep class]])
 				[self addStep:currentObject parent:(LDrawMPDModel*)parent index:real_index];
 			else

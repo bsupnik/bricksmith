@@ -203,7 +203,7 @@
 // Purpose:		Returns the LDraw directives stored in this collection.
 //
 //==============================================================================
-- (NSArray *) subdirectives
+- (NSMutableArray *) subdirectives
 {
 	return containedObjects;
 	
@@ -369,6 +369,18 @@
 						  
 }//end removeDirectiveAtIndex:
 
+//========== setSubdirectiveSelected: ==========================================
+//
+// Purpose: Called by a subdirective when it's been selected.  This allows
+//          container directives to act on child selection.  Override in
+//          subclasses.
+//
+//==============================================================================
+- (void) setSubdirectiveSelected:(BOOL)subdirective
+{
+    // stub
+}
+
 
 #pragma mark -
 #pragma mark UTILITES
@@ -396,6 +408,17 @@
 	
 	return containsReference;
 }
+
+//========== acceptsDroppedDirective: ==========================================
+//
+// Purpose:		Returns YES if this container will accept a directive dropped on
+//              it.  Intended to be overridden by subclasses
+//
+//==============================================================================
+-(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
+{
+    return YES;
+}//end acceptsDroppedDirective:
 
 
 //========== flattenIntoLines:triangles:quadrilaterals:other:currentColor: =====
@@ -528,7 +551,7 @@
 //========== receiveMessage ====================================================
 //
 // Purpose:		The things we observe call this when something one-time and 
-//				eventful happens - we can repsond if desired.
+//				eventful happens - we can respond if desired.
 //
 //==============================================================================
 - (void) receiveMessage:(MessageT) msg who:(id<LDrawObservable>) observable

@@ -42,12 +42,18 @@ typedef enum
 - (void) setLDrawColor:(LDrawColor *)color;
 
 - (TransformComponents) transformComponents;
+- (Matrix4) transformationMatrix;
+
 
 // Utilities
 - (void) synthesize;
 - (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
 - (NSString *)determineIconName:(LDrawDirective *)directive;
+- (NSMutableArray *)prepareAutoHullData;
 -(int)synthesizedPartsCount;
 
+
 + (BOOL) lineIsLSynthBeginning:(NSString*)line;
++ (BOOL) lineIsLSynthTerminator:(NSString*)line;
+
 @end

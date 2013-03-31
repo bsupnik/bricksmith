@@ -17,7 +17,7 @@
 //
 // Enumeration:	LDrawColorT
 //
-// Purpose:		Provides named symbols for many commenly-accepted/official LDraw 
+// Purpose:		Provides named symbols for many commonly-accepted/official LDraw
 //				color codes. 
 //
 // Notes:		LDraw colors are defined by the ldconfig.ldr file distributed 
@@ -173,5 +173,9 @@ typedef enum LDrawColorMaterial
 - (NSComparisonResult) HSVACompare:(LDrawColor *)otherColor;
 - (NSString *) hexStringForRGB:(GLfloat *)components;
 - (BOOL) scanHexString:(NSScanner *)hexScanner intoRGB:(GLfloat *)components;
+- (id)fullCopyWithZone:(NSZone *)zone;
 
 @end
+
+extern void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
+extern void HSVtoRGB( float h, float s, float v, float *r, float *g, float *b );

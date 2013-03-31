@@ -55,7 +55,8 @@
     LDrawLSynth	*representedObject	= [self object];
 
     // Update the object
-    NSMutableArray *types = [self getTypes:[[lsynthClassChooserMatrix selectedCell] tag]];
+	LSynthClassT	classType	= [[lsynthClassChooserMatrix selectedCell] tag];
+	NSArray 		*types		= [self typesForLSynthClass:classType];
 
     [representedObject setLsynthClass:[[lsynthClassChooserMatrix selectedCell] tag]];
     [representedObject setLsynthType:[[types objectAtIndex:[typePopup indexOfSelectedItem]] valueForKey:@"LSYNTH_TYPE"]];
@@ -145,7 +146,7 @@
 //==============================================================================
 - (void) populateTypes:(int)classTag
 {
-    NSMutableArray *types = [self getTypes:classTag];
+    NSArray *types = [self typesForLSynthClass:classTag];
 
     // Populate the dropdown
     [typePopup removeAllItems];
@@ -222,20 +223,6 @@
 #pragma mark -
 #pragma mark ACTIONS
 #pragma mark -
-
-- (void)updateSynthTypeLabel:(int)tag
-{
-    // Update the type title according to our class of synthesized part
-    if (tag == LSYNTH_PART) {
-        [SynthTypeLabel setStringValue:@"Part Type:"];
-    }
-    else if (tag == LSYNTH_HOSE) {
-        [SynthTypeLabel setStringValue:@"Hose Type:"];
-    }
-    else if (tag == LSYNTH_BAND) {
-        [SynthTypeLabel setStringValue:@"Band Type:"];
-    }
-}
 
 //========== partClassChanged: =================================================
 //
@@ -316,15 +303,15 @@
 }
 
 #pragma mark -
-#pragma mark UTILITY
+#pragma mark UTILITIES
 #pragma mark -
 
-//========== getTypes: =========================================================
+//========== typesForLSynthClass: ==============================================
 //
 // Purpose:		Convenience method to return types for a synth class
 //
 //==============================================================================
-- (NSMutableArray *)getTypes:(LSynthClassT)classTag
+- (NSArray *)typesForLSynthClass:(LSynthClassT)classTag
 {
     LSynthConfiguration *lsynthConfig = [[NSApp delegate] lsynthConfiguration];
 
@@ -345,7 +332,28 @@
     }
     
     return nil;
-}//end getTypes:
+}//end typesForLSynthClass:
+
+
+//========== updateSynthTypeLabel: =============================================
+//
+// Purpose:		Show the label type.
+//
+//==============================================================================
+- (void) updateSynthTypeLabel:(LSynthClassT)tag
+{
+    // Update the type title according to our class of synthesized part
+    if (tag == LSYNTH_PART) {
+        [SynthTypeLabel setStringValue:@"Part Type:"];
+    }
+    else if (tag == LSYNTH_HOSE) {
+        [SynthTypeLabel setStringValue:@"Hose Type:"];
+    }
+    else if (tag == LSYNTH_BAND) {
+        [SynthTypeLabel setStringValue:@"Band Type:"];
+    }
+}
+
 
 #pragma mark -
 #pragma mark DESTRUCTOR

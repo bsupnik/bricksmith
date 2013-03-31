@@ -32,6 +32,7 @@
 	self = [super init];
 	
 	enclosingDirective = nil;
+    iconName = @"";
 
 	#if NEW_SET
 		LDrawFastSetInit(observers);
@@ -462,7 +463,10 @@
 //==============================================================================
 - (NSString *) iconName
 {
-	return @""; //Nothing.
+	if (self->iconName) {
+        return self->iconName;
+    }
+    return @""; //Nothing.
 	
 }//end iconName
 
@@ -660,6 +664,18 @@
 	self->isSelected = flag;
 	
 }//end setSelected:
+
+//========== setIconName: ======================================================
+//
+// Purpose:		Set the icon name
+//
+//==============================================================================
+- (void) setIconName:(NSString *)icon
+{
+    [icon retain];
+    [self->iconName release];
+    self->iconName = icon;
+}//end setIconName:
 
 #pragma mark -
 #pragma mark <INSPECTABLE>

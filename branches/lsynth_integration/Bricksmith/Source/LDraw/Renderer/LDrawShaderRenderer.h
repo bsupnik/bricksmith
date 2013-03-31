@@ -43,10 +43,13 @@ enum {
 #define DL_STACK_DEPTH 64
 
 struct	LDrawDLBuilder;
+struct	LDrawBDP;
+struct	LDrawDragHandleInstance;
 
 @interface LDrawShaderRenderer : NSObject<LDrawRenderer,LDrawCollector> {
 
 	struct LDrawDLSession *			session;										// DL session - this accumulates draw calls and sorts them.
+	struct LDrawBDP *				pool;
 
 	GLfloat							color_now[4];									// Color stack.
 	GLfloat							compl_now[4];
@@ -71,6 +74,13 @@ struct	LDrawDLBuilder;
 	
 	GLfloat							mvp[16];										// Cached MVP from when shader is built.
 
+	struct LDrawDragHandleInstance *drag_handles;									// List of drag handles - deferred to draw at the end for perf and correct scaling.
+
+	GLfloat							scale;
+	
 }
+
+- (id) initWithScale:(float)scale;
+- (void) drawDragHandleImm:(GLfloat*)xyz withSize:(GLfloat)size;
 
 @end

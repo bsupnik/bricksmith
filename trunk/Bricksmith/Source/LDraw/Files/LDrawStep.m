@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		LDrawStep.h
+// File:		LDrawStep.m
 //
 // Purpose:		Represents a collection of Lego bricks which compose a single 
 //				step when constructing a model.
@@ -239,6 +239,7 @@
 
 	self = [super initWithCoder:decoder];
 	cachedBounds = InvalidBox;
+	[self invalCache:CacheFlagBounds];	
 	
 	temporary = [decoder decodeBytesForKey:@"rotationAngle" returnedLength:NULL];
 	memcpy(&rotationAngle, temporary, sizeof(Tuple3));

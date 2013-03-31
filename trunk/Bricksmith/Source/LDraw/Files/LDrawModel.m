@@ -197,6 +197,7 @@
 {
 	self = [super initWithCoder:decoder];
 	self->cachedBounds = InvalidBox;
+	[self invalCache:CacheFlagBounds];	
 	
 	modelDescription	= [[decoder decodeObjectForKey:@"modelDescription"] retain];
 	fileName			= [[decoder decodeObjectForKey:@"fileName"] retain];
@@ -525,8 +526,9 @@
 		   bestObject:(id *)bestObject 
 			bestDepth:(float *)bestDepth
 {
-	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) 
-		return;
+	if(!VolumeCanIntersectPoint([self boundingBox3], transform, bounds, *bestDepth)) {
+        return;
+    }
 
 	NSArray     *steps              = [self subdirectives];
 	NSUInteger  maxIndex            = [self maxStepIndexToOutput];
@@ -1130,7 +1132,7 @@
 	//Need to check and make sure this step number is not overflowing the bounds.
 	NSInteger maximumIndex = [[self steps] count]-1;
 	
-	if(stepIndex > maximumIndex || stepIndex < 0)
+	if(stepIndex > maximumIndex)
 		[NSException raise:NSRangeException format:@"index (%ld) beyond maximum step index %ld", (long)stepIndex, (long)maximumIndex];
 	else
 	{
@@ -1674,9 +1676,6 @@
 	[undoManager setActionName:NSLocalizedString(@"UndoAttributesModel", nil)];
 	
 }//end registerUndoActions:
-
-
-
 
 #pragma mark -
 #pragma mark DESTRUCTOR

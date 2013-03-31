@@ -72,6 +72,7 @@ typedef enum
 	float					zoomFactor;
 	
 	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
+	Point3					rotationCenter;
 	Size2					snugFrameSize;
 	LDrawColor				*color;					// default color to draw parts if none is specified
 	GLfloat                 glBackgroundColor[4];
@@ -187,6 +188,7 @@ typedef enum
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
 - (void) scrollCenterToPoint:(Point2)newCenter;
 - (void) scrollRectToVisible:(Box2)aRect notifyDelegate:(BOOL)notify;
+- (void) updateRotationCenter;
 
 // - Geometry
 - (Point2) convertPointFromViewport:(Point2)viewportPoint;

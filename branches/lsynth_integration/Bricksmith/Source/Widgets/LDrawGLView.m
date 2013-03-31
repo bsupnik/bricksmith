@@ -175,11 +175,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSOpenGLPixelFormat     *pixelFormat        = [LDrawApplication openGLPixelFormat];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
 	
-	[[self openGLContext] makeCurrentContext];
-	
-	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
-	[renderer setDelegate:self];
-
 	selectionIsMarquee = NO;
 	marqueeSelectionMode = SelectionReplace;
 	
@@ -198,7 +193,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	//---------- Initialize instance variables ---------------------------------
 	
 	[self setAcceptsFirstResponder:YES];
-	[self->renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
 	canDrawLock				= [[NSConditionLock alloc] initWithCondition:NO];
 	keepDrawThreadAlive		= YES;
@@ -231,6 +225,10 @@ static Size2 NSSizeToSize2(NSSize size)
 //	[[self openGLContext] setValues: &surfaceOrder
 //					   forParameter: NSOpenGLCPSurfaceOrder ];
 			
+	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
+	[renderer setDelegate:self];
+	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
+
 	[self setViewOrientation:ViewOrientation3D];
 	
 	
@@ -1997,6 +1995,13 @@ static Size2 NSSizeToSize2(NSSize size)
 			
 			//---------- Reset event tracking flags ----------------------------
 
+            NSLog(@"DO UPDATE IN dragAndDropDragged");
+            for (LDrawDirective *directive in [delegate selectedObjects]) {
+                NSLog(@"directive: %@", directive);
+                [directive sendMessageToObservers:MessageObservedChanged];
+            }
+
+
 			[self->renderer setDraggingOffset:displacement];
 			
 			// reset drop destination flag.
@@ -2063,7 +2068,7 @@ static Size2 NSSizeToSize2(NSSize size)
 //				selection.  it is called in an odd pattern:
 //				
 //				It is _always_ called on mouse-down, whether this is a marquee
-//				drag or selection click.  This is true because we have ot click
+//				drag or selection click.  This is true because we have to click
 //				once (and hit test) to even know if we hit an obj or will marquee.
 //
 //				It is _only_ called during drag if it is a marquee drag.  If we
@@ -2440,6 +2445,11 @@ static Size2 NSSizeToSize2(NSSize size)
 							 constrainAxis:constrainDragAxis];
 
     NSLog(@"SHOULD UPDATE CONTAINER");
+    // this doesn't cause a redraw.  Would be nice if it did.
+    for (LDrawDirective *directive in [delegate selectedObjects]) {
+        NSLog(@"directive: %@", directive);
+        [directive sendMessageToObservers:MessageObservedChanged];
+    }
 
 	return dragOperation;
 	

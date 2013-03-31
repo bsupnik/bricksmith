@@ -78,10 +78,10 @@
 //	 are now in sync.  If the property requires expensive computation in the
 //	 observable, the observable probably updates its own internal cache.
 //
-// - Every time the obserable changes that property, it sends a notification
+// - Every time the observable changes that property, it sends a notification
 //	 only IF the cache flag is clear; it then sets the cache flag.
 //
-// - An observer who receievs an invalidate message may in turn invalidate
+// - An observer who receives an invalidate message may in turn invalidate
 //	 its own cache (if necessary), causing a cascade up the observation tree.
 //
 // Thus if the position of an object is changed 8 times between any external
@@ -94,13 +94,14 @@
 // Cache flags.  For now, we can maintain all cache flags in one place.  In
 // theory observable/observer could be used in many places in the app but for
 // now since it is just used for directives, maintain all directive-related
-// enusm and flags here...
+// enums and flags here...
 
 typedef enum CacheFlags {
 
 	// The bounding box of the directive has changed and is no longer valid.
-	CacheFlagBounds = 1,
-	DisplayList		= 2
+	CacheFlagBounds      = 1,
+	DisplayList		     = 2,
+    ContainerInvalid     = 4  // Subdirectives have changed in a way that may invalidate the cache
 } CacheFlagsT;
 
 typedef enum Message {
@@ -110,9 +111,12 @@ typedef enum Message {
 	MessageNameChanged = 0,
 	
 	// The MPD's parent has changed, and thus its scope may have changed
-	MessageScopeChanged = 1
-	
-	// The 
+	MessageScopeChanged = 1,
+
+    // The observed have changed in a way that may require the observer to
+    // update its representation (e.g. an LSynth constraint has moved and
+    // requires resynthesis)
+    MessageObservedChanged = 2
 } MessageT;
 
 @protocol LDrawObserver
@@ -168,6 +172,7 @@ typedef enum Message {
 	#endif
 	CacheFlagsT		invalFlags;
 	BOOL			isSelected;
+    NSString       *iconName;
 	
 }
 
@@ -205,6 +210,7 @@ typedef enum Message {
 
 - (void) setEnclosingDirective:(LDrawContainer *)newParent;
 - (void) setSelected:(BOOL)flag;
+- (void) setIconName:(NSString *)icon;
 
 // protocol Inspectable
 - (void) lockForEditing;

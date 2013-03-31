@@ -115,11 +115,17 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 - (void) pushTexture:(struct LDrawTextureSpec *)tex_spec;
 - (void) popTexture;
 
-// Drag handle is simply the location of the handle (float[3]).
-- (void) drawDragHandle:(GLfloat *) vertices;
+// Draw drag handle at a given location (3 floats).  The coordinates are within the current
+// transform.  The size is in screen pixels.
+- (void) drawDragHandle:(GLfloat *)xyz withSize:(GLfloat)size;
 
+// Begin/end for a display list.  Multiple display lists can be "open" for recording at one time;
+// each one returns its own collector object.  However, only the most recently (innermost)
+// display list can be accumulated into at one time.  (This is a bit of a defect of the API that we
+// should consider some day fixing.)
 - (id<LDrawCollector>) beginDL;	
 - (void) endDL:(LDrawDLHandle *) outHandle cleanupFunc:(LDrawDLCleanup_f *)func;		// Returns NULL if the display list is empty (e.g. no calls between begin/end)
+
 - (void) drawDL:(LDrawDLHandle)dl;
 
 @end

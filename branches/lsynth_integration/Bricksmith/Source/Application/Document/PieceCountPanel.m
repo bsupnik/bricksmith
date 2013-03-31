@@ -253,14 +253,14 @@
 	NSInteger   result              = 0;
 	
 	//set up the save panel
-	[savePanel setRequiredFileType:@"txt"];
+	[savePanel setAllowedFileTypes:[NSArray arrayWithObject:@"txt"]];
 	[savePanel setCanSelectHiddenExtension:YES];
 	[savePanel setTitle:NSLocalizedString(@"PieceCountSaveDialogTitle", nil)];
 	[savePanel setMessage:NSLocalizedString(@"PieceCountSaveDialogMessage", nil)];
+	[savePanel setNameFieldStringValue:NSLocalizedString(@"untitled", nil)];
 	
 	//run it and export the file if needed
-	result = [savePanel runModalForDirectory:nil
-										file:NSLocalizedString(@"untitled", nil)];
+	result = [savePanel runModal];
 	if(result == NSFileHandlingPanelOKButton)
 	{
 		savePath	= [savePanel URL];

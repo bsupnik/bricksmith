@@ -45,7 +45,7 @@
 #define NEW_RENDERER				1
 
 
-#define DEBUG_DRAWING				1	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
+#define DEBUG_DRAWING				0	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
 #define SIMPLIFICATION_THRESHOLD	0.3 //seconds
 #define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
 
@@ -217,7 +217,7 @@
 - (void) draw
 {
 	NSDate			*startTime			= nil;
-//	NSUInteger		options 			= DRAW_NO_OPTIONS;
+	NSUInteger		options 			= DRAW_NO_OPTIONS;
 	NSTimeInterval	drawTime			= 0;
 	BOOL			considerFastDraw	= NO;
 	

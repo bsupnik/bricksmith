@@ -263,131 +263,6 @@
 }//end windowControllerDidLoadNib:
 
 
-//========== populateLSynthModelMenus ==========================================
-//
-// Purpose:		Populate the LSynth Model menus. We guard against creating
-//              more than one menu.
-//
-//==============================================================================
-- (void) populateLSynthModelMenus
-{
-    LDrawApplication *appDelegate    = [NSApp delegate];
-    NSMenu           *mainMenu       = [NSApp mainMenu];
-    NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
-
-    NSLog(@"populateLSynthModelMenus");
-
-    // We recreate this menu each time we're called since the
-    // target potentially changes (different window/document)
-    // TODO: make this once per document?
-
-    if ([modelMenu itemWithTag:lsynthMenuTag]) {
-        [modelMenu removeItemAtIndex:[modelMenu indexOfItemWithTag:lsynthMenuTag]];
-    }
-
-    if (! [modelMenu itemWithTag:lsynthMenuTag]) {
-        NSInteger  separatorIndex = [modelMenu indexOfItemWithTag:rawCommandMenuTag];
-        NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
-
-        // A declarative encoding of our LSynth menus
-        // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
-        NSArray *menus = @[
-        @{@"title"  : @"Add Part",                      @"getter" : @"getParts",           @"entry_key" : @"nickname",
-          @"action" : @"InsertLSynthPart:",             @"tag" : [NSNumber numberWithInt:lsynthPartMenuTag]},
-        @{@"title"  : @"Add Hose",                      @"getter" : @"getHoseTypes",       @"entry_key" : @"title",
-          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
-        @{@"title"  : @"Add Hose Constraint",           @"getter" : @"getHoseConstraints", @"entry_key" : @"description",
-          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]},
-        @{@"title"  : @"Add Band",                      @"getter" : @"getBandTypes",       @"entry_key" : @"title",
-          @"action" : @"insertSynthesizableDirective:", @"tag" : [NSNumber numberWithInt:lsynthSynthesizableMenuTag]},
-        @{@"title"  : @"Add Band Constraint",           @"getter" : @"getBandConstraints", @"entry_key" : @"description",
-          @"action" : @"InsertLSynthConstraint:",       @"tag" : [NSNumber numberWithInt:lsynthConstraintMenuTag]}
-        ];
-
-        for (NSDictionary *menuSpec in menus) {
-            NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
-
-            // Retrieve the appropriate data for each menu entry, based on the getter given above
-            // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
-            // for an alternative that could avoid the use of NSSelectorFromString by storing the selectors
-            // directly in a dictionary.
-
-            for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])]) {
-                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
-                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
-                [entryMenuItem setRepresentedObject:entry];
-                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
-                [entryMenuItem setTarget:self];
-                // Should these be unique, i.e. add a loop index to a base value? Don't need them to be, yet.
-                [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
-                [menu addItem:entryMenuItem];
-            }
-            NSMenuItem *subMenu = [[[NSMenuItem alloc] init] autorelease];
-            [subMenu setTitle:[menuSpec objectForKey:@"title"]];
-            [subMenu setSubmenu:menu];
-
-            [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
-            //[menu setDelegate:self];
-
-            [lsynthMenu addItem:subMenu]; // a menuItem
-        }
-
-        //
-        // Add INSIDE/OUTSIDE menus
-        //
-
-        // Main menu and menuItem
-
-        NSMenu *insideOutsideMenu = [[[NSMenu alloc] init] autorelease];
-        NSMenuItem *insideOutsideMenuItem = [[[NSMenuItem alloc] init] autorelease];
-        [insideOutsideMenuItem setTitle:@"Inside/Outside"];
-        [lsynthMenu setSubmenu:insideOutsideMenu forItem:insideOutsideMenuItem];
-        [lsynthMenu addItem:insideOutsideMenuItem];
-
-        // Menu entries
-
-// TODO: Add these in later
-//        NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
-//        [surroundSelectionItem setTitle:@"Surround Selection"];
-//        [surroundSelectionItem setTarget:self];
-//        [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
-//        [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
-//        [insideOutsideMenu addItem:surroundSelectionItem];
-//
-//        NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
-//        [invertSelectionItem setTitle:@"Invert Selection"];
-//        [invertSelectionItem setTarget:self];
-//        [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
-//        [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
-//        [insideOutsideMenu addItem:invertSelectionItem];
-
-        NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
-        [addInsideItem setTitle:@"Insert INSIDE"];
-        [addInsideItem setTarget:self];
-        [addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
-        [addInsideItem setTag:lsynthInsertINSIDETag];
-        [insideOutsideMenu addItem:addInsideItem];
-
-        NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
-        [addOutsideItem setTitle:@"Insert OUTSIDE"];
-        [addOutsideItem setTarget:self];
-        [addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
-        [addOutsideItem setTag:lsynthInsertOUTSIDETag];
-        [insideOutsideMenu addItem:addOutsideItem];
-
-
-        // Add in the main LSynth menu to the Model menu
-        NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
-        [lsynthSubMenu setTitle:@"LSynth"];
-        [lsynthSubMenu setTag:lsynthMenuTag];
-        [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
-        // Add it at the top.  Should it go at the bottom?  It's my favourite
-        // feature but may not be everyone's
-        [modelMenu insertItem:lsynthSubMenu atIndex:0];
-    }
-}//end populateLSynthModelMenus
-
-
 #pragma mark -
 #pragma mark Reading
 
@@ -1554,118 +1429,93 @@
 	NSString	*activeName		= [[[self documentContents] activeModel] modelName];
 	NSString	*nameFormat		= NSLocalizedString(@"ExportedStepsFolderFormat", nil);
 	
-//	[exportPanel setRequiredFileType:@"ldr"];
-//	[exportPanel setCanSelectHiddenExtension:YES];
+	[exportPanel setDirectoryURL:nil];
+	[exportPanel setNameFieldStringValue:[NSString stringWithFormat:nameFormat, activeName]];
 	
-	[exportPanel beginSheetForDirectory:nil
-								   file:[NSString stringWithFormat:nameFormat, activeName]
-						 modalForWindow:[self windowForSheet]
-						  modalDelegate:self
-						 didEndSelector:@selector(exportStepsPanelDidEnd:returnCode:contextInfo:)
-							contextInfo:NULL ];
-		
+	[exportPanel beginSheetModalForWindow:[self windowForSheet]
+						completionHandler:
+	 ^(NSInteger returnCode)
+	 {
+		 // Do the save
+		 
+		 NSFileManager	 *fileManager		 = [[[NSFileManager alloc] init] autorelease];
+		 NSURL			 *saveURL			 = nil;
+		 NSString		 *saveName			 = nil;
+		 NSString		 *modelName 		 = nil;
+		 NSString		 *folderName		 = nil;
+		 NSString		 *modelnameFormat	 = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
+		 NSString		 *filenameFormat	 = NSLocalizedString(@"ExportedStepsFileFormat", nil);
+		 NSString		 *fileString		 = nil;
+		 NSData 		 *fileOutputData	 = nil;
+		 NSString		 *outputName		 = nil;
+		 NSString		 *outputPath		 = nil;
+		 
+		 LDrawFile		 *fileCopy			 = nil;
+		 
+		 NSInteger		 modelCounter		 = 0;
+		 NSInteger		 counter			 = 0;
+		 
+		 if(returnCode == NSOKButton)
+		 {
+			 saveURL	= [exportPanel URL];
+			 saveName	= ([saveURL isFileURL] ? [saveURL path] : nil);
+			 
+			 // If we got this far, we need to replace any prexisting file.
+			 if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
+				 [fileManager removeItemAtPath:saveName error:NULL];
+			 
+			 [fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
+			 
+			 //Output all the steps for all the submodels.
+			 for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
+			 {
+				 fileCopy = [[self documentContents] copy];
+				 
+				 //Move the target model to the top of the file. That way L3P will know to
+				 // render it!
+				 LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
+				 [currentModel retain];
+				 [fileCopy removeDirective:currentModel];
+				 [fileCopy insertDirective:currentModel atIndex:0];
+				 [fileCopy setActiveModel:currentModel];
+				 [currentModel release];
+				 
+				 //Make a new folder for the model's steps.
+				 modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
+				 folderName	= [saveName stringByAppendingPathComponent:modelName];
+				 
+				 [fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
+				 
+				 //Write out each step!
+				 for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
+				 {
+					 fileString		= [fileCopy write];
+					 fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
+					 
+					 outputName = [NSString stringWithFormat: filenameFormat,
+								   [currentModel modelName],
+								   (long)counter+1 ];
+					 outputPath = [folderName stringByAppendingPathComponent:outputName];
+					 [fileManager createFileAtPath:outputPath
+										  contents:fileOutputData
+										attributes:nil ];
+					 
+					 //Remove the step we just wrote, so that the next cycle won't
+					 // include it. We can safely do this because we are working with
+					 // a copy of the file!
+					 [currentModel removeDirectiveAtIndex:counter];
+				 }
+				 
+				 
+				 [fileCopy release];
+				 
+			 }
+			 
+		 }
+	 }];
 
 }//end exportSteps:
 
-
-//========== exportStepsPanelDidEnd:returnCode:contextInfo: ====================
-//
-// Purpose:		The export steps dialog was closed. If OK was clicked, the 
-//				filename specified is the name of the folder we should create 
-//				to export the model.
-//
-//==============================================================================
-- (void)exportStepsPanelDidEnd:(NSSavePanel *)savePanel
-					returnCode:(NSInteger)returnCode
-				   contextInfo:(void *)contextInfo
-{
-	NSFileManager   *fileManager        = [[[NSFileManager alloc] init] autorelease];
-	NSString        *saveName           = nil;
-	NSString        *modelName          = nil;
-	NSString        *folderName         = nil;
-	NSString        *modelnameFormat    = NSLocalizedString(@"ExportedStepsFolderFormat", nil);
-	NSString        *filenameFormat     = NSLocalizedString(@"ExportedStepsFileFormat", nil);
-	NSString        *fileString         = nil;
-	NSData          *fileOutputData     = nil;
-	NSString        *outputName         = nil;
-	NSString        *outputPath         = nil;
-		
-	LDrawFile       *fileCopy           = nil;
-	
-	NSInteger       modelCounter        = 0;
-	NSInteger       counter             = 0;
-	
-	if(returnCode == NSOKButton)
-	{
-		saveName	= [savePanel filename];
-		
-		//If we got this far, we need to replace any prexisting file.
-		if([fileManager fileExistsAtPath:saveName isDirectory:NULL])
-			[fileManager removeItemAtPath:saveName error:NULL];
-		 
-		[fileManager createDirectoryAtPath:saveName withIntermediateDirectories:YES attributes:nil error:NULL];
-		
-		//Output all the steps for all the submodels.
-		for(modelCounter = 0; modelCounter < [[[self documentContents] submodels] count]; modelCounter++)
-		{
-			fileCopy = [[self documentContents] copy];
-			
-			//Move the target model to the top of the file. That way L3P will know to 
-			// render it!
-			LDrawMPDModel *currentModel = [[fileCopy submodels] objectAtIndex:modelCounter];
-			[currentModel retain];
-			[fileCopy removeDirective:currentModel];
-			[fileCopy insertDirective:currentModel atIndex:0];
-			[fileCopy setActiveModel:currentModel];
-			[currentModel release];
-			
-			//Make a new folder for the model's steps.
-			modelName	= [NSString stringWithFormat:modelnameFormat, [currentModel modelName]];
-			folderName	= [saveName stringByAppendingPathComponent:modelName];
-			
-			[fileManager createDirectoryAtPath:folderName withIntermediateDirectories:YES attributes:nil error:NULL];
-			
-			//Write out each step!
-			for(counter = [[currentModel steps] count]-1; counter >= 0; counter--)
-			{
-				fileString		= [fileCopy write];
-				fileOutputData	= [fileString dataUsingEncoding:NSUTF8StringEncoding];
-				
-				outputName = [NSString stringWithFormat: filenameFormat, 
-														 [currentModel modelName],
-														 (long)counter+1 ];
-				outputPath = [folderName stringByAppendingPathComponent:outputName];
-				[fileManager createFileAtPath:outputPath
-									 contents:fileOutputData
-								   attributes:nil ];
-				
-				//Remove the step we just wrote, so that the next cycle won't 
-				// include it. We can safely do this because we are working with 
-				// a copy of the file!
-				[currentModel removeDirectiveAtIndex:counter];
-			}
-			
-					
-			[fileCopy release];
-			
-		}
-		
-	}
-}//end exportStepsPanelDidEnd:returnCode:contextInfo:
-
-//========== revealInFinder: ===================================================
-//
-// Purpose:		Open a Finder window with the current file selected.
-//
-//==============================================================================
-- (IBAction) revealInFinder:(id)sender
-{
-    // Cribbed directly from
-    // http://stackoverflow.com/questions/7652928/launch-osx-finder-window-with-specific-files-selected
-    NSArray *fileURLs = [NSArray arrayWithObjects:[self fileURL], nil];
-    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:fileURLs];
-
-}//end revealInFinder:
 
 #pragma mark -
 #pragma mark Edit Menu
@@ -2107,6 +1957,47 @@
 	[self setCurrentStep: (currentStep-1) % numberSteps ];
 
 }//end backOneStep:
+
+
+//========== useSelectionForRotationCenter: ====================================
+//
+// Purpose:		Defines the model's rotation center.
+//
+//==============================================================================
+- (IBAction) useSelectionForRotationCenter:(id)sender
+{
+	NSMutableArray *selectedDrawables = [NSMutableArray array];
+	
+	for(id currentDirective in self->selectedDirectives)
+	{
+		if([currentDirective isKindOfClass:[LDrawDrawableElement class]])
+		{
+			[selectedDrawables addObject:currentDirective];
+		}
+	}
+	
+	if([selectedDrawables count] == 0)
+	{
+		[[self->documentContents activeModel] setRotationCenter:ZeroPoint3];
+	}
+	else
+	{
+		[[self->documentContents activeModel] setRotationCenter:[(LDrawDrawableElement*)[selectedDrawables objectAtIndex:0] position]];
+	}
+	
+}//end useSelectionForRotationCenter:
+
+
+//========== clearRotationCenter: ==============================================
+//
+// Purpose:		Resets rotation center to the origin.
+//
+//==============================================================================
+- (IBAction) clearRotationCenter:(id)sender
+{
+	[[self->documentContents activeModel] setRotationCenter:ZeroPoint3];
+		
+}//end clearRotationCenter:
 
 
 #pragma mark -
@@ -2555,7 +2446,6 @@
     //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
     // Allow for no color selected
     LDrawColor          *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
-	TransformComponents transformation = IdentityComponents;
     
     //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
     [synthesizedObject setLDrawColor:selectedColor];
@@ -2656,7 +2546,7 @@
 
             // Show the new element
             [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:@[constraint]];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
             [constraint setSelected:YES];
         }
 
@@ -2675,7 +2565,7 @@
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
             [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:@[constraint]];
+            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
             [constraint setSelected:YES];
         }
 
@@ -2739,7 +2629,7 @@
         [(LDrawLSynth *)parent synthesize];
         [[self documentContents] noteNeedsDisplay];
         [fileContentsOutline expandItem:parent];
-        [fileContentsOutline selectObjects:@[direction]];
+        [fileContentsOutline selectObjects:[NSArray arrayWithObject:direction]];
         [direction setSelected:YES];
         [direction release];
     }
@@ -4365,6 +4255,14 @@
 		//
 		////////////////////////////////////////
 		
+		case useSelectionForSpinCenterMenuTag:
+			enable = ([selectedItems count] > 0);
+			break;
+		
+		case resetSpinCenterMenuTag:
+			enable = !V3EqualPoints(ZeroPoint3, [[self->documentContents activeModel] rotationCenter]);
+			break;
+
 		case stepDisplayMenuTag:
 			[menuItem setState:([activeModel stepDisplay])];
 			enable = YES;
@@ -4722,7 +4620,8 @@
 	{
 		glView          = [viewports objectAtIndex:counter];
 		
-		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%d", counter]];
+		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%ld", (long)counter]];
+		[glView setAutosaveName:[NSString stringWithFormat:@"fileGraphicView_%ld", (long)counter]];
 		
 		if(shouldRestore == YES)
 			[glView restoreConfiguration];
@@ -5232,6 +5131,142 @@
 	[self addModelsToMenus];
 
 }//end loadDataIntoDocumentUI
+
+
+//========== populateLSynthModelMenus ==========================================
+//
+// Purpose:		Populate the LSynth Model menus. We guard against creating
+//              more than one menu.
+//
+//==============================================================================
+- (void) populateLSynthModelMenus
+{
+    LDrawApplication *appDelegate    = [NSApp delegate];
+    NSMenu           *mainMenu       = [NSApp mainMenu];
+    NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+
+    NSLog(@"populateLSynthModelMenus");
+
+    // We recreate this menu each time we're called since the
+    // target potentially changes (different window/document)
+    // TODO: make this once per document?
+
+    if ([modelMenu itemWithTag:lsynthMenuTag]) {
+        [modelMenu removeItemAtIndex:[modelMenu indexOfItemWithTag:lsynthMenuTag]];
+    }
+
+    if (! [modelMenu itemWithTag:lsynthMenuTag])
+	{
+        NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
+
+        // A declarative encoding of our LSynth menus
+        // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
+        NSArray *menus = [NSArray arrayWithObjects:
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"nickname", @"InsertLSynthPart:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose", @"getHoseTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Hose Constraint", @"getHoseConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band", @"getBandTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+                          [NSDictionary dictionaryWithObjects:
+                           [NSArray arrayWithObjects:@"Add Band Constraint", @"getBandConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
+                                                      forKeys:
+                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
+
+                          nil];
+
+        for (NSDictionary *menuSpec in menus) {
+            NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
+
+            // Retrieve the appropriate data for each menu entry, based on the getter given above
+            // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
+            // for an alternative that could avoid the use of NSSelectorFromString by storing the selectors
+            // directly in a dictionary.
+
+            for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])]) {
+                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
+                [entryMenuItem setRepresentedObject:entry];
+                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
+                [entryMenuItem setTarget:self];
+                // Should these be unique, i.e. add a loop index to a base value? Don't need them to be, yet.
+                [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
+                [menu addItem:entryMenuItem];
+            }
+            NSMenuItem *subMenu = [[[NSMenuItem alloc] init] autorelease];
+            [subMenu setTitle:[menuSpec objectForKey:@"title"]];
+            [subMenu setSubmenu:menu];
+
+            [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
+            //[menu setDelegate:self];
+
+            [lsynthMenu addItem:subMenu]; // a menuItem
+        }
+
+        //
+        // Add INSIDE/OUTSIDE menus
+        //
+
+        // Main menu and menuItem
+
+        NSMenu *insideOutsideMenu = [[[NSMenu alloc] init] autorelease];
+        NSMenuItem *insideOutsideMenuItem = [[[NSMenuItem alloc] init] autorelease];
+        [insideOutsideMenuItem setTitle:@"Inside/Outside"];
+        [lsynthMenu setSubmenu:insideOutsideMenu forItem:insideOutsideMenuItem];
+        [lsynthMenu addItem:insideOutsideMenuItem];
+
+        // Menu entries
+
+// TODO: Add these in later
+//        NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [surroundSelectionItem setTitle:@"Surround Selection"];
+//        [surroundSelectionItem setTarget:self];
+//        [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
+//        [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:surroundSelectionItem];
+//
+//        NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//        [invertSelectionItem setTitle:@"Invert Selection"];
+//        [invertSelectionItem setTarget:self];
+//        [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
+//        [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
+//        [insideOutsideMenu addItem:invertSelectionItem];
+
+        NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addInsideItem setTitle:@"Insert INSIDE"];
+        [addInsideItem setTarget:self];
+        [addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addInsideItem setTag:lsynthInsertINSIDETag];
+        [insideOutsideMenu addItem:addInsideItem];
+
+        NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
+        [addOutsideItem setTitle:@"Insert OUTSIDE"];
+        [addOutsideItem setTarget:self];
+        [addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+        [addOutsideItem setTag:lsynthInsertOUTSIDETag];
+        [insideOutsideMenu addItem:addOutsideItem];
+
+
+        // Add in the main LSynth menu to the Model menu
+        NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
+        [lsynthSubMenu setTitle:@"LSynth"];
+        [lsynthSubMenu setTag:lsynthMenuTag];
+        [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
+        // Add it at the top.  Should it go at the bottom?  It's my favourite
+        // feature but may not be everyone's
+        [modelMenu insertItem:lsynthSubMenu atIndex:0];
+    }
+}//end populateLSynthModelMenus
 
 
 //========== selectedContainer =================================================

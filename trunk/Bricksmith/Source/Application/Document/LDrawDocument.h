@@ -6,6 +6,12 @@
 //
 //				Opens the document and manages its editor and viewer.
 //
+//              To use elsewhere, do something like:
+//
+//                   #import "LDrawDocument.h"
+//                   NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
+//                   LDrawDocument *currentDocument = [documentController currentDocument];
+//
 //  Created by Allen Smith on 2/14/05.
 //  Copyright (c) 2005. All rights reserved.
 //==============================================================================
@@ -125,6 +131,7 @@
 
 // - File menu
 - (IBAction) exportSteps:(id)sender;
+- (IBAction) revealInFinder:(id)sender;
 
 // - Edit menu
 - (IBAction) copy:(id)sender;
@@ -197,7 +204,7 @@
 - (LDrawGLView *) main3DViewport;
 - (void) updateViewportAutosaveNamesAndRestore:(BOOL)shouldRestore;
 
-// Utilites
+// Utilities
 - (void) addModel:(LDrawMPDModel *)newModel atIndex:(NSInteger)insertAtIndex preventNameCollisions:(BOOL)renameModels;
 - (void) addStep:(LDrawStep *)newStep parent:(LDrawMPDModel*)selectedModel index:(NSInteger)insertAtIndex;
 - (void) addPartNamed:(NSString *)partName;
@@ -207,6 +214,7 @@
 - (BOOL) elementsAreSelectedOfVisibility:(BOOL)visibleFlag;
 - (NSAttributedString *) formatDirective:(LDrawDirective *)item withStringRepresentation:(NSString *)representation;
 - (void) loadDataIntoDocumentUI;
+- (void) populateLSynthModelMenus;
 - (LDrawContainer *) selectedContainer;
 - (NSArray *) selectedObjects;
 - (LDrawMPDModel *) selectedModel;
