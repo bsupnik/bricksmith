@@ -1,5 +1,5 @@
 //
-//  Suggestions.h
+//  RelatedParts.h
 //  Bricksmith
 //
 //  Created by bsupnik on 2/24/13.
@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "MatrixMath.h"
 
-@interface PartSuggestion : NSObject
+@interface RelatedPart : NSObject
 {
 	NSString		*parent;
 	NSString		*child;
@@ -29,13 +29,13 @@
 
 @end
 
-@interface Suggestions : NSObject 
+@interface RelatedParts : NSObject 
 {
-	NSArray *		suggestions;
+	NSArray *		relatedParts;
 
 }
 
-+ (Suggestions*)sharedSuggestions;
++ (RelatedParts*)sharedRelatedParts;
 - (id)			initWithFilePath:(NSString *)filePath;
 - (void)		dump;
 
@@ -47,7 +47,7 @@
 // Second level search: given the parent and one of the role or child,
 // get the completions.  (There can be more than one, e.g. for a red wheels and "left tire"
 // we expect to get the big and small tires).  
-// The array is na array of complete PartSuggestion objects.
+// The array is na array of complete RelatedPart objects.
 - (NSArray*)	getSuggestionList:(NSString*) parent withRole:(NSString*) role;
 - (NSArray*)	getSuggestionList:(NSString*) parent withChild:(NSString*) role;
 

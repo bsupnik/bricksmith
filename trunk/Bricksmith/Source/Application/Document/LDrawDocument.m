@@ -66,26 +66,38 @@
 #import "LDrawDragHandle.h"
 #import "LDrawContainer.h"
 #import "LDrawLSynthDirective.h"
-#import "Suggestions.h"
+#import "RelatedParts.h"
 
 void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray * subs, int want_role)
 {
 	NSUInteger i, counter;
 	NSMenuItem * my_item = nil;
 	NSMenu * choices_menu = nil;
-	
-	my_item = [[[NSMenuItem alloc] initWithTitle:child_name action:NULL keyEquivalent:@""] autorelease];
-	[parent_menu addItem:my_item];
-	
-	choices_menu = [[[NSMenu alloc] initWithTitle:@"choices"] autorelease];
-	[my_item setSubmenu:choices_menu];
-	
+
+	if(want_role != 2)
+	{
+		my_item = [[[NSMenuItem alloc] initWithTitle:child_name action:NULL keyEquivalent:@""] autorelease];
+		[parent_menu addItem:my_item];
+		
+		choices_menu = [[[NSMenu alloc] initWithTitle:@"choices"] autorelease];
+		[my_item setSubmenu:choices_menu];
+	}
+	else
+		choices_menu = parent_menu;
+		
 	counter = [subs count];
 	for(i = 0; i < counter; ++i)
 	{
-		PartSuggestion * ps = [subs objectAtIndex:i];
+		RelatedPart * ps = [subs objectAtIndex:i];
 
-		NSMenuItem * ps_item = [[[NSMenuItem alloc] initWithTitle:(want_role ? [ps role] : [ps childName]) action:@selector(addSuggestionClicked:) keyEquivalent:@""] autorelease];
+		NSString * title;
+		switch(want_role) {
+		case 0: title = [ps childName]; break;
+		case 1: title = [ps role]; break;
+		case 2: title = [NSString stringWithFormat:@"%s: %s", [[ps role] UTF8String], [[ps childName] UTF8String]]; break;
+		}
+
+		NSMenuItem * ps_item = [[[NSMenuItem alloc] initWithTitle:title action:@selector(addSuggestionClicked:) keyEquivalent:@""] autorelease];
 		[choices_menu addItem:ps_item];		
 		[ps_item setRepresentedObject:ps];
 	}
@@ -101,7 +113,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 //==============================================================================
 - (id) init
 {
-//	[[Suggestions sharedSuggestions] dump];
+//	[[RelatedParts sharedRelatedParts] dump];
     self = [super init];
     if (self)
 	{
@@ -2410,7 +2422,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 
 - (IBAction) addSuggestionClicked:(id)sender
 {
-	PartSuggestion * suggestion = [sender representedObject];
+	RelatedPart * suggestion = [sender representedObject];
 	
 	NSString * partName = [suggestion child];
 	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
@@ -4622,7 +4634,7 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 			LDrawPart * pp = (LDrawPart *) p;
 			NSString * parentName = [pp referenceName];
 			
-			Suggestions * s = [Suggestions sharedSuggestions];
+			RelatedParts * s = [RelatedParts sharedRelatedParts];
 			
 			NSArray * kids = [s getChildPartList:parentName];
 			NSArray * roles = [s getChildRoleList:parentName];
@@ -4631,10 +4643,12 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 			
 			if([kids count])
 			{
-				NSMenu * kids_and_roles = [[[NSMenu alloc] initWithTitle:@"Suggestions"] autorelease];
+				NSMenu * kids_and_roles = [[[NSMenu alloc] initWithTitle:@"Related Parts"] autorelease];
 				
 				[relatedItem setSubmenu:kids_and_roles];
 				[relatedItem setEnabled:TRUE];
+				
+				BOOL is_flat = ([kids count] == 1 || [roles count] == 1);
 				
 				NSUInteger count, i;
 				
@@ -4644,17 +4658,20 @@ void AppendChoicestoNewItem(NSMenu * parent_menu, NSString * child_name, NSArray
 				{
 					NSString * child = [kids objectAtIndex:i];
 					NSArray * choices = [s getSuggestionList:parentName withChild:child];
-					AppendChoicestoNewItem(kids_and_roles,[[choices objectAtIndex:0] childName],choices,1);
+					AppendChoicestoNewItem(kids_and_roles,[[choices objectAtIndex:0] childName],choices,(is_flat || [choices count] == 1) ? 2 : 1);
 				}
 				
-				[kids_and_roles addItem:[NSMenuItem separatorItem]];
-				
-				count = [roles count];
-				for(i = 0; i < count; ++i)
+				if(!is_flat)
 				{
-					NSString * role = [roles objectAtIndex:i];
-					NSArray * choices = [s getSuggestionList:parentName withRole:role];
-					AppendChoicestoNewItem(kids_and_roles,role,choices,0);
+					[kids_and_roles addItem:[NSMenuItem separatorItem]];
+					
+					count = [roles count];
+					for(i = 0; i < count; ++i)
+					{
+						NSString * role = [roles objectAtIndex:i];
+						NSArray * choices = [s getSuggestionList:parentName withRole:role];
+						AppendChoicestoNewItem(kids_and_roles,role,choices,[choices count] == 1 ? 2 : 0);
+					}
 				}
 				
 			}

@@ -1,17 +1,45 @@
 //
-//  Suggestions.m
+//  RelatedParts.m
 //  Bricksmith
 //
 //  Created by bsupnik on 2/24/13.
 //  Copyright 2013 __MyCompanyName__. All rights reserved.
 //
 
-#import "Suggestions.h"
+#import "RelatedParts.h"
 #import "LDrawUtilities.h"
 #import "StringCategory.h"
 #import "PartLibrary.h"
 
-@implementation PartSuggestion
+static NSInteger sort_by_part_description(id a, id b, void * ref)
+{
+	PartLibrary * pl = (PartLibrary *) ref;
+	NSString * aa = a;
+	NSString * bb = b;
+	
+	NSString * da = [pl descriptionForPartName:aa];
+	NSString * db = [pl descriptionForPartName:bb];
+	
+	return [da compare:db];
+}
+
+static NSInteger sort_by_child_name(id a, id b, void * ref)
+{
+	RelatedPart * aa = a;
+	RelatedPart * bb = b;
+	
+	return [[aa childName] compare:[bb childName]];	
+}
+
+static NSInteger sort_by_role(id a, id b, void * ref)
+{
+	RelatedPart * aa = a;
+	RelatedPart * bb = b;
+	
+	return [[aa role] compare:[bb role]];	
+}
+
+@implementation RelatedPart
 
 - (id)			initWithLine:(NSString *) line
 {
@@ -134,18 +162,22 @@
 @end
 
 
-@implementation Suggestions
+@implementation RelatedParts
 
-static Suggestions * SharedSuggestions = nil;
+static RelatedParts * SharedRelatedParts = nil;
 
-+ (Suggestions*)sharedSuggestions
++ (RelatedParts*)sharedRelatedParts
 {
-	if(SharedSuggestions == nil)
+	if(SharedRelatedParts == nil)
 	{
-		SharedSuggestions = [[Suggestions alloc] initWithFilePath:@"/Users/bsupnik/Desktop/suggestions.txt"];
+	
+		NSBundle * mainBundle	= [NSBundle mainBundle];
+		NSString * path	= [mainBundle pathForResource:@"related.txt" ofType:nil];
+	
+		SharedRelatedParts = [[RelatedParts alloc] initWithFilePath:path];
 	}
 	
-	return SharedSuggestions;
+	return SharedRelatedParts;
 }
 
 - (id)			initWithFilePath:(NSString *)filePath
@@ -164,17 +196,17 @@ static Suggestions * SharedSuggestions = nil;
 
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [[PartSuggestion alloc] initWithLine:[lines objectAtIndex:i]];
+		RelatedPart * p = [[RelatedPart alloc] initWithLine:[lines objectAtIndex:i]];
 		[arr addObject:p];
 		[p release];
 	}
-	self->suggestions = arr;
+	self->relatedParts = arr;
 	return self;
 }
 
 - (void) dealloc
 {
-	[self->suggestions release];
+	[self->relatedParts release];
 
 	[super dealloc];
 }
@@ -182,84 +214,91 @@ static Suggestions * SharedSuggestions = nil;
 - (NSArray*)	getChildPartList:(NSString *)parent
 {
 	NSUInteger i;
-	NSUInteger count = [self->suggestions count];
+	NSUInteger count = [self->relatedParts count];
 	NSMutableSet * kids = [NSMutableSet setWithCapacity:10];
 	
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [self->suggestions objectAtIndex:i];
+		RelatedPart * p = [self->relatedParts objectAtIndex:i];
 		if ([parent compare:[p parent]] == NSOrderedSame)
 		{
 			[kids addObject:[p child]];
 		}
 	}
-	return [kids allObjects];
+
+	NSArray * kids_sorted = [kids allObjects];
+	return [kids_sorted sortedArrayUsingFunction:sort_by_part_description context:[PartLibrary sharedPartLibrary]];
 }
 
 - (NSArray*)	getChildRoleList:(NSString *)parent
 {
 	NSUInteger i;
-	NSUInteger count = [self->suggestions count];
+	NSUInteger count = [self->relatedParts count];
 	NSMutableSet * kids = [NSMutableSet setWithCapacity:10];
 	
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [self->suggestions objectAtIndex:i];
+		RelatedPart * p = [self->relatedParts objectAtIndex:i];
 		if ([parent compare:[p parent]] == NSOrderedSame)
 		{
 			[kids addObject:[p role]];
 		}
 	}
-	return [kids allObjects];
+	
+	NSArray * kids_sorted = [kids allObjects];
+	return [kids_sorted sortedArrayUsingSelector:@selector(compare:)];	
 }
 
 // Second level search: given the parent and one of the role or child,
 // get the completions.  (There can be more than one, e.g. for a red wheels and "left tire"
 // we expect to get the big and small tires).  
-// The array is na array of complete PartSuggestion objects.
+// The array is na array of complete RelatedPart objects.
 - (NSArray*)	getSuggestionList:(NSString*) parent withRole:(NSString*) role
 {
 	NSUInteger i;
-	NSUInteger count = [self->suggestions count];
+	NSUInteger count = [self->relatedParts count];
 	NSMutableArray * kids = [NSMutableArray arrayWithCapacity:10];
 	
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [self->suggestions objectAtIndex:i];
+		RelatedPart * p = [self->relatedParts objectAtIndex:i];
 		if ([parent compare:[p parent]] == NSOrderedSame)
 		if ([role compare:[p role]] == NSOrderedSame)
 		{
 			[kids addObject:p];
 		}
 	}
+	[kids sortUsingFunction:sort_by_child_name context:NULL];
 	return kids;
 }
 
 - (NSArray*)	getSuggestionList:(NSString*) parent withChild:(NSString*) child
 {
 	NSUInteger i;
-	NSUInteger count = [self->suggestions count];
+	NSUInteger count = [self->relatedParts count];
 	NSMutableArray * kids = [NSMutableArray arrayWithCapacity:10];
 	
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [self->suggestions objectAtIndex:i];
+		RelatedPart * p = [self->relatedParts objectAtIndex:i];
 		if ([parent compare:[p parent]] == NSOrderedSame)
 		if ([child compare:[p child]] == NSOrderedSame)
 		{
 			[kids addObject:p];
 		}
 	}
+	
+	[kids sortUsingFunction:sort_by_role context:NULL];
 	return kids;
 }
 
 - (void) dump
 {
 	NSUInteger i, count;
-	count = [self->suggestions count];
+	count = [self->relatedParts count];
 	for(i = 0; i < count; ++i)
 	{
-		PartSuggestion * p = [self->suggestions objectAtIndex:i];
+		RelatedPart * p = [self->relatedParts objectAtIndex:i];
 		[p dump];
 	}
 }
