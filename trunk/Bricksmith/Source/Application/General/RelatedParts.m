@@ -41,7 +41,10 @@ static NSInteger sort_by_role(id a, id b, void * ref)
 
 @implementation RelatedPart
 
-- (id)			initWithLine:(NSString *) line
+- (id)			initWithParent:(NSString *) parentName
+						offset:(GLfloat *) offset
+					  relation:(NSString *) relation
+					 childLine:(NSString *) line
 {
 	NSCharacterSet	*whitespaceCharacterSet = [NSCharacterSet whitespaceCharacterSet];
 
@@ -49,22 +52,17 @@ static NSInteger sort_by_role(id a, id b, void * ref)
 	NSString	*orig=line;
 	self = [super init];
 	
-	
-	// parent child role xform
 	@try {
+		// Skip color
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		self->parent = [parsedField retain];
-
-		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		self->child = [parsedField retain];
 
 		// Matrix XYZ
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		transform[12] = [parsedField floatValue];
+		transform[12] = [parsedField floatValue] - offset[0];
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		transform[13] = [parsedField floatValue];
+		transform[13] = [parsedField floatValue] - offset[1];
 		parsedField = [LDrawUtilities readNextField:line remainder:&line];
-		transform[14] = [parsedField floatValue];
+		transform[14] = [parsedField floatValue] - offset[2];
 		
 		// Matrix rotation 3x3.  LDraw format is transpose of what we are
 		// used to from OpenGL.
@@ -94,10 +92,13 @@ static NSInteger sort_by_role(id a, id b, void * ref)
 		transform[11] = 0.0f;		
 		transform[15] = 1.0f;
 
-		self->role = [[line stringByTrimmingCharactersInSet:whitespaceCharacterSet] retain];
+		self->child = [[line stringByTrimmingCharactersInSet:whitespaceCharacterSet] retain];
 		
 		self->childName = [[[PartLibrary sharedPartLibrary] descriptionForPartName:self->child] retain];
-
+		
+		self->role = [relation retain];
+		
+		self->parent = [parentName retain];
 	}
 	@catch (NSException * e) {
 		NSLog(@"a suggestion line '%@' was fatally invalid", orig);
@@ -172,7 +173,7 @@ static RelatedParts * SharedRelatedParts = nil;
 	{
 	
 		NSBundle * mainBundle	= [NSBundle mainBundle];
-		NSString * path	= [mainBundle pathForResource:@"related.txt" ofType:nil];
+		NSString * path	= [mainBundle pathForResource:@"related.ldr" ofType:nil];
 	
 		SharedRelatedParts = [[RelatedParts alloc] initWithFilePath:path];
 	}
@@ -185,6 +186,10 @@ static RelatedParts * SharedRelatedParts = nil;
 	NSUInteger			i;
 	NSUInteger			count;
 	NSString *			fileContents	= nil;
+	NSString *			parsedField		= nil;
+
+	NSCharacterSet	*whitespaceCharacterSet = [NSCharacterSet whitespaceCharacterSet];
+
 	NSArray *			lines			= nil;
 	NSMutableArray *	arr				= nil;
 
@@ -194,11 +199,87 @@ static RelatedParts * SharedRelatedParts = nil;
 	count			= [lines count];
 	arr				= [[NSMutableArray alloc] initWithCapacity:count];
 
+	NSMutableArray * parents = [NSMutableArray arrayWithCapacity:5];
+	GLfloat offset[3] = { 0, 0, 0 };
+	NSString * relName = nil;
+	
 	for(i = 0; i < count; ++i)
 	{
-		RelatedPart * p = [[RelatedPart alloc] initWithLine:[lines objectAtIndex:i]];
-		[arr addObject:p];
-		[p release];
+		NSString * line = [lines objectAtIndex:i];
+		NSString * orig_line = line;
+		
+		parsedField = [LDrawUtilities readNextField:line remainder:&line];
+		
+		if([parsedField compare:@"0"] == NSOrderedSame)
+		{
+			// meta command - do we know what it is?
+			parsedField = [LDrawUtilities readNextField:line remainder:&line];
+			if([parsedField compare:@"!PARENT"] == NSOrderedSame)
+			{
+				relName = nil;
+				parents = [NSMutableArray arrayWithCapacity:5];
+				offset[0] = offset[1] = offset[2] = 0.0f;
+			}
+			else if([parsedField compare:@"!CHILD"] == NSOrderedSame)
+			{
+				relName = [line stringByTrimmingCharactersInSet:whitespaceCharacterSet];			
+			}
+			else
+				printf("Unparsable META command: %s\n", [orig_line UTF8String]);
+			
+		}
+		else if([parsedField compare:@"1"] == NSOrderedSame)
+		{
+			if(relName == nil)
+			{
+				// skip color
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+
+				// Grab offset
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				offset[0] = [parsedField floatValue];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				offset[1] = [parsedField floatValue];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				offset[2] = [parsedField floatValue];
+				
+				// skip matrix
+
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				parsedField = [LDrawUtilities readNextField:line remainder:&line];
+				
+
+				NSString * parentName = [line stringByTrimmingCharactersInSet:whitespaceCharacterSet];
+				[parents addObject:parentName];
+
+			}
+			else
+			{
+				NSInteger num_parents = [parents count];
+				NSInteger pidx;
+				for(pidx = 0; pidx < num_parents; ++pidx)
+				{
+					NSString * pname = [parents objectAtIndex:pidx];
+					RelatedPart * p = [[RelatedPart alloc] initWithParent:pname offset:offset relation:relName childLine:line];
+					[arr addObject:p];
+					[p release];
+					
+				}
+			}
+		}
+		else
+			printf("Unparsable line: %s\n", [orig_line UTF8String]);
+		
+	
 	}
 	self->relatedParts = arr;
 	return self;

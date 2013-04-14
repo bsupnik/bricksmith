@@ -125,12 +125,12 @@
 3581.dat	3582.dat	0 0 -12	0 0 1  0 1 0  -1 0 0  Shutter
 3853.dat	3854.dat	-34 4 -4	0 0 -1  0 1 0  1 0 0  Left Pane Front
 3853.dat	2529.dat	-34 4 -4	0 0 -1  0 1 0  1 0 0  Left Pane Front
-4132.dat	4133.dat	-29 9 -14	0 0 -1  0 1 0  1 0 0  Left Pane Front
+4132.dat	4133.dat	-28 8 -14	0 0 -1  0 1 0  1 0 0  Left Pane Front
 3853.dat	3854.dat	-34 4 4	0 0 -1  0 1 0  1 0 0  Left Pane Rear
 3853.dat	2529.dat	-34 4 4	0 0 -1  0 1 0  1 0 0  Left Pane Rear
 4132.dat	3854.dat	-33 4 14	0 0 -1  0 1 0  1 0 0  Left Pane Rear
 60594.dat	60608.dat	-32 4 4	0 0 -1  0 1 0  1 0 0  Left Pane
-60598.dat	60608.dat	-32 4 -14	0 0 -1  0 1 0  1 0 0  Left Pane
+60598.dat	60608.dat	-32 4 -15	0 0 -1  0 1 0  1 0 0  Left Pane
 3853.dat	3855.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
 4033.dat	3855.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
 4033.dat	6016.dat	0 34 -3	1 0 0  0 1 0  0 0 1  Glass
@@ -141,10 +141,8 @@
 2493b.dat	2494d01.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
 2493a.dat	2494.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
 2493a.dat	2494d01.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
-60596.dat	57895.dat	0 4 6	1 0 0  0 1 0  0 0 1  Glass
-60596.dat	57895p01.dat	0 4 6	1 0 0  0 1 0  0 0 1  Glass
-60594.dat	86210.dat	0 8 5	1 0 0  0 1 0  0 0 1  Glass
-60806.dat	86210.dat	0 11 -14	1 0 0  0 0 0  0 0 0  Glass
+60596.dat	57895.dat	0 4 5	1 0 0  0 1 0  0 0 1  Glass
+60596.dat	57895p01.dat	0 4 5	1 0 0  0 1 0  0 0 1  Glass
 57894.dat	57895.dat	0 4 -3	1 0 0  0 1 0  0 0 1  Glass
 57894.dat	57895p01.dat	0 4 -3	1 0 0  0 1 0  0 0 1  Glass
 6160a.dat	6202.dat	0 0 0	1 0 0  0 1 0  0 0 1  Glass
@@ -154,20 +152,28 @@
 4741.dat	4448.dat	0 72 -70	-1 0 0  0 1 0  0 0 -1  Bottom Glass
 4741.dat	4448d01.dat	0 72 -70	-1 0 0  0 1 0  0 0 -1  Bottom Glass
 60594.dat	60608.dat	32 4 4	0 0 1  0 1 0  -1 0 0  Right Pane
-60598.dat	60608.dat	32 4 -14	0 0 1  0 1 0  -1 0 0  Right Pane
+60598.dat	60608.dat	32 4 -15	0 0 1  0 1 0  -1 0 0  Right Pane
 3853.dat	3854.dat	34 4 -4	0 0 1  0 1 0  -1 0 0  Right Pane Front
 3853.dat	2529.dat	34 4 -4	0 0 1  0 1 0  -1 0 0  Right Pane Front
-4132.dat	4133.dat	29 9 -14	0 0 0  0 1 0  0 0 0  Right Pane Front
+4132.dat	4133.dat	28 8 -14	0 0 0  0 1 0  0 0 0  Right Pane Front
 3853.dat	3854.dat	34 4 4	0 0 1  0 1 0  -1 0 0  Right Pane Rear
 3853.dat	2529.dat	34 4 4	0 0 1  0 1 0  -1 0 0  Right Pane Rear
 4132.dat	3854.dat	33 4 14	0 0 1  0 1 0  -1 0 0  Right Pane Rear
 60596.dat	60621.dat	-32 0 5	1 0 0  0 1 0  0 0 1  Door Left
 60596.dat	60623.dat	-32 0 5	1 0 0  0 1 0  0 0 1  Door Left
 4033.dat	6546.dat	-34 64 5	1 0 0  0 -1 0  0 0 -1  Door Left
-60594.dat	60614.dat	-32 64 4	1 0 0  0 -1 0  0 0 -1  Door Left
+60594.dat	60614.dat	-32 64 5	1 0 0  0 -1 0  0 0 -1  Door Left
+60806.dat	60614.dat	-32 8 -11	1 0 0  0 0 0  0 0 0  Door Left
 60596.dat	60621.dat	32 0 5	-1 0 0  0 1 0  0 0 -1  Door Right
 60596.dat	30178.dat	32 4 5	0 0 0  0 1 0  0 0 0  Door Right
 60596.dat	60623.dat	32 0 5	-1 0 0  0 1 0  0 0 -1  Door Right
 60596.dat	30178c01.dat	32 4 5	0 0 0  0 1 0  0 0 0  Door Right
 4033.dat	6546.dat	34 4 5	-1 0 0  0 1 0  0 0 -1  Door Right
-60594.dat	60614.dat	32 4 4	-1 0 0  0 1 0  0 0 -1  Door Right
+60594.dat	60614.dat	32 4 5	-1 0 0  0 1 0  0 0 -1  Door Right
+60806.dat	60614.dat	32 53 -50	-1 0 0  0 0 0  0 0 0  Door Right
+60594.dat	86210.dat	0 8 5	1 0 0  0 1 0  0 0 1  Glass Top Hinge
+60806.dat	86210.dat	0 11 -13	1 0 0  0 0 0  0 0 0  Glass Top Hinge
+60598.dat	86210.dat	0 8 -15	1 0 0  0 1 0  0 0 1  Glass Top Hinge
+60594.dat	86210.dat	0 60 5	1 0 0  0 -1 0  0 0 -1  Glass Bottom Hinge
+60806.dat	86210.dat	0 50 -48	1 0 0  0 0 0  0 0 0  Glass Bottom Hinge
+60598.dat	86210.dat	0 60 -15	1 0 0  0 -1 0  0 0 -1  Glass Bottom Hinge

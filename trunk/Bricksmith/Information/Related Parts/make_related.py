@@ -2,6 +2,9 @@
 
 import os,sys
 
+i = 0
+j = 0
+
 def fail(x):
 	print x
 	exit(1)
@@ -31,20 +34,29 @@ def output_pairs(parents,children,relation):
 		if not check_same_matrix(parents[0],p):
 			fail('Relation %s: matrices do not match.' % relation)
 
-	offset = [ int(x) for x in parents[0][2:5] ]
-	
+	act_offset = [ int(x) for x in parents[0][2:5] ]
+	offset = [ i * 100, 0, j * 100 ]
+
+	print "0 !PARENT"	
 	for p in parents:
-		for c in children:
-			child_xform = [ float(x) for x in c[2:14]]
-			#parent child trans rotate relation name
-			#122c01.dat	3641.dat	-31 6 0 0 0 1 0 1 0 -1 0 0	Left Tire
-			print ('%s\t%s\t%d %d %d\t%d %d %d  %d %d %d  %d %d %d  %s' %
-				(p[14],c[14],
-					child_xform[0]-offset[0],					child_xform[1]-offset[1],					child_xform[2]-offset[2],
-					child_xform[3],child_xform[4],child_xform[5],
-					child_xform[6],child_xform[7],child_xform[6],
-					child_xform[9],child_xform[10],child_xform[11],
-					relation))
+		print ('1 4\t%d %d %d\t1 0 0 0 1 0 0 0 1 %s' % (offset[0], offset[1], offset[2], p[14]))
+
+	
+	print "0 !CHILD %s" % relation
+		
+	for c in children:
+		child_xform = [ float(x) for x in c[2:14]]
+		#parent child trans rotate relation name
+		#122c01.dat	3641.dat	-31 6 0 0 0 1 0 1 0 -1 0 0	Left Tire
+		print ('1 1\t%f %f %f\t%f %f %f  %f %f %f  %f %f %f  %s' %
+			(
+				child_xform[0]-act_offset[0] + offset[0],					
+				child_xform[1]-act_offset[1] + offset[1],
+				child_xform[2]-act_offset[2] + offset[2],
+				child_xform[3],child_xform[4],child_xform[5],
+				child_xform[6],child_xform[7],child_xform[6],
+				child_xform[9],child_xform[10],child_xform[11],
+				c[14]))
 
 for fname in sys.argv[1:]:
 	fi = open(fname)
@@ -54,6 +66,11 @@ for fname in sys.argv[1:]:
 	got_mpd = 0
 	parents=None
 	children=None
+	
+	print "0 FILE %s.ldr" % fname
+	print "0 %s" % fname
+	print "0 Name: %s.ldr" % fname
+	print "0 Author: Ben Supnik"
 	
 	for raw_line in fi:
 		line = raw_line.strip('\r\n \t').split()
@@ -74,6 +91,10 @@ for fname in sys.argv[1:]:
 			step = step + 1
 			if step == 3:
 				output_pairs(parents,children,relation)
+				i = i + 1
+				if i > 9:
+					i = 0
+					j = j + 1
 				parents=[]
 				children=[]
 				step = 1
@@ -89,3 +110,6 @@ for fname in sys.argv[1:]:
 				children.append(line)
 			else:
 				fail('ERROR: 1 line not in step %d' % step)
+
+	print "0 NOFILE"
+	

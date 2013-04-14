@@ -18,7 +18,11 @@
 	GLfloat			transform[16];
 }
 
-- (id)			initWithLine:(NSString *) line;
+- (id)			initWithParent:(NSString *) parentName
+						offset:(GLfloat *) offset
+					  relation:(NSString *) relation
+					 childLine:(NSString *) line;
+					 
 - (void)		dump;
 
 - (NSString*)	parent;

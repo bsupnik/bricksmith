@@ -1,3 +1,3 @@
 #!/bin/bash
-
-./make_related.py *.ldr > related.txt
+rm -rf related.ldr
+./make_related.py *.ldr > related.ldr
