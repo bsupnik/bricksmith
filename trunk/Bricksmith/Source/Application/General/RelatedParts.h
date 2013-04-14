@@ -1,14 +1,21 @@
+//==============================================================================
 //
 //  RelatedParts.h
 //  Bricksmith
 //
 //  Created by bsupnik on 2/24/13.
-//  Copyright 2013 __MyCompanyName__. All rights reserved.
+//  Copyright 2013. All rights reserved.
 //
+//==============================================================================
 
 #import <Cocoa/Cocoa.h>
 #import "MatrixMath.h"
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// class RelatedPart
+//
+////////////////////////////////////////////////////////////////////////////////
 @interface RelatedPart : NSObject
 {
 	NSString		*parent;
@@ -33,6 +40,11 @@
 
 @end
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// class RelatedParts
+//
+////////////////////////////////////////////////////////////////////////////////
 @interface RelatedParts : NSObject 
 {
 	NSArray *		relatedParts;

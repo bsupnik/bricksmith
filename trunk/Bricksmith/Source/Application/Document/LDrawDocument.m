@@ -75,7 +75,7 @@ enum {
 	rpm_merged = 2				// List only one item wiht name and roll - used when we only have one choice to shorten menus.
 };
 
-//========== AppendChoicesToNewItem ============================================
+//---------- AppendChoicesToNewItem --------------------------------------------
 //
 // Purpose:		Build a menu item with a sub-menu of roles or children for 
 //				related parts.
@@ -85,7 +85,7 @@ enum {
 //				make the single menu item "the" command.  When we have only one
 //				choice, this lets us limit the menu depth.
 //
-//==============================================================================
+//------------------------------------------------------------------------------
 void AppendChoicesToNewItem(
 					NSMenu *	parent_menu,	// Menu we append to
 					NSString *	child_name,		// Unmerged: name of the menu item that shows the sub-menu
@@ -112,7 +112,7 @@ void AppendChoicesToNewItem(
 	{
 		RelatedPart * ps = [subs objectAtIndex:i];
 
-		NSString * title;
+		NSString * title = nil;
 		switch(menu_style) {
 		case rpm_list_child: title = [ps childName]; break;
 		case rpm_list_role: title = [ps role]; break;
@@ -123,6 +123,7 @@ void AppendChoicesToNewItem(
 		[choices_menu addItem:ps_item];		
 		[ps_item setRepresentedObject:ps];
 	}
+	
 }//end AppendChoicesToNewItem
 
 
