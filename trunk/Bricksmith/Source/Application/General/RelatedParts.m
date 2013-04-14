@@ -101,7 +101,7 @@ static NSInteger sort_by_role(id a, id b, void * ref)
 		self->parent = [parentName retain];
 	}
 	@catch (NSException * e) {
-		NSLog(@"a suggestion line '%@' was fatally invalid", orig);
+		NSLog(@"a related part line '%@' was fatally invalid", orig);
 		NSLog(@" raised exception %@", [e name]);
 		[self release];
 		self = nil;
@@ -334,7 +334,7 @@ static RelatedParts * SharedRelatedParts = nil;
 // get the completions.  (There can be more than one, e.g. for a red wheels and "left tire"
 // we expect to get the big and small tires).  
 // The array is na array of complete RelatedPart objects.
-- (NSArray*)	getSuggestionList:(NSString*) parent withRole:(NSString*) role
+- (NSArray*)	getRelatedPartList:(NSString*) parent withRole:(NSString*) role
 {
 	NSUInteger i;
 	NSUInteger count = [self->relatedParts count];
@@ -353,7 +353,7 @@ static RelatedParts * SharedRelatedParts = nil;
 	return kids;
 }
 
-- (NSArray*)	getSuggestionList:(NSString*) parent withChild:(NSString*) child
+- (NSArray*)	getRelatedPartList:(NSString*) parent withChild:(NSString*) child
 {
 	NSUInteger i;
 	NSUInteger count = [self->relatedParts count];

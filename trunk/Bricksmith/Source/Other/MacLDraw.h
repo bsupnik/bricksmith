@@ -253,7 +253,7 @@ typedef enum MenuTags
 	insertReferenceMenuTag			= 603,
 	submodelReferenceMenuTag		= 604, //used for all items in the Insert Reference menu.
 
-	suggestionMenuTag				= 610,
+	relatedPartMenuTag				= 610, //used to add related parts dynamically.
 	
 	rawCommandMenuTag               = 605,
     lsynthMenuTag                   = 606,
