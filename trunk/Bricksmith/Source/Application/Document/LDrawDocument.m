@@ -66,8 +66,12 @@
 #import "LDrawDragHandle.h"
 #import "LDrawContainer.h"
 #import "LDrawLSynthDirective.h"
+#if WANT_RELATED_PARTS
 #import "RelatedParts.h"
+#endif
 
+
+#if WANT_RELATED_PARTS
 // Modes to build a submenu for related parts:
 enum {
 	rpm_list_child = 0,			// List our choices in a sub-menu by child part name.
@@ -125,6 +129,7 @@ void AppendChoicesToNewItem(
 	}
 	
 }//end AppendChoicesToNewItem
+#endif
 
 
 @implementation LDrawDocument
@@ -2457,6 +2462,7 @@ void AppendChoicesToNewItem(
 //==============================================================================
 - (IBAction) addRelatedPartClicked:(id)sender
 {
+#if WANT_RELATED_PARTS
 	RelatedPart * relatedPart = [sender representedObject];
 	
 	NSString * partName = [relatedPart child];
@@ -2491,6 +2497,7 @@ void AppendChoicesToNewItem(
 		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
 		[[self documentContents] noteNeedsDisplay];
 	}
+#endif	
 }//end addRelatedPartClicked
 
 
@@ -4238,6 +4245,8 @@ void AppendChoicesToNewItem(
     [self populateLSynthModelMenus];
 
 	[self addModelsToMenus];
+
+	[self buildRelatedPartsMenus];
 	
 }//end windowDidBecomeMain:
 
@@ -4667,6 +4676,8 @@ void AppendChoicesToNewItem(
 	NSMenu      *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
 	NSMenuItem	*relatedItem	= [modelMenu itemWithTag:relatedPartMenuTag];
 
+#if WANT_RELATED_PARTS
+
 	if ([relatedItem hasSubmenu])
 	{
 		[relatedItem setSubmenu:nil];
@@ -4751,6 +4762,18 @@ void AppendChoicesToNewItem(
 			}			
 		}
 	}
+	
+#else /* WANT_RELATED_PARTS */
+
+	// We can't (as faras I know) use macros to remove UI.  So instead we simply delete our menu item the first time we find
+	// it if the related parts UI is disabled.
+
+	if(relatedItem != nil)
+	{
+		[modelMenu removeItem:relatedItem];
+	}
+
+#endif	/* WANT_RELATED_PARTS */
 	
 }//end buildRelatedPartsMenus
 
@@ -5369,6 +5392,8 @@ void AppendChoicesToNewItem(
 	[self->fileContentsOutline	reloadData];
 	
 	[self addModelsToMenus];
+	
+	[self buildRelatedPartsMenus];
 
 }//end loadDataIntoDocumentUI
 

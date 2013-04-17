@@ -8,6 +8,8 @@
 //
 //==============================================================================
 
+#if WANT_RELATED_PARTS
+
 #import "RelatedParts.h"
 #import "LDrawUtilities.h"
 #import "StringCategory.h"
@@ -541,3 +543,5 @@ static RelatedParts * SharedRelatedParts = nil;
 }//end dump
 
 @end
+
+#endif /* WANT_RELATED_PARTS */

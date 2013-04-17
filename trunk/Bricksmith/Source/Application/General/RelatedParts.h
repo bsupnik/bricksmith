@@ -8,6 +8,8 @@
 //
 //==============================================================================
 
+#if WANT_RELATED_PARTS
+
 #import <Cocoa/Cocoa.h>
 #import "MatrixMath.h"
 
@@ -68,3 +70,5 @@
 - (NSArray*)	getRelatedPartList:(NSString*) parent withChild:(NSString*) role;
 
 @end
+
+#endif /* WANT_RELATED_PARTS */
