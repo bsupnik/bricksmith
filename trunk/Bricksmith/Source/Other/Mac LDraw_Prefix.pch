@@ -54,3 +54,6 @@
 
 // This draws wire frames by setting the polygon fill mode instead of generating separate meshes.
 #define USE_AUTOMATIC_WIREFRAMES					1
+
+// This enables the "related parts" UI - define to 0 to hide it for now.
+#define WANT_RELATED_PARTS							0

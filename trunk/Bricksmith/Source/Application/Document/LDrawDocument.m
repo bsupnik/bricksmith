@@ -66,6 +66,70 @@
 #import "LDrawDragHandle.h"
 #import "LDrawContainer.h"
 #import "LDrawLSynthDirective.h"
+#if WANT_RELATED_PARTS
+#import "RelatedParts.h"
+#endif
+
+
+#if WANT_RELATED_PARTS
+// Modes to build a submenu for related parts:
+enum {
+	rpm_list_child = 0,			// List our choices in a sub-menu by child part name.
+	rpm_list_role = 1,			// List our chioces in a sub-menu by their role.
+	rpm_merged = 2				// List only one item wiht name and roll - used when we only have one choice to shorten menus.
+};
+
+//---------- AppendChoicesToNewItem --------------------------------------------
+//
+// Purpose:		Build a menu item with a sub-menu of roles or children for 
+//				related parts.
+//
+// Notes:		In the "merged" mode, subs should contain one item and we ignore
+//				child name.  Instead of making a menu item with sub-menu, we 
+//				make the single menu item "the" command.  When we have only one
+//				choice, this lets us limit the menu depth.
+//
+//------------------------------------------------------------------------------
+void AppendChoicesToNewItem(
+					NSMenu *	parent_menu,	// Menu we append to
+					NSString *	child_name,		// Unmerged: name of the menu item that shows the sub-menu
+					NSArray *	subs,			// Array of RelatedPart objects to list in the sub-menu
+					int			menu_style)		// Way to list menus.
+{
+	NSUInteger i, counter;
+	NSMenuItem * my_item = nil;
+	NSMenu * choices_menu = nil;
+
+	if(menu_style != rpm_merged)
+	{
+		my_item = [[[NSMenuItem alloc] initWithTitle:child_name action:NULL keyEquivalent:@""] autorelease];
+		[parent_menu addItem:my_item];
+		
+		choices_menu = [[[NSMenu alloc] initWithTitle:@"choices"] autorelease];
+		[my_item setSubmenu:choices_menu];
+	}
+	else
+		choices_menu = parent_menu;
+		
+	counter = [subs count];
+	for(i = 0; i < counter; ++i)
+	{
+		RelatedPart * ps = [subs objectAtIndex:i];
+
+		NSString * title = nil;
+		switch(menu_style) {
+		case rpm_list_child: title = [ps childName]; break;
+		case rpm_list_role: title = [ps role]; break;
+		case rpm_merged: title = [NSString stringWithFormat:@"%s: %s", [[ps role] UTF8String], [[ps childName] UTF8String]]; break;
+		}
+
+		NSMenuItem * ps_item = [[[NSMenuItem alloc] initWithTitle:title action:@selector(addRelatedPartClicked:) keyEquivalent:@""] autorelease];
+		[choices_menu addItem:ps_item];		
+		[ps_item setRepresentedObject:ps];
+	}
+	
+}//end AppendChoicesToNewItem
+#endif
 
 
 @implementation LDrawDocument
@@ -77,6 +141,7 @@
 //==============================================================================
 - (id) init
 {
+//	[[RelatedParts sharedRelatedParts] dump];
     self = [super init];
     if (self)
 	{
@@ -2384,6 +2449,58 @@
 }//end addCommentClicked:
 
 
+//========== addRelatedPartClicked: ============================================
+//
+// Purpose:		Adds the related child part for a selected parent part.
+//
+// Notes:		Right now we use the last selected part as a cheat for the 
+//				parent we need to insert.  Someday if I can figure out how to
+//				insert multiple parts in a single undo, we can iterate on the 
+//				selection and add one part per selection.  This would speed up
+//				adding the same glass to a whole pile of windows, for example.
+//
+//==============================================================================
+- (IBAction) addRelatedPartClicked:(id)sender
+{
+#if WANT_RELATED_PARTS
+	RelatedPart * relatedPart = [sender representedObject];
+	
+	NSString * partName = [relatedPart child];
+	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
+	NSUndoManager       *undoManager    = [self undoManager];
+	LDrawColor          *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	TransformComponents transformation  = IdentityComponents;
+	
+	//We got a part; let's add it!
+	if(partName != nil)
+	{
+		//Set up the part attributes
+		[newPart setLDrawColor:selectedColor];
+		[newPart setDisplayName:partName];
+		
+		if(self->lastSelectedPart != nil)
+		{
+			// Collect the transformation from the previous part and apply it to 
+			// the new one.  Ideally we'd use the selection someday, but
+			// we can only add one directive for now.
+			transformation = [lastSelectedPart transformComponents];
+
+			transformation = [relatedPart calcChildPosition:transformation];
+			
+			[newPart setTransformComponents:transformation];
+		}
+		
+		[newPart optimizeOpenGL];
+		
+		[self addStepComponent:newPart parent:nil index:NSNotFound];
+		
+		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
+		[[self documentContents] noteNeedsDisplay];
+	}
+#endif	
+}//end addRelatedPartClicked
+
+
 //========== addMinifigure: ====================================================
 //
 // Purpose:		Create a new minifigure with the amazing Minifigure Generator 
@@ -3409,7 +3526,8 @@
 	if ([lastSelectedItem isKindOfClass:[LDrawPart class]] ||
         [lastSelectedItem isKindOfClass:[LDrawLSynth class]])
 		[self setLastSelectedPart:lastSelectedItem];
-	
+
+	[self buildRelatedPartsMenus];
 	[originalContext makeCurrentContext];
 	
 }//end outlineViewSelectionDidChange:
@@ -4127,6 +4245,8 @@
     [self populateLSynthModelMenus];
 
 	[self addModelsToMenus];
+
+	[self buildRelatedPartsMenus];
 	
 }//end windowDidBecomeMain:
 
@@ -4331,6 +4451,11 @@
 			enable = (activeModel != [menuItem representedObject]);
 			break;
 
+		case relatedPartMenuTag:
+			// Related parts is enabled if it has a sub-menu, which happens when we have
+			// usable suggestions.
+			enable = [menuItem submenu] != nil;
+			break;
 
         case lsynthSynthesizableMenuTag:
             // We can only add synthesizable parts below a step so ensure we've not selected a model
@@ -4538,6 +4663,120 @@
 	[self->submodelPopUpMenu removeAllItems];
 	
 }//end clearModelMenus
+
+
+//========== buildRelatedPartsMenus ============================================
+//
+// Purpose:		This kills and rebuilds the related-parts menu.
+//
+//==============================================================================
+- (void) buildRelatedPartsMenus
+{
+	NSMenu      *mainMenu       = [NSApp mainMenu];
+	NSMenu      *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+	NSMenuItem	*relatedItem	= [modelMenu itemWithTag:relatedPartMenuTag];
+
+#if WANT_RELATED_PARTS
+
+	if ([relatedItem hasSubmenu])
+	{
+		[relatedItem setSubmenu:nil];
+	}
+	
+	// We're going to go looking for the selection's part name.  This code will find
+	// a string if the entire selection shares a single part-type, or nil if we have
+	// no parts selected or two parts with different reference names.
+	//
+	// This is over-kill for now, but written in anticipation of someday being able
+	// to add a related child to a set of parents that all can accept the same
+	// relation.
+	NSString *	parentName = nil;
+	NSUInteger	selCount, pidx;
+	
+	selCount = [selectedDirectives count];
+	for(pidx = 0; pidx < selCount; ++pidx)
+	{
+		LDrawDirective * p = [selectedDirectives objectAtIndex:pidx];
+		if([p isKindOfClass:[LDrawPart class]])
+		{
+			LDrawPart * pp = (LDrawPart *) p;
+			NSString * this_name = [pp referenceName];
+			if(parentName == nil || [this_name compare:parentName] == NSOrderedSame)
+			{
+				parentName = this_name;
+			} 
+			else
+			{
+				parentName = nil;
+				break;
+			}
+		}
+	}
+	
+	// For now: require not only same parent, but also that we have only one part
+	// selected, because we can only insert the child for one part.
+	if(parentName != nil && selCount == 1)
+	{
+		RelatedParts * s = [RelatedParts sharedRelatedParts];
+		
+		NSArray * kids = [s getChildPartList:parentName];
+		NSArray * roles = [s getChildRoleList:parentName];
+		
+		assert(([kids count] == 0) == ([roles count] == 0));
+		
+		if([kids count])
+		{
+			NSMenu * kids_and_roles = [[[NSMenu alloc] initWithTitle:@"Related Parts"] autorelease];
+			
+			[relatedItem setSubmenu:kids_and_roles];
+			[relatedItem setEnabled:TRUE];
+			
+			// If we only have one role or one child type of part, don't build two-level menus - there's no need.
+			BOOL is_flat = ([kids count] == 1 || [roles count] == 1);
+			
+			NSUInteger count, i;
+			
+			// Do all children
+			count = [kids count];
+			for (i = 0; i < count; ++i)
+			{
+				NSString * child = [kids objectAtIndex:i];
+				NSArray * choices = [s getRelatedPartList:parentName withChild:child];
+				// If this particular relation has only one child fo the role, we will 'flatten' the menu, rather than having a menu item that has a submenu with
+				// only one meu item.
+				AppendChoicesToNewItem(kids_and_roles,[[choices objectAtIndex:0] childName],choices,(is_flat || [choices count] == 1) ? rpm_merged : rpm_list_role);
+			}
+			
+			// If we made the 'flat' menu, we don't need a second menu by roles - everything is there in the first menu.
+			if(!is_flat)
+			{
+				[kids_and_roles addItem:[NSMenuItem separatorItem]];
+				
+				count = [roles count];
+				for(i = 0; i < count; ++i)
+				{
+					NSString * role = [roles objectAtIndex:i];
+					NSArray * choices = [s getRelatedPartList:parentName withRole:role];
+					AppendChoicesToNewItem(kids_and_roles,role,choices,[choices count] == 1 ? rpm_merged : rpm_list_child);
+				}
+			}			
+		}
+	}
+	
+#else /* WANT_RELATED_PARTS */
+
+	// We can't (as faras I know) use macros to remove UI.  So instead we simply delete our menu item the first time we find
+	// it if the related parts UI is disabled.
+
+	if(relatedItem != nil)
+	{
+		[modelMenu removeItem:relatedItem];
+	}
+
+#endif	/* WANT_RELATED_PARTS */
+	
+}//end buildRelatedPartsMenus
+
 
 
 #pragma mark -
@@ -5153,6 +5392,8 @@
 	[self->fileContentsOutline	reloadData];
 	
 	[self addModelsToMenus];
+	
+	[self buildRelatedPartsMenus];
 
 }//end loadDataIntoDocumentUI
 
