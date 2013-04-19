@@ -1,0 +1,253 @@
+0 FILE left shutter.ldr
+0 Left Shutter
+0 Name: left shutter.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 -40 0 -12 0 0 -1 0 1 0 1 0 0 3856.dat
+0 STEP
+0 NOFILE
+0 FILE right shutter.ldr
+0 Right Shutter
+0 Name: right shutter.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 40 0 -12 -0 0 1 -0 1 0 -1 -0 -0 3856.dat
+0 STEP
+0 NOFILE
+0 FILE shutter.ldr
+0 Shutter
+0 Name: shutter.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3581.dat
+0 STEP
+1 16 0 0 -12 0 0 1 0 1 0 -1 0 0 3582.dat
+0 STEP
+0 NOFILE
+0 FILE left pane front.ldr
+0 Left Pane Front
+0 Name: left pane front.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 -34 4 -4 0 0 -1 0 1 0 1 0 0 3854.dat
+1 16 -34 4 -4 -0 0 -1 -0 1 0 1 0 -0 2529.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4132.dat
+0 STEP
+1 16 -128 8 -14 0 0 -1 0 1 0 1 0 0 4133.dat
+0 STEP
+0 NOFILE
+0 FILE left pane rear.ldr
+0 Left Pane Rear
+0 Name: left pane rear.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 -34 4 4 0 0 -1 0 1 0 1 0 0 3854.dat
+1 16 -34 4 4 -0 0 -1 -0 1 0 1 0 -0 2529.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4132.dat
+0 STEP
+1 16 -133 4 14 -0 0 -1 -0 1 0 1 0 -0 3854.dat
+0 STEP
+0 NOFILE
+0 FILE left pane.ldr
+0 Left Pane
+0 Name: left pane.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 16 -32 4 4 0 0 -1 0 1 0 1 0 0 60608.dat
+0 STEP
+1 16 -200 0 0 1 0 0 0 1 0 -0 0 1 60598.dat
+0 STEP
+1 16 -232 4 -15 0 0 -1 0 1 0 1 0 0 60608.dat
+0 STEP
+0 NOFILE
+0 FILE glass.ldr
+0 Glass
+0 Name: glass.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 47 0 0 0 1 0 0 -0 1 0 -0 0 1 3855.dat
+0 STEP
+1 7 -100 0 0 1 0 0 -0 1 -0 -0 0 1 4033.dat
+0 STEP
+1 47 -100 0 0 1 0 0 -0 1 -0 -0 0 1 3855.dat
+1 15 -100 34 -3 1 0 0 -0 1 -0 -0 0 1 6016.dat
+1 47 -100 0 0 1 0 0 -0 1 -0 -0 0 1 4034.dat
+0 STEP
+1 7 -200 0 0 1 0 0 -0 1 -0 -0 0 1 4447.dat
+0 STEP
+1 47 -200 0 0 1 0 0 -0 1 -0 -0 0 1 4448.dat
+1 47 -200 0 0 1 0 0 -0 1 -0 -0 0 1 4448d01.dat
+0 STEP
+1 16 -300 0 0 1 0 0 0 1 0 -0 0 1 2493b.dat
+1 16 -300 0 0 1 0 0 0 1 0 -0 0 1 2493a.dat
+0 STEP
+1 47 -300 0 0 1 0 0 0 1 0 -0 0 1 2494.dat
+1 47 -300 0 0 1 0 0 0 1 0 -0 0 1 2494d01.dat
+0 STEP
+1 16 -400 0 0 1 0 0 0 1 0 -0 0 1 60596.dat
+0 STEP
+1 47 -400 4.5 5 1 0 0 0 1 0 -0 0 1 57895.dat
+1 47 -400 4.5 5 1 0 0 0 1 0 -0 0 1 57895p01.dat
+0 STEP
+1 16 -700 0 0 1 0 0 0 1 0 -0 0 1 57894.dat
+0 STEP
+1 47 -700 4.5 -3 1 0 0 0 1 0 -0 0 1 57895.dat
+1 47 -700 4.5 -3 1 0 0 0 1 0 -0 0 1 57895p01.dat
+0 STEP
+1 16 -800 0 0 1 0 0 0 1 0 -0 0 1 6160a.dat
+0 STEP
+1 47 -800 0 0 1 0 0 0 1 0 -0 0 1 6202.dat
+0 STEP
+1 16 -900 0 0 1 0 0 0 1 0 -0 0 1 30178.dat
+0 STEP
+1 47 -900 0 0 1 0 0 0 1 0 -0 0 1 30245.dat
+0 STEP
+0 NOFILE
+0 FILE top glass.ldr
+0 Top Glass
+0 Name: top glass.ldr
+0 Author: bsupnik
+1 71 0 0 0 1 0 0 0 1 0 -0 0 1 4741.dat
+0 STEP
+1 47 0 0 0 1 0 0 0 1 0 -0 0 1 4448.dat
+1 47 0 0 0 1 0 0 0 1 0 -0 0 1 4448d01.dat
+0 STEP
+0 NOFILE
+0 FILE bottom glass.ldr
+0 Bottom Glass
+0 Name: bottom glass.ldr
+0 Author: bsupnik
+1 71 0 0 0 1 0 0 0 1 0 -0 0 1 4741.dat
+0 STEP
+1 47 0 72 -70 -1 -0 0 -0 1 -0 0 -0 -1 4448.dat
+1 47 0 72 -70 -1 -0 0 -0 1 -0 0 -0 -1 4448d01.dat
+0 STEP
+0 NOFILE
+0 FILE right pane.ldr
+0 Right Pane
+0 Name: right pane.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 16 32 4 4 -0 0 1 0 1 0 -1 0 -0 60608.dat
+0 STEP
+1 16 -200 0 0 1 0 0 0 1 0 -0 0 1 60598.dat
+0 STEP
+1 16 -168 4 -15 0 0 1 0 1 0 -1 0 0 60608.dat
+0 STEP
+0 NOFILE
+0 FILE right pane front.ldr
+0 Right Pane Front
+0 Name: right pane front.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 34 4 -4 -0 0 1 0 1 0 -1 0 -0 3854.dat
+1 16 34 4 -4 -0 0 1 0 1 0 -1 0 -0 2529.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4132.dat
+0 STEP
+1 16 -72 8 -14 0 0 0.999999 0 1 0 -0.999999 0 0 4133.dat
+0 STEP
+0 NOFILE
+0 FILE right pane rear.ldr
+0 Right Pane Rear
+0 Name: right pane rear.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 3853.dat
+0 STEP
+1 16 34 4 4 -0 0 1 0 1 0 -1 0 -0 3854.dat
+1 16 34 4 4 -0 0 1 0 1 0 -1 0 -0 2529.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4132.dat
+0 STEP
+1 16 -67 4 14 -0 0 1 0 1 0 -1 0 -0 3854.dat
+0 STEP
+0 NOFILE
+0 FILE door left.ldr
+0 Door Left
+0 Name: door left.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 60596.dat
+0 STEP
+1 16 -32 0 5 1 0 0 0 1 0 -0 0 1 60621.dat
+1 16 -32 0 5 1 0 0 0 1 0 -0 0 1 60623.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4033.dat
+0 STEP
+1 16 -134 64 5 1 0 0 0 -1 0 0 0 -1 6546.dat
+0 STEP
+1 16 -200 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 16 -232 64 5 1 0 0 0 -1 -0 0 0 -1 60614.dat
+0 STEP
+1 7 -300 0 0 1 0 0 0 1 0 -0 0 1 60806.dat
+0 STEP
+1 7 -332 8.5 -11 1 0 0 0 0.749834 0.661626 -0 -0.661626 0.749834 60614.dat
+0 STEP
+0 NOFILE
+0 FILE door right.ldr
+0 Door Right
+0 Name: door right.ldr
+0 Author: bsupnik
+1 16 0 0 0 1 0 0 0 1 0 -0 0 1 60596.dat
+0 STEP
+1 16 32 0 5 -1 0 -0 0 1 0 0 0 -1 60621.dat
+1 16 32 4 5 -0 0 0.999999 0 1 0 -0.999999 0 -0 30178.dat
+1 16 32 0 5 -1 0 -0 0 1 0 0 0 -1 60623.dat
+1 16 32 4 5 -0 0 0.999999 0 1 0 -0.999999 0 -0 30178c01.dat
+0 STEP
+1 16 -100 0 0 1 0 0 0 1 0 -0 0 1 4033.dat
+0 STEP
+1 16 -66 4 5 -1 -0 0 -0 1 0 0 0 -1 6546.dat
+0 STEP
+1 16 -200 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 16 -168 4 5 -1 0 0 0 1 0 0 0 -1 60614.dat
+0 STEP
+1 7 -300 0 0 1 0 0 0 1 0 -0 0 1 60806.dat
+0 STEP
+1 7 -268 53.5 -50.700001 -1 -0 0 0 -0.749834 0.661626 -0 0.661626 0.749834 60614.dat
+0 STEP
+0 NOFILE
+0 FILE glass open top.ldr
+0 Glass Top Hinge
+0 Name: glass open top.ldr
+0 Author: bsupnik
+1 7 0 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 47 0 8 5 1 0 0 0 1 0 -0 0 1 86210.dat
+0 STEP
+1 7 -100 0 0 1 0 0 0 1 0 -0 0 1 60806.dat
+0 STEP
+1 47 -100 11.4 -13.8 1 0 0 0 0.749834 0.661626 -0 -0.661626 0.749834 86210.dat
+0 STEP
+1 135 -200 0 0 1 0 0 -0 1 0 -0 0 1 60598.dat
+0 STEP
+1 47 -200 8 -15 1 0 0 -0 1 0 -0 0 1 86210.dat
+0 STEP
+0 NOFILE
+0 FILE glass open bottom.ldr
+0 Glass Bottom Hinge
+0 Name: glass open bottom.ldr
+0 Author: bsupnik
+1 7 0 0 0 1 0 0 0 1 0 -0 0 1 60594.dat
+0 STEP
+1 47 0 60 5 1 0 0 0 -1 0 0 -0 -1 86210.dat
+0 STEP
+1 7 -100 0 0 1 0 0 0 1 0 -0 0 1 60806.dat
+0 STEP
+1 47 -100 50.150002 -48.5 1 0 0 0 -0.749834 -0.661626 -0 0.661626 -0.749834 86210.dat
+0 STEP
+1 135 -200 0 0 1 0 0 -0 1 0 -0 0 1 60598.dat
+0 STEP
+1 47 -200 60 -15 1 0 0 0 -1 0 0 -0 -1 86210.dat
+0 STEP
+0 NOFILE

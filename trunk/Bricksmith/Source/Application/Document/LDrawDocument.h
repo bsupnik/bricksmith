@@ -175,6 +175,7 @@
 - (IBAction) addConditionalClicked:(id)sender;
 - (IBAction) addCommentClicked:(id)sender;
 - (IBAction) addRawCommandClicked:(id)sender;
+- (IBAction) addRelatedPartClicked:(id)sender;
 - (void) modelSelected:(id)sender;
 
 // Undoable Activities
@@ -195,6 +196,7 @@
 //Menus
 - (void) addModelsToMenus;
 - (void) clearModelMenus;
+- (void) buildRelatedPartsMenus;
 
 // Viewport Management
 - (NSArray *) all3DViewports;
