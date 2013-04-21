@@ -21,10 +21,10 @@ enum {
 	tex_proj_planar = 0
 };
 
-enum {
-	cull_skip,
-	cull_box,
-	cull_draw 
+enum {					// Culling codes from renderer culling checks.
+	cull_skip,			// Don't draw - object is off screen or too-small-to-care.
+	cull_box,			// Draw, but consider replacing with a box for speed - the object is rather small.
+	cull_draw			// Draw, the object is on screen and big.
 };
 
 
@@ -105,9 +105,12 @@ typedef void (* LDrawDLCleanup_f)(LDrawDLHandle  who);			// Cleanup function ass
 - (void) pushMatrix:(GLfloat *)matrix;
 - (void) popMatrix;
 
-// Returns true if the AABB between the points is on screen, false if it is entirely off-screen.
-// Useful for culling parts.
+// Returns a cull code indicating whether the AABB from minXYZ to maxXYZ is on screen and big enough
+// to be worth drawing.
 - (int) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ;
+
+// This draws a plane AABB cube in the current color from minXYZ to maxXYZ.
+// It can be used for cheap bouding-box approximations of small bricks.
 - (void) drawBoxFrom:(GLfloat *)minXyz to:(GLfloat *)maxXyz;
 
 // Color stack.  Pushing a color overrides the current color.  If no one ever sets the current color we get

@@ -583,6 +583,14 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	total_tris /= 3;
 	total_quads /= 4;
 	total_lines /= 2;
+	
+	// We use one mesh for the entire DL, even if it has multiple textures.  We have to
+	// do this because we wnat smoothing across triangles that do not share the same
+	// texture.  (Key use case: minifig faces are part textured, part untextured.)
+	//
+	// So instead each face gets a texture ID (tid), which is an index that we will tie
+	// to our texture list.  The mesh smoother remembers this and dumps out the tris in
+	// tid order later.
 
 	struct Mesh * M = create_mesh(total_tris,total_quads,total_lines);
 
@@ -654,6 +662,9 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, total_indices * sizeof(GLuint), NULL, GL_STATIC_DRAW);
 	volatile GLuint * index_ptr = (volatile GLuint *) glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+	
+	// Grab variable size arrays for the start/offsets of each sub-part of our big pile-o-mesh...
+	// the mesher will give us back our tris sorted by texture.
 	
 	int * line_start	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
 	int * line_count	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);

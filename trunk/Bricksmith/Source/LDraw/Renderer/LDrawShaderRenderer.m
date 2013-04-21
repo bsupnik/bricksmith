@@ -293,6 +293,11 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 //			coordinates and see if the AABB (in screen space) of the original
 //			bounding cube (in MV coordinates) is now entirely out of clip bounds.
 //
+// Notes:	we also look at the screen-space size of the box to decide if we can
+//			cull it because it's tiny or replace it with a box.
+//
+// TODO:	change hard-coded values to be compensated for aspect ratio, etc.
+//
 //================================================================================
 - (int) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ
 {
@@ -349,6 +354,17 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	return cull_draw;
 }//end pushMatrix:to:
 
+
+//========== drawBoxFrom:to: =====================================================
+//
+// Purpose: draw an axis-aligned cube of a given size.
+//
+// Notes:	this routine retains a single unit-cube display list that can be
+//			drawn multiple times; the DL system will end up instancing it for us.
+//			Because BrickSmith ensures GL resources are never lost, we can just
+//			keep the cube statically.
+//
+//================================================================================
 - (void) drawBoxFrom:(GLfloat *)minXyz to:(GLfloat *)maxXyz
 {
 	static struct LDrawDL * unit_cube = NULL;
@@ -399,7 +415,7 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	[self drawDL:unit_cube];
 	[self popMatrix];	
 				
-}
+}//end drawBoxFrom:to:
 
 
 

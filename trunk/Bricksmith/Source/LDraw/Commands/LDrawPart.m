@@ -33,8 +33,20 @@
 #import "PartReport.h"
 #import "ModelManager.h"
 
+// This is experimental for now: one way to draw the gaps between lego bricks 
+// without using lines is to simply shrink the entire brick by a tiny amount,
+// leaving a small gap between bricks.  (This is based on the seam-shrink code
+// in Travis' LDView.)
+//
+// The theory is that the look of a seam is very lighting-direction dependent,
+// e.g. a seam may be bright or dark depending on how the edge of the brick 
+// faces the light source.  Shrunk seams sort of approximate this by exposing
+// tiny amounts of the tops of bricks, etc.
+//
+// Normally defined to 0 for production use.  
+
 #define SHRINK_SEAMS 0
-#define SHRINK_AMOUNT 0.125
+#define SHRINK_AMOUNT 0.125		// in LDU
 
 @implementation LDrawPart
 
