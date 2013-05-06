@@ -100,7 +100,7 @@
 	if(isMPDModel == YES)
 	{
 		// Strip out the first line and the NOFILE command, if there is one.
-		lastLine = [lines lastObject];
+		lastLine = [lines objectAtIndex:NSMaxRange(range)-1];
 		
 		hasSubmodelEnd = [[self class] lineIsMPDModelEnd:lastLine];
 		if(hasSubmodelEnd)
