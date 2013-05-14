@@ -640,17 +640,14 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 
 
 	finish_faces_and_sort(M);
-
 	add_creases(M);
-
 	find_and_remove_t_junctions(M);
-
 	finish_creases_and_join(M);
-
 	smooth_vertices(M);
-
-	int total_vertices = merge_vertices(M);
-	int total_indices = M->tri_count * 3 + M->quad_count * 4 + M->line_count * 2;
+	merge_vertices(M);
+	
+	int total_vertices, total_indices;
+	get_final_mesh_counts(M,&total_vertices,&total_indices);
 
 	glGenBuffers(1,&dl->geo_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, dl->geo_vbo);
@@ -675,9 +672,9 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 
 	write_indexed_mesh(
 		M,
-		M->unique_vertex_count,
+		total_vertices,
 		vertex_ptr,
-		M->vertex_count,
+		total_indices,
 		index_ptr,
 		0,
 		line_start,

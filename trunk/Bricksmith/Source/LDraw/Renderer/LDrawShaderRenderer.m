@@ -609,7 +609,7 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 //
 // Purpose:	This draws one drag handle using the current transform.
 //
-// Notes:	We do'nt draw anything - we just grab a list link and stash the
+// Notes:	We don't draw anything - we just grab a list link and stash the
 //			drag handle in "global model space" - that is, the space that the 
 //			root of all drawing happens, without the local part transform.
 //			We do that so that when we pop out all local transforms and draw 
@@ -637,8 +637,6 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 
 }//end drawDragHandle:withSize:
 
-//	GLfloat handle_local[4] = { xyz[0], xyz[1], xyz[2], 1.0f };
-//	GLfloat handle_world[4];
 
 //========== drawDragHandle:withSize: ============================================
 //
