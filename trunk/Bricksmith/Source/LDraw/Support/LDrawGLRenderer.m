@@ -1766,7 +1766,9 @@
 
 	// Rotate.
 	glMatrixMode(GL_MODELVIEW);
+	glTranslatef(rotationCenter.x, rotationCenter.y, rotationCenter.z);	
 	glRotatef( angle, 0, -1, 0);
+	glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
 
 }//end rotateWithEvent:
 
