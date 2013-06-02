@@ -927,9 +927,11 @@ void validate_neighbors(struct Mesh * mesh)
 
 #pragma mark -
 //==============================================================================
-//	IMPLEMENTATION
+//	MAIN API IMPLEMENTATION
 //==============================================================================
 
+// Create a new mesh to smooth.  You must pass in the _exact_ number of tris,
+// quads and lines that you will later pass in.
 struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count)
 {
 	struct Mesh * ret = (struct Mesh *) malloc(sizeof(struct Mesh));
@@ -952,6 +954,24 @@ struct Mesh *		create_mesh(int tri_count, int quad_count, int line_count)
 	return ret;
 }
 
+// Add one face to the mesh.  Quads and tris can be added in any order but all 
+// quads and tris (polygons) must be added before all lines.
+// When passing a face, simply pass NULL for any 'extra' vertices - that is,
+// to create a line, pass NULL for p3 and p4; to create a triangle, pass NULL for
+// p3.  The color is the color of the entire face in RGBA; the face normal is
+// computed for you.
+//
+// tid is the 'texture ID', a 0-based counted number identifying which texture
+// state this face gets.  Texture IDs must be consecutive, zero based and 
+// positive, but do not need to be submitted in any particular order, and the 
+// highest TID does not have to be pre-declared; the library simply watches
+// the TIDs on input.
+//
+// Technically lines have TIDs as well - typically TID 0 is used to mean the
+// 'untextured texture group' and is used for lines and untextured polygons.
+//
+// The TIDs are used to output sets of draw commands that share common texture state -
+// that is, faces, quads and lines are ouput in TID order.
 void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const float p3[3], const float p4[3], const float color[4], int tid)
 {
 	#if SLOW_CHECKING
@@ -1034,6 +1054,9 @@ void				add_face(struct Mesh * mesh, const float p1[3], const float p2[3], const
 	f->vertex[3]->face = f;
 }
 
+// Utility: this is the visior used to snap vertices to each other.
+// Snapping is done by linking nearby vertices into a ring whose
+// centroid is later found.
 static void visit_vertex_to_snap(struct Vertex * v, void * ref)
 {
 	struct Vertex * o = (struct Vertex *) ref;
@@ -1076,6 +1099,27 @@ static void visit_vertex_to_snap(struct Vertex * v, void * ref)
 	}
 }
 
+// This function does a bunch of post-geometry-adding processing:
+// 1. It sorts the vertices in XYZ order for correct indexing.  This
+// forces colocated vertices together in the list.
+// 2. It indexes vertices into an R-tree.
+// 3. It performs a two-step snapping process by 
+// 3a. Locating rings of too-close vertices and
+// 3b. Setting each member of the ring to the ring's centroid location.
+// 4. Vertices are resorted AGAIN.
+// 5. The links from faces to vertices must be rebuilt due to sorting.
+// 6. Degenerate quads/tris are marked as 'creased' on all sides.
+//
+// Notes:
+// 2 and 4 are BOTH necessary - the first sort is needed to pre-sorted
+// the data for the R-tree interface.  
+// The second sort is needed because the order of sort is ruined by 
+// changing XYZ geometry locations.
+//
+// Re: 6, we don't want to delete degenerate quads (a degen quad
+// might be a visible triangle) but passing degenerate geometry to the
+// smoother causes problems - so instead we 'seal off' this geometry to
+// avoid further problems.
 void				finish_faces_and_sort(struct Mesh * mesh)
 {
 	int v, f;
@@ -1083,12 +1127,6 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 
 	// sort vertices by 10 params
 	sort_vertices_3(mesh->vertices,mesh->vertex_count);
-
-	// then re-build ptr indices into faces since we moved vertices
-//	for(v = 0; v < mesh->vertex_count; ++v)
-//	{
-//		mesh->vertices[v].face->vertex[mesh->vertices[v].index] = mesh->vertices+v;
-//	}
 
 	mesh->index = index_vertices(mesh->vertices,mesh->vertex_count);
 	
@@ -1230,7 +1268,8 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 	
 }
 
-
+// Utility function: this marks one edge as a crease - the edge is identified by its
+// location.
 static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[3])
 {
 	struct Vertex * begin, * end, *v;
@@ -1271,6 +1310,8 @@ static void				add_crease(struct Mesh * mesh, const float p1[3], const float p2[
 
 }
 
+// This marks every line added to the mesh as a crease.  This
+// ensures we won't smooth across our type 2 lines.
 void add_creases(struct Mesh * mesh)
 {
 	int fi;
@@ -1284,9 +1325,12 @@ void add_creases(struct Mesh * mesh)
 	}
 }
 
-
-
-
+// Once all creases have been marked, this routine locates all colocated mesh
+// edges going in opposite directions (opposite direction colocated edges mean
+// the faces go in the same direction) that are not already marked as neighbors
+// or creases.  If the potential join between faces is too sharp, it is marked
+// as a crease, otherwise the edges are recorded as neighbors of each other.
+// When we are done every polygon edge is a crease or neighbor of someone.
 void				finish_creases_and_join(struct Mesh * mesh)
 {
 	int fi;
@@ -1417,6 +1461,13 @@ void				finish_creases_and_join(struct Mesh * mesh)
 	#endif
 }
 
+// Utility function: given a vertex (for a specific face) this 
+// returns a relative weighting for smoothing based on the normal
+// of this tri.  This is doen using trig - the angle that the triangle
+// circulates around the vertex defines its contribution to smoothing.
+// This ensures subdivision of triangles produces weights that sum to be
+// equal to the original face, and thus subdivision doesn't change our
+// normals (which is what we would hope for).
 static float weight_for_vertex(struct Vertex * v)
 {
 	return 1.0f;
@@ -1434,6 +1485,22 @@ static float weight_for_vertex(struct Vertex * v)
 	return acos(d);
 }
 
+// Once all neighbors have been found, this routine calculates the
+// actual per-vertex smooth normals.  This is done by circulating
+// each vertex (via its neighbors) to find all contributing triangles,
+// computing a weighted average (from for each triangle) and applying
+// the new averaged normal to all participating vertices.
+//
+// A few key points:
+// - Circulation around the vertex only goes by neigbhor.  So creases
+// (lack of a neighbor) partition the triangles around our vertex into
+// adjacent groups, each of which get their own smoothing.
+// - This is what makes a 'creased' shape flat-shaded: the creases keep
+// us from circulating more than one triangle.
+// - We weight our average normal by the angle the triangle spans around
+// the vertex, not just a straight average of all participating triangles.
+// We do not want to bias our normal toward the direction of more small
+// triangles.
 void				smooth_vertices(struct Mesh * mesh)
 {
 	int f;
@@ -1525,6 +1592,12 @@ void				smooth_vertices(struct Mesh * mesh)
 	}
 }
 
+// This routine merges vertices that have the same complete (10-float)
+// value to optimize down the size of geometry in VRAM.  We do this
+// by resorting by all components and then recognizing adjacently equal
+// vertices.  This routine rebuilds the ptrs from triangles so that all
+// faces see the 'shared' vertex.  By convention the first of a group
+// of equal vertices in the vertex array is the one we will keep/use.
 void				merge_vertices(struct Mesh * mesh)
 {
 	// Once smoothing is done, indexing the mesh is actually pretty easy:
@@ -1572,13 +1645,16 @@ void				merge_vertices(struct Mesh * mesh)
 	//printf("Before: %d vertices, after: %d\n", mesh->vertex_count, unique);
 }
 
+// This returns the final counts for vertices and indices in a mesh - after merging,
+// subdivising, etc. our original counts may be changed, so clients need to know
+// how much VBO space to allocate.
 void 	get_final_mesh_counts(struct Mesh * m, int * total_vertices,int * total_indices)
 {
 	*total_vertices = m->unique_vertex_count;
 	*total_indices = m->vertex_count;
 }
 
-
+// This cleans our mesh, deallocating all internal memory.
 void				destroy_mesh(struct Mesh * mesh)
 {
 	int f,i;
@@ -1614,6 +1690,21 @@ void				destroy_mesh(struct Mesh * mesh)
 	free(mesh);
 }
 
+// This routine writes out the final smoothed mesh.  It takes:
+// - Buffer space for the vertex table (10x floats per vertex)
+// - Buffer space for the indices (1 uint per index)
+// - Pointers to variable-sized arrays to take the start/count for
+// each kind of primitive for each TID.  
+// In other words, out_line_starts[0] contains the offset into our
+// index buffer of the lines for TID 0.  out_quad_counts[2] contains
+// the number of indices for all quads in TID 2.
+// max(tids)+1 ints should be allocated for each output array.
+//
+// The indices are written in TID order, so that at most three draw calls
+// (one each for tris, lines and quads) can be used to draw each TID's
+// collection of geometry.  Primitives are also output in order.
+//
+// (In other words, the primary sort key is TID, second is primitive type.)
 void				write_indexed_mesh(
 							struct Mesh *			mesh,
 							int						vertex_table_size,
@@ -1724,16 +1815,60 @@ void				write_indexed_mesh(
 //	T JUNCTION REMOVAL
 //==============================================================================
 
+// This code attempts to remove "T" junctions from a mesh.  Since an ASCII 
+// picture is worth 1000 words...
+//
+//    B            B
+//   /|\          /|\
+//  / | \        / | \
+// A  C--E  ->  A--C--E
+//  \ | /        \ | /
+//   \|/          \|/
+//    D            D
+//
+// Given 3 triangles ADB, BCE, and CDE, we have a T junction at "C" - the vertex C
+// is colinear with hte edge DB (as part of ADB), and this is bad.  This is bad 
+// because: (1) C's normal contributions won't include ADB (since C is not a vertex
+// of ADB) and (2) we may get a cracking artifact at C from the graphics card.
+//
+// We try to fix this by subdividing DB at C to produce two triangles ADC and ACB.
+//
+// IMHO: T junction removal sucks.  It's hard to set up the heuristics to get good
+// junction removal, huge numbers of tiny triangles can be added, and the models 
+// that need it are usually problematic enough that it doesn't work, while slowing
+// down smoothing and increasing vertex count.  I recommend that clients _not_ use
+// this functionality - rather T junctions should probably be addressed by:
+//
+// 1. Fixing the source parts that cause T junctions and
+// 2. Aggressively adopting textures for complex patterned parts.
+//
+
+
+// When we are looking for T junctions, we use this structure to 'remember' which
+// edge we are working on from the R-tree visitor.
+
 struct t_finder_info_t { 
-	int split_quads;
-	int inserted_pts;
-	struct Vertex * v1;
+	int split_quads;			// The number of quads that have been split.  Each quad with a 
+								// subdivision must be triangulated, changing our face count, so 
+								// we have to track this.
+	int inserted_pts;			// Number of points inserted into edges - this increases triangle
+								// count so we must track it.
+	struct Vertex * v1;			// Start and end vertices of the edge we are testing.
 	struct Vertex * v2;
-	struct Face * f;
-	int i;
-	float line_dir[3];
+	struct Face * f;			// The face that v1/v2 belong to.
+	int i;						// The side index i of face f that we are tracking, e.g. f->vertices[i] == v1
+	float line_dir[3];			// A normalized direction vector from v1 to v2, used to order the intrusions.
 };
 
+
+// This is the call back that gets called once for each vertex V that _might_ be near an edge (e.g. 
+// via a bounding box test).  We project the point onto the line and see how far the intruding point
+// is from the projection on the line.  If the point is close, it's a T junction and we record it
+// on a linked list ƒor this side, in order of distanec along the line.
+//
+// Since (1) duplicate vertices are not processed and (2) near-duplicate vertices were removed long ago
+// and (3) the bounding box ensures that our point is 'within' the line segment's span, any near-line
+// point _is_ a T.
 void visit_possible_t_junc(struct Vertex * v, void * ref)
 {
 	struct t_finder_info_t * info = (struct t_finder_info_t *) ref;
@@ -1776,6 +1911,22 @@ void visit_possible_t_junc(struct Vertex * v, void * ref)
 		}
 	}
 }
+
+// Given a convex polygon (specified by an interleaved XYZ array "poly" and pt_count points, this routine
+// cuts down the degree of the polygon by cutting off an 'ear' (that is, a non-reflex vertex).  The ear is
+// added as a triangle, and the polygon loses a vertex.  This is done by cutting off the sharpest corners 
+// first.
+//
+// BEFORE:     AFTER
+//
+// A--B--C    A--B
+// |     |    |   \
+// |     |    |    \
+// D     E    D     E
+// |     |    |     |
+// F--G--H    F--G--H
+//
+// (BEC is added as a new trinagle.)
 
 void add_ear_and_remove(float * poly, int pt_count, struct Mesh * target_mesh, const float * color, int tid)
 {
@@ -1823,8 +1974,14 @@ void add_ear_and_remove(float * poly, int pt_count, struct Mesh * target_mesh, c
 }
 
 
-
-
+// This routine finds and removes all T junctions from the mesh.  It does this by...
+// For each non-creased edge (we don't de-T creases for speed) we R-tree search for
+// all T-forming vertices and put them in a sorted linked list by edge.
+//
+// Then we build a brand new copy of our mesh and peel off ears for each interference
+// as new triangles.  When done, we're left with triangles that we also add.
+// 
+// Finall we redo a bunch of processing we already did, now that we have a new mesh.
 void find_and_remove_t_junctions(struct Mesh * mesh)
 {
 	assert(mesh->vertex_count == mesh->vertex_capacity);
