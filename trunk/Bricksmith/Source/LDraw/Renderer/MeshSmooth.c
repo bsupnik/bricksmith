@@ -1195,7 +1195,7 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 		
 		++total_after;
 	}
-	printf("BEFORE: %d, AFTER: %d\n", total_before, total_after);
+	// printf("BEFORE: %d, AFTER: %d\n", total_before, total_after);
 
 	sort_vertices_3(mesh->vertices,mesh->vertex_count);
 
@@ -2028,7 +2028,7 @@ void find_and_remove_t_junctions(struct Mesh * mesh)
 	}
 
 
-	printf("Subdivided %d quads and added %d pts.\n", info.split_quads,info.inserted_pts);
+	//printf("Subdivided %d quads and added %d pts.\n", info.split_quads,info.inserted_pts);
 	if(info.inserted_pts > 0)
 	{
 		int f;

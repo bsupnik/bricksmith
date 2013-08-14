@@ -24,7 +24,7 @@
 #define WANT_SMOOTH 1
 
 // This times smoothing of parts.
-#define TIME_SMOOTHING 1
+#define TIME_SMOOTHING 0
 
 #if WANT_SMOOTH
 static const GLuint * idx_null = NULL;
