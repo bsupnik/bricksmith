@@ -1179,7 +1179,7 @@ void				finish_faces_and_sort(struct Mesh * mesh)
 				do
 				{
 					has_more = 
-						k < mesh->vertices+mesh->vertex_count &&
+						(k+1) < mesh->vertices+mesh->vertex_count &&
 							compare_points(k->location,(k+1)->location) == 0;
 										
 					k->location[0] = p[0];
