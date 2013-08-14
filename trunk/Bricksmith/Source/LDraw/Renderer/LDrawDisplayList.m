@@ -10,9 +10,25 @@
 #import "LDrawRenderer.h"
 #import "LDrawBDPAllocator.h"
 #import "LDrawShaderRenderer.h"
+#import "MeshSmooth.h"
 #import OPEN_GL_HEADER
 #import OPEN_GL_EXT_HEADER
 
+
+// This forces quads to be subdivided into tris at creation.
+// For unindexed geometry this is a loss - we end up pushing 50% more vertices for the quad data, which hurts vertex-bound big models.
+// To revisit: once we are indexed, will quads vs tris be a wash?
+#define ONLY_USE_TRIS 0
+
+// This turns on normal smoothing.
+#define WANT_SMOOTH 1
+
+// This times smoothing of parts.
+#define TIME_SMOOTHING 1
+
+#if WANT_SMOOTH
+static const GLuint * idx_null = NULL;
+#endif
 /*
 
 	INSTANCING IMPLEMENTATION NOTES
@@ -152,10 +168,16 @@ struct LDrawDL {
 	struct LDrawDLInstance *instance_tail;
 	int						instance_count;
 	int						flags;					// See flags defs above.
-	GLuint					vbo;					// Single VBO containing all geometry in the DL.
+	GLuint					geo_vbo;				// Single VBO containing all geometry in the DL.
+#if WANT_SMOOTH
+	GLuint					idx_vbo;				// Single VBO containing all mesh indices.
+#endif
 	int						tex_count;				// Number of per-textures; untex case is always first if present.
 	#if WANT_STATS
-	int						vert_count;
+	int						vrt_count;
+#if WANT_SMOOTH
+	int						idx_count;
+#endif	
 	#endif
 	struct LDrawDLPerTex	texes[0];				// Variable size array of textures - DL is allocated larger as needed.
 
@@ -169,7 +191,10 @@ struct LDrawDL {
 // huge instancing data buffer.  (The name is taken from "segment buffering" in
 // GPU Gems 2.)
 struct LDrawDLSegment {
-	GLuint					vbo;				// VBO of the brick we are going to draw - contains the actual brick mesh.
+	GLuint					geo_vbo;			// VBO of the brick we are going to draw - contains the actual brick mesh.
+#if WANT_SMOOTH
+	GLuint					idx_vbo;
+#endif
 	struct LDrawDLPerTex *	dl;					// Ptr to the per-tex info for that brick - only untexed bricks get instanced, so we only have one "per tex", by definition.
 	float *					inst_base;			// VBO-relative ptr to the instance data base in the instance VBO.
 	int						inst_count;			// Number of instances startingat that offset.
@@ -373,8 +398,61 @@ void LDrawDLBuilderAddQuad(struct LDrawDLBuilder * ctx, const GLfloat v[12], GLf
 		 if(c[3] == 0.0f)	ctx->flags |= dl_has_meta;
 	else if(c[3] != 1.0f)	ctx->flags |= dl_has_alpha;
 
+	#if ONLY_USE_TRIS
+
 	int i;
-	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 4);
+	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 3);
+	nl->next = NULL;
+	nl->vcount = 3;
+	for(i = 0; i < 3; ++i)
+	{
+		copy_vec3(nl->data+VERT_STRIDE*i  ,v+i*3);	// Vertex data is per vertex.
+		copy_vec3(nl->data+VERT_STRIDE*i+3,n    );	// But color and norm are for the whole tri, for now.  So we replicate it out to get
+		copy_vec4(nl->data+VERT_STRIDE*i+6,c    );	// a uniform DL.
+	}
+	
+	if(ctx->cur->tri_tail)
+	{
+		ctx->cur->tri_tail->next = nl;
+		ctx->cur->tri_tail = nl;
+	}
+	else
+	{
+		ctx->cur->tri_head = nl;
+		ctx->cur->tri_tail = nl;
+	}
+
+
+	nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 3);
+	nl->next = NULL;
+	nl->vcount = 3;
+	for(i = 0; i < 3; ++i)
+	{
+		copy_vec3(nl->data+VERT_STRIDE*i+3,n    );	// But color and norm are for the whole tri, for now.  So we replicate it out to get
+		copy_vec4(nl->data+VERT_STRIDE*i+6,c    );	// a uniform DL.
+	}
+
+	copy_vec3(nl->data+VERT_STRIDE*0  ,v  );	// Vertex data is per vertex.
+	copy_vec3(nl->data+VERT_STRIDE*1  ,v+6);	// Vertex data is per vertex.
+	copy_vec3(nl->data+VERT_STRIDE*2  ,v+9);	// Vertex data is per vertex.
+	
+	if(ctx->cur->tri_tail)
+	{
+		ctx->cur->tri_tail->next = nl;
+		ctx->cur->tri_tail = nl;
+	}
+	else
+	{
+		ctx->cur->tri_head = nl;
+		ctx->cur->tri_tail = nl;
+	}
+
+	
+	#else
+
+	int i;
+	struct LDrawDLBuilderVertexLink * nl = (struct LDrawDLBuilderVertexLink *) LDrawBDPAllocate(
+												ctx->alloc, sizeof(struct LDrawDLBuilderVertexLink) + sizeof(GLfloat) * VERT_STRIDE * 4);
 	nl->next = NULL;
 	nl->vcount = 4;
 	for(i = 0; i < 4; ++i)
@@ -394,6 +472,7 @@ void LDrawDLBuilderAddQuad(struct LDrawDLBuilder * ctx, const GLfloat v[12], GLf
 		ctx->cur->quad_head = nl;
 		ctx->cur->quad_tail = nl;
 	}
+	#endif
 }//end LDrawDLBuilderAddQuad
 
 
@@ -444,6 +523,210 @@ void LDrawDLBuilderAddLine(struct LDrawDLBuilder * ctx, const GLfloat v[6], GLfl
 //================================================================================
 struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 {
+#if WANT_SMOOTH
+	#if TIME_SMOOTHING
+	NSTimeInterval startTime = [NSDate timeIntervalSinceReferenceDate];
+	#endif
+
+	int total_texes = 0;
+	int total_tris = 0;
+	int total_quads = 0;
+	int total_lines = 0;
+
+
+	struct LDrawDLBuilderVertexLink * l;
+	struct LDrawDLBuilderPerTex * s;
+	
+	// Count up the total vertices we will need, for VBO space, as well
+	// as the total distinct non-empty textures.
+	for(s = ctx->head; s; s = s->next)
+	{
+		if(s->tri_head || s->line_head || s->quad_head)
+			++total_texes;
+		for(l = s->tri_head; l; l = l->next)
+		{
+			total_tris += l->vcount;
+		}
+		for(l = s->quad_head; l; l = l->next)
+		{
+			total_quads += l->vcount;
+		}
+		for(l = s->line_head; l; l = l->next)
+		{
+			total_lines += l->vcount;
+		}
+	}
+	
+	// No non-empty textures?  Bail out early - nuke our
+	// context and get out.  Client code knows we get NO DL, rather than 
+	// an empty one.
+	if(total_texes == 0)
+	{
+		LDrawBDPDestroy(ctx->alloc);
+		return NULL;
+	}
+	
+	// Malloc DL structure with extra storage for variable-sized tex array.
+	struct LDrawDL * dl = (struct LDrawDL *) malloc(sizeof(struct LDrawDL) + sizeof(struct LDrawDLPerTex) * total_texes);
+	
+	// All per-session linked list ptrs start null.
+	dl->next_dl = NULL;
+	dl->instance_head = NULL;
+	dl->instance_tail = NULL;
+	dl->instance_count = 0;
+	
+	dl->tex_count = total_texes;
+
+	struct LDrawDLPerTex * cur_tex = dl->texes;	
+	dl->flags = ctx->flags;
+
+	total_tris /= 3;
+	total_quads /= 4;
+	total_lines /= 2;
+	
+	// We use one mesh for the entire DL, even if it has multiple textures.  We have to
+	// do this because we wnat smoothing across triangles that do not share the same
+	// texture.  (Key use case: minifig faces are part textured, part untextured.)
+	//
+	// So instead each face gets a texture ID (tid), which is an index that we will tie
+	// to our texture list.  The mesh smoother remembers this and dumps out the tris in
+	// tid order later.
+
+	struct Mesh * M = create_mesh(total_tris,total_quads,total_lines);
+
+
+	// Now: walk our building textures - for each non-empty one, we will copy it into
+	// the tex array and push its vertices.
+	int ti = 0;
+	for(s = ctx->head; s; s = s->next)
+	{
+		if(s->tri_head == NULL && s->line_head == NULL && s->quad_head == NULL)
+			continue;
+		if(s->spec.tex_obj != 0)
+			dl->flags |= dl_has_tex;
+
+		for(l = s->tri_head; l; l = l->next)
+		{
+			add_face(M,
+				l->data, l->data+10,l->data+20,NULL,
+				l->data+6,ti);
+		}
+
+		for(l = s->quad_head; l; l = l->next)
+		{
+			add_face(M,
+				l->data, l->data+10,l->data+20,l->data+30,
+				l->data+6,ti);
+		}
+
+		++ti;
+	}
+
+	ti = 0;
+	for(s = ctx->head; s; s = s->next)
+	{
+		if(s->tri_head == NULL && s->line_head == NULL && s->quad_head == NULL)
+			continue;
+		if(s->spec.tex_obj != 0)
+			dl->flags |= dl_has_tex;
+
+		for(l = s->line_head; l; l = l->next)
+		{
+			add_face(M,l->data,l->data+10,NULL,NULL,l->data+6,ti);
+		}
+		
+		++ti;
+	}
+
+
+	finish_faces_and_sort(M);
+	add_creases(M);
+	find_and_remove_t_junctions(M);
+	finish_creases_and_join(M);
+	smooth_vertices(M);
+	merge_vertices(M);
+	
+	int total_vertices, total_indices;
+	get_final_mesh_counts(M,&total_vertices,&total_indices);
+
+	glGenBuffers(1,&dl->geo_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, dl->geo_vbo);
+	glGenBuffers(1,&dl->idx_vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, dl->idx_vbo);
+
+	glBufferData(GL_ARRAY_BUFFER, total_vertices * sizeof(GLfloat) * VERT_STRIDE, NULL, GL_STATIC_DRAW);
+	volatile GLfloat * vertex_ptr = (volatile GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, total_indices * sizeof(GLuint), NULL, GL_STATIC_DRAW);
+	volatile GLuint * index_ptr = (volatile GLuint *) glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
+	
+	// Grab variable size arrays for the start/offsets of each sub-part of our big pile-o-mesh...
+	// the mesher will give us back our tris sorted by texture.
+	
+	int * line_start	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * line_count	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * tri_start		= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * tri_count		= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * quad_start	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+	int * quad_count	= (int *) LDrawBDPAllocate(ctx->alloc, sizeof(int) * total_texes);
+
+	write_indexed_mesh(
+		M,
+		total_vertices,
+		vertex_ptr,
+		total_indices,
+		index_ptr,
+		0,
+		line_start,
+		line_count,
+		tri_start,
+		tri_count,
+		quad_start,
+		quad_count);
+
+	ti = 0;
+	
+	for(s = ctx->head; s; s = s->next)
+	{
+		memcpy(&cur_tex->spec, &s->spec, sizeof(struct LDrawTextureSpec));
+		
+		cur_tex->quad_off = quad_start[ti];
+		cur_tex->line_off = line_start[ti];
+		cur_tex->tri_off = tri_start[ti];
+		cur_tex->quad_count = quad_count[ti];
+		cur_tex->line_count = line_count[ti];
+		cur_tex->tri_count = tri_count[ti];
+		
+		++ti;
+		++cur_tex;
+	}
+
+	destroy_mesh(M);
+
+	#if WANT_STATS
+	dl->vrt_count = total_vertices;
+	dl->idx_count = total_indices;
+	#endif	
+	
+	glUnmapBuffer(GL_ARRAY_BUFFER);
+	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+	glBindBuffer(GL_ARRAY_BUFFER,0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+
+	// Release the BDP that contains all of the build-related junk.
+	LDrawBDPDestroy(ctx->alloc);
+
+	#if TIME_SMOOTHING
+	NSTimeInterval endTime = [NSDate timeIntervalSinceReferenceDate];			
+	#if WANT_STATS
+	printf("Optimize took %f seconds for %d indices, %d vertices.\n",  endTime - startTime, dl->idx_count, dl->vrt_count);
+	#else
+	printf("Optimize took %f seconds.\n",  endTime - startTime);
+	#endif
+	#endif
+	
+	return dl;
+#else
 	int total_texes = 0;
 	int total_vertices = 0;
 	
@@ -485,12 +768,12 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	dl->tex_count = total_texes;
 	
 	#if WANT_STATS
-	dl->vert_count = total_vertices;
+	dl->vrt_count = total_vertices;
 	#endif	
 	
 	// Generate and map a VBO for our mesh data.
-	glGenBuffers(1,&dl->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, dl->vbo);
+	glGenBuffers(1,&dl->geo_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, dl->geo_vbo);
 	glBufferData(GL_ARRAY_BUFFER, total_vertices * sizeof(GLfloat) * VERT_STRIDE, NULL, GL_STATIC_DRAW);
 	GLfloat * buf_ptr = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 	int cur_v = 0;
@@ -552,6 +835,8 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	LDrawBDPDestroy(ctx->alloc);
 	
 	return dl;
+
+#endif	
 }//end LDrawDLBuilderFinish
 
 
@@ -642,7 +927,7 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 
 	if(session->dl_head)
 	{
-		// Build a var-sized array of segments to record our instances for hardware instancing.  We amy not need it for every DL but that's okay.
+		// Build a var-sized array of segments to record our instances for hardware instancing.  We may not need it for every DL but that's okay.
 		struct LDrawDLSegment * segments = (struct LDrawDLSegment *) LDrawBDPAllocate(session->alloc, sizeof(struct LDrawDLSegment) * session->dl_count);
 		struct LDrawDLSegment * cur_segment = segments;
 
@@ -667,7 +952,10 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			if(dl->instance_count >= get_instance_cutoff() && inst_remain >= dl->instance_count)
 			{
 				// If we have capacity for hw instancing and this DL is used enough, create a segment record and fill it out.
-				cur_segment->vbo = dl->vbo;
+				cur_segment->geo_vbo = dl->geo_vbo;
+				#if WANT_SMOOTH
+				cur_segment->idx_vbo = dl->idx_vbo;
+				#endif
 				cur_segment->dl = &dl->texes[0];
 				cur_segment->inst_base = NULL; 
 				cur_segment->inst_base += (inst_data - inst_base);
@@ -676,8 +964,8 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				#if WANT_STATS
 					session->stats.num_btch_ins++;
 					session->stats.num_inst_ins += (dl->instance_count);
-					session->stats.num_vert_ins += (dl->instance_count * dl->vert_count);
-					session->stats.num_work_ins += dl->vert_count;
+					session->stats.num_vert_ins += (dl->instance_count * dl->vrt_count);
+					session->stats.num_work_ins += dl->vrt_count;
 				#endif
 			
 				// Now walk the instance list, copying the instances into the instance VBO one by one.
@@ -712,12 +1000,15 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				#if WANT_STATS
 					session->stats.num_btch_att++;
 					session->stats.num_inst_att += (dl->instance_count);
-					session->stats.num_vert_att += (dl->instance_count * dl->vert_count);
-					session->stats.num_work_att += dl->vert_count;
+					session->stats.num_vert_att += (dl->instance_count * dl->vrt_count);
+					session->stats.num_work_att += dl->vrt_count;
 				#endif
 			
 				// Immediate mode instancing - we draw now!  So bind up the mesh of this DL.
-				glBindBuffer(GL_ARRAY_BUFFER,dl->vbo);
+				glBindBuffer(GL_ARRAY_BUFFER,dl->geo_vbo);
+				#if WANT_SMOOTH
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,dl->idx_vbo);
+				#endif
 				float * p = NULL;
 				glVertexAttribPointer(attr_position, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p);
 				glVertexAttribPointer(attr_normal, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p+3);
@@ -735,12 +1026,21 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			
 					struct LDrawDLPerTex * tptr = dl->texes;
 					
+					#if WANT_SMOOTH
+					if(tptr->line_count)
+						glDrawElements(GL_LINES,tptr->line_count,GL_UNSIGNED_INT,idx_null+tptr->line_off);
+					if(tptr->tri_count)
+						glDrawElements(GL_TRIANGLES,tptr->tri_count,GL_UNSIGNED_INT,idx_null+tptr->tri_off);
+					if(tptr->quad_count)
+						glDrawElements(GL_QUADS,tptr->quad_count,GL_UNSIGNED_INT,idx_null+tptr->quad_off);
+					#else
 					if(tptr->line_count)
 						glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 					if(tptr->tri_count)
 						glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 					if(tptr->quad_count)
 						glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
+					#endif					
 				}
 			}
 			
@@ -783,7 +1083,10 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			for(s = segments; s < cur_segment; ++s)
 			{
 
-				glBindBuffer(GL_ARRAY_BUFFER,s->vbo);
+				glBindBuffer(GL_ARRAY_BUFFER,s->geo_vbo);
+				#if WANT_SMOOTH
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,s->idx_vbo);
+				#endif
 				float * p = NULL;
 				glVertexAttribPointer(attr_position, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p);
 				glVertexAttribPointer(attr_normal, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p+3);
@@ -798,13 +1101,22 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				glVertexAttribPointer(attr_transform_y, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+12);
 				glVertexAttribPointer(attr_transform_z, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+16);
 				glVertexAttribPointer(attr_transform_w, 4, GL_FLOAT, GL_FALSE, 24 * sizeof(GLfloat), p+20);
-
+				
+				#if WANT_SMOOTH	
+				if(s->dl->line_count)
+					glDrawElementsInstancedARB(GL_LINES,s->dl->line_count,GL_UNSIGNED_INT,idx_null+s->dl->line_off, s->inst_count);
+				if(s->dl->tri_count)
+					glDrawElementsInstancedARB(GL_TRIANGLES,s->dl->tri_count,GL_UNSIGNED_INT,idx_null+s->dl->tri_off, s->inst_count);
+				if(s->dl->quad_count)
+					glDrawElementsInstancedARB(GL_QUADS,s->dl->quad_count,GL_UNSIGNED_INT,idx_null+s->dl->quad_off, s->inst_count);
+				#else
 				if(s->dl->line_count)
 					glDrawArraysInstancedARB(GL_LINES,s->dl->line_off,s->dl->line_count, s->inst_count);
 				if(s->dl->tri_count)
 					glDrawArraysInstancedARB(GL_TRIANGLES,s->dl->tri_off,s->dl->tri_count, s->inst_count);
 				if(s->dl->quad_count)
 					glDrawArraysInstancedARB(GL_QUADS,s->dl->quad_off,s->dl->quad_count, s->inst_count);
+				#endif
 			}
 
 			glDisableVertexAttribArray(attr_transform_x);
@@ -863,7 +1175,10 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			glVertexAttrib4fv(attr_color_compliment, l->comp);
 			
 			dl = l->dl;
-			glBindBuffer(GL_ARRAY_BUFFER,dl->vbo);
+			glBindBuffer(GL_ARRAY_BUFFER,dl->geo_vbo);
+			#if WANT_SMOOTH
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,dl->idx_vbo);
+			#endif
 			float * p = NULL;
 			glVertexAttribPointer(attr_position, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p);
 			glVertexAttribPointer(attr_normal, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p+3);
@@ -881,18 +1196,30 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 				else 
 					setup_tex_spec(&l->spec);
 				
+				#if WANT_SMOOTH
+				if(tptr->line_count)
+					glDrawElements(GL_LINES,tptr->line_count,GL_UNSIGNED_INT,idx_null+tptr->line_off);
+				if(tptr->tri_count)
+					glDrawElements(GL_TRIANGLES,tptr->tri_count,GL_UNSIGNED_INT,idx_null+tptr->tri_off);
+				if(tptr->quad_count)
+					glDrawElements(GL_QUADS,tptr->quad_count,GL_UNSIGNED_INT,idx_null+tptr->quad_off);
+				#else
 				if(tptr->line_count)
 					glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 				if(tptr->tri_count)
 					glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 				if(tptr->quad_count)
 					glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
+				#endif				
 			}
 			++l;
 		}
 	}
 	
 	glBindBuffer(GL_ARRAY_BUFFER,0);
+	#if WANT_SMOOTH
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	#endif
 
 	#if WANT_STATS
 		printf("Immediate drawing: %d batches, %d vertices.\n",session->stats.num_btch_imm, session->stats.num_vert_imm);
@@ -947,7 +1274,7 @@ void LDrawDLDraw(
 		{
 			#if WANT_STATS
 				session->stats.num_btch_srt++;
-				session->stats.num_vert_srt += dl->vert_count;
+				session->stats.num_vert_srt += dl->vrt_count;
 			#endif
 		
 			// Build a sorted link, copy the instance data to it, and link it up to our session for later processing.
@@ -1008,7 +1335,7 @@ void LDrawDLDraw(
 	// position.
 	#if WANT_STATS
 		session->stats.num_btch_imm++;
-		session->stats.num_vert_imm += dl->vert_count;
+		session->stats.num_vert_imm += dl->vrt_count;
 	#endif
 	
 	// Push current transform & color into attribute state.
@@ -1022,7 +1349,10 @@ void LDrawDLDraw(
 	assert(dl->tex_count > 0);
 	
 	// Bind our DL VBO and set up ptrs.
-	glBindBuffer(GL_ARRAY_BUFFER,dl->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER,dl->geo_vbo);
+	#if WANT_SMOOTH
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,dl->idx_vbo);
+	#endif
 	float * p = NULL;
 	glVertexAttribPointer(attr_position, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p);
 	glVertexAttribPointer(attr_normal, 3, GL_FLOAT, GL_FALSE, VERT_STRIDE * sizeof(GLfloat), p+3);
@@ -1033,12 +1363,21 @@ void LDrawDLDraw(
 	if(dl->tex_count == 1 && tptr->spec.tex_obj == 0 && (spec == NULL || spec->tex_obj == 0))
 	{
 		// Special case: one untextured mesh - just draw.
+		#if WANT_SMOOTH
+		if(tptr->line_count)
+			glDrawElements(GL_LINES,tptr->line_count,GL_UNSIGNED_INT,idx_null+tptr->line_off);
+		if(tptr->tri_count)
+			glDrawElements(GL_TRIANGLES,tptr->tri_count,GL_UNSIGNED_INT,idx_null+tptr->tri_off);
+		if(tptr->quad_count)
+			glDrawElements(GL_QUADS,tptr->quad_count,GL_UNSIGNED_INT,idx_null+tptr->quad_off);
+		#else
 		if(tptr->line_count)
 			glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 		if(tptr->tri_count)
 			glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 		if(tptr->quad_count)
 			glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
+		#endif		
 	}
 	else
 	{
@@ -1053,13 +1392,22 @@ void LDrawDLDraw(
 			}
 			else 
 				setup_tex_spec(spec);
-			
+
+			#if WANT_SMOOTH			
+			if(tptr->line_count)
+				glDrawElements(GL_LINES,tptr->line_count,GL_UNSIGNED_INT,idx_null+tptr->line_off);
+			if(tptr->tri_count)
+				glDrawElements(GL_TRIANGLES,tptr->tri_count,GL_UNSIGNED_INT,idx_null+tptr->tri_off);
+			if(tptr->quad_count)
+				glDrawElements(GL_QUADS,tptr->quad_count,GL_UNSIGNED_INT,idx_null+tptr->quad_off);
+			#else
 			if(tptr->line_count)
 				glDrawArrays(GL_LINES,tptr->line_off,tptr->line_count);
 			if(tptr->tri_count)
 				glDrawArrays(GL_TRIANGLES,tptr->tri_off,tptr->tri_count);
 			if(tptr->quad_count)
 				glDrawArrays(GL_QUADS,tptr->quad_off,tptr->quad_count);
+			#endif		
 		}
 
 		setup_tex_spec(spec);
@@ -1092,7 +1440,10 @@ void LDrawDLDestroy(struct LDrawDL * dl)
 	// reason inval a DL mid-draw, which is usually a sign of coding error.
 	assert(dl->instance_head == NULL);
 
-	glDeleteBuffers(1,&dl->vbo);
+	#if WANT_SMOOTH
+	glDeleteBuffers(1,&dl->idx_vbo);
+	#endif
+	glDeleteBuffers(1,&dl->geo_vbo);
 	free(dl);
 
 }//end LDrawDLDestroy

@@ -75,8 +75,7 @@ struct	LDrawDragHandleInstance;
 	GLfloat							mvp[16];										// Cached MVP from when shader is built.
 
 	struct LDrawDragHandleInstance *drag_handles;									// List of drag handles - deferred to draw at the end for perf and correct scaling.
-
-	GLfloat							scale;
+	GLfloat							scale;											// Needed to code Allen's res-independent drag handles...someday get this from viewport?
 	
 }
 

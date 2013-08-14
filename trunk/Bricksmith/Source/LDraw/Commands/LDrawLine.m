@@ -24,6 +24,10 @@
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
 
+// If set to 1, lines don't draw using the new renderer.  This can be used
+// as a quick-and-dirty way to measure the fps cost of line drawing or see
+// what a polygon-only render would look like.
+#define NO_LINE_DRWAING 0
 
 @implementation LDrawLine
 
@@ -236,6 +240,7 @@
 	[self revalCache:DisplayList];
 	if(self->hidden == NO)
 	{
+		#if !NO_LINE_DRWAING
 		GLfloat	v[6] = { 
 			vertex1.x, vertex1.y, vertex1.z,
 			vertex2.x, vertex2.y, vertex2.z };
@@ -251,6 +256,7 @@
 			[self->color getColorRGBA:rgba];
 			[renderer drawLine:v normal:n color:rgba];
 		}
+		#endif
 	}
 }//end collectSelf:
 

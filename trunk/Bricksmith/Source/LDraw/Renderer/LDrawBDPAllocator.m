@@ -147,3 +147,4 @@ void *					LDrawBDPAllocate(struct LDrawBDP * pool, size_t sz)
 		return ret;
 	}
 }//end LDrawBDPAllocate
+

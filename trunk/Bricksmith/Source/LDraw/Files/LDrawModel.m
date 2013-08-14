@@ -31,6 +31,15 @@
 #import "LDrawVertexes.h"
 #import "StringCategory.h"
 
+// This disables culling and box approximations for small bricks.  Normally
+// we want this on, but for the purpose of measuring heads-up video card
+// performance we don't want small bricks to get lost...if we do, the exact
+// window size is going to change the rendering load, making it difficult to
+// get good metrics on laptops with small screens.
+// (If we zoom in to avoid culling by size, the large model will be offscreen 
+// and the off-screen bricks are culled!
+
+#define NO_CULL_SMALL_BRICKS 0
 
 @implementation LDrawModel
 
@@ -311,8 +320,20 @@
 	GLfloat minxyz[3] = { my_bounds.min.x, my_bounds.min.y, my_bounds.min.z };
 	GLfloat maxxyz[3] = { my_bounds.max.x, my_bounds.max.y, my_bounds.max.z };
 
-	if(![renderer checkCull:minxyz to:maxxyz])
+	int cull_result = [renderer checkCull:minxyz to:maxxyz];
+	
+	#if !NO_CULL_SMALL_BRICKS
+
+	if(cull_result == cull_skip)
 		return;
+		
+	if(cull_result == cull_box)
+	{
+		[renderer drawBoxFrom:minxyz to:maxxyz];
+		return;
+	}
+
+	#endif
 
 	// DL cache control: we may have to throw out our old DL if it has gone
 	// stale. EITHER WAY we mark our DL bit as validated per the rules of
