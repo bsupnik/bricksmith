@@ -3390,7 +3390,9 @@ void AppendChoicesToNewItem(
     // to take action if their subdirectives change.
     NSMutableSet *donatingParents = [[NSMutableSet alloc] init];
     for (LDrawPart *part in doomedObjects) {
-        [donatingParents addObject:[sourceView parentForItem:part]];
+		NSObject * donatingParent = [sourceView parentForItem:part];
+		if(donatingParent != nil)
+			[donatingParents addObject:donatingParent];
     }
 
     // Do The Move.
