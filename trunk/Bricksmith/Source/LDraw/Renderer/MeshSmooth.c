@@ -582,7 +582,7 @@ void destroy_rtree(struct RTree_node * n)
 
 // Utility: Returns true if two 3-d AABBs (stored as min XYZ and max XYZ) overlap, including
 // overlaps of their edges.
-inline int overlap(float b1_min[3], float b1_max[3], float b2_min[3], float b2_max[3])
+static inline int overlap(float b1_min[3], float b1_max[3], float b2_min[3], float b2_max[3])
 {
 	if(b1_min[0] > b2_max[0])			return 0;
 	if(b2_min[0] > b1_max[0])			return 0;
@@ -595,7 +595,7 @@ inline int overlap(float b1_min[3], float b1_max[3], float b2_min[3], float b2_m
 }
 
 // Returns true if a point is inside an AABB, or on its edges.
-inline int inside(float b1_min[3], float b1_max[3], float p[3])
+static inline int inside(float b1_min[3], float b1_max[3], float p[3])
 {
 	if(p[0] >= b1_min[0] && p[0] <= b1_max[0])
 	if(p[1] >= b1_min[1] && p[1] <= b1_max[1])
@@ -640,7 +640,7 @@ void scan_rtree(struct RTree_node * n, float min_bounds[3], float max_bounds[3],
 // So vec3 -> float[3], and vec4 -> float[4].
 
 // Normalize vector N in place if not zero-length.
-inline void vec3f_normalize(float N[3])
+static inline void vec3f_normalize(float N[3])
 {
 	float len = sqrt(N[0]*N[0]+N[1]*N[1]+N[2]*N[2]);
 	if(len)
@@ -653,7 +653,7 @@ inline void vec3f_normalize(float N[3])
 }
 
 // copy vec3: d = s.
-inline void vec3f_copy(float * __restrict d, const float * __restrict s)
+static inline void vec3f_copy(float * __restrict d, const float * __restrict s)
 {
 	d[0] = s[0];
 	d[1] = s[1];
@@ -661,7 +661,7 @@ inline void vec3f_copy(float * __restrict d, const float * __restrict s)
 }
 
 // copy vec4: d = s
-inline void vec4f_copy(float * __restrict d, const float * __restrict s)
+static inline void vec4f_copy(float * __restrict d, const float * __restrict s)
 {
 	d[0] = s[0];
 	d[1] = s[1];
@@ -670,13 +670,13 @@ inline void vec4f_copy(float * __restrict d, const float * __restrict s)
 }
 
 // return dot product of vec3's d1 and d2.
-inline float vec3f_dot(const float * __restrict v1, const float * __restrict v2)
+static inline float vec3f_dot(const float * __restrict v1, const float * __restrict v2)
 {
 	return v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
 }
 
 // vec3: dst = b - a.  (or: vector dst points from A to B).
-inline void vec3f_diff(float * __restrict dst, const float * __restrict a, const float * __restrict b)
+static inline void vec3f_diff(float * __restrict dst, const float * __restrict a, const float * __restrict b)
 {
 	dst[0] = b[0] - a[0];
 	dst[1] = b[1] - a[1];
@@ -684,7 +684,7 @@ inline void vec3f_diff(float * __restrict dst, const float * __restrict a, const
 }
 
 // Return the square of the length of the distance between two vec3 points p1, p2.
-inline float vec3f_length2(const float * __restrict p1, const float * __restrict p2)
+static inline float vec3f_length2(const float * __restrict p1, const float * __restrict p2)
 {
 	float d[3];
 	vec3f_diff(d, p1,p2);
@@ -692,13 +692,13 @@ inline float vec3f_length2(const float * __restrict p1, const float * __restrict
 }
 
 // 3-d comparison of p1 and p2 (simple true/false, not a comparator).
-inline int vec3f_eq(const float * __restrict p1, const float * __restrict p2)
+static inline int vec3f_eq(const float * __restrict p1, const float * __restrict p2)
 {
 	return p1[0] == p2[0] && p1[1] == p2[1] && p1[2] == p2[2];
 }
 
 // vec3 cross product, e.g. dst = v1 x v2.
-inline void vec3_cross(float * __restrict dst, const float * __restrict v1, const float * __restrict v2)
+static inline void vec3_cross(float * __restrict dst, const float * __restrict v1, const float * __restrict v2)
 {
 	dst[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
 	dst[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
@@ -706,7 +706,7 @@ inline void vec3_cross(float * __restrict dst, const float * __restrict v1, cons
 }
 
 // Returns true if the projection of B onto the line AC is in between (but not on) A and C.
-inline int in_between_line(const float * __restrict a, const float * __restrict b, const float * __restrict c)
+static inline int in_between_line(const float * __restrict a, const float * __restrict b, const float * __restrict c)
 {
 	float ab[3], ac[3], cb[3];
 	vec3f_diff(ab,a,b);
@@ -716,7 +716,7 @@ inline int in_between_line(const float * __restrict a, const float * __restrict 
 }
 
 // project p onto the line along v through o, return it in proj.
-inline void proj_onto_line(float * __restrict proj, const float * __restrict o, const float * __restrict v, const float * __restrict p)
+static inline void proj_onto_line(float * __restrict proj, const float * __restrict o, const float * __restrict v, const float * __restrict p)
 {
 	float op[3];
 	vec3f_diff(op,o,p);
