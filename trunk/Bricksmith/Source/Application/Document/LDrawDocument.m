@@ -2463,40 +2463,62 @@ void AppendChoicesToNewItem(
 - (IBAction) addRelatedPartClicked:(id)sender
 {
 #if WANT_RELATED_PARTS
-	RelatedPart * relatedPart = [sender representedObject];
-	
-	NSString * partName = [relatedPart child];
-	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
+	RelatedPart *		relatedPart		= [sender representedObject];	
+	NSString *			partName		= [relatedPart child];
 	NSUndoManager       *undoManager    = [self undoManager];
 	LDrawColor          *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
 	TransformComponents transformation  = IdentityComponents;
-	
-	//We got a part; let's add it!
-	if(partName != nil)
-	{
-		//Set up the part attributes
-		[newPart setLDrawColor:selectedColor];
-		[newPart setDisplayName:partName];
+	NSMutableIndexSet * newPartIndices	= [NSMutableIndexSet indexSet];							// Indices of all new parts.
+	id					parentPart = nil;
+	LDrawPart *			newPart = nil;
+	NSUInteger			i, counter;
+
+	// We have to save the selection up-front - as we go adding parts, the selection
+	// will change out from under us.
+	NSArray *			parentParts		= [NSArray arrayWithArray:selectedDirectives];			 // Selection at start that spawns new parts
+	NSMutableArray *	newParts		= [NSMutableArray arrayWithCapacity:[parentParts count]];// All new parts added, one for each selected part.
 		
-		if(self->lastSelectedPart != nil)
+	// Step 1: for each selected part, we are going to add one child part.
+	
+	counter = [parentParts count];
+	for(i = 0; i < counter; ++i)
+	{
+		parentPart = [parentParts objectAtIndex:i];
+		if([parentPart isKindOfClass:[LDrawPart class]])
 		{
+			// Create our new part to match the parent.
+			newPart        = [[[LDrawPart alloc] init] autorelease];
+			[newPart setLDrawColor:selectedColor];
+			[newPart setDisplayName:partName];
+			
 			// Collect the transformation from the previous part and apply it to 
 			// the new one.  Ideally we'd use the selection someday, but
 			// we can only add one directive for now.
-			transformation = [lastSelectedPart transformComponents];
-
-			transformation = [relatedPart calcChildPosition:transformation];
-			
+			transformation = [parentPart transformComponents];
+			transformation = [relatedPart calcChildPosition:transformation];			
 			[newPart setTransformComponents:transformation];
+			
+			// Add the part to our model and remember it for later.
+			[newPart optimizeOpenGL];			
+			[self addStepComponent:newPart parent:nil index:NSNotFound];			
+			[newParts addObject:newPart]; 
 		}
-		
-		[newPart optimizeOpenGL];
-		
-		[self addStepComponent:newPart parent:nil index:NSNotFound];
-		
-		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
-		[[self documentContents] noteNeedsDisplay];
 	}
+
+	// Step 2: go select every new part.  This way the user can pick "insert related"
+	// again, e.g. to add tires to newly added wheels.
+
+	counter = [newParts count];
+	for(i = 0; i < counter; ++i)
+	{
+		[newPartIndices addIndex:[fileContentsOutline rowForItem:[newParts objectAtIndex:i]]];
+	}
+	
+	[fileContentsOutline selectRowIndexes:newPartIndices byExtendingSelection:NO];
+		
+	[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
+	[[self documentContents] noteNeedsDisplay];
+
 #endif	
 }//end addRelatedPartClicked
 
@@ -4717,7 +4739,7 @@ void AppendChoicesToNewItem(
 	
 	// For now: require not only same parent, but also that we have only one part
 	// selected, because we can only insert the child for one part.
-	if(parentName != nil && selCount == 1)
+	if(parentName != nil && selCount > 0)
 	{
 		RelatedParts * s = [RelatedParts sharedRelatedParts];
 		
