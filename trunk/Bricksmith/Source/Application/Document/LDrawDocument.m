@@ -1666,6 +1666,11 @@ void AppendChoicesToNewItem(
 	NSArray         *selectedObjects    = [self selectedObjects];
 	LDrawDirective  *currentObject      = nil;
 	NSInteger       counter;
+
+	// Clear the selection FIRST.  We already have a copy of the doomed objects;
+	// if we don't clear the selection, deleting the objs OUT of the selection
+	// will cause massive thrash of the outliner.
+	[fileContentsOutline deselectAll:sender];
 	
 	//We'll just try to delete everything. Count backwards so that if a 
 	// deletion fails, it's the thing at the top rather than the bottom that 
@@ -1679,7 +1684,6 @@ void AppendChoicesToNewItem(
 		}
 	}
 	
-	[fileContentsOutline deselectAll:sender];
 	[[self documentContents] noteNeedsDisplay];
 }//end delete:
 
@@ -1736,6 +1740,77 @@ void AppendChoicesToNewItem(
 	[undoManager setActionName:NSLocalizedString(@"UndoDuplicate", nil)];
 	
 }//end duplicate:
+
+
+//========== splitStep: ========================================================
+//
+// Purpose:		splitStep splits the selected directives out of their current
+//				steps and puts them into a newly created step; the newly 
+//				created step is inserted directly after the last parent step of
+//				the selection.  (Users can use this to rapidly 'break down' a
+//				monolithic pile of bricks into sane steps.)
+//
+// Notes:		The function will only move selection directives that are 
+//				children of steps from a single model.
+//
+//==============================================================================
+- (IBAction) splitStep:(id)sender
+{
+	NSUndoManager			*undoManager		= [self undoManager];
+	NSArray					*directives =			[self selectedObjects];
+													//[NSArray arrayWithArray:selectedDirectives];	
+	NSMutableArray			*movedDirectives = [NSMutableArray arrayWithCapacity:[directives count]];
+	LDrawContainer			*containingModel = nil;
+	NSInteger				highestIndex = 0;
+	LDrawStep				*newStep = nil;
+	NSMutableIndexSet		*newPartIndices=nil;
+
+	[fileContentsOutline deselectAll:sender];
+
+	for(id child in directives)
+	{
+		LDrawDirective * parent = [child enclosingDirective];
+		if(parent)
+		{
+			LDrawContainer * model = [parent enclosingDirective];
+			if(model)
+			{
+				if(containingModel == nil) 
+					containingModel = model;
+				if(containingModel == model)
+				{
+					highestIndex = MAX(highestIndex, [containingModel indexOfDirective:parent]);
+					[movedDirectives addObject:child];
+					[self deleteDirective:child];
+				}
+			}
+		}		
+	}
+	
+	if([movedDirectives count] == 0)
+		return;
+
+	newStep = [LDrawStep emptyStep];
+	[self addDirective:newStep toParent:containingModel atIndex:highestIndex+1];
+	
+	for(id child in movedDirectives)
+	{
+		[self addDirective:child toParent:newStep];
+	}
+
+	[fileContentsOutline expandItem:newStep];
+	
+	newPartIndices = [NSMutableIndexSet indexSet];
+	for(id newPart in movedDirectives)
+	{
+		[newPartIndices addIndex:[fileContentsOutline rowForItem:newPart]];
+	}
+	
+	[fileContentsOutline selectRowIndexes:newPartIndices byExtendingSelection:NO];
+		
+	[undoManager setActionName:NSLocalizedString(@"UndoSplitStep", nil)];
+	[[self documentContents] noteNeedsDisplay];
+}//end splitStep:
 
 
 //========== orderFrontMovePanel: ==============================================
@@ -2516,7 +2591,7 @@ void AppendChoicesToNewItem(
 	
 	[fileContentsOutline selectRowIndexes:newPartIndices byExtendingSelection:NO];
 		
-	[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
+	[undoManager setActionName:NSLocalizedString(@"UndoAddRelatedPart", nil)];
 	[[self documentContents] noteNeedsDisplay];
 
 #endif	
@@ -2860,6 +2935,13 @@ void AppendChoicesToNewItem(
 // Purpose:		Removes the specified doomedDirective from its enclosing 
 //				container.
 //
+// Notes:		If the doomed directive is selected, chaos breaks out.  (The
+//				act of removing the directive triggers a rebuilding of the 
+//				outliner.  The outliner rebuild triggers a push of the cached
+//				selection back to the outliner.  The cached selection will have
+//				doomedDirective and the outliner won't, causing the push of the
+//				selection to fail with an ObjC exception.
+///
 //==============================================================================
 - (void) deleteDirective:(LDrawDirective *)doomedDirective
 {
@@ -4214,32 +4296,32 @@ void AppendChoicesToNewItem(
 			[[self documentContents] noteNeedsDisplay];
 		}
 
-        // Ensure that even if the outline contents have changed (for instance a
-        // container that inserts directives automatically) the original selection
-        // is maintained
-        [fileContentsOutline selectObjects:selectedDirectives];
-        [fileContentsOutline reloadData];
+			// Ensure that even if the outline contents have changed (for instance a
+			// container that inserts directives automatically) the original selection
+			// is maintained
+			[fileContentsOutline selectObjects:selectedDirectives];
+			[fileContentsOutline reloadData];
 
-		//Model menu needs to change if:
-		//	*model list changes (in the file)
-		//	*model name changes (in the model)
-		if(		[[notification object] isKindOfClass:[LDrawFile class]]
-			||	[[notification object] isKindOfClass:[LDrawModel class]])
-		{
-			[self addModelsToMenus];
+			//Model menu needs to change if:
+			//	*model list changes (in the file)
+			//	*model name changes (in the model)
+			if(		[[notification object] isKindOfClass:[LDrawFile class]]
+				||	[[notification object] isKindOfClass:[LDrawModel class]])
+			{
+				[self addModelsToMenus];
+			}
+			// If step display attributes changed and we're in step display, we need 
+			// to reset the step's viewing angle. 
+			// Note: Unfortunately, this is called when the step's content array 
+			//		 changes, and we have no way of distinguishing that case except 
+			//		 for a cheesy hack ivar "lockViewingAngle".
+			else if(	[[notification object] isKindOfClass:[LDrawStep class]]
+					&&	[[[self documentContents] activeModel] stepDisplay] == YES
+					&&	self->lockViewingAngle == NO)
+			{
+				[self updateViewingAngleToMatchStep];
+			}
 		}
-		// If step display attributes changed and we're in step display, we need 
-		// to reset the step's viewing angle. 
-		// Note: Unfortunately, this is called when the step's content array 
-		//		 changes, and we have no way of distinguishing that case except 
-		//		 for a cheesy hack ivar "lockViewingAngle".
-		else if(	[[notification object] isKindOfClass:[LDrawStep class]]
-				&&	[[[self documentContents] activeModel] stepDisplay] == YES
-				&&	self->lockViewingAngle == NO)
-		{
-			[self updateViewingAngleToMatchStep];
-		}
-	}
 }//end partChanged:
 
 
@@ -4388,6 +4470,34 @@ void AppendChoicesToNewItem(
 			if([selectedItems count] > 0)
 				enable = YES;
 			break;
+		
+		case splitStepMenuTag:
+			// We can only split a step if the selection is entirely direct children of steps.
+			// Also, all parent steps must be from the same model.
+			if([selectedItems count] > 0)
+			{
+				LDrawModel * commonModel = nil;
+				enable = YES;
+				for(id currentDirective in self->selectedDirectives)
+				{
+					LDrawModel * model = [currentDirective enclosingModel];
+					LDrawContainer * parent = [currentDirective enclosingDirective];
+					if(commonModel == nil)
+						commonModel = model;
+						
+					if(parent == nil || model == nil ||					// Selection has no parent or
+						model != commonModel ||							// Two selections have different MPD models or
+						![parent isKindOfClass:[LDrawStep class]])		// Not a part of a step.
+					{
+						enable = NO;
+						break;
+					}
+				}
+			}	
+			else
+				enable = NO;
+			break;
+			
 		
 		case pasteMenuTag:
 			if([[pasteboard types] containsObject:LDrawDirectivePboardType])

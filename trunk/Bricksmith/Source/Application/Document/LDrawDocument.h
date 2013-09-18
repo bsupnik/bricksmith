@@ -138,6 +138,7 @@
 - (IBAction) paste:(id)sender;
 - (IBAction) delete:(id)sender;
 - (IBAction) duplicate:(id)sender;
+- (IBAction) splitStep:(id)sender;
 - (IBAction) orderFrontRotationPanel:(id)sender;
 - (IBAction) quickRotateClicked:(id)sender;
 

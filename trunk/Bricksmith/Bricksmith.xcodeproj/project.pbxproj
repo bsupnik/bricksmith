@@ -309,7 +309,6 @@
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
 		D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */; };
 		D687D424170A6DF3007300E2 /* related.ldr in Resources */ = {isa = PBXBuildFile; fileRef = D687D423170A6DF3007300E2 /* related.ldr */; };
-		D691EC57170906C000AD6E4C /* related.txt in Resources */ = {isa = PBXBuildFile; fileRef = D691EC56170906C000AD6E4C /* related.txt */; };
 		D6C0C5CF16DABE70007E4266 /* RelatedParts.h in Headers */ = {isa = PBXBuildFile; fileRef = D6C0C5CD16DABE70007E4266 /* RelatedParts.h */; };
 		D6C0C5D016DABE70007E4266 /* RelatedParts.m in Sources */ = {isa = PBXBuildFile; fileRef = D6C0C5CE16DABE70007E4266 /* RelatedParts.m */; };
 		D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D6CB41DE15E2AA6C00730E2A /* ModelManager.h */; };
@@ -697,7 +696,6 @@
 		D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairTimes.tiff; sourceTree = "<group>"; };
 		D65CE86C158EBBCC001A1D7D /* CrosshairPlus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairPlus.tiff; sourceTree = "<group>"; };
 		D687D423170A6DF3007300E2 /* related.ldr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = related.ldr; sourceTree = "<group>"; };
-		D691EC56170906C000AD6E4C /* related.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = related.txt; sourceTree = "<group>"; };
 		D6C0C5CD16DABE70007E4266 /* RelatedParts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RelatedParts.h; sourceTree = "<group>"; };
 		D6C0C5CE16DABE70007E4266 /* RelatedParts.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RelatedParts.m; sourceTree = "<group>"; };
 		D6CB41DE15E2AA6C00730E2A /* ModelManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelManager.h; sourceTree = "<group>"; };
@@ -1238,7 +1236,6 @@
 			isa = PBXGroup;
 			children = (
 				D687D423170A6DF3007300E2 /* related.ldr */,
-				D691EC56170906C000AD6E4C /* related.txt */,
 				D6EDBA0B164DF86F00B4062B /* Shaders */,
 				95D893AD1655334500AA055B /* lsynth.mpd */,
 				95D8939216550B6400AA055B /* Legonian Ruler.pdf */,
@@ -1629,7 +1626,6 @@
 				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
 				0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */,
 				957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */,
-				D691EC57170906C000AD6E4C /* related.txt in Resources */,
 				D687D424170A6DF3007300E2 /* related.ldr in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

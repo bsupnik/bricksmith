@@ -1,0 +1,90 @@
+==================================================
+RELATED PARTS - File Specification and Information
+==================================================
+
+Bricksmith uses a file called related.ldr to insert the related parts for a selection.  The user selects one or more 'parent' parts (E.g. a series of window frames) and then picks insert related -> and selects the desired child part from a menu (e.g. glass or panes or shutters) and Bricksmith then adds the parts in their correct locations.
+
+The motivation for this feature is three-fold:
+- To allow users to rapidly insert a lot of parts, e.g. to insert the glass into dozens of windows in one operation.
+- To allow users to rapidly find the matching parts, e.g. the right tire for a given wheel.
+- To automatically place such parts at their correct locations, even when the relationship between the two parts' origins (in LDU) for a correct fit is non-obvious.
+
+(For example, a number of doors have their origin set to make the door rotate around its hinge; since the door frame's center is typically the actual center of the top or bottom of the door frame, the door itself must be offset from the frame; the exact offset is hard to see in 3-d and tedious to enter.)
+
+CONCEPTUAL STRUCTURE OF RELATED PARTS DATA
+------------------------------------------
+
+Conceptually, the related parts database consists of a series of tuples that consist of:
+- A parent part file name (e.g. 3023.dat)
+- A child part file name
+- A 12-component transform matrix that describes the correct positioning of the child part if the parent part sits at the origin with no rotations.
+- A human-readable "relationship name" (white-space allowed, CR/LF not allowed) that describes the child's relationship to the parent, e.g. "Left shutter", "Glass", "Right Wheel".
+
+Where one child part can be attached to a parent part in multiple ways (e.g. tires to a "plate 2x2 with red wheels") the relationship name distinguishes the differing attachment points.
+
+It is important that the human readable names be consistent within the scope of a single parent.  For example, if plate 2x2 with red wheels can have more than one "Left Tire" (with differing tire parts) then each record containing a different left tire should use the exact same string for the relationship name.  This allows programs to determine that there are multiple choices of "left tires".
+
+FORMAT OF THE RELATED.LDR CONFIGURATION FILE
+--------------------------------------------
+
+The file related.ldr is used to encode the related-parts database in a format easy for authors to directly edit using an LDraw editing program.
+
+Related.ldr is a standard multi-part document LDraw file with two additional meta-commands to support related features:
+
+!PARENT
+
+Defines the following directives as being parents in the parent-child relationship that follows.
+
+!CHILD <relationship name>
+
+Defines the following directives as being children of the preceding parent parts, with a given relationship name.
+
+Every sub-part that follows the parent directive forms the "parent set". Parts in the parent set must all have the same transform, and should have no rotation.  However, translation is legal and allows the various parent-child groups to be spread out.
+
+Every sub-part that follows a child forms the "Child set".  Children's position are understood relate to the previous parent and may have rotations - that is, the parent's translation is removed from the child matrix on file-load to find the relative transform matrix.
+
+For each child set, every child forms a relationship with every parent using the !CHILD meta's name.
+
+An illustrated example will explain:
+
+0 !PARENT
+1 4 0 0 0 1 0 0 0 1 0 0 0 1 122c01.dat
+1 4 0 0 0 1 0 0 0 1 0 0 0 1 122c02.dat
+0 !CHILD Left Tire
+1 1 -31 6 0 0 0 1 0 1 0 -1 0 0 3641.dat
+1 1 -31 6 0 -0 0 1 -0 1 -0 -1 -0 -0 4084.dat
+0 !CHILD Right Tire
+1 1 31 6 0 -0 0 -1 -0 1 -0 1 0 -0 3641.dat
+1 1 31 6 0 -0 0 -1 -0 1 -0 1 0 -0 4084.dat
+
+In this example there are eight relationships defined: each of the two plates (122c01 and 122c02 are 2x2 plates with red and white wheels, respectively) has two relationships "Left Tire" and "Right Tire" and for each relationship, two wheels (3641 and 4084) both fit the wheel.  In other words, each child set (with 2 children) is crossed with the 2 parents to get four relationships, and  this happens for both Left Tire and Right Tire.
+
+OTHER USE OF THE RELATED FILE
+-----------------------------
+
+No (1 records) parts may be included in the related.ldr file other than parents and children.
+
+No parts may be included before a !PARENT or !CHILD directive.
+
+No two !PARENT directives should be included in a row because the first one would define zero relationships.
+
+MPD sub-parts and steps may be used to structure the document for convenience; parent/child groups should not span steps or MPD sub-parts.
+
+No parts (1-records) should refer to other MPD sub-parts of the related.ldr document - the processing program simply scans every MPD sub-part.
+
+No other meta or comment commands should be included.
+
+All parents should be located on integral coordinate locations and should not have any rotation.  No parts should have any scaling or skew applied.
+
+The color of parts is ignored - the Bricksmith file uses red for parents and blue for children as a visual convention for human editors.
+
+EDITING THE RELATED.LDR FILE FROM BRICKSMITH
+--------------------------------------------
+
+If you are using Bricksmith directly, related.ldr is in Bricksmith's app package; if you are building Bricksmith from source, the master copy of the file is in trunk/Bricksmith/Resources/related.ldr.
+
+To add new relations to related.ldr you need to:
+
+- Add the parent and child parts, with the child after the parent.
+- Add the raw meta commands !PARENT and !CHILD <relationship> - pick "insert raw command" from the model menu - you'll have to hold down the option key to see this menu choice.
+- You'll need to restart Bricksmith to see the changes. If you are running from source, recompile to get the new file.

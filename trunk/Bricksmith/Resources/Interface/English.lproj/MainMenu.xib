@@ -11,7 +11,7 @@
 			<string key="NS.object.0">851</string>
 		</object>
 		<array class="NSMutableArray" key="IBDocument.EditedObjectIDs">
-			<integer value="230"/>
+			<integer value="169"/>
 		</array>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -414,6 +414,27 @@
 									<int key="NSTag">207</int>
 								</object>
 								<object class="NSMenuItem" id="557850395">
+									<reference key="NSMenu" ref="284872496"/>
+									<bool key="NSIsDisabled">YES</bool>
+									<bool key="NSIsSeparator">YES</bool>
+									<string key="NSTitle"/>
+									<string key="NSKeyEquiv"/>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+								</object>
+								<object class="NSMenuItem" id="717632064">
+									<reference key="NSMenu" ref="284872496"/>
+									<string key="NSTitle">Split Step</string>
+									<string key="NSKeyEquiv">e</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="904676617"/>
+									<reference key="NSMixedImage" ref="1001426656"/>
+									<int key="NSTag">208</int>
+								</object>
+								<object class="NSMenuItem" id="616085447">
 									<reference key="NSMenu" ref="284872496"/>
 									<bool key="NSIsDisabled">YES</bool>
 									<bool key="NSIsSeparator">YES</bool>
@@ -2029,6 +2050,14 @@
 					</object>
 					<int key="connectionID">437</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">splitStep:</string>
+						<reference key="source" ref="859723934"/>
+						<reference key="destination" ref="717632064"/>
+					</object>
+					<int key="connectionID">441</int>
+				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<array key="orderedObjects">
@@ -2321,6 +2350,8 @@
 							<reference ref="314953221"/>
 							<reference ref="223003500"/>
 							<reference ref="857347892"/>
+							<reference ref="616085447"/>
+							<reference ref="717632064"/>
 						</array>
 						<reference key="parent" ref="604403940"/>
 					</object>
@@ -2974,6 +3005,16 @@
 						<reference key="object" ref="889728439"/>
 						<reference key="parent" ref="470995292"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">438</int>
+						<reference key="object" ref="616085447"/>
+						<reference key="parent" ref="284872496"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">439</int>
+						<reference key="object" ref="717632064"/>
+						<reference key="parent" ref="284872496"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -3000,6 +3041,7 @@
 				<string key="160.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="163.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="164.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="169.IBEditorWindowLastContentRect">{{561, 500}, {183, 303}}</string>
 				<string key="169.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="171.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="172.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3021,7 +3063,7 @@
 				<string key="224.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="229.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="23.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="230.IBEditorWindowLastContentRect">{{352, 746}, {219, 203}}</string>
+				<string key="230.IBEditorWindowLastContentRect">{{764, 600}, {219, 203}}</string>
 				<string key="230.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="231.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="232.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3059,7 +3101,7 @@
 				<string key="288.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="289.IBEditorWindowLastContentRect">{{571, 883}, {64, 6}}</string>
 				<string key="289.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="29.IBEditorWindowLastContentRect">{{0, 949}, {544, 20}}</string>
+				<string key="29.IBEditorWindowLastContentRect">{{412, 803}, {544, 20}}</string>
 				<string key="29.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="290.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="292.IBEditorWindowLastContentRect">{{299, 826}, {192, 123}}</string>
@@ -3114,6 +3156,8 @@
 				<string key="432.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="434.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="436.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="438.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="439.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="56.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="57.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3132,7 +3176,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">437</int>
+			<int key="maxID">441</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -3475,9 +3519,9 @@
 						<string key="addPartClicked:">id</string>
 						<string key="addQuadrilateralClicked:">id</string>
 						<string key="addRawCommandClicked:">id</string>
+						<string key="addRelatedPartClicked:">id</string>
 						<string key="addStepClicked:">id</string>
 						<string key="addSubmodelReferenceClicked:">id</string>
-						<string key="addSuggestionClicked:">id</string>
 						<string key="addTriangleClicked:">id</string>
 						<string key="advanceOneStep:">id</string>
 						<string key="backOneStep:">id</string>
@@ -3506,6 +3550,7 @@
 						<string key="showParts:">id</string>
 						<string key="showPieceCount:">id</string>
 						<string key="snapSelectionToGrid:">id</string>
+						<string key="splitStep:">id</string>
 						<string key="stepFieldChanged:">id</string>
 						<string key="stepNavigatorClicked:">id</string>
 						<string key="toggleFileContentsDrawer:">id</string>
@@ -3546,16 +3591,16 @@
 							<string key="name">addRawCommandClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="addRelatedPartClicked:">
+							<string key="name">addRelatedPartClicked:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 						<object class="IBActionInfo" key="addStepClicked:">
 							<string key="name">addStepClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="addSubmodelReferenceClicked:">
 							<string key="name">addSubmodelReferenceClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addSuggestionClicked:">
-							<string key="name">addSuggestionClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="addTriangleClicked:">
@@ -3668,6 +3713,10 @@
 						</object>
 						<object class="IBActionInfo" key="snapSelectionToGrid:">
 							<string key="name">snapSelectionToGrid:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="splitStep:">
+							<string key="name">splitStep:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="stepFieldChanged:">

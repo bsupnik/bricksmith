@@ -215,6 +215,7 @@ typedef enum MenuTags
 	deleteMenuTag					= 205,
 	selectAllMenuTag				= 206,
 	duplicateMenuTag				= 207,
+	splitStepMenuTag				= 208,
 	rotatePositiveXTag				= 220,
 	rotateNegativeXTag				= 221,
 	rotatePositiveYTag				= 222,
