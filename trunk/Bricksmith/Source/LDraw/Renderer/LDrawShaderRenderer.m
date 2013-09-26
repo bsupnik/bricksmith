@@ -11,6 +11,7 @@
 #import "LDrawDisplayList.h"
 #import "LDrawBDPAllocator.h"
 #import "ColorLibrary.h"
+#import "GLMatrixMath.h"
 
 // This list of attribute names matches the text of the GLSL attribute declarations - 
 // and its order must match the attr_position...array in the .h.
@@ -68,81 +69,6 @@ static void set_color4fv(GLfloat * c, GLfloat storage[4])
 }//end set_color4fv
 
 
-//========== applyMatrix =========================================================
-//
-// Purpose:	Apply a 4x4 matrix to a 4-component vector with copy.  
-//
-// Notes:	This routine takes data in direct "OpenGL" format.
-//
-//================================================================================
-static void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4])
-{
-	dst[0] = v[0] * m[0] + v[1] * m[4] + v[2] * m[8 ] + v[3] * m[12];
-	dst[1] = v[0] * m[1] + v[1] * m[5] + v[2] * m[9 ] + v[3] * m[13];
-	dst[2] = v[0] * m[2] + v[1] * m[6] + v[2] * m[10] + v[3] * m[14];
-	dst[3] = v[0] * m[3] + v[1] * m[7] + v[2] * m[11] + v[3] * m[15];
-}//end applyMatrix
-
-
-//========== perspectiveDivide ===================================================
-//
-// Purpose: perform a "perspective divide' on a 4-component vector - if the 'w'
-//			is not zero, we convert x,y,z.  This lets us get to clip space 
-//			coordinates.
-//
-//================================================================================
-static void perspectiveDivide(GLfloat p[4])
-{
-	if(p[3] != 0.0f)
-	{
-		float f = 1.0f / p[3];
-		p[0] *= f;
-		p[1] *= f;
-		p[2] *= f;
-	}
-}//end perspectiveDivide
-
-
-//========== applyMatrixTranspose ================================================
-//
-// Purpose: Apply the transpose of a matrix to a 4-component vector.  This
-//			saves us from having to transpose our matrices that we've stashed.
-//
-//================================================================================
-static void applyMatrixTranspose(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4])
-{
-	dst[0] = v[0] * m[0 ] + v[1] * m[1 ] + v[2] * m[2 ] + v[3] * m[3 ];
-	dst[1] = v[0] * m[4 ] + v[1] * m[5 ] + v[2] * m[6 ] + v[3] * m[7 ];
-	dst[2] = v[0] * m[8 ] + v[1] * m[9 ] + v[2] * m[10] + v[3] * m[11];
-	dst[3] = v[0] * m[12] + v[1] * m[13] + v[2] * m[14] + v[3] * m[15];
-}//end applyMatrixTranspose
-
-
-//========== multMatrices ========================================================
-//
-// Purpose: compose two matrices in OpenGL format.
-//
-//================================================================================
-static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[16])
-{
-	dst[0 ] = b[0 ]*a[0] + b[1 ]*a[4] + b[2 ]*a[8 ] + b[3 ]*a[12];
-	dst[1 ] = b[0 ]*a[1] + b[1 ]*a[5] + b[2 ]*a[9 ] + b[3 ]*a[13];
-	dst[2 ] = b[0 ]*a[2] + b[1 ]*a[6] + b[2 ]*a[10] + b[3 ]*a[14];
-	dst[3 ] = b[0 ]*a[3] + b[1 ]*a[7] + b[2 ]*a[11] + b[3 ]*a[15];
-	dst[4 ] = b[4 ]*a[0] + b[5 ]*a[4] + b[6 ]*a[8 ] + b[7 ]*a[12];
-	dst[5 ] = b[4 ]*a[1] + b[5 ]*a[5] + b[6 ]*a[9 ] + b[7 ]*a[13];
-	dst[6 ] = b[4 ]*a[2] + b[5 ]*a[6] + b[6 ]*a[10] + b[7 ]*a[14];
-	dst[7 ] = b[4 ]*a[3] + b[5 ]*a[7] + b[6 ]*a[11] + b[7 ]*a[15];
-	dst[8 ] = b[8 ]*a[0] + b[9 ]*a[4] + b[10]*a[8 ] + b[11]*a[12];
-	dst[9 ] = b[8 ]*a[1] + b[9 ]*a[5] + b[10]*a[9 ] + b[11]*a[13];
-	dst[10] = b[8 ]*a[2] + b[9 ]*a[6] + b[10]*a[10] + b[11]*a[14];
-	dst[11] = b[8 ]*a[3] + b[9 ]*a[7] + b[10]*a[11] + b[11]*a[15];
-	dst[12] = b[12]*a[0] + b[13]*a[4] + b[14]*a[8 ] + b[15]*a[12];
-	dst[13] = b[12]*a[1] + b[13]*a[5] + b[14]*a[9 ] + b[15]*a[13];
-	dst[14] = b[12]*a[2] + b[13]*a[6] + b[14]*a[10] + b[15]*a[14];
-	dst[15] = b[12]*a[3] + b[13]*a[7] + b[14]*a[11] + b[15]*a[15];
-}//end multMatrices
-
 
 //================================================================================
 @implementation LDrawShaderRenderer
@@ -154,7 +80,9 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 // Purpose: initialize our renderer, and grab all basic OpenGL state we need.
 //
 //================================================================================
-- (id) initWithScale:(float)initial_scale;
+- (id) initWithScale:(float)initial_scale
+		   modelView:(GLfloat *)mv_matrix
+		  projection:(GLfloat *)proj_matrix
 {	
 	pool = LDrawBDPCreate();
 	// Build our shader if it doesn't exist yet.  For now, just stash the GL 
@@ -186,14 +114,11 @@ static void multMatrices(GLfloat dst[16], const GLfloat a[16], const GLfloat b[1
 	
 	// "Rip" the MVP matrix from OpenGL.  (TODO: does LDraw just have this info?)  
 	// We use this for culling.
-	GLfloat m[16], p[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX,m);
-	glGetFloatv(GL_PROJECTION_MATRIX,p);
-	multMatrices(mvp,p,m);
+	multMatrices(mvp,proj_matrix,mv_matrix);
 	memcpy(cull_now,mvp,sizeof(mvp));
 
 	// Create a DL session to match our lifetime.
-	session = LDrawDLSessionCreate(m);
+	session = LDrawDLSessionCreate(mv_matrix);
 	
 	// Set up GL state for attribute drawing, not the fixed function drawing we used to do.
 	glEnableVertexAttribArray(attr_position);

@@ -14,6 +14,7 @@
 #import "BricksmithUtilities.h"
 #import "ColorLibrary.h"
 #import "LDrawGLRenderer.h"
+#import "LDrawGLCamera.h"
 #import "LDrawUtilities.h"
 #import "MatrixMath.h"
 #import "ToolPalette.h"
@@ -30,7 +31,7 @@
 //		LDrawGLView
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawGLView : NSOpenGLView <LDrawColorable, LDrawGLRendererDelegate>
+@interface LDrawGLView : NSOpenGLView <LDrawColorable, LDrawGLRendererDelegate, LDrawGLCameraScroller>
 {
 @private
 	// The renderer is responsible for viewport math and OpenGL calls. Because 

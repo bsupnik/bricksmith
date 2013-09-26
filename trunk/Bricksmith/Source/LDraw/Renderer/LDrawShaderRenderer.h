@@ -79,7 +79,8 @@ struct	LDrawDragHandleInstance;
 	
 }
 
-- (id) initWithScale:(float)scale;
+- (id) initWithScale:(float)scale modelView:(GLfloat *)mv_matrix projection:(GLfloat *)proj_matrix;
+
 - (void) drawDragHandleImm:(GLfloat*)xyz withSize:(GLfloat)size;
 
 @end
