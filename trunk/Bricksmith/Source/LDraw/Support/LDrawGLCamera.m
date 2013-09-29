@@ -20,6 +20,9 @@
 #define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
 
 
+#define WALKTHROUGH_NEAR	20.0
+#define WALKTHROUGH_FAR		20000.0
+
 @implementation LDrawGLCamera
 
 #pragma mark -
@@ -45,6 +48,8 @@
 	zoomFactor						= 100; // percent
 	cameraDistance					= -10000;
 	projectionMode					= ProjectionModePerspective;
+	locationMode					= LocationModeModel;
+	modelSize						= InvalidBox;
 	
 	buildRotationMatrix(orientation,180,1,0,0);
 	buildIdentity(modelView);
@@ -150,6 +155,18 @@
 }//end projectionMode
 
 
+//========== locationMode ====================================================
+//
+// Purpose:		Returns the current location mode.
+//
+//==============================================================================
+- (LocationModeT) locationMode
+{
+	return self->locationMode;
+	
+}//end locationMode
+
+
 //========== viewingAngle ======================================================
 //
 // Purpose:		Returns the current viewing angle as a triplet of Euler angles.
@@ -173,6 +190,12 @@
 	return degrees;
 	
 }//end viewingAngle
+
+
+- (Point3) rotationCenter
+{
+	return self->rotationCenter;
+}
 
 
 #pragma mark -
@@ -391,9 +414,26 @@
 	// openGLContext the current context
 	
 	// Start from scratch
-	if(self->projectionMode == ProjectionModePerspective)
+	if(self->locationMode == LocationModeWalkthrough)
+	{
+		Size2	viewportSize = [scroller getMaxVisibleSizeDoc];
+		float aspect_ratio = viewportSize.width / viewportSize.height;
+		
+		buildFrustumMatrix(projection,
+					-WALKTHROUGH_NEAR / (self->zoomFactor / 100.0),
+					+WALKTHROUGH_NEAR / (self->zoomFactor / 100.0),
+					-WALKTHROUGH_NEAR / (self->zoomFactor / 100.0) / aspect_ratio,
+					+WALKTHROUGH_NEAR / (self->zoomFactor / 100.0) / aspect_ratio,
+					WALKTHROUGH_NEAR,
+					WALKTHROUGH_FAR);
+	}
+	
+	else if(self->projectionMode == ProjectionModePerspective)
 	{
 		visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:[scroller getVisibleRect]];
+		
+		assert(visibilityPlane.size.width > 0.0);
+		assert(visibilityPlane.size.height > 0.0);
 		
 		buildFrustumMatrix(projection,		
 				  V2BoxMinX(visibilityPlane),	// left
@@ -407,6 +447,9 @@
 	else
 	{
 		visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:[scroller getVisibleRect]];
+
+		assert(visibilityPlane.size.width > 0.0);
+		assert(visibilityPlane.size.height > 0.0);
 		
 		buildOrthoMatrix(projection,
 				V2BoxMinX(visibilityPlane),	// left
@@ -434,11 +477,21 @@
 	buildTranslationMatrix(cam_trans, 0, 0, self->cameraDistance);
 	buildTranslationMatrix(center_trans,-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
 
-	buildIdentity(temp1);	
-	multMatrices(temp2,temp1,cam_trans);
-	multMatrices(temp1,temp2,orientation);
-	multMatrices(temp2,temp1,center_trans);
-	multMatrices(modelView,temp2,flip);
+	if(locationMode == LocationModeModel)
+	{
+		buildIdentity(temp1);	
+		multMatrices(temp2,temp1,cam_trans);
+		multMatrices(temp1,temp2,orientation);
+		multMatrices(temp2,temp1,center_trans);
+		multMatrices(modelView,temp2,flip);
+	}
+	else
+	{
+		buildIdentity(temp1);	
+		multMatrices(temp2,temp1,orientation);
+		multMatrices(temp1,temp2,center_trans);
+		multMatrices(modelView,temp1,flip);		
+	}
 	
 }//end makeModelView
 
@@ -524,9 +577,16 @@
 		centerPoint.x += (newFrameSize.width  - oldFrameSize.width)/2;
 		centerPoint.y += (newFrameSize.height - oldFrameSize.height)/2;
 		
-		[scroller setDocumentSize:newFrameSize];
-		[self scrollCenterToPoint:centerPoint];		//Restore centering - changing the doc size causes AppKit to whack scrolling.
-		
+		if(locationMode == LocationModeModel)
+		{
+			[scroller setDocumentSize:newFrameSize];
+			[self scrollCenterToPoint:centerPoint];		//Restore centering - changing the doc size causes AppKit to whack scrolling.
+		}
+		else
+		{
+			[scroller setDocumentSize:[scroller getMaxVisibleSizeDoc]];
+		}
+
 		// Rebuild projection based on latest scroll data from AppKit.
 		[self makeProjection];
 
@@ -550,18 +610,21 @@
 //==============================================================================
 - (void) setModelSize:(Box3)inModelSize
 {
+	assert(inModelSize.min.x != inModelSize.max.x ||
+		inModelSize.min.y != inModelSize.max.y ||
+		inModelSize.min.z != inModelSize.max.z);
 	self->modelSize = inModelSize;
 	[self tickle];
 }//end setModelSize:
 
 
-//========== updateRotationCenter: =============================================
+//========== setRotationCenter: =============================================
 //
 // Purpose:		Change the rotation center to a new location, and center that
 //				location.
 //
 //==============================================================================
-- (void) updateRotationCenter:(Point3)point
+- (void) setRotationCenter:(Point3)point
 {
 	if(V3EqualPoints(self->rotationCenter,point) == NO)
 	{
@@ -569,7 +632,7 @@
 		[self makeModelView];																		// Recalc model view - needed before we can scroll to a given point!
 		[self scrollModelPoint:self->rotationCenter toViewportProportionalPoint:V2Make(0.5,0.5)];	// scroll to new center (tickles itself, public API)
 	}
-}//end updateRotationCenter:
+}//end setRotationCenter:
 
 
 //========== setZoomPercentage: ================================================
@@ -598,13 +661,17 @@
 	self->zoomFactor = newPercentage;
 
 	// Tell NS that sizes have changed - once we do this, we can request a re-scroll.
-	[scroller setScaleFactor:newPercentage/100.0];
+	if(locationMode == LocationModeWalkthrough)
+		[scroller setScaleFactor:1.0];
+	else
+		[scroller setScaleFactor:self->zoomFactor/100.0];
 
 	centerPoint.x = centerFraction.x * [scroller getDocumentSize].width;
 	centerPoint.y = centerFraction.y * [scroller getDocumentSize].height;
 
-	[self scrollCenterToPoint:centerPoint]; // Request that NS change scrolling to restore centering.
-	[self tickle];							// Rebuild ourselves based on the new zoom, scroll, etc.
+	if(locationMode != LocationModeWalkthrough)
+		[self scrollCenterToPoint:centerPoint]; // Request that NS change scrolling to restore centering.
+	[self tickle];								// Rebuild ourselves based on the new zoom, scroll, etc.
 }//end setZoomPercentage:
 
 
@@ -644,6 +711,9 @@
 //==============================================================================
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint
 {
+	if(locationMode == LocationModeWalkthrough)
+		return;
+
 	Point2  newCenter           = ZeroPoint2;
 	float   zEval               = 0;
 	float	zNear				= 0;
@@ -774,6 +844,29 @@
 {
 	self->projectionMode = newProjectionMode;
 	[self makeProjection];		// This doesn't need a full tickle because proj mode doesn't change the doc size.
+	
+}//end setProjectionMode:
+
+
+//========== setLocationMode: ================================================
+//
+// Purpose:		Change Location modes.
+//
+//==============================================================================
+- (void) setLocationMode:(LocationModeT)newLocationMode
+{
+	if(self->locationMode != newLocationMode)
+	{
+		self->locationMode = newLocationMode;
+		
+		// Tell NS that sizes have changed - once we do this, we can request a re-scroll.
+		if(locationMode == LocationModeWalkthrough)
+			[scroller setScaleFactor:1.0];
+		else
+			[scroller setScaleFactor:self->zoomFactor/100.0];
+		
+		[self tickle];
+	}
 	
 }//end setProjectionMode:
 

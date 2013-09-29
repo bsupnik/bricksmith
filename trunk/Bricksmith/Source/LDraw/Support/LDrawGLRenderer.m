@@ -238,7 +238,7 @@
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	// Make lines look a little nicer; Max width 1.0; 0.5 at 100% zoom
-	glLineWidth(MIN([self zoomPercentage]/100 * 0.5, 1.0));
+	glLineWidth(MIN([self zoomPercentageForGL]/100 * 0.5, 1.0));
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf([camera getProjection]);
@@ -249,12 +249,12 @@
 	#if !NEW_RENDERER
 	
 		[self->fileBeingDrawn draw:options
-						 viewScale:[self zoomPercentage]/100.
+						 viewScale:[self zoomPercentageForGL]/100.
 					   parentColor:color];
 	
 	#else
 
-		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] initWithScale:[self zoomPercentage]/100. modelView:[camera getModelView] projection:[camera getProjection]];	
+		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] initWithScale:[self zoomPercentageForGL]/100. modelView:[camera getModelView] projection:[camera getProjection]];	
 		[self->fileBeingDrawn drawSelf:ren];
 		[ren release];
 
@@ -539,6 +539,18 @@
 }//end projectionMode
 
 
+//========== locationMode ====================================================
+//
+// Purpose:		Returns the current location mode (model or walkthrough).
+//
+//==============================================================================
+- (LocationModeT) locationMode
+{
+	return [camera locationMode];
+	
+}//end locationMode
+
+
 //========== selectionMarquee ==================================================
 //==============================================================================
 - (Box2) selectionMarquee
@@ -591,10 +603,8 @@
 //========== zoomPercentage ====================================================
 //
 // Purpose:		Returns the percentage magnification being applied to the 
-//				receiver. (200 means 2x magnification.) The scaling factor is
-//				determined by the receiver's scroll view, not the GLView itself.
-//				If the receiver is not contained within a scroll view, this 
-//				method returns 100.
+//				receiver. (200 means 2x magnification.)  This is the 'nominal'
+//				zoom the user sees - it should be used by UI and tool code.
 //
 //==============================================================================
 - (CGFloat) zoomPercentage
@@ -602,6 +612,30 @@
 	return [camera zoomPercentage];
 	
 }//end zoomPercentage
+
+
+//========== zoomPercentage ====================================================
+//
+// Purpose:		Returns the percentage magnification being applied to drawing;
+//				this represents the scale from GL viewport coordiantes (which
+//				are always window manager pixels) to NS document coordinates 
+//				(which DO get scaled).
+//
+//				Use this routine to convert between NS view and GL viewport 
+//				coordinates.
+//
+// Notes:		When walk-through is engaged, zoom controls the camera FOV but
+//				leaves the document untouched at window size.  So this routine
+//				checks the camera mode and just returns 100.0.
+//
+//==============================================================================
+- (CGFloat) zoomPercentageForGL
+{
+	if([self locationMode] == LocationModeWalkthrough)
+		return 100.0;
+	return [camera zoomPercentage];
+	
+}//end zoomPercentageForGL
 
 
 #pragma mark -
@@ -854,6 +888,22 @@
 } //end setProjectionMode:
 
 
+//========== setLocationMode: ================================================
+//
+// Purpose:		Sets the location mode used when drawing the receiver.
+//					- model points the camera at the model center from a distance.
+//					- walk-through puts the camera _on_ the model center.
+//
+//==============================================================================
+- (void) setLocationMode:(LocationModeT)newLocationMode
+{
+	[camera setLocationMode:newLocationMode];
+	
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+	
+} //end setLocationMode:
+
+
 //========== setSelectionMarquee: ==============================================
 //
 // Purpose:		The box (in view coordinates) in which to draw the selection 
@@ -932,6 +982,19 @@
 	[camera setZoomPercentage:newPercentage];
 }
 
+
+//========== moveCamera: =======================================================
+//
+// Purpose:		Moves the camera's rotation center by a fixed offset.  Used to
+//				walk around the walk-through camera, or to change the model's
+//				center of rotation for the model camera.
+//
+//==============================================================================
+- (void) moveCamera:(Vector3)delta
+{
+	[camera setRotationCenter:V3Add([camera rotationCenter], delta)];
+	[delegate LDrawGLRendererNeedsRedisplay:self];
+}//end moveCamera
 
 
 #pragma mark -
@@ -1930,7 +1993,7 @@
 		{
 			[[directives objectAtIndex:counter] hitTest:pickRay
 											  transform:IdentityMatrix4
-											  viewScale:[self zoomPercentage]/100.
+											  viewScale:[self zoomPercentageForGL]/100.
 											 boundsOnly:fastDraw
 										   creditObject:nil
 												   hits:hits];
@@ -2169,7 +2232,7 @@
 		point = [(LDrawModel*)fileBeingDrawn rotationCenter];
 	}
 	
-	[camera updateRotationCenter:point];	
+	[camera setRotationCenter:point];	
 }
 
 #pragma mark -
@@ -2187,8 +2250,8 @@
 	Point2	point_view			= ZeroPoint2;
 	
 	// Rescale to visible rect
-	point_visibleRect.x = viewportPoint.x / ([self zoomPercentage]/100.);
-	point_visibleRect.y = viewportPoint.y / ([self zoomPercentage]/100.);
+	point_visibleRect.x = viewportPoint.x / ([self zoomPercentageForGL]/100.);
+	point_visibleRect.y = viewportPoint.y / ([self zoomPercentageForGL]/100.);
 	
 	// The viewport origin is always at (0,0), so wo only need to translate if 
 	// the coordinate system is flipped. 
@@ -2234,8 +2297,8 @@
 	}
 	
 	// Rescale to viewport pixels
-	point_viewport.x = point_visibleRect.x * ([self zoomPercentage]/100.);
-	point_viewport.y = point_visibleRect.y * ([self zoomPercentage]/100.);
+	point_viewport.x = point_visibleRect.x * ([self zoomPercentageForGL]/100.);
+	point_viewport.y = point_visibleRect.y * ([self zoomPercentageForGL]/100.);
 	
 	return point_viewport;
 	

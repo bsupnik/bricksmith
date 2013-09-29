@@ -212,6 +212,7 @@ static void set_color4fv(GLfloat * c, GLfloat storage[4])
 }//end pushMatrix:
 
 
+
 //========== checkCull:to: =======================================================
 //
 // Purpose: cull out bounding boxes that are off-screen.  We transform to clip
@@ -226,49 +227,25 @@ static void set_color4fv(GLfloat * c, GLfloat storage[4])
 //================================================================================
 - (int) checkCull:(GLfloat *)minXYZ to:(GLfloat *)maxXYZ
 {
-	int     counter     = 0;
-	GLfloat  vin[32] = {	
-							minXYZ[0], minXYZ[1], minXYZ[2],1.0f,
-							minXYZ[0], minXYZ[1], maxXYZ[2],1.0f,
-							minXYZ[0], maxXYZ[1], maxXYZ[2],1.0f,
-							minXYZ[0], maxXYZ[1], minXYZ[2],1.0f,
-							
-							maxXYZ[0], minXYZ[1], minXYZ[2],1.0f,
-							maxXYZ[0], minXYZ[1], maxXYZ[2],1.0f,
-							maxXYZ[0], maxXYZ[1], maxXYZ[2],1.0f,
-							maxXYZ[0], maxXYZ[1], minXYZ[2],1.0f,
-						  };
-	GLfloat minb[3], maxb[3], p[4];
+	if (minXYZ[0] > maxXYZ[0] ||
+		minXYZ[1] > maxXYZ[1] ||
+		minXYZ[2] > maxXYZ[2])		return cull_skip;
+		
+	GLfloat aabb_model[6] = { minXYZ[0], minXYZ[1], minXYZ[2], maxXYZ[0], maxXYZ[1], maxXYZ[2] };
+	GLfloat aabb_ndc[6];
 	
-	applyMatrix(p,cull_now,vin);
-	perspectiveDivide(p);
-	minb[0] = maxb[0] = p[0];
-	minb[1] = maxb[1] = p[1];
-	minb[2] = maxb[2] = p[2];
+	aabbToClipbox(aabb_model, cull_now, aabb_ndc);
 	
-	for(counter = 1; counter < 8; counter++)
-	{
-		applyMatrix(p,cull_now,vin+4*counter);
-		perspectiveDivide(p);
-		minb[0] = MIN(minb[0],p[0]);
-		minb[1] = MIN(minb[1],p[1]);
-		minb[2] = MIN(minb[2],p[2]);
-
-		maxb[0] = MAX(maxb[0],p[0]);
-		maxb[1] = MAX(maxb[1],p[1]);
-		maxb[2] = MAX(maxb[2],p[2]);
-	}
-
-	if(maxb[0] < -1.0f ||
-	   maxb[1] < -1.0f ||
-	   minb[0] > 1.0f ||
-	   minb[1] > 1.0f)
+	if(aabb_ndc[3] < -1.0f ||
+	   aabb_ndc[4] < -1.0f ||
+	   aabb_ndc[0] > 1.0f ||
+	   aabb_ndc[1] > 1.0f)
 	{
 		return cull_skip;
 	}
 	
-	int x_pix = (maxb[0] - minb[0]) * 512.0;
-	int y_pix = (maxb[1] - minb[1]) * 384.0;
+	int x_pix = (aabb_ndc[3] - aabb_ndc[0]) * 512.0;
+	int y_pix = (aabb_ndc[4] - aabb_ndc[1]) * 384.0;
 	int dim = MAX(x_pix,y_pix);
 	
 	if(dim < 1)

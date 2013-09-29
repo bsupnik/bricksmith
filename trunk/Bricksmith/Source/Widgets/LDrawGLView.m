@@ -583,6 +583,16 @@ static NSSize Size2ToNSSize(Size2 size)
 }//end projectionMode
 
 
+//========== locationMode ====================================================
+//==============================================================================
+- (LocationModeT) locationMode
+{
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer locationMode];
+	
+}//end locationMode
+
+
 //========== viewingAngle ======================================================
 //==============================================================================
 - (Tuple3) viewingAngle
@@ -861,6 +871,29 @@ static NSSize Size2ToNSSize(Size2 size)
 } //end setProjectionMode:
 
 
+//========== setLocationMode: ================================================
+//
+// Purpose:		Sets the location mode used when drawing the receiver.
+//
+//==============================================================================
+- (void) setLocationMode:(LocationModeT)newLocationMode
+{
+	CGLLockContext([[self openGLContext] CGLContextObj]);
+	{
+		[[self openGLContext] makeCurrentContext];
+		
+		[self->renderer setLocationMode:newLocationMode];
+		
+		[self setNeedsDisplay:YES];
+	}
+	CGLUnlockContext([[self openGLContext] CGLContextObj]);
+	
+	[self saveConfiguration];
+
+} //end setLocationMode:
+
+
+
 //========== setTarget: ========================================================
 //
 // Purpose:		Sets the object which is the receiver of this view's action 
@@ -962,6 +995,11 @@ static NSSize Size2ToNSSize(Size2 size)
 		[self->renderer setProjectionMode:ProjectionModePerspective];
 	else
 		[self->renderer setProjectionMode:ProjectionModeOrthographic];
+		
+	if(newAngle == ViewOrientationWalkThrough)
+		[self->renderer setLocationMode:LocationModeWalkthrough];
+	else
+		[self->renderer setLocationMode:LocationModeModel];
 	
 	[self saveConfiguration];
 
@@ -1295,31 +1333,38 @@ static NSSize Size2ToNSSize(Size2 size)
 			case '4':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationLeft];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '6':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationRight];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '2':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationBottom];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '8':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationTop];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '5':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationFront];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '7':
 			case '9':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationBack];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '0':
 				[self setProjectionMode:ProjectionModePerspective];
 				[self setViewOrientation:ViewOrientation3D];
+				[self setLocationMode:LocationModeModel];
 				break;
 				
 			default:
@@ -1482,7 +1527,11 @@ static NSSize Size2ToNSSize(Size2 size)
 				if(isFastNudge)
 					actualNudge = V3Scale(actualNudge,10.0);
 				self->nudgeVector = actualNudge;
-				[NSApp sendAction:self->nudgeAction to:self->target from:self];
+				
+				if([self locationMode] == LocationModeWalkthrough)
+					[renderer moveCamera:actualNudge];
+				else				
+					[NSApp sendAction:self->nudgeAction to:self->target from:self];
 				self->nudgeVector = ZeroPoint3;
 			}
 		}
@@ -3192,6 +3241,8 @@ static NSSize Size2ToNSSize(Size2 size)
 {
 	assert(!isnan(newDocumentSize.width));
 	assert(!isnan(newDocumentSize.height));
+	assert(newDocumentSize.width > 0);
+	assert(newDocumentSize.height > 0);
 	NSSize sizeNow = [self frame].size;
 	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
 		return;

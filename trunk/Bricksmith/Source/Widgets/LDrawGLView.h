@@ -79,6 +79,7 @@
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
+- (LocationModeT) locationMode;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
 - (CGFloat) zoomPercentage;
@@ -92,6 +93,7 @@
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
 - (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
+- (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setTarget:(id)target;
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setViewOrientation:(ViewOrientationT) newAngle;

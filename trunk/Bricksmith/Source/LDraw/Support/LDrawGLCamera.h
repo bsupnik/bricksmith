@@ -37,6 +37,12 @@ typedef enum
 	
 } ProjectionModeT;
 
+typedef enum
+{
+	LocationModeModel = 0,
+	LocationModeWalkthrough = 1
+} LocationModeT;
+
 @protocol LDrawGLCameraScroller;
 
 
@@ -49,6 +55,7 @@ typedef enum
 	GLfloat					orientation[16];
 
 	ProjectionModeT         projectionMode;
+	LocationModeT			locationMode;
 	Box3					modelSize;
 
 	BOOL					viewportExpandsToAvailableSize;
@@ -72,7 +79,9 @@ typedef enum
 // the client code creates the "known" views.
 - (CGFloat) zoomPercentage;
 - (ProjectionModeT) projectionMode;
+- (LocationModeT) locationMode; 
 - (Tuple3) viewingAngle;
+- (Point3) rotationCenter;
 
 // Call this when the scroller's states change in any way, to force the 
 // camera to 'suck in' the camera scroller parameters.  Clients only need
@@ -83,7 +92,7 @@ typedef enum
 
 // These change the cached representation of the 3-d "thing" the camera is looking at.
 - (void) setModelSize:(Box3)modelSize;
-- (void) updateRotationCenter:(Point3)point;
+- (void) setRotationCenter:(Point3)point;
 
 // These change the camera-controllable aspects of the scroller via the camera.
 - (void) setZoomPercentage:(CGFloat)newPercentage;
@@ -93,6 +102,7 @@ typedef enum
 // These change the camera by sending 'rotation' commands of various kinds to the camera.
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setProjectionMode:(ProjectionModeT)newProjectionMode;
+- (void) setLocationMode:(LocationModeT)newLocationMode;
 - (void) rotationDragged:(Vector2)viewDirection;
 - (void) rotateByDegrees:(float)angle;
 

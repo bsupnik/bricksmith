@@ -21,6 +21,7 @@
 
 
 // Apply matrix transform ot input vec4.
+void applyMatrixInPlace(GLfloat v[4], const GLfloat m[16]);
 void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4]);
 
 // Apply perspective divide to homogeneous vec4.
@@ -43,5 +44,12 @@ void buildOrthoMatrix(GLfloat m[16], GLfloat left, GLfloat right, GLfloat bottom
 void buildFrustumMatrix(GLfloat m[16], GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 
 void applyRotationMatrix(GLfloat m[16], GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
+
+
+
+void meshToClipbox(GLfloat * vertices, int vcount, const int * lines, const GLfloat m[16], GLfloat out_aabb_ndc[6]);
+void aabbToClipbox(const GLfloat aabb_mv[6], const GLfloat m[16], GLfloat aabb_ndc[6]);
+
+
 
 #endif

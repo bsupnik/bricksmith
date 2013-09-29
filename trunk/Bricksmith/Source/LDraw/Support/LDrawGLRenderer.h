@@ -101,11 +101,13 @@ typedef enum
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
+- (LocationModeT) locationMode;
 - (Box2) selectionMarquee;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
 - (Box2) viewport;
 - (CGFloat) zoomPercentage;
+- (CGFloat) zoomPercentageForGL;
 
 - (void) setAllowsEditing:(BOOL)flag;
 - (void) setBackAction:(SEL)newAction;
@@ -118,11 +120,13 @@ typedef enum
 - (void) setMaximumVisibleSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
 - (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
+- (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setSelectionMarquee:(Box2)newBox;
 - (void) setTarget:(id)target;
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setViewOrientation:(ViewOrientationT) newAngle;
 - (void) setZoomPercentage:(CGFloat) newPercentage;
+- (void) moveCamera:(Vector3)delta;
 
 // Actions
 - (IBAction) zoomIn:(id)sender;
