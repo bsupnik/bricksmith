@@ -64,6 +64,8 @@ typedef enum
 	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
 	Point3					rotationCenter;
 	Size2					snugFrameSize;
+	
+	int						mute;					// Counted 'mute' to stop re-entrant calls to tickle...
 
 }
 

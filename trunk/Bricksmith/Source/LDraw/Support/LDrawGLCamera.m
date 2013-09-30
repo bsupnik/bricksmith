@@ -507,6 +507,8 @@
 //==============================================================================
 - (void) tickle
 {
+	if(mute) 
+		return;
 	// At init we get tickled before we are wired - avoid seg fault or NaNs.
 	if(scroller)
 	{
@@ -579,12 +581,20 @@
 		
 		if(locationMode == LocationModeModel)
 		{
+			// I have only seen this on Lion and later: when we set the document size the scroll point is set to something totally 
+			// silly.  Because of this, the visible rect is empty, and the entire camera calculation NaNs out.
+			// To 'work around' this, we ignore the tickle that comes back from the reshape that is a result of the doc frame size
+			// changing; we don't need it since we're going to re-scroll and redo the MV projection in the next few lines.
+			++self->mute;
 			[scroller setDocumentSize:newFrameSize];
 			[self scrollCenterToPoint:centerPoint];		//Restore centering - changing the doc size causes AppKit to whack scrolling.
+			--self->mute;			
 		}
 		else
 		{
+			++self->mute;			
 			[scroller setDocumentSize:[scroller getMaxVisibleSizeDoc]];
+			--self->mute;			
 		}
 
 		// Rebuild projection based on latest scroll data from AppKit.
@@ -661,6 +671,9 @@
 	self->zoomFactor = newPercentage;
 
 	// Tell NS that sizes have changed - once we do this, we can request a re-scroll.
+	
+	self->mute++;
+	
 	if(locationMode == LocationModeWalkthrough)
 		[scroller setScaleFactor:1.0];
 	else
@@ -671,6 +684,8 @@
 
 	if(locationMode != LocationModeWalkthrough)
 		[self scrollCenterToPoint:centerPoint]; // Request that NS change scrolling to restore centering.
+		
+	self->mute--;	
 	[self tickle];								// Rebuild ourselves based on the new zoom, scroll, etc.
 }//end setZoomPercentage:
 
