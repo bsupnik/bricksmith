@@ -27,6 +27,7 @@
 #import "LDrawDragHandle.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#include "GLMatrixMath.h"
 
 
 @implementation LDrawTriangle
@@ -340,20 +341,32 @@
 {
 	if(self->hidden == NO)
 	{
-		Vector3 worldVertex1    = V3MulPointByProjMatrix(self->vertex1, transform);
-		Vector3 worldVertex2    = V3MulPointByProjMatrix(self->vertex2, transform);
-		Vector3 worldVertex3    = V3MulPointByProjMatrix(self->vertex3, transform);
+		Point4 clipVertex1    = V4MulPointByMatrix(V4FromPoint3(self->vertex1), transform);
+		Point4 clipVertex2    = V4MulPointByMatrix(V4FromPoint3(self->vertex2), transform);
+		Point4 clipVertex3    = V4MulPointByMatrix(V4FromPoint3(self->vertex3), transform);
 
-		Point2	tri[3] = { 
-			V2Make(worldVertex1.x,worldVertex1.y),
-			V2Make(worldVertex2.x,worldVertex2.y),
-			V2Make(worldVertex3.x,worldVertex3.y) };
-
-		if(V2BoxIntersectsPolygon(bounds, tri, 3))
+		float h_tri[12] = { 
+						clipVertex1.x, clipVertex1.y, clipVertex1.z, clipVertex1.w,
+						clipVertex2.x, clipVertex2.y, clipVertex2.z, clipVertex2.w,
+						clipVertex3.x, clipVertex3.y, clipVertex3.z, clipVertex3.w };
+						
+		float ndc_tris[18];			
+		int triCount = clipTriangle(h_tri,ndc_tris);
+		int i;
+		for(i = 0; i < triCount; ++i)
 		{
-			[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
-			if(creditObject) 
-				return TRUE;
+			Point2	tri[3] = { 
+				V2Make(ndc_tris[i*9+0],ndc_tris[i*9+1]),
+				V2Make(ndc_tris[i*9+3],ndc_tris[i*9+4]),
+				V2Make(ndc_tris[i*9+6],ndc_tris[i*9+7])
+			};
+
+			if(V2BoxIntersectsPolygon(bounds, tri, 3))
+			{
+				[LDrawUtilities registerHitForObject:self creditObject:creditObject hits:hits];
+				if(creditObject) 
+					return TRUE;
+			}
 		}
 	}
 	return FALSE;
@@ -376,19 +389,35 @@
 {
 	if(self->hidden == NO)
 	{
-		Vector3 worldVertex1    = V3MulPointByProjMatrix(self->vertex1, transform);
-		Vector3 worldVertex2    = V3MulPointByProjMatrix(self->vertex2, transform);
-		Vector3 worldVertex3    = V3MulPointByProjMatrix(self->vertex3, transform);
-		Point3 probe = { pt.x, pt.y, *bestDepth };
+		Point4 clipVertex1    = V4MulPointByMatrix(V4FromPoint3(self->vertex1), transform);
+		Point4 clipVertex2    = V4MulPointByMatrix(V4FromPoint3(self->vertex2), transform);
+		Point4 clipVertex3    = V4MulPointByMatrix(V4FromPoint3(self->vertex3), transform);
 
-		if(DepthOnTriangle(worldVertex1,worldVertex2,worldVertex3,&probe))
+		Point3 probe = { pt.x, pt.y, *bestDepth };
+		
+		float h_tri[12] = { 
+						clipVertex1.x, clipVertex1.y, clipVertex1.z, clipVertex1.w,
+						clipVertex2.x, clipVertex2.y, clipVertex2.z, clipVertex2.w,
+						clipVertex3.x, clipVertex3.y, clipVertex3.z, clipVertex3.w };
+						
+		float ndc_tris[18];			
+		int triCount = clipTriangle(h_tri,ndc_tris);
+		int i;
+		for(i = 0; i < triCount; ++i)
 		{
-			if(probe.z <= *bestDepth)
+			Point3	ndcVertex1 = V3Make(ndc_tris[i*9+0],ndc_tris[i*9+1],ndc_tris[i*9+2]);
+			Point3	ndcVertex2 = V3Make(ndc_tris[i*9+3],ndc_tris[i*9+4],ndc_tris[i*9+5]);
+			Point3	ndcVertex3 = V3Make(ndc_tris[i*9+6],ndc_tris[i*9+7],ndc_tris[i*9+8]);
+
+			if(DepthOnTriangle(ndcVertex1,ndcVertex2,ndcVertex3,&probe))
 			{
-				*bestDepth = probe.z;
-				*bestObject = creditObject ? creditObject : self;
-			}
-		}
+				if(probe.z <= *bestDepth)
+				{
+					*bestDepth = probe.z;
+					*bestObject = creditObject ? creditObject : self;
+				}
+			}			
+		}			
 		
 		if(self->dragHandles)
 		{

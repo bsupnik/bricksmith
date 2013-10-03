@@ -25,7 +25,8 @@ void applyMatrixInPlace(GLfloat v[4], const GLfloat m[16]);
 void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4]);
 
 // Apply perspective divide to homogeneous vec4.
-void perspectiveDivide(GLfloat p[4]);
+void perspectiveDivideInPlace(GLfloat p[4]);
+void perspectiveDivide(GLfloat o[3], const GLfloat p[4]);
 
 // Apply transpose(M) to vec4.
 void applyMatrixTranspose(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4]);
@@ -50,6 +51,7 @@ void applyRotationMatrix(GLfloat m[16], GLfloat angle, GLfloat x, GLfloat y, GLf
 void meshToClipbox(GLfloat * vertices, int vcount, const int * lines, const GLfloat m[16], GLfloat out_aabb_ndc[6]);
 void aabbToClipbox(const GLfloat aabb_mv[6], const GLfloat m[16], GLfloat aabb_ndc[6]);
 
+int clipTriangle(const GLfloat in_tri[12], GLfloat out_tri[18]);
 
 
 #endif

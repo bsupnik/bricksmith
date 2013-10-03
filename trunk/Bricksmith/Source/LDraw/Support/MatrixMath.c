@@ -556,6 +556,34 @@ Vector3 V3FromV4(Vector4 originalVector)
 }//end V3FromV4
 
 
+//========== V3FromV4Normalize =================================================
+//
+// Purpose:		Create a new 3D vector whose components match the given 4D 
+//				vector. This function divides out the 'w' component, converting
+//				from homogenous to cartesian coordinates.
+//
+// Notes:		The only sane use for this is to get a device-coordinate point
+//				out from clip space coordinates - this function does the
+//				"perspective divide."
+//
+//==============================================================================
+Vector3 V3FromV4Normalize(Vector4 originalVector)
+{
+	Vector3 newVector;	
+	float	recip = 1.0f;
+	
+	if(originalVector.w != 0.0f)
+		recip = 1.0f / originalVector.w;
+
+	newVector.x = originalVector.x * recip;
+	newVector.y = originalVector.y * recip;
+	newVector.z = originalVector.z * recip;
+	
+	return newVector;
+	
+}//end V3FromV4Normalize
+
+
 #pragma mark -
 
 //========== V3EqualPoints() ===================================================

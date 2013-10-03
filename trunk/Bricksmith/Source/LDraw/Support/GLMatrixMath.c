@@ -19,6 +19,23 @@
 #endif
 
 
+// copy vec3: d = s.
+static inline void vec3f_copy(float * __restrict d, const float * __restrict s)
+{
+	d[0] = s[0];
+	d[1] = s[1];
+	d[2] = s[2];
+}
+
+// copy vec4: d = s
+static inline void vec4f_copy(float * __restrict d, const float * __restrict s)
+{
+	d[0] = s[0];
+	d[1] = s[1];
+	d[2] = s[2];
+	d[3] = s[3];
+}
+
 //========== applyMatrix =========================================================
 //
 // Purpose:	Apply a 4x4 matrix to a 4-component vector with copy.  
@@ -34,12 +51,39 @@ void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4])
 	dst[3] = v[0] * m[3] + v[1] * m[7] + v[2] * m[11] + v[3] * m[15];
 }
 
+
+//========== applyMatrixInPlace ==================================================
+//
+// Purpose:	Apply a 4x4 matrix to a 4-component vector.
+//
+// Notes:	This routine takes data in direct "OpenGL" format.
+//
+//================================================================================
 void applyMatrixInPlace(GLfloat dst[4], const GLfloat m[16])
 {
 	float v[4] = { dst[0], dst[1], dst[2], dst[3] };
 	applyMatrix(dst,m,v);
 }
 
+
+//========== perspectiveDivideInPlace ============================================
+//
+// Purpose: perform a "perspective divide' on a 4-component vector - if the 'w'
+//			is not zero, we convert x,y,z.  This lets us get to clip space 
+//			coordinates.
+//
+//================================================================================
+void perspectiveDivideInPlace(GLfloat p[4])
+{
+	if(p[3] != 0.0f)
+	{
+		float f = 1.0f / p[3];
+		p[0] *= f;
+		p[1] *= f;
+		p[2] *= f;
+		p[3] = f;
+	}
+}//end perspectiveDivideInPlace
 
 
 //========== perspectiveDivide ===================================================
@@ -49,14 +93,14 @@ void applyMatrixInPlace(GLfloat dst[4], const GLfloat m[16])
 //			coordinates.
 //
 //================================================================================
-void perspectiveDivide(GLfloat p[4])
+void perspectiveDivide(GLfloat o[3], const GLfloat p[4])
 {
 	if(p[3] != 0.0f)
 	{
 		float f = 1.0f / p[3];
-		p[0] *= f;
-		p[1] *= f;
-		p[2] *= f;
+		o[0] = p[0] * f;
+		o[1] = p[1] * f;
+		o[2] = p[2] * f;
 	}
 }//end perspectiveDivide
 
@@ -337,8 +381,8 @@ static void accum_bounds(const float a[4], const float b[4], float aabb[6])
 		return;					// near clip plane.
 	
 	// Perspective divide AFTER clipping, ensures we don't get insane results.
-	perspectiveDivide(p);
-	perspectiveDivide(p+4);
+	perspectiveDivideInPlace(p);
+	perspectiveDivideInPlace(p+4);
 	
 	aabb[0] = MIN(aabb[0],p[0]);
 	aabb[1] = MIN(aabb[1],p[1]);
@@ -499,3 +543,114 @@ void aabbToClipbox(
 	meshToClipbox(vin,8,line_list, m, aabb_ndc);
 	
 }//end aabbToClipbox
+
+
+//========== clipTriangle ========================================================
+//
+// Purpose:		Given a triangle in homogeneous clip-space coordinates, this 
+//				routine clips the triangle against the near clip plane (z = -w in
+//				clip coords) and returns zero, one, or two triangles in 
+//				normalized-device-coordinates.
+//
+// Arguments:	The input triangle is 12 floats: three consecutive x,y,z,w points
+//				in clip coordinates.
+//
+//				The output triangles are 18 floats: two consecutive triangles,
+//				each containing three consecutive x,y,z coordinates in device 
+//				coords.  Only some of these floats are filled out, depending on
+//				the number of triangles post-clipping:
+//
+// Return:		The number of triangles after clipping, 0, 1, or 2.  9 * return
+//				floats are copied into out_tri.
+//
+// Notes:		If a triangle has a single vertex clipped (resulting in a quad
+//				then two adjacent triangles are returned).
+//
+//================================================================================
+int clipTriangle(const GLfloat in_tri[12], GLfloat out_tri[18])
+{
+	// Ihe idea is that we determine whether each of the three
+	// vertices is outside our clip plane.  Then based on the
+	// resulting code, we can know which vertices to output and
+	// which triangle edges need to be 'split'.
+	
+	int code = 0;
+	if (in_tri[2 ] < -in_tri[3 ])	code |= 1;		// vert 0 is clipped
+	if (in_tri[6 ] < -in_tri[7 ])	code |= 2;		// vert 1 is clipped
+	if (in_tri[10] < -in_tri[11])	code |= 4;		// vert 2 is clipped
+
+	float r[16];
+
+	switch(code) {
+	case 0:
+		perspectiveDivide(out_tri  ,in_tri);
+		perspectiveDivide(out_tri+3,in_tri+4);
+		perspectiveDivide(out_tri+6,in_tri+8);
+		return 1;
+	case 1:
+		// Vertex 0 is clipped, leaving a quad
+		hclip(in_tri,in_tri+4,r);
+		hclip(in_tri+8,in_tri,r+8);
+		perspectiveDivide(out_tri   ,r   );
+		perspectiveDivide(out_tri+3 ,r+4 );
+		perspectiveDivide(out_tri+6 ,r+8 );
+
+		perspectiveDivide(out_tri+9 ,r   );
+		perspectiveDivide(out_tri+12,r+8 );
+		perspectiveDivide(out_tri+15,r+12);
+		return 2;
+	case 2:
+		// Vertex 1 is clipped, leaving a quad
+		hclip(in_tri+4,in_tri+8,r);
+		hclip(in_tri  ,in_tri+4,r+8);
+		perspectiveDivide(out_tri   ,r   );
+		perspectiveDivide(out_tri+3 ,r+4 );
+		perspectiveDivide(out_tri+6 ,r+8 );
+
+		perspectiveDivide(out_tri+9 ,r   );
+		perspectiveDivide(out_tri+12,r+8 );
+		perspectiveDivide(out_tri+15,r+12);
+		return 2;
+	case 3:
+		// Vertex 0 and 1 are both clipped.
+		hclip(in_tri+4,in_tri+8,r);
+		perspectiveDivide(out_tri,r);
+		perspectiveDivide(out_tri+3,in_tri+8);
+		hclip(in_tri+8,in_tri,r);
+		perspectiveDivide(out_tri+6,r+4);
+		return 1;
+	case 4:
+		// Vertex 2 is clipped, leaving a quad
+		hclip(in_tri+8,in_tri  ,r);
+		hclip(in_tri+4,in_tri+8,r+8);
+		perspectiveDivide(out_tri   ,r   );
+		perspectiveDivide(out_tri+3 ,r+4 );
+		perspectiveDivide(out_tri+6 ,r+8 );
+
+		perspectiveDivide(out_tri+9 ,r   );
+		perspectiveDivide(out_tri+12,r+8 );
+		perspectiveDivide(out_tri+15,r+12);
+		return 2;	
+	case 5:
+		// Vertices 0 and 2 are both clipped
+		hclip(in_tri,in_tri+4,r);
+		perspectiveDivide(out_tri,r);
+		perspectiveDivide(out_tri+3,in_tri+4);
+		hclip(in_tri+4,in_tri+8,r);
+		perspectiveDivide(out_tri+6,r+4);
+		return 1;			
+	case 6:
+		// Vertices 1 and 2 are both clipped
+		perspectiveDivide(out_tri,in_tri);
+		hclip(in_tri,in_tri+4,r);
+		perspectiveDivide(out_tri+3,r+4);
+		hclip(in_tri+8,in_tri,r);
+		perspectiveDivide(out_tri+6,r);
+		return 1;
+	case 7:
+		return 0;
+	default:
+		return 0;
+	}
+	
+}//end cliTriangle
