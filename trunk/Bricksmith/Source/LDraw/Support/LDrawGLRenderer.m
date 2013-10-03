@@ -1475,12 +1475,11 @@
 //==============================================================================
 - (void) rotationDragged:(Vector2)viewDirection
 {
-	if(self->viewOrientation != ViewOrientation3D)
+	if([self projectionMode] != ProjectionModePerspective)
 	{
 		[self setProjectionMode:ProjectionModePerspective];
 		self->viewOrientation = ViewOrientation3D;
 	}
-	
 
 	[camera rotationDragged:viewDirection];
 	
@@ -1613,7 +1612,7 @@
 //==============================================================================
 - (void) rotateByDegrees:(float)angle
 {
-	if(self->viewOrientation != ViewOrientation3D)
+	if([self projectionMode] != ProjectionModePerspective)
 	{
 		[self setProjectionMode:ProjectionModePerspective];
 		self->viewOrientation = ViewOrientation3D;
@@ -2328,8 +2327,8 @@
 							Y:(Vector3 *)outModelY
 							Z:(Vector3 *)outModelZ
 {
-	Vector4 screenX		= {1,0,0,1};
-	Vector4 screenY		= {0,1,0,1};
+	Vector4 screenX		= {1,0,0,0};
+	Vector4 screenY		= {0,1,0,0};
 	Vector4 unprojectedX, unprojectedY; //the vectors in the model which are projected onto x,y on screen
 	Vector3 modelX, modelY, modelZ; //the closest model axes to which the screen's x,y,z align
 	

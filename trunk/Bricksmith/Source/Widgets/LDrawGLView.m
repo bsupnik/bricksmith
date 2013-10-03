@@ -991,7 +991,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	
 	//We treat 3D as a request for perspective, but any straight-on view can 
 	// logically be expected to be displayed orthographically.
-	if(newAngle == ViewOrientation3D)
+	if(newAngle == ViewOrientation3D || newAngle == ViewOrientationWalkThrough)
 		[self->renderer setProjectionMode:ProjectionModePerspective];
 	else
 		[self->renderer setProjectionMode:ProjectionModeOrthographic];
