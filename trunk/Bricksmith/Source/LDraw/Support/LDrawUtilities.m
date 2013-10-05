@@ -728,6 +728,10 @@ static NSString				*defaultAuthor		= @"anonymous";
 	
 	switch(orientation)
 	{
+		case ViewOrientationWalkThrough:
+			angle = V3Make(0,0,0);
+			break;
+	
 		case ViewOrientation3D:
 			// This is MLCad's default 3-D viewing angle, which is arrived at by 
 			// applying these rotations in order: z=0, y=45, x=23. 

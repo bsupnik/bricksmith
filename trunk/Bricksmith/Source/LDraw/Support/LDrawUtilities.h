@@ -27,7 +27,8 @@ typedef enum
 	ViewOrientationLeft			= 3,
 	ViewOrientationRight		= 4,
 	ViewOrientationTop			= 5,
-	ViewOrientationBottom		= 6
+	ViewOrientationBottom		= 6,
+	ViewOrientationWalkThrough	= 7
 	
 } ViewOrientationT;
 

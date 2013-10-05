@@ -304,6 +304,10 @@
 		95D893CB16569CFD00AA055B /* LDrawLSynth.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D893C916569CFD00AA055B /* LDrawLSynth.m */; };
 		D608724816ED61F500828B4E /* MeshSmooth.h in Headers */ = {isa = PBXBuildFile; fileRef = D608724616ED61F500828B4E /* MeshSmooth.h */; };
 		D608724916ED61F500828B4E /* MeshSmooth.c in Sources */ = {isa = PBXBuildFile; fileRef = D608724716ED61F500828B4E /* MeshSmooth.c */; };
+		D619130117F004A300B5DF44 /* LDrawGLCamera.h in Headers */ = {isa = PBXBuildFile; fileRef = D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */; };
+		D619130217F004A300B5DF44 /* LDrawGLCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = D619130017F004A300B5DF44 /* LDrawGLCamera.m */; };
+		D6191B9D17F277B600B5DF44 /* GLMatrixMath.h in Headers */ = {isa = PBXBuildFile; fileRef = D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */; };
+		D6191B9E17F277B600B5DF44 /* GLMatrixMath.c in Sources */ = {isa = PBXBuildFile; fileRef = D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */; };
 		D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */; };
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
@@ -690,6 +694,10 @@
 		95D893C916569CFD00AA055B /* LDrawLSynth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawLSynth.m; sourceTree = "<group>"; };
 		D608724616ED61F500828B4E /* MeshSmooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeshSmooth.h; sourceTree = "<group>"; };
 		D608724716ED61F500828B4E /* MeshSmooth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MeshSmooth.c; sourceTree = "<group>"; };
+		D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawGLCamera.h; sourceTree = "<group>"; };
+		D619130017F004A300B5DF44 /* LDrawGLCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawGLCamera.m; sourceTree = "<group>"; };
+		D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLMatrixMath.h; sourceTree = "<group>"; };
+		D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GLMatrixMath.c; sourceTree = "<group>"; };
 		D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDataStream.h; sourceTree = "<group>"; };
 		D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDataStream.m; sourceTree = "<group>"; };
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
@@ -790,6 +798,10 @@
 				73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */,
 				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
 				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
+				D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */,
+				D619130017F004A300B5DF44 /* LDrawGLCamera.m */,
+				D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */,
+				D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1437,6 +1449,8 @@
 				D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */,
 				D608724816ED61F500828B4E /* MeshSmooth.h in Headers */,
 				D6C0C5CF16DABE70007E4266 /* RelatedParts.h in Headers */,
+				D619130117F004A300B5DF44 /* LDrawGLCamera.h in Headers */,
+				D6191B9D17F277B600B5DF44 /* GLMatrixMath.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1736,6 +1750,8 @@
 				73772B77F842475786994924 /* InspectionLSynth.m in Sources */,
 				D608724916ED61F500828B4E /* MeshSmooth.c in Sources */,
 				73772E2FDEFC3AB2B54D58D3 /* RegexKitLite.m in Sources */,
+				D619130217F004A300B5DF44 /* LDrawGLCamera.m in Sources */,
+				D6191B9E17F277B600B5DF44 /* GLMatrixMath.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -34,20 +34,16 @@
 #include "OpenGLUtilities.h"
 #include "MacLDraw.h"
 
-#define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
-#define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
-#define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
 #define WANT_TWOPASS_BOXTEST		0	// this enables the two-pass box-test.  It is actually faster to _not_ do this now that hit testing is optimized.
 #define TIME_BOXTEST				0	// output timing data for how long box tests and marquee drags take.
-#define DEBUG_BOUNDING_BOX			0
+#define DEBUG_BOUNDING_BOX			0	// attempts to draw debug bounding box visualization on the model.
 
-#define NEW_RENDERER				1
+#define NEW_RENDERER				1	// runs Ben's new shader-based renderer, not 2.6-era fixed-function renderer.
 
 
 #define DEBUG_DRAWING				0	// print fps of drawing, and never fall back to bounding boxes no matter how slow.
-#define SIMPLIFICATION_THRESHOLD	0.3 //seconds
-#define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
+#define SIMPLIFICATION_THRESHOLD	0.3 // seconds
 
 #define HANDLE_SIZE 3
 
@@ -70,16 +66,10 @@
 	
 	[self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
-	bounds							= boundsIn;
-	visibleRect 					= V2MakeBox(0, 0, boundsIn.width, boundsIn.height);
-	maximumVisibleSize				= boundsIn;
-	viewportExpandsToAvailableSize	= YES;
+	camera = [[LDrawGLCamera alloc] init];
 	
-	zoomFactor						= 100; // percent
-	cameraDistance					= -10000;
 	isTrackingDrag					= NO;
 	selectionMarquee				= ZeroBox2;
-	projectionMode					= ProjectionModePerspective;
 	rotationDrawMode				= LDrawGLDrawNormal;
 	gridSpacing 					= 20.0;
 		
@@ -248,18 +238,23 @@
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	// Make lines look a little nicer; Max width 1.0; 0.5 at 100% zoom
-	glLineWidth(MIN([self zoomPercentage]/100 * 0.5, 1.0));
+	glLineWidth(MIN([self zoomPercentageForGL]/100 * 0.5, 1.0));
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf([camera getProjection]);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf([camera getModelView]);
 
 	// DRAW!
 	#if !NEW_RENDERER
 	
 		[self->fileBeingDrawn draw:options
-						 viewScale:[self zoomPercentage]/100.
+						 viewScale:[self zoomPercentageForGL]/100.
 					   parentColor:color];
 	
 	#else
 
-		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] initWithScale:[self zoomPercentage]/100.];	
+		LDrawShaderRenderer * ren = [[LDrawShaderRenderer alloc] initWithScale:[self zoomPercentageForGL]/100. modelView:[camera getModelView] projection:[camera getProjection]];	
 		[self->fileBeingDrawn drawSelf:ren];
 		[ren release];
 
@@ -421,7 +416,7 @@
 //==============================================================================
 - (Point2) centerPoint
 {
-	return V2Make( V2BoxMidX(self->visibleRect), V2BoxMidY(self->visibleRect) );
+	return V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
 	
 }//end centerPoint
 
@@ -454,7 +449,7 @@
 //==============================================================================
 - (Matrix4) getInverseMatrix
 {
-	Matrix4	transformation	= [self getMatrix];
+	Matrix4	transformation	= Matrix4CreateFromGLMatrix4([camera getModelView]);
 	Matrix4	inversed		= Matrix4Invert(transformation);
 	
 	return inversed;
@@ -475,19 +470,7 @@
 //==============================================================================
 - (Matrix4) getMatrix
 {
-	GLfloat	currentMatrix[16];
-	Matrix4	transformation	= IdentityMatrix4;
-	
-	glGetFloatv(GL_MODELVIEW_MATRIX, currentMatrix);
-	transformation = Matrix4CreateFromGLMatrix4(currentMatrix); //convert to our utility library format
-	
-	// When using a perspective view, we must use gluLookAt to reposition 
-	// the camera. That basically means translating the model. But all we're 
-	// concerned about here is the *rotation*, so we'll zero out the camera
-	// translation component. 
-	transformation.element[3][2] -= self->cameraDistance; //translation is in the bottom row of the matrix.
-	
-	return transformation;
+	return Matrix4CreateFromGLMatrix4([camera getModelView]);
 	
 }//end getMatrix
 
@@ -551,9 +534,21 @@
 //==============================================================================
 - (ProjectionModeT) projectionMode
 {
-	return self->projectionMode;
+	return [camera projectionMode];
 	
 }//end projectionMode
+
+
+//========== locationMode ====================================================
+//
+// Purpose:		Returns the current location mode (model or walkthrough).
+//
+//==============================================================================
+- (LocationModeT) locationMode
+{
+	return [camera locationMode];
+	
+}//end locationMode
 
 
 //========== selectionMarquee ==================================================
@@ -575,21 +570,8 @@
 //==============================================================================
 - (Tuple3) viewingAngle
 {
-	Matrix4              transformation		= IdentityMatrix4;
-	TransformComponents  components			= IdentityComponents;
-	Tuple3				 degrees			= ZeroPoint3;
-	
-	transformation = [self getMatrix];
-	transformation = Matrix4Rotate(transformation, V3Make(180, 0, 0)); // LDraw is upside-down
-	Matrix4DecomposeTransformation(transformation, &components);
-	degrees = components.rotate;
-	
-	degrees.x = degrees(degrees.x);
-	degrees.y = degrees(degrees.y);
-	degrees.z = degrees(degrees.z);
-	
-	return degrees;
-	
+	return [camera viewingAngle];
+
 }//end viewingAngle
 
 
@@ -612,42 +594,48 @@
 //==============================================================================
 - (Box2) viewport
 {
-	GLint	glViewport[4]	= {};
-	Box2	viewport		= ZeroBox2;
-	
-	glGetIntegerv(GL_VIEWPORT, glViewport);
-	viewport = V2MakeBox(glViewport[0], glViewport[1], glViewport[2], glViewport[3]);
-	
+	Box2	viewport = ZeroBox2;
+	viewport.size = [scroller getMaxVisibleSizeGL];	
 	return viewport;
 }
 
 
-//========== visibleRect =======================================================
-//
-// Purpose:		Returns the rect in the view coordinate system which is 
-//				considered "visible." This is the rect the viewport is projected 
-//				in. 
-//
-//==============================================================================
-- (Box2) visibleRect
-{
-	return self->visibleRect;
-}
-
 //========== zoomPercentage ====================================================
 //
 // Purpose:		Returns the percentage magnification being applied to the 
-//				receiver. (200 means 2x magnification.) The scaling factor is
-//				determined by the receiver's scroll view, not the GLView itself.
-//				If the receiver is not contained within a scroll view, this 
-//				method returns 100.
+//				receiver. (200 means 2x magnification.)  This is the 'nominal'
+//				zoom the user sees - it should be used by UI and tool code.
 //
 //==============================================================================
 - (CGFloat) zoomPercentage
 {
-	return self->zoomFactor;
+	return [camera zoomPercentage];
 	
 }//end zoomPercentage
+
+
+//========== zoomPercentage ====================================================
+//
+// Purpose:		Returns the percentage magnification being applied to drawing;
+//				this represents the scale from GL viewport coordiantes (which
+//				are always window manager pixels) to NS document coordinates 
+//				(which DO get scaled).
+//
+//				Use this routine to convert between NS view and GL viewport 
+//				coordinates.
+//
+// Notes:		When walk-through is engaged, zoom controls the camera FOV but
+//				leaves the document untouched at window size.  So this routine
+//				checks the camera mode and just returns 100.0.
+//
+//==============================================================================
+- (CGFloat) zoomPercentageForGL
+{
+	if([self locationMode] == LocationModeWalkthrough)
+		return 100.0;
+	return [camera zoomPercentage];
+	
+}//end zoomPercentageForGL
 
 
 #pragma mark -
@@ -673,10 +661,12 @@
 //				window manager to do things like scrolling. 
 //
 //==============================================================================
-- (void) setDelegate:(id)object
+- (void) setDelegate:(id<LDrawGLRendererDelegate>)object withScroller:(id<LDrawGLCameraScroller>)newScroller
 {
 	// weak link.
 	self->delegate = object;
+	self->scroller = newScroller;
+	[self->camera setScroller:newScroller];
 
 }//end setDelegate:
 
@@ -712,26 +702,6 @@
 				 glBackgroundColor[3] );
 				 
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
-}
-
-
-//========== setBounds: ========================================================
-//
-// Purpose:		Sets the maximum logical dimensions of the renderer.
-//
-// Notes:		The renderer tends to set this up itself based on the size of 
-//				the model being displayed. See -resetFrameSize. 
-//
-//==============================================================================
-- (void) setBounds:(Size2)boundsIn
-{
-	if(V2EqualSizes(self->bounds, boundsIn) == false)
-	{
-		self->bounds = boundsIn;
-		
-		[self resetVisibleRect];
-		[self->delegate LDrawGLRendererNeedsRedisplay:self];
-	}
 }
 
 
@@ -829,18 +799,19 @@
 - (void) setLDrawDirective:(LDrawDirective *)newFile
 {
 	BOOL    virginView  = (self->fileBeingDrawn == nil);
-	Size2   frame       = ZeroSize2;
 	
 	//Update our variable.
 	[newFile retain];
 	[self->fileBeingDrawn release];
 	self->fileBeingDrawn = newFile;
 	
-	[self resetFrameSize];
-	frame = self->bounds; //now that it's been changed above.
+	[camera setModelSize:[newFile boundingBox3]];
+
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+	
 	if(virginView == YES)
 	{
-		[self scrollCenterToPoint:V2Make(frame.width/2, frame.height/2 )];
+		[self scrollModelPoint:ZeroPoint3 toViewportProportionalPoint:V2Make(0.5,0.5)];
 	}
 
 	//Register for important notifications.
@@ -879,9 +850,7 @@
 //==============================================================================
 - (void) setMaximumVisibleSize:(Size2)size
 {
-	self->maximumVisibleSize = size;
-
-	[self resetVisibleRect];
+	[camera tickle];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
@@ -912,12 +881,27 @@
 //==============================================================================
 - (void) setProjectionMode:(ProjectionModeT)newProjectionMode
 {
-	self->projectionMode = newProjectionMode;
+	[camera setProjectionMode:newProjectionMode];
 	
-	[self makeProjection];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
 } //end setProjectionMode:
+
+
+//========== setLocationMode: ================================================
+//
+// Purpose:		Sets the location mode used when drawing the receiver.
+//					- model points the camera at the model center from a distance.
+//					- walk-through puts the camera _on_ the model center.
+//
+//==============================================================================
+- (void) setLocationMode:(LocationModeT)newLocationMode
+{
+	[camera setLocationMode:newLocationMode];
+	
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+	
+} //end setLocationMode:
 
 
 //========== setSelectionMarquee: ==============================================
@@ -957,26 +941,7 @@
 //==============================================================================
 - (void) setViewingAngle:(Tuple3)newAngle
 {
-	Matrix4 modelview       = IdentityMatrix4;
-	GLfloat glModelview[16];
-	
-	//Get the default angle.
-	glMatrixMode(GL_MODELVIEW);
-	
-	modelview = Matrix4RotateModelview(modelview, newAngle);
-	
-	// The camera distance was set for us by -resetFrameSize, so as to be 
-	// able to see the entire model. 
-	modelview = V3LookAt(V3Make(0, 0, self->cameraDistance),
-						 ZeroPoint3, 
-						 V3Make(0, -1, 0), 
-						 modelview);
-						 
-	modelview = Matrix4Translate(modelview, V3Negate(rotationCenter));
-	
-	Matrix4GetGLMatrix4(modelview, glModelview);
-	glLoadMatrixf(glModelview);
-	
+	[camera setViewingAngle:newAngle];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 
 }//end setViewingAngle:
@@ -1001,20 +966,6 @@
 }//end setViewOrientation:
 
 
-//========== setViewportExpandsToAvailableSize: ================================
-//
-// Purpose:		Sets whether the viewport will always cover the full area of 
-//				self->maximumVisibleSize, or whether it will be just big enough 
-//				to fit the model. 
-//
-//==============================================================================
-- (void) setViewportExpandsToAvailableSize:(BOOL)flag
-{
-	self->viewportExpandsToAvailableSize = flag;
-	[self->delegate LDrawGLRendererNeedsRedisplay:self];
-}
-
-
 //========== setZoomPercentage: ================================================
 //
 // Purpose:		Enlarges (or reduces) the magnification on this view. The center 
@@ -1028,46 +979,22 @@
 //==============================================================================
 - (void) setZoomPercentage:(CGFloat)newPercentage
 {
-	CGFloat currentZoomPercentage   = [self zoomPercentage];
-	
-	// Don't zoom if the zoom level isn't actually changing (to avoid 
-	// unnecessary re-draw) 
-	if(currentZoomPercentage != newPercentage)
-	{
-		Size2   frame           = self->bounds;
-		Point2  originalCenter  = [self centerPoint];
-		Point2  newCenter       = ZeroPoint2;
-		Point2  centerFraction  = ZeroPoint2;
-		
-		// We want to maintain the visual center as we zoom. However, if the 
-		// view is set to expand to its entire viewport, the frame may change 
-		// size after zooming. That means we can't use the scroll center 
-		// directly, but must instead calculate the proportion of the view it 
-		// represents. 
-		centerFraction.x = originalCenter.x / frame.width;
-		centerFraction.y = originalCenter.y / frame.height;
-		
-		// Don't go below a certain zoom
-		if(newPercentage >= 1)
-		{
-			self->zoomFactor                = newPercentage;
-			self->visibleRect.size.width    /= (newPercentage / currentZoomPercentage);
-			self->visibleRect.size.height   /= (newPercentage / currentZoomPercentage);
-			
-			[self->delegate LDrawGLRenderer:self didSetZoomPercentage:self->zoomFactor];
-			
-			[self resetFrameSize];
-			
-			// Restore the original scroll center using proportions, because the 
-			// size of the frame may have changed. 
-			frame       = self->bounds;
-			newCenter.x = centerFraction.x * frame.width;
-			newCenter.y = centerFraction.y * frame.height;
-			[self scrollCenterToPoint:newCenter];
-		}
-	}
+	[camera setZoomPercentage:newPercentage];
+}
 
-}//end setZoomPercentage
+
+//========== moveCamera: =======================================================
+//
+// Purpose:		Moves the camera's rotation center by a fixed offset.  Used to
+//				walk around the walk-through camera, or to change the model's
+//				center of rotation for the model camera.
+//
+//==============================================================================
+- (void) moveCamera:(Vector3)delta
+{
+	[camera setRotationCenter:V3Add([camera rotationCenter], delta)];
+	[delegate LDrawGLRendererNeedsRedisplay:self];
+}//end moveCamera
 
 
 #pragma mark -
@@ -1118,16 +1045,14 @@
 	Matrix4 modelView               = IdentityMatrix4;
 	Matrix4 projection              = IdentityMatrix4;
 	Box2    viewport                = ZeroBox2;
-	GLfloat modelViewGLMatrix	[16];
-	GLfloat projectionGLMatrix	[16];
 	Box3    projectedBounds         = InvalidBox;
 	Box2    projectionRect          = ZeroBox2;
 	Size2   zoomScale2D             = ZeroSize2;
 	CGFloat zoomScaleFactor         = 0.0;
 	
 	// How many onscreen pixels do we have to work with?
-	maxContentSize.width    = V2BoxWidth(visibleRect)  * [self zoomPercentage]/100.;
-	maxContentSize.height   = V2BoxHeight(visibleRect) * [self zoomPercentage]/100.;
+	maxContentSize.width    = V2BoxWidth([scroller getVisibleRect])  * [self zoomPercentage]/100.;
+	maxContentSize.height   = V2BoxHeight([scroller getVisibleRect]) * [self zoomPercentage]/100.;
 //	NSLog(@"windowVisibleRect = %@", NSStringFromRect(windowVisibleRect));
 //	NSLog(@"maxContentSize = %@", NSStringFromSize(maxContentSize));
 	
@@ -1138,11 +1063,8 @@
 		if(V3EqualBoxes(boundingBox, InvalidBox) == NO)
 		{		
 			// Project the bounds onto the 2D "canvas"
-			glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-			glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-			
-			modelView   = Matrix4CreateFromGLMatrix4(modelViewGLMatrix);
-			projection  = Matrix4CreateFromGLMatrix4(projectionGLMatrix);
+			modelView   = Matrix4CreateFromGLMatrix4([camera getModelView]);
+			projection  = Matrix4CreateFromGLMatrix4([camera getProjection]);
 			viewport    = [self viewport];
 
 			projectedBounds = [(id)self->fileBeingDrawn
@@ -1281,28 +1203,22 @@
 //==============================================================================
 - (void) mouseCenterClick:(Point2)viewClickedPoint
 {
-	// In orthographic projection, each world point always ends up in the same 
-	// place on the document plane no matter where the scrollers are. So we can 
-	// take a shortcut. 
-	if(self->projectionMode == ProjectionModeOrthographic)
-	{
-		[self scrollCenterToPoint:viewClickedPoint];
-	}
-	else
-	{
-		// Perspective distortion makes this more complicated. The camera is in 
-		// a fixed position, but the frustum changes with the scrollbars. 
-		// We need to calculate the world point we just clicked on, then derive 
-		// a new frustum projection centered on that point. 
-		Point3  clickedPointInModel = ZeroPoint3;
-		
-		// Find the point we clicked on. It would be more accurate to use 
-		// -getDirectivesUnderMouse:::, but it has to actually draw parts, which 
-		// can be slow. 
-		clickedPointInModel = [self modelPointForPoint:viewClickedPoint];
-		
-		[self scrollCenterToModelPoint:clickedPointInModel];
-	}
+	// Ben says: this function used to have a special case for ortho-viewing.
+	// But since perspective-case code is fully general, we just now use it alway.
+	
+
+	// Perspective distortion makes this more complicated. The camera is in 
+	// a fixed position, but the frustum changes with the scrollbars. 
+	// We need to calculate the world point we just clicked on, then derive 
+	// a new frustum projection centered on that point. 
+	Point3  clickedPointInModel = ZeroPoint3;
+	
+	// Find the point we clicked on. It would be more accurate to use 
+	// -getDirectivesUnderMouse:::, but it has to actually draw parts, which 
+	// can be slow. 
+	clickedPointInModel = [self modelPointForPoint:viewClickedPoint];
+	
+	[self scrollCenterToModelPoint:clickedPointInModel];
 	
 }//end mouseCenterClick:
 
@@ -1337,13 +1253,7 @@
 		GLfloat depth					= 1.0;
 
 		Box2	viewport				= [self viewport];
-		GLfloat projectionGLMatrix[16]	= {0.0};
-		GLfloat modelViewGLMatrix[16]	= {0.0};
-		
 		// Get view and projection
-		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-
 		Point2 point_clip = V2Make( (point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport)  - 1.0,
 								    (point_viewport.y - viewport.origin.y) * 2.0 / V2BoxHeight(viewport) - 1.0 );
 
@@ -1355,8 +1265,8 @@
 		Box2 test_box = V2MakeBoxFromPoints( V2Make(x1, y1), V2Make(x2, y2) );
 
 		Matrix4	mvp =			Matrix4Multiply(
-										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+										Matrix4CreateFromGLMatrix4([camera getModelView]),
+										Matrix4CreateFromGLMatrix4([camera getProjection]));
 					
 		id bestObject = nil;
 		[fileBeingDrawn depthTest:point_clip inBox:test_box transform:mvp creditObject:nil bestObject:&bestObject bestDepth:&depth];
@@ -1565,75 +1475,19 @@
 //==============================================================================
 - (void) rotationDragged:(Vector2)viewDirection
 {
-	CGFloat	deltaX			=   viewDirection.x;
-	CGFloat	deltaY			= - viewDirection.y; //Apple's delta is backwards, for some reason.
-	
-	// Get the percentage of the window we have swept over. Since half the 
-	// window represents 180 degrees of rotation, we will eventually 
-	// multiply this percentage by 180 to figure out how much to rotate. 
-	CGFloat	percentDragX	= deltaX / bounds.width;
-	CGFloat	percentDragY	= deltaY / bounds.height;
-	
-	// Remember, dragging on y means rotating about x.
-	CGFloat	rotationAboutY	= + ( percentDragX * 180 );
-	CGFloat	rotationAboutX	= - ( percentDragY * 180 ); //multiply by -1,
-				// as we need to convert our drag into a proper rotation 
-				// direction. See notes in function header.
-
-	if(USE_TURNTABLE)
-	{
-		Tuple3 view_now = [self viewingAngle];
-		if(view_now.x * view_now.y * view_now.z < 0.0)
-			rotationAboutY = -rotationAboutY;
-	}	
-	
-	//Get the current transformation matrix. By using its inverse, we can 
-	// convert projection-coordinates back to the model coordinates they 
-	// are displaying.
-	Matrix4 inversed = [self getInverseMatrix];
-	
-	// clear any translation resulting from a rotation center
-	inversed.element[3][0] = 0;
-	inversed.element[3][1] = 0;
-	inversed.element[3][2] = 0;
-	
-	// Now we will convert what appears to be the vertical and horizontal 
-	// axes into the actual model vectors they represent. 
-	Vector4 vectorX             = {1,0,0,1}; //unit vector i along x-axis.
-	Vector4 vectorY             = {0,1,0,1}; //unit vector j along y-axis.
-	Vector4 transformedVectorX;
-	Vector4 transformedVectorY;
-	
-	// We do this conversion from screen to model coordinates by multiplying 
-	// our screen points by the modelview matrix inverse. That has the 
-	// effect of "undoing" the model matrix on the screen point, leaving us 
-	// a model point. 
-	transformedVectorX = V4MulPointByMatrix(vectorX, inversed);
-	transformedVectorY = V4MulPointByMatrix(vectorY, inversed);
-
-	if(USE_TURNTABLE)
-	{
-		rotationAboutY = -rotationAboutY;
-		transformedVectorY = vectorY;
-	}
-	
-	if(self->viewOrientation != ViewOrientation3D)
+	if([self projectionMode] != ProjectionModePerspective)
 	{
 		[self setProjectionMode:ProjectionModePerspective];
 		self->viewOrientation = ViewOrientation3D;
 	}
-	
-	//Now rotate the model around the visual "up" and "down" directions.
-	glMatrixMode(GL_MODELVIEW);
-	glTranslatef(rotationCenter.x, rotationCenter.y, rotationCenter.z);
-	glRotatef( rotationAboutX, transformedVectorX.x, transformedVectorX.y, transformedVectorX.z);
-	glRotatef( rotationAboutY, transformedVectorY.x, transformedVectorY.y, transformedVectorY.z);
-	glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
+
+	[camera rotationDragged:viewDirection];
 	
 	if([self->delegate respondsToSelector:@selector(LDrawGLRendererMouseNotPositioning:)])
 		[self->delegate LDrawGLRendererMouseNotPositioning:self];
 	
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+		
 	
 }//end rotationDragged
 
@@ -1758,17 +1612,13 @@
 //==============================================================================
 - (void) rotateByDegrees:(float)angle
 {
-	if(self->viewOrientation != ViewOrientation3D)
+	if([self projectionMode] != ProjectionModePerspective)
 	{
 		[self setProjectionMode:ProjectionModePerspective];
 		self->viewOrientation = ViewOrientation3D;
 	}
 
-	// Rotate.
-	glMatrixMode(GL_MODELVIEW);
-	glTranslatef(rotationCenter.x, rotationCenter.y, rotationCenter.z);	
-	glRotatef( angle, 0, -1, 0);
-	glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
+	[camera rotateByDegrees:angle];
 
 }//end rotateWithEvent:
 
@@ -1998,10 +1848,10 @@
 //==============================================================================
 - (void) activeModelDidChange:(NSNotification *)notification
 {
-	[self->delegate LDrawGLRendererNeedsCurrentContext:self];
-	
 	[self updateRotationCenter];
-	[self resetFrameSize];
+	[camera setModelSize:[fileBeingDrawn boundingBox3]];
+
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
 }//end displayNeedsUpdating
 
@@ -2017,9 +1867,8 @@
 //==============================================================================
 - (void) displayNeedsUpdating:(NSNotification *)notification
 {
-	[self->delegate LDrawGLRendererNeedsCurrentContext:self];
-
-	[self resetFrameSize]; //calls setNeedsDisplay
+	[camera setModelSize:[fileBeingDrawn boundingBox3]];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
 }//end displayNeedsUpdating
 
@@ -2031,32 +1880,11 @@
 //==============================================================================
 - (void) rotationCenterChanged:(NSNotification *)notification
 {
-	[self->delegate LDrawGLRendererNeedsCurrentContext:self];
-	
 	[self updateRotationCenter];
 
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+
 }//end rotationCenterChanged:
-
-
-//========== reshape ===========================================================
-//
-// Purpose:		Something changed in the viewing department; we need to adjust 
-//				our projection and viewing area.
-//
-//==============================================================================
-- (void) reshape
-{
-	CGFloat	scaleFactor	= [self zoomPercentage] / 100;
-	
-//	NSLog(@"GL view(%p) reshaping; frame %@", self, NSStringFromRect([self frame]));
-	
-	//Make a new view based on the current viewable area
-	[self makeProjection];
-
-	// How many PIXELS of the screen should the context use?
-	glViewport(0,0, V2BoxWidth(visibleRect) * scaleFactor, V2BoxHeight(visibleRect) * scaleFactor );
-	
-}//end reshape
 
 
 #pragma mark -
@@ -2079,12 +1907,6 @@
 	GLfloat depth					= 1.0;
 
 	Box2	viewport				= [self viewport];
-	GLfloat projectionGLMatrix[16]	= {0.0};
-	GLfloat modelViewGLMatrix[16]	= {0.0};
-	
-	// Get view and projection
-	glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
 
 	Point2 point_clip = {
 				(point_viewport.x - viewport.origin.x) * 2.0 / V2BoxWidth(viewport) - 1.0,
@@ -2098,8 +1920,8 @@
 		Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
 
 	Matrix4	mvp =			Matrix4Multiply(
-									Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-									Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+									Matrix4CreateFromGLMatrix4([camera getModelView]),
+									Matrix4CreateFromGLMatrix4([camera getProjection]));
 				
 	id bestObject = nil;
 	[fileBeingDrawn depthTest:point_clip inBox:test_box transform:mvp creditObject:nil bestObject:&bestObject bestDepth:&depth];
@@ -2146,27 +1968,21 @@
 		Ray3                pickRay                 = {{0}};
 		Point3              pickRay_end             = ZeroPoint3;
 		Box2				viewport	            = [self viewport];
-		GLfloat             projectionGLMatrix[16]  = {0.0};
-		GLfloat             modelViewGLMatrix[16]   = {0.0};
 		NSMutableDictionary *hits                   = [NSMutableDictionary dictionary];
 		NSUInteger          counter                 = 0;
-		
-		// Get view and projection
-		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-		
+
 		// convert to 3D viewport coordinates
 		contextNear		= V3Make(point_viewport.x, point_viewport.y, 0.0);
 		contextFar		= V3Make(point_viewport.x, point_viewport.y, 1.0);
 		
 		// Pick Ray
 		pickRay.origin      = V3Unproject(contextNear,
-										  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
+										  Matrix4CreateFromGLMatrix4([camera getModelView]),
+										  Matrix4CreateFromGLMatrix4([camera getProjection]),
 										  viewport);
 		pickRay_end         = V3Unproject(contextFar,
-										  Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										  Matrix4CreateFromGLMatrix4(projectionGLMatrix),
+										  Matrix4CreateFromGLMatrix4([camera getModelView]),
+										  Matrix4CreateFromGLMatrix4([camera getProjection]),
 										  viewport);
 		pickRay.direction   = V3Sub(pickRay_end, pickRay.origin);
 		pickRay.direction	= V3Normalize(pickRay.direction);
@@ -2176,7 +1992,7 @@
 		{
 			[[directives objectAtIndex:counter] hitTest:pickRay
 											  transform:IdentityMatrix4
-											  viewScale:[self zoomPercentage]/100.
+											  viewScale:[self zoomPercentageForGL]/100.
 											 boundsOnly:fastDraw
 										   creditObject:nil
 												   hits:hits];
@@ -2227,15 +2043,9 @@
 		Point2			bl						= [self convertPointToViewport:bottom_left];
 		Point2			tr						= [self convertPointToViewport:top_right];
 		Box2			viewport				= [self viewport];
-		GLfloat 		projectionGLMatrix[16]	= {0.0};
-		GLfloat 		modelViewGLMatrix[16]	= {0.0};
 		NSMutableSet	*hits					= [NSMutableSet set];
 		NSUInteger		counter 				= 0;
 		
-		// Get view and projection
-		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-
 		float x1 = (MIN(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
 		float x2 = (MAX(bl.x,tr.x) - viewport.origin.x) * 2.0 / V2BoxWidth (viewport) - 1.0;
 		float y1 = (MIN(bl.y,tr.y) - viewport.origin.x) * 2.0 / V2BoxHeight(viewport) - 1.0;
@@ -2244,8 +2054,8 @@
 		Box2	test_box = V2MakeBox(x1,y1,x2-x1,y2-y1);
 		
 		Matrix4	mvp =			Matrix4Multiply(
-										Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-										Matrix4CreateFromGLMatrix4(projectionGLMatrix));
+									  Matrix4CreateFromGLMatrix4([camera getModelView]),
+									  Matrix4CreateFromGLMatrix4([camera getProjection]));
 										
 		// Do hit test
 		for(counter = 0; counter < [directives count]; counter++)
@@ -2356,164 +2166,6 @@
 }
 
 
-//========== resetFrameSize: ===================================================
-//
-// Purpose:		We resize the canvas to accomodate the model. It automatically 
-//				shrinks for small models and expands for large ones. Neat-o!
-//
-//==============================================================================
-- (void) resetFrameSize
-{
-	// We do not want to apply this resizing to a raw GL view.
-	// It only makes sense for those in a scroll view. (The Part Browsers have 
-	// been moved to scrollviews now too in order to allow zooming.) 
-	if( [self->fileBeingDrawn respondsToSelector:@selector(boundingBox3)] )
-	{
-		// Determine whether the canvas size needs to change.
-		Point3	origin			= {0,0,0};
-		Point2	centerPoint		= [self centerPoint];
-		Box3	newBounds		= InvalidBox;
-		
-		if([self->fileBeingDrawn respondsToSelector:@selector(boundingBox3)])
-		{
-			newBounds = [(id)fileBeingDrawn boundingBox3]; //cast to silence warning.
-		}
-
-		if(V3EqualBoxes(newBounds, InvalidBox) == YES)
-		{
-			newBounds = V3BoundsFromPoints(V3Make(-1, -1, -1), V3Make(1, 1, 1));
-		}
-		
-		//
-		// Find bounds size, based on model dimensions.
-		//
-		
-		float	distance1		= V3DistanceBetween2Points(origin, newBounds.min );
-		float	distance2		= V3DistanceBetween2Points(origin, newBounds.max );
-		float	newSize			= MAX(distance1, distance2) + 40; //40 is just to provide a margin.
-		GLfloat	currentMatrix[16];
-		
-		// The canvas resizing is set to a fairly large granularity so 
-		// it doesn't constantly change on people. 
-		newSize = ceil(newSize / 384) * 384;
-		
-		//
-		// Reposition the Camera
-		//
-		
-		// As the size of the model changes, we must move the camera in 
-		// and out so as to view the entire model in the right 
-		// perspective. Moving the camera is equivalent to translating 
-		// the modelview matrix. (That's what gluLookAt does.) 
-		// Note:	glTranslatef() doesn't work here. If M is the current matrix, 
-		//			and T is the translation, it performs M = M x T. But we need 
-		//			M = T x M, because OpenGL uses transposed matrices.
-		//			Solution: set matrix manually. Is there a better one?
-		glMatrixMode(GL_MODELVIEW);
-		glGetFloatv(GL_MODELVIEW_MATRIX, currentMatrix);
-		Matrix4 modelview = Matrix4CreateFromGLMatrix4(currentMatrix);
-		
-		// remove the old camera distance
-		modelview = Matrix4Translate(modelview, V3Make(0, 0, -self->cameraDistance));
-		
-		// Apply new distance
-		// Note: As cameraDistance approaches infinity, the view approximates an 
-		//		 orthographic projection. We want a fairly large distance to 
-		//		 produce a small, only slightly-noticable perspective. 
-		self->cameraDistance = - (newSize) * CAMERA_DISTANCE_FACTOR;
-		modelview = Matrix4Translate(modelview, V3Make(0, 0, cameraDistance));
-		
-		Matrix4GetGLMatrix4(modelview, currentMatrix);
-		glLoadMatrixf(currentMatrix);
-		
-		//
-		// Resize the Frame
-		//
-		
-		Size2	oldFrameSize	= self->bounds;
-		Size2	newFrameSize	= ZeroSize2;
-		
-		self->snugFrameSize	= V2MakeSize( newSize*2, newSize*2 );
-		
-		if(self->viewportExpandsToAvailableSize == YES)
-		{
-			// Make the frame either just a little bit bigger than the 
-			// size of the model, or the same as the scroll view, 
-			// whichever is larger. 
-			newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  self->maximumVisibleSize.width  / ([self zoomPercentage]/100)),
-										  MAX(snugFrameSize.height, self->maximumVisibleSize.height / ([self zoomPercentage]/100)) );
-		}
-		else
-		{
-			newFrameSize	= snugFrameSize;
-		}
-		newFrameSize.width	= floor(newFrameSize.width);
-		newFrameSize.height = floor(newFrameSize.height);
-		
-		// The canvas size changes will effectively be distributed equally 
-		// on all sides, because the model is always drawn in the center of 
-		// the canvas. So, our effective viewing center will only change by 
-		// half the size difference. 
-		centerPoint.x += (newFrameSize.width  - oldFrameSize.width)/2;
-		centerPoint.y += (newFrameSize.height - oldFrameSize.height)/2;
-		
-//			NSLog(@"frame %f %f; camera %f", newFrameSize.width, newFrameSize.height, cameraDistance);
-		[self setBounds:newFrameSize];
-		if([self->delegate respondsToSelector:@selector(LDrawGLRenderer:didSetBoundsToSize:)])
-		{
-			[self->delegate  LDrawGLRenderer:self didSetBoundsToSize:self->bounds];
-		}
-		[self scrollCenterToPoint:centerPoint]; //must preserve this; otherwise, viewing is funky.
-		
-		// Make *sure* the projection matches the frame. Ordinarily, this 
-		// happens automatically in -reshape. But when the view is set to 
-		// fill its entire scroll view, the frame *may not actualy change*, 
-		// even though the camera distance DOES! If we didn't force the 
-		// projection to be remade here, the model would just vanish in that 
-		// case. 
-		[self makeProjection];
-		
-		//NSLog(@"minimum (%f, %f, %f); maximum (%f, %f, %f)", newBounds.min.x, newBounds.min.y, newBounds.min.z, newBounds.max.x, newBounds.max.y, newBounds.max.z);
-		[self->delegate LDrawGLRendererNeedsRedisplay:self];
-	}
-	
-}//end resetFrameSize
-
-
-//========== resetVisibleRect ==================================================
-//
-// Purpose:		Recomputes the visible rect based on the current bounds and max 
-//				visible area. 
-//
-//==============================================================================
-- (void) resetVisibleRect
-{
-	Box2	newFrame		= ZeroBox2;
-	Box2	maxVisibleRect	= ZeroBox2;
-	Point2	maxVisiblePoint = ZeroPoint2;
-	Box2	newVisibleRect	= ZeroBox2;
-	
-	newFrame.origin				= ZeroPoint2;
-	newFrame.size				= self->bounds;
-	
-	maxVisibleRect.origin		= self->visibleRect.origin;
-	maxVisibleRect.size 		= self->maximumVisibleSize;
-	maxVisibleRect.size.width	/= self->zoomFactor / 100;
-	maxVisibleRect.size.height	/= self->zoomFactor / 100;
-	
-	maxVisiblePoint.x			= MIN( V2BoxMaxX(maxVisibleRect), V2BoxMaxX(newFrame) );
-	maxVisiblePoint.y			= MIN( V2BoxMaxY(maxVisibleRect), V2BoxMaxY(newFrame) );
-	
-	newVisibleRect.origin		= self->visibleRect.origin;
-	newVisibleRect.size.width	= maxVisiblePoint.x - V2BoxMinX(maxVisibleRect);
-	newVisibleRect.size.height	= maxVisiblePoint.y - V2BoxMinY(maxVisibleRect);
-	
-	self->visibleRect			= newVisibleRect;
-	
-	[self reshape];
-}
-
-
 //========== setZoomPercentage:preservePoint: ==================================
 //
 // Purpose:		Performs cursor-centric zooming on the given point, in view 
@@ -2525,24 +2177,10 @@
 - (void) setZoomPercentage:(CGFloat)newPercentage
 			 preservePoint:(Point2)viewPoint
 {
-	Point2 viewportProportion  = ZeroPoint2;
-	Point3  modelPoint          = ZeroPoint3;
-	
-	// Cursor-centric zooming: when the new zoom factor is applied, the point in 
-	// the model we clicked on should still be directly under the mouse. 
-	modelPoint = [self modelPointForPoint:viewPoint];
-	
-	viewportProportion.x = (viewPoint.x - V2BoxMinX(visibleRect)) / V2BoxWidth(visibleRect);
-	viewportProportion.y = (viewPoint.y - V2BoxMinY(visibleRect)) / V2BoxHeight(visibleRect);
-	
-	if([self isFlipped] == YES)
-	{
-		viewportProportion.y = 1.0 - viewportProportion.y;
-	}
-	
-	[self setZoomPercentage:newPercentage];
-	[self scrollModelPoint:modelPoint toViewportProportionalPoint:viewportProportion];
+	Point3 modelPoint = [self modelPointForPoint:viewPoint];
 
+	[camera setZoomPercentage:newPercentage preservePoint:modelPoint];
+	
 }//end setZoomPercentage:preservePoint:
 
 
@@ -2570,130 +2208,8 @@
 - (void)     scrollModelPoint:(Point3)modelPoint
   toViewportProportionalPoint:(Point2)viewportPoint
 {
-	Point3  cameraPoint         = V3Make(0, 0, self->cameraDistance);
-	Point2  newCenter           = ZeroPoint2;
-	float   nearClippingZ       = 0;
-	float   zEval               = 0;
-	Matrix4 modelViewMatrix     = [self getMatrix];
-	Point4  transformedPoint    = ZeroPoint4;
-	Box2    newVisibleRect      = ZeroBox2;
-	Box2    currentClippingRect = ZeroBox2;
-	Box2    newClippingRect     = ZeroBox2;
-	
-	// For the camera calculation, we need effective world coordinates, not 
-	// model coordinates. 
-	transformedPoint = V4MulPointByMatrix(V4FromPoint3(modelPoint), modelViewMatrix);
-	
-	// Perspective distortion makes this more complicated. The camera is in a 
-	// fixed position, but the frustum changes with the scrollbars. We need to 
-	// calculate the world point we just clicked on, then derive a new frustum 
-	// projection centered on that point. 
-	if(self->projectionMode == ProjectionModePerspective)
-	{
-		currentClippingRect = [self nearFrustumClippingRectFromVisibleRect:self->visibleRect];
-		
-		// Transforming causes an undesired shift on z. I'm not mathematically 
-		// sure why yet, but it is lethal and must be undone. I think it has 
-		// something to do with LDraw's flipped coordinate system and the camera 
-		// location therein... 
-		transformedPoint.z *= -1;
-		
-		// Intersect the 3D line between the camera and the clicked point with 
-		// the near clipping plane. 
-		nearClippingZ   = - [self fieldDepth] / 2;
-		zEval           = (nearClippingZ - cameraPoint.z) / (transformedPoint.z - cameraPoint.z);
-		newCenter.x     = zEval * (transformedPoint.x - cameraPoint.x) + cameraPoint.x;
-		newCenter.y     = zEval * (transformedPoint.y - cameraPoint.y) + cameraPoint.y;
-		
-		// Calculate a NEW frustum clipping rect centered on the clicked point's 
-		// projection onto the near clipping plane. 
-		newClippingRect.size        = currentClippingRect.size;
-		newClippingRect.origin.x    = newCenter.x - V2BoxWidth(currentClippingRect) * viewportPoint.x;
-		newClippingRect.origin.y    = newCenter.y - V2BoxHeight(currentClippingRect) * viewportPoint.y;
-		
-		// Reverse-derive the correct Cocoa view visible rect which will result 
-		// in the desired clipping rect to be used. 
-		newVisibleRect = [self visibleRectFromNearFrustumClippingRect:newClippingRect];
-	}
-	else
-	{
-		currentClippingRect = [self nearOrthoClippingRectFromVisibleRect:self->visibleRect];
-		
-		// Ortho centers are trivial.
-		newCenter.x = transformedPoint.x;
-		newCenter.y = transformedPoint.y;
-		
-		// Calculate a clipping rect centered on the clicked point's projection. 
-		newClippingRect.size        = currentClippingRect.size;
-		newClippingRect.origin.x    = newCenter.x - V2BoxWidth(currentClippingRect) * viewportPoint.x;
-		newClippingRect.origin.y    = newCenter.y - V2BoxHeight(currentClippingRect) * viewportPoint.y;
-		
-		// Reverse-derive the correct Cocoa view visible rect which will result 
-		// in the desired clipping rect to be used. 
-		newVisibleRect = [self visibleRectFromNearOrthoClippingRect:newClippingRect];
-	}
-
-	// Scroll to it. -makeProjection will now derive the exact frustum or ortho 
-	// projection which will make the clicked point appear in the center. 
-	[self scrollRectToVisible:newVisibleRect notifyDelegate:YES];
-	
+	[camera scrollModelPoint:modelPoint  toViewportProportionalPoint:viewportPoint];
 }//end scrollCenterToModelPoint:
-
-
-//========== scrollCenterToPoint ===============================================
-//
-// Purpose:		Scrolls the receiver (if it is inside a scroll view) so that 
-//				newCenter is at the center of the viewing area. newCenter is 
-//				given in frame coordinates.
-//
-//==============================================================================
-- (void) scrollCenterToPoint:(Point2)newCenter
-{
-	Box2	newVisibleRect	= self->visibleRect;
-	Point2	scrollOrigin	= V2Make(newCenter.x - V2BoxWidth(visibleRect)/2,
-									 newCenter.y - V2BoxHeight(visibleRect)/2);
-	// Sanity check
-	if(scrollOrigin.x < 0)
-	{
-		scrollOrigin.x = 0;
-	}
-	if(scrollOrigin.y < 0)
-	{
-		scrollOrigin.y = 0;
-	}
-	
-	newVisibleRect.origin = scrollOrigin;
-	
-	[self scrollRectToVisible:newVisibleRect notifyDelegate:YES];
-	
-}//end scrollCenterToPoint:
-
-
-//========== scrollRectToVisible:notifyDelegate: ===============================
-//
-// Purpose:		Sets the visible rect to aRect.
-//
-// Parameters:	notifyDelegate - pass YES when the renderer is requesting a 
-//					change in its scroll position that the delegate doesn't yet 
-//					know about. Pass NO when the delegate is telling the 
-//					renderer about a scroll it has already performed. If the 
-//					scrollview is already reflecting the "final" state, it could 
-//					be unhealthy to try and re-scroll to match it. 
-//
-//==============================================================================
-- (void) scrollRectToVisible:(Box2)aRect notifyDelegate:(BOOL)notify
-{
-	if( V2EqualBoxes(aRect, self->visibleRect) == false )
-	{
-		self->visibleRect = aRect;
-		
-		if(notify && [self->delegate respondsToSelector:@selector(LDrawGLRenderer:scrollToRect:)])
-		{
-			[self->delegate LDrawGLRenderer:self scrollToRect:self->visibleRect];
-		}
-		[self->delegate LDrawGLRendererNeedsRedisplay:self];
-	}
-}
 
 
 //========== updateRotationCenter ==============================================
@@ -2704,7 +2220,6 @@
 //==============================================================================
 - (void) updateRotationCenter
 {
-	Point3	oldCenter	= self->rotationCenter;
 	Point3	point		= ZeroPoint3;
 	
 	if([fileBeingDrawn isKindOfClass:[LDrawFile class]])
@@ -2716,19 +2231,7 @@
 		point = [(LDrawModel*)fileBeingDrawn rotationCenter];
 	}
 	
-	self->rotationCenter = point;
-	
-	if(V3EqualPoints(oldCenter, rotationCenter) == NO)
-	{
-		// update modelview matrix
-		glMatrixMode(GL_MODELVIEW);
-		glTranslatef(oldCenter.x, oldCenter.y, oldCenter.z);
-		glTranslatef(-rotationCenter.x, -rotationCenter.y, -rotationCenter.z);
-		
-		// scroll to new center
-		Size2   frame       = self->bounds;
-		[self scrollCenterToPoint:V2Make(frame.width/2, frame.height/2 )];
-	}
+	[camera setRotationCenter:point];	
 }
 
 #pragma mark -
@@ -2746,8 +2249,8 @@
 	Point2	point_view			= ZeroPoint2;
 	
 	// Rescale to visible rect
-	point_visibleRect.x = viewportPoint.x / ([self zoomPercentage]/100.);
-	point_visibleRect.y = viewportPoint.y / ([self zoomPercentage]/100.);
+	point_visibleRect.x = viewportPoint.x / ([self zoomPercentageForGL]/100.);
+	point_visibleRect.y = viewportPoint.y / ([self zoomPercentageForGL]/100.);
 	
 	// The viewport origin is always at (0,0), so wo only need to translate if 
 	// the coordinate system is flipped. 
@@ -2757,12 +2260,12 @@
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight(visibleRect) - point_visibleRect.y;
+		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
 	}
 	
 	// Translate to full bounds coordinates
-	point_view.x = point_visibleRect.x + visibleRect.origin.x;
-	point_view.y = point_visibleRect.y + visibleRect.origin.y;
+	point_view.x = point_visibleRect.x + [scroller getVisibleRect].origin.x;
+	point_view.y = point_visibleRect.y + [scroller getVisibleRect].origin.y;
 	
 	return point_view;
 	
@@ -2781,48 +2284,24 @@
 	Point2	point_viewport		= ZeroPoint2;
 	
 	// Translate from full bounds coordinates to the visible rect
-	point_visibleRect.x = point_view.x - visibleRect.origin.x;
-	point_visibleRect.y = point_view.y - visibleRect.origin.y;
+	point_visibleRect.x = point_view.x - [scroller getVisibleRect].origin.x;
+	point_visibleRect.y = point_view.y - [scroller getVisibleRect].origin.y;
 	
 	// Flip the coordinates
 	if([self isFlipped])
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight(visibleRect) - point_visibleRect.y;
+		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
 	}
 	
 	// Rescale to viewport pixels
-	point_viewport.x = point_visibleRect.x * ([self zoomPercentage]/100.);
-	point_viewport.y = point_visibleRect.y * ([self zoomPercentage]/100.);
+	point_viewport.x = point_visibleRect.x * ([self zoomPercentageForGL]/100.);
+	point_viewport.y = point_visibleRect.y * ([self zoomPercentageForGL]/100.);
 	
 	return point_viewport;
 	
 }//end convertPointToViewport:
-
-
-//========== fieldDepth ========================================================
-//
-// Purpose:		Returns the distance between the near and far clipping planes.
-//
-// Notes:		Once upon a time, I had a feature called "infinite field depth," 
-//				as opposed to a depth that would clip the model. Eventually I 
-//				concluded this was a bad idea. But for future reference, the 
-//				maximum fieldDepth is about 1e6 (50,000 studs, >1300 ft; 
-//				probably enough!); viewing goes haywire with bigger numbers. 
-//
-//==============================================================================
-- (float) fieldDepth
-{
-	float	fieldDepth		= 0;
-	
-	// This is effectively equivalent to infinite field depth
-	fieldDepth = MAX(snugFrameSize.height, snugFrameSize.width);
-	fieldDepth *= 2;
-	
-	return fieldDepth;
-	
-}//end fieldDepth
 
 
 //========== getModelAxesForViewX:Y:Z: =========================================
@@ -2848,8 +2327,8 @@
 							Y:(Vector3 *)outModelY
 							Z:(Vector3 *)outModelZ
 {
-	Vector4 screenX		= {1,0,0,1};
-	Vector4 screenY		= {0,1,0,1};
+	Vector4 screenX		= {1,0,0,0};
+	Vector4 screenY		= {0,1,0,0};
 	Vector4 unprojectedX, unprojectedY; //the vectors in the model which are projected onto x,y on screen
 	Vector3 modelX, modelY, modelZ; //the closest model axes to which the screen's x,y,z align
 	
@@ -2911,8 +2390,6 @@
 	float               depth                   = 0.0; 
 	TransformComponents partTransform           = IdentityComponents;
 	Point3              contextPoint            = ZeroPoint3;
-	GLfloat             modelViewGLMatrix	[16];
-	GLfloat             projectionGLMatrix	[16];
 	Point3              modelPoint              = ZeroPoint3;
 	
 	depth = [self getDepthUnderPoint:viewPoint];
@@ -2939,12 +2416,9 @@
 		contextPoint = V3Make(viewportPoint.x, viewportPoint.y, depth);
 	
 		// Convert back to a point in the model.
-		glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-		
 		modelPoint = V3Unproject(contextPoint,
-								 Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-								 Matrix4CreateFromGLMatrix4(projectionGLMatrix),
+								  Matrix4CreateFromGLMatrix4([camera getModelView]),
+								  Matrix4CreateFromGLMatrix4([camera getProjection]),
 								 [self viewport]);
 	}
 	
@@ -2983,8 +2457,6 @@
 - (Point3) modelPointForPoint:(Point2)viewPoint
 		  depthReferencePoint:(Point3)depthPoint
 {
-	GLfloat modelViewGLMatrix	[16];
-	GLfloat projectionGLMatrix	[16];
 	Box2	viewport				= [self viewport];
 	
 	Point2	contextPoint			= [self convertPointToViewport:viewPoint];
@@ -2994,22 +2466,19 @@
 	Vector3 modelZ					= ZeroPoint3;
 	float	t						= 0; //parametric variable
 	
-	glGetFloatv(GL_PROJECTION_MATRIX, projectionGLMatrix);
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewGLMatrix);
-	
 	// gluUnProject takes a window "z" coordinate. These values range from 
 	// 0.0 (on the near clipping plane) to 1.0 (the far clipping plane). 
 	
 	// - Near clipping plane unprojection
 	nearModelPoint = V3Unproject(V3Make(contextPoint.x, contextPoint.y, 0.0),
-								 Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-								 Matrix4CreateFromGLMatrix4(projectionGLMatrix),
+								  Matrix4CreateFromGLMatrix4([camera getModelView]),
+								  Matrix4CreateFromGLMatrix4([camera getProjection]),
 								 viewport);
 	
 	// - Far clipping plane unprojection
 	farModelPoint = V3Unproject(V3Make(contextPoint.x, contextPoint.y, 1.0),
-								Matrix4CreateFromGLMatrix4(modelViewGLMatrix),
-								Matrix4CreateFromGLMatrix4(projectionGLMatrix),
+								  Matrix4CreateFromGLMatrix4([camera getModelView]),
+								  Matrix4CreateFromGLMatrix4([camera getProjection]),
 								viewport);
 	
 	//---------- Derive the actual point from the depth point --------------
@@ -3065,196 +2534,6 @@
 }//end modelPointForPoint:depthReferencePoint:
 
 
-//========== makeProjection ====================================================
-//
-// Purpose:		Loads the viewing projection appropriate for our canvas size.
-//
-//==============================================================================
-- (void) makeProjection
-{
-	float	fieldDepth		= [self fieldDepth];
-	Box2	visibilityPlane	= ZeroBox2;
-	
-	//ULTRA-IMPORTANT NOTE: this method assumes that you have already made our 
-	// openGLContext the current context
-	
-	// Start from scratch
-	glMatrixMode(GL_PROJECTION); //we are changing the projection, NOT the model!
-	glLoadIdentity();
-	
-	if(self->projectionMode == ProjectionModePerspective)
-	{
-		visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:visibleRect];
-		
-		glFrustum(V2BoxMinX(visibilityPlane),	// left
-				  V2BoxMaxX(visibilityPlane),	// right
-				  V2BoxMinY(visibilityPlane),	// bottom
-				  V2BoxMaxY(visibilityPlane),	// top
-				  fabs(cameraDistance) - fieldDepth/2,	// near (closer points are clipped); distance from CAMERA LOCATION
-				  fabs(cameraDistance) + fieldDepth/2	// far (points beyond this are clipped); distance from CAMERA LOCATION
-				 );
-	}
-	else
-	{
-		visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:visibleRect];
-		
-		glOrtho(V2BoxMinX(visibilityPlane),	// left
-				V2BoxMaxX(visibilityPlane),	// right
-				V2BoxMinY(visibilityPlane),	// bottom
-				V2BoxMaxY(visibilityPlane),	// top
-				fabs(cameraDistance) - fieldDepth/2,	// near (points beyond these are clipped)
-				fabs(cameraDistance) + fieldDepth/2 );	// far
-	}
-	
-}//end makeProjection
-
-
-//========== nearOrthoClippingRectFromVisibleRect: ============================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an orthographic projection. The coordinates are in model 
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
-//==============================================================================
-- (Box2) nearOrthoClippingRectFromVisibleRect:(Box2)visibleRectIn
-{
-	Box2	visibilityPlane	= ZeroBox2;
-
-	CGFloat y = V2BoxMinY(visibleRectIn);
-	if([self isFlipped] == YES)
-	{
-		y = bounds.height - y - V2BoxHeight(visibleRectIn);
-	}
-	
-	//The projection plane is stated in model coordinates.
-	visibilityPlane.origin.x	= V2BoxMinX(visibleRectIn) - bounds.width/2;
-	visibilityPlane.origin.y	= y - bounds.height/2;
-	visibilityPlane.size.width	= V2BoxWidth(visibleRectIn);
-	visibilityPlane.size.height	= V2BoxHeight(visibleRectIn);
-	
-	return visibilityPlane;
-	
-}//end nearOrthoClippingRectFromVisibleRect:
-
-
-//========== nearFrustumClippingRectFromVisibleRect: ==========================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an perspective projection. The coordinates are in model 
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
-// Notes:		We want perspective and ortho views to show objects at the 
-//				 origin as the same size. Since perspective viewing is defined 
-//				 by a frustum (truncated pyramid), we have to shrink the 
-//				 visibily plane--which is located on the near clipping plane--in 
-//				 such a way that the slice of the frustum at the origin will 
-//				 have the dimensions of the desired visibility plane. (Remember, 
-//				 slices grow *bigger* as they go deeper into the view. Since the 
-//				 origin is deeper, that means we need a near visibility plane 
-//				 that is *smaller* than the desired size at the origin.) 
-//
-//==============================================================================
-- (Box2) nearFrustumClippingRectFromVisibleRect:(Box2)visibleRectIn
-{
-	Box2  orthoVisibilityPlane    = [self nearOrthoClippingRectFromVisibleRect:visibleRectIn];
-	Box2  visibilityPlane         = orthoVisibilityPlane;
-	float   fieldDepth              = [self fieldDepth];
-	
-	// Find the scaling percentage betwen the frustum slice through 
-	// (0,0,0) and the slice that defines the near clipping plane. 
-	float visibleProportion = (fabs(self->cameraDistance) - fieldDepth/2)
-												/
-									fabs(self->cameraDistance);
-	
-	//scale down the visibility plane, centering it in the full-size one.
-	visibilityPlane.origin.x    = V2BoxMinX(orthoVisibilityPlane) + V2BoxWidth(orthoVisibilityPlane)  * (1 - visibleProportion) / 2;
-	visibilityPlane.origin.y    = V2BoxMinY(orthoVisibilityPlane) + V2BoxHeight(orthoVisibilityPlane) * (1 - visibleProportion) / 2;
-	visibilityPlane.size.width  = V2BoxWidth(orthoVisibilityPlane)  * visibleProportion;
-	visibilityPlane.size.height = V2BoxHeight(orthoVisibilityPlane) * visibleProportion;
-	
-	return visibilityPlane;
-	
-}//end nearFrustumClippingRectFromVisibleRect:
-
-
-//========== nearOrthoClippingRectFromNearFrustumClippingRect: =================
-//
-// Purpose:		Returns the near clipping rectangle which would be used if the 
-//				given perspective view were converted to an orthographic 
-//				projection. 
-//
-//==============================================================================
-- (Box2) nearOrthoClippingRectFromNearFrustumClippingRect:(Box2)visibilityPlane
-{
-	Box2    orthoVisibilityPlane    = ZeroBox2;
-	float   fieldDepth              = [self fieldDepth];
-	
-	// Find the scaling percentage betwen the frustum slice through 
-	// (0,0,0) and the slice that defines the near clipping plane. 
-	float visibleProportion = (fabs(self->cameraDistance) - fieldDepth/2)
-												/
-									fabs(self->cameraDistance);
-	
-	// Enlarge the ortho plane 
-	orthoVisibilityPlane.size.width     = visibilityPlane.size.width  / visibleProportion;
-	orthoVisibilityPlane.size.height    = visibilityPlane.size.height / visibleProportion;
-	
-	// Move origin according to enlargement
-	orthoVisibilityPlane.origin.x       = V2BoxMinX(visibilityPlane) - V2BoxWidth(orthoVisibilityPlane)  * (1 - visibleProportion) / 2;
-	orthoVisibilityPlane.origin.y       = V2BoxMinY(visibilityPlane) - V2BoxHeight(orthoVisibilityPlane) * (1 - visibleProportion) / 2;
-
-	return orthoVisibilityPlane;
-	
-}//end nearOrthoClippingRectFromNearFrustumClippingRect:
-
-
-//========== visibleRectFromNearOrthoClippingRect: =============================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given orthographic clipping rect. 
-//
-//==============================================================================
-- (Box2) visibleRectFromNearOrthoClippingRect:(Box2)visibilityPlane
-{
-	Box2  newVisibleRect  = ZeroBox2;
-	
-	// Convert from model coordinates back to Cocoa view coordinates.
-	
-	newVisibleRect.origin.x    = visibilityPlane.origin.x + bounds.width/2;
-	newVisibleRect.origin.y    = visibilityPlane.origin.y + bounds.height/2;
-	newVisibleRect.size        = visibilityPlane.size;
-	
-	if([self isFlipped] == YES)
-	{
-		newVisibleRect.origin.y = bounds.height - V2BoxHeight(visibilityPlane) - V2BoxMinY(newVisibleRect);
-	}
-	
-	return newVisibleRect;
-	
-}//end visibleRectFromNearOrthoClippingRect:
-
-
-//========== visibleRectFromNearFrustumClippingRect: ===========================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given frustum clipping rect. 
-//
-//==============================================================================
-- (Box2) visibleRectFromNearFrustumClippingRect:(Box2)visibilityPlane
-{
-	Box2  orthoClippingRect   = ZeroBox2;
-	Box2  newVisibleRect      = ZeroBox2;
-	
-	orthoClippingRect   = [self nearOrthoClippingRectFromNearFrustumClippingRect:visibilityPlane];
-	newVisibleRect      = [self visibleRectFromNearOrthoClippingRect:orthoClippingRect];
-	
-	return newVisibleRect;
-	
-}//end visibleRectFromNearFrustumClippingRect:
-
-
 #pragma mark -
 #pragma mark DESTRUCTOR
 #pragma mark -
@@ -3270,6 +2549,8 @@
 	
 	[fileBeingDrawn	release];
 
+	[camera release];
+	
 	[super dealloc];
 	
 }//end dealloc

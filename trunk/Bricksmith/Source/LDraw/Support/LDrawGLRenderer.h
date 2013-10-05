@@ -14,11 +14,13 @@
 #import "ColorLibrary.h"
 #import "LDrawUtilities.h"
 #import "MatrixMath.h"
+#import "LDrawGLCamera.h"
 
 //Forward declarations
 @class LDrawDirective;
 @class LDrawDragHandle;
 @protocol LDrawGLRendererDelegate;
+@protocol LDrawGLCameraScroller;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,14 +28,6 @@
 //		Types
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-// Projection Mode
-typedef enum
-{
-	ProjectionModePerspective	= 0,
-	ProjectionModeOrthographic	= 1
-	
-} ProjectionModeT;
 
 
 // Draw Mode
@@ -53,6 +47,7 @@ typedef enum
 @interface LDrawGLRenderer : NSObject <LDrawColorable>
 {
 	id<LDrawGLRendererDelegate> delegate;
+	id<LDrawGLCameraScroller>	scroller;
 	id							target;
 	SEL 						backAction;
 	SEL 						forwardAction;
@@ -64,20 +59,12 @@ typedef enum
 													// tweak the selection code in LDrawDrawableElement
 													// and here in -mouseUp: to handle such cases.
 	
-	// Drawing Environment
-	Size2					bounds;
-	Box2					visibleRect;
-	Size2					maximumVisibleSize;
-	BOOL					viewportExpandsToAvailableSize;
-	float					zoomFactor;
+	LDrawGLCamera *			camera;
 	
-	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
-	Point3					rotationCenter;
-	Size2					snugFrameSize;
+	// Drawing Environment
 	LDrawColor				*color;					// default color to draw parts if none is specified
 	GLfloat                 glBackgroundColor[4];
 	Box2					selectionMarquee;		// in view coordinates. ZeroBox2 means no marquee.
-	ProjectionModeT         projectionMode;
 	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
 	ViewOrientationT        viewOrientation;		// our orientation
 	NSTimeInterval			fpsStartTime;
@@ -109,37 +96,37 @@ typedef enum
 - (LDrawDragHandle*) activeDragHandle;
 - (Point2) centerPoint;
 - (BOOL) didPartSelection;
-- (Matrix4) getInverseMatrix;
 - (Matrix4) getMatrix;
 - (BOOL) isTrackingDrag;
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
+- (LocationModeT) locationMode;
 - (Box2) selectionMarquee;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
 - (Box2) viewport;
-- (Box2) visibleRect;
 - (CGFloat) zoomPercentage;
+- (CGFloat) zoomPercentageForGL;
 
 - (void) setAllowsEditing:(BOOL)flag;
 - (void) setBackAction:(SEL)newAction;
 - (void) setBackgroundColorRed:(float)red green:(float)green blue:(float)blue;
-- (void) setBounds:(Size2)boundsIn;
-- (void) setDelegate:(id<LDrawGLRendererDelegate>)object;
+- (void) setDelegate:(id<LDrawGLRendererDelegate>)object withScroller:(id<LDrawGLCameraScroller>)scroller;
 - (void) setDraggingOffset:(Vector3)offsetIn;
 - (void) setForwardAction:(SEL)newAction;
 - (void) setGridSpacing:(float)newValue;
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
-- (void) setMaximumVisibleSize:(Size2)size;
+- (void) setMaximumVisibleSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
 - (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
+- (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setSelectionMarquee:(Box2)newBox;
 - (void) setTarget:(id)target;
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setViewOrientation:(ViewOrientationT) newAngle;
-- (void) setViewportExpandsToAvailableSize:(BOOL)flag;
 - (void) setZoomPercentage:(CGFloat) newPercentage;
+- (void) moveCamera:(Vector3)delta;
 
 // Actions
 - (IBAction) zoomIn:(id)sender;
@@ -159,12 +146,12 @@ typedef enum
 
 - (void) dragHandleDraggedToPoint:(Point2)point_view constrainDragAxis:(BOOL)constrainDragAxis;
 - (void) panDragged:(Vector2)viewDirection location:(Point2)point_view;
-- (void) rotationDragged:(Vector2)viewDirection;
+- (void) rotationDragged:(Vector2)viewDirection;																	// This is how we get track-balled
 - (void) zoomDragged:(Vector2)viewDirection;
 - (void) mouseSelectionDragToPoint:(Point2)point_view selectionMode:(SelectionModeT) selectionMode;
 - (void) beginGesture;
 - (void) endGesture;
-- (void) rotateByDegrees:(float)angle;
+- (void) rotateByDegrees:(float)angle;																				// Track-pad twist gesture
 
 // Drag and Drop
 - (void) draggingEnteredAtPoint:(Point2)point_view directives:(NSArray *)directives setTransform:(BOOL)setTransform originatedLocally:(BOOL)originatedLocally;
@@ -174,35 +161,23 @@ typedef enum
 
 // Notifications
 - (void) displayNeedsUpdating:(NSNotification *)notification;
-- (void) reshape;
 
 // Utilities
 //- (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getDirectivesUnderRect:(Box2)rect_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 //- (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
-- (void) resetFrameSize;
-- (void) resetVisibleRect;
-- (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point2)viewPoint;
-- (void) scrollCenterToModelPoint:(Point3)modelPoint;
+- (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point2)viewPoint;		// This and setZoomPercentage are how we zoom.
+- (void) scrollCenterToModelPoint:(Point3)modelPoint;									// These two are how we do gesture-based scrolls
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
-- (void) scrollCenterToPoint:(Point2)newCenter;
-- (void) scrollRectToVisible:(Box2)aRect notifyDelegate:(BOOL)notify;
-- (void) updateRotationCenter;
+- (void) updateRotationCenter;															// A camera "property change"
 
 // - Geometry
 - (Point2) convertPointFromViewport:(Point2)viewportPoint;
 - (Point2) convertPointToViewport:(Point2)point_view;
-- (float) fieldDepth;
 - (void) getModelAxesForViewX:(Vector3 *)outModelX Y:(Vector3 *)outModelY Z:(Vector3 *)outModelZ;
-- (void) makeProjection;
 - (Point3) modelPointForPoint:(Point2)viewPoint;
 - (Point3) modelPointForPoint:(Point2)viewPoint depthReferencePoint:(Point3)depthPoint;
-- (Box2) nearOrthoClippingRectFromVisibleRect:(Box2)visibleRect;
-- (Box2) nearFrustumClippingRectFromVisibleRect:(Box2)visibleRect;
-- (Box2) nearOrthoClippingRectFromNearFrustumClippingRect:(Box2)visibilityPlane;
-- (Box2) visibleRectFromNearOrthoClippingRect:(Box2)visibilityPlane;
-- (Box2) visibleRectFromNearFrustumClippingRect:(Box2)visibilityPlane;
 
 @end
 
@@ -215,10 +190,6 @@ typedef enum
 @protocol LDrawGLRendererDelegate <NSObject>
 
 @required
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer scrollToRect:(Box2)scrollRect;
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetBoundsToSize:(Size2)newBoundsSize;
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetZoomPercentage:(CGFloat)newZoomPercent;
-- (void) LDrawGLRendererNeedsCurrentContext:(LDrawGLRenderer *)renderer;
 - (void) LDrawGLRendererNeedsFlush:(LDrawGLRenderer*)renderer;
 - (void) LDrawGLRendererNeedsRedisplay:(LDrawGLRenderer*)renderer;
 

@@ -52,12 +52,10 @@
 #import "ScrollViewCategory.h"
 #import "UserDefaultsCategory.h"
 
+// Macros for pref-based UI tricks.
 #define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
 #define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
 #define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
-
-#define SIMPLIFICATION_THRESHOLD	0.3 //seconds
-#define CAMERA_DISTANCE_FACTOR		6.5	//controls perspective; cameraLocation = modelSize * CAMERA_DISTANCE_FACTOR
 
 //========== NSRectToBox2 ======================================================
 //
@@ -80,6 +78,19 @@ static Box2 NSRectToBox2(NSRect rect)
 static Size2 NSSizeToSize2(NSSize size)
 {
 	Size2 sizeOut = V2MakeSize(size.width, size.height);
+	
+	return sizeOut;
+}
+
+
+//========== Size2ToNSSize =====================================================
+//
+// Purpose:		Convert our internal format to Cocoa sizes.
+//
+//==============================================================================
+static NSSize Size2ToNSSize(Size2 size)
+{
+	NSSize sizeOut = NSMakeSize(size.width, size.height);
 	
 	return sizeOut;
 }
@@ -226,7 +237,7 @@ static Size2 NSSizeToSize2(NSSize size)
 //					   forParameter: NSOpenGLCPSurfaceOrder ];
 			
 	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
-	[renderer setDelegate:self];
+	[renderer setDelegate:self withScroller:self];
 	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 
 	[self setViewOrientation:ViewOrientation3D];
@@ -572,6 +583,16 @@ static Size2 NSSizeToSize2(NSSize size)
 }//end projectionMode
 
 
+//========== locationMode ====================================================
+//==============================================================================
+- (LocationModeT) locationMode
+{
+	[[self openGLContext] makeCurrentContext];
+	return [self->renderer locationMode];
+	
+}//end locationMode
+
+
 //========== viewingAngle ======================================================
 //==============================================================================
 - (Tuple3) viewingAngle
@@ -735,9 +756,12 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (void)setFrame:(NSRect)frameRect
 {
+	assert(!isnan(frameRect.origin.x));
+	assert(!isnan(frameRect.origin.y));
+	assert(!isnan(frameRect.size.width));
+	assert(!isnan(frameRect.size.height));
 	[[self openGLContext] makeCurrentContext];
 	[super setFrame:frameRect];
-	[self->renderer setBounds:NSSizeToSize2(frameRect.size)];
 }
 
 
@@ -847,6 +871,29 @@ static Size2 NSSizeToSize2(NSSize size)
 } //end setProjectionMode:
 
 
+//========== setLocationMode: ================================================
+//
+// Purpose:		Sets the location mode used when drawing the receiver.
+//
+//==============================================================================
+- (void) setLocationMode:(LocationModeT)newLocationMode
+{
+	CGLLockContext([[self openGLContext] CGLContextObj]);
+	{
+		[[self openGLContext] makeCurrentContext];
+		
+		[self->renderer setLocationMode:newLocationMode];
+		
+		[self setNeedsDisplay:YES];
+	}
+	CGLUnlockContext([[self openGLContext] CGLContextObj]);
+	
+	[self saveConfiguration];
+
+} //end setLocationMode:
+
+
+
 //========== setTarget: ========================================================
 //
 // Purpose:		Sets the object which is the receiver of this view's action 
@@ -944,10 +991,15 @@ static Size2 NSSizeToSize2(NSSize size)
 	
 	//We treat 3D as a request for perspective, but any straight-on view can 
 	// logically be expected to be displayed orthographically.
-	if(newAngle == ViewOrientation3D)
+	if(newAngle == ViewOrientation3D || newAngle == ViewOrientationWalkThrough)
 		[self->renderer setProjectionMode:ProjectionModePerspective];
 	else
 		[self->renderer setProjectionMode:ProjectionModeOrthographic];
+		
+	if(newAngle == ViewOrientationWalkThrough)
+		[self->renderer setLocationMode:LocationModeWalkthrough];
+	else
+		[self->renderer setLocationMode:LocationModeModel];
 	
 	[self saveConfiguration];
 
@@ -1281,31 +1333,38 @@ static Size2 NSSizeToSize2(NSSize size)
 			case '4':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationLeft];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '6':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationRight];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '2':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationBottom];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '8':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationTop];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '5':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationFront];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '7':
 			case '9':
 				[self setProjectionMode:ProjectionModeOrthographic];
 				[self setViewOrientation:ViewOrientationBack];
+				[self setLocationMode:LocationModeModel];
 				break;
 			case '0':
 				[self setProjectionMode:ProjectionModePerspective];
 				[self setViewOrientation:ViewOrientation3D];
+				[self setLocationMode:LocationModeModel];
 				break;
 				
 			default:
@@ -1468,7 +1527,11 @@ static Size2 NSSizeToSize2(NSSize size)
 				if(isFastNudge)
 					actualNudge = V3Scale(actualNudge,10.0);
 				self->nudgeVector = actualNudge;
-				[NSApp sendAction:self->nudgeAction to:self->target from:self];
+				
+				if([self locationMode] == LocationModeWalkthrough)
+					[renderer moveCamera:actualNudge];
+				else				
+					[NSApp sendAction:self->nudgeAction to:self->target from:self];
 				self->nudgeVector = ZeroPoint3;
 			}
 		}
@@ -2614,86 +2677,6 @@ static Size2 NSSizeToSize2(NSSize size)
 #pragma mark RENDERER DELEGATE
 #pragma mark -
 
-//========== LDrawGLRenderer:scrollToRect: =====================================
-//
-// Purpose:		Update the scrollbars to reflect the new visible rect computed 
-//				by the renderer. 
-//
-//==============================================================================
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer scrollToRect:(Box2)scrollRect
-{
-	BOOL	success 	= NO;
-	NSRect	nsRect		= NSMakeRect(scrollRect.origin.x, scrollRect.origin.y,
-									 scrollRect.size.width, scrollRect.size.height);
-	NSRect	visibleRect = [self visibleRect];
-	
-	if( NSEqualRects(nsRect, visibleRect) == NO ) // don't depend on this, it's often wrong
-	{
-		success = [self scrollRectToVisible:nsRect];
-//		NSLog(@"%d", success);
-	}
-}
-
-
-//========== LDrawGLRenderer:didSetBoundsToSize: ===============================
-//
-// Purpose:		Update the full size of the NSOpenGLView.
-//
-//==============================================================================
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetBoundsToSize:(Size2)newBoundsSize
-{
-	[self setFrameSize:NSMakeSize(newBoundsSize.width, newBoundsSize.height)];
-}
-
-
-//========== LDrawGLRenderer:didSetZoomPercentage: =============================
-//
-// Purpose:		Update the scrollview to match the new rendering size.
-//
-//==============================================================================
-- (void) LDrawGLRenderer:(LDrawGLRenderer*)renderer didSetZoomPercentage:(CGFloat)newPercentage
-{
-	NSScrollView    *scrollView             = [self enclosingScrollView];
-	
-	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
-	// actually changing (to avoid unnecessary re-draw) 
-	if(scrollView != nil)
-	{
-		NSClipView  *clipView       = [scrollView contentView];
-		NSRect      clipFrame       = [clipView frame];
-		NSRect      clipBounds      = [clipView bounds];
-		CGFloat     scaleFactor     = newPercentage / 100;
-		
-		// Change the magnification level of the clip view, which has the 
-		// effect of zooming us in and out. 
-		clipBounds.size.width	= NSWidth(clipFrame)  / scaleFactor;
-		clipBounds.size.height	= NSHeight(clipFrame) / scaleFactor;
-		// Note: must use -setBoundsSize:, not -setBounds:. The latter 
-		//		 causes bad things to happen when called on a collapsed 
-		//		 split view. 
-		[clipView setBoundsSize:clipBounds.size];
-		
-		// update KVO
-		[self willChangeValueForKey:@"zoomPercentage"];
-		[self didChangeValueForKey:@"zoomPercentage"];
-	}
-}
-
-
-//========== LDrawGLRendererNeedsCurrentContext: ===============================
-//
-// Purpose:		While almost all calls to the renderer are initiated from this 
-//				class, there is unfortunately one entry point in the renderer 
-//				itself: directive-change notifications. When the renderer 
-//				receives one, it will issue OpenGL calls which must be directed 
-//				toward the renderer's context--which it knows nothing about. 
-//
-//==============================================================================
-- (void) LDrawGLRendererNeedsCurrentContext:(LDrawGLRenderer *)renderer
-{
-	[[self openGLContext] makeCurrentContext];
-}
-
 
 //========== LDrawGLRendererNeedsFlush: ========================================
 //
@@ -2904,8 +2887,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
 	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 	
-	[self->renderer resetFrameSize];
-	[self->renderer scrollRectToVisible:NSRectToBox2([self visibleRect]) notifyDelegate:NO];
 	
 }//end scrollViewFrameDidChange:
 
@@ -2950,12 +2931,14 @@ static Size2 NSSizeToSize2(NSSize size)
 		[[self openGLContext] makeCurrentContext];
 				
 		NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
-		[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
-		
-		NSRect visibleRect = [self visibleRect];
-		[self->renderer scrollRectToVisible:NSRectToBox2(visibleRect) notifyDelegate:NO];
-		
-		[self->renderer reshape];
+		if(maxVisibleSize.width > 0 && maxVisibleSize.height > 0)
+		{
+			glViewport(0,0, maxVisibleSize.width,maxVisibleSize.height);
+
+			// Bit of a hack - this gets called for SCROLLING too, and of course our max visible size has
+			// NOT changed - but it tickles the camera, which is what we are REALLY after.
+			[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];		
+		}
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -3228,6 +3211,167 @@ static Size2 NSSizeToSize2(NSSize size)
 	
 }//end takeBackgroundColorFromUserDefaults
 
+
+#pragma mark -
+#pragma mark SCROLLER PROTOCOL
+#pragma mark -
+
+
+//========== getDocumentSize ===================================================
+//
+// Purpose:		Returns the size of our document (e.g. the size of the entire
+//				model) in model coorinates.
+//
+//==============================================================================
+- (Size2)	getDocumentSize
+{
+	return NSSizeToSize2([self frame].size);
+}
+
+
+//========== setDocumentSize: ==================================================
+//
+// Purpose:		Changes the size of the document.
+//
+// Notes:		The camera calls this to request that the document size change;
+//				the change in document size by NS will adjust scroll bars, etc.
+//
+//==============================================================================
+- (void)	setDocumentSize:(Size2)newDocumentSize
+{
+	assert(!isnan(newDocumentSize.width));
+	assert(!isnan(newDocumentSize.height));
+	assert(newDocumentSize.width > 0);
+	assert(newDocumentSize.height > 0);
+	NSSize sizeNow = [self frame].size;
+	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
+		return;
+
+	[self setFrameSize:Size2ToNSSize(newDocumentSize)];
+}
+
+
+//========== getVisibleRect ====================================================
+//
+// Purpose:		Returns the visible sub-section of our document (in model
+//				coordinates).  The origin is the document's scroll origin, and
+//				the size defines the visible area on screen (in doc windows).
+//
+//==============================================================================
+- (Box2)	getVisibleRect
+{
+	return NSRectToBox2([self visibleRect]);
+}
+
+
+//========== getMaxVisibleSizeDoc ==============================================
+//
+// Purpose:		This returns the maximum size we can set our document before it
+//				scrolls - the results are in model coordinates.
+//
+//==============================================================================
+- (Size2)	getMaxVisibleSizeDoc
+{
+	NSScrollView *scrollView = [self enclosingScrollView];
+	if(scrollView != nil)
+	{
+		NSClipView  *clipView       = [scrollView contentView];
+		return NSSizeToSize2([clipView bounds].size);
+	}
+	else
+	{
+		return NSSizeToSize2([self bounds].size);
+	}
+}
+
+
+//========== getMaxVisibleSizeGL ===============================================
+//
+// Purpose:		This returns the maximum size we can set our document before it
+//				scrolls - the results are in OpenGL pixels (e.g. the pixels you
+//				give to glViewport).
+//
+//==============================================================================
+- (Size2)	getMaxVisibleSizeGL
+{
+	NSScrollView *scrollView = [self enclosingScrollView];
+	if(scrollView != nil)
+	{
+		return NSSizeToSize2([scrollView contentSize]);
+	}
+	else
+	{
+		return NSSizeToSize2([self bounds].size);
+	}
+}
+
+
+//========== setScaleFactor: ===================================================
+//
+// Purpose:		This sets the scaling factor on our scrolling view.
+//
+// NoteS:		The camera calls this to request that a scaling factor be 
+//				induced in NS's view system.  This makes the scale of the
+//				parent view and the document different; the scroll bars adjust
+//				appropriately.
+//
+//				(For all pratical purposes, scaling down the doc makes the size
+//				of our scrolled content smaller - but the frame of the actual
+//				GL view does not change because it is always in model 
+//				coordinates.)
+//
+//==============================================================================
+- (void)	setScaleFactor:(CGFloat)newScaleFactor
+{
+	assert(newScaleFactor > 0.0);
+	assert(!isnan(newScaleFactor));
+	
+	NSScrollView    *scrollView             = [self enclosingScrollView];
+	
+	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
+	// actually changing (to avoid unnecessary re-draw) 
+	if(scrollView != nil)
+	{
+		NSClipView  *clipView       = [scrollView contentView];
+		NSRect      clipFrame       = [clipView frame];
+		NSRect      clipBounds      = [clipView bounds];
+		
+		// Change the magnification level of the clip view, which has the 
+		// effect of zooming us in and out. 
+		clipBounds.size.width	= NSWidth(clipFrame)  / newScaleFactor;
+		clipBounds.size.height	= NSHeight(clipFrame) / newScaleFactor;
+		// Note: must use -setBoundsSize:, not -setBounds:. The latter 
+		//		 causes bad things to happen when called on a collapsed 
+		//		 split view. 
+		[clipView setBoundsSize:clipBounds.size];
+		
+		// update KVO
+		[self willChangeValueForKey:@"zoomPercentage"];
+		[self didChangeValueForKey:@"zoomPercentage"];
+	}
+
+}
+
+
+//========== setScrollOrigin: ==================================================
+//
+// Purpose:		This scrolls our view so that the model point passed in is in
+//				the upper left corner of our visible exposed area, scrolling
+//				us as needed.
+//
+//==============================================================================
+- (void)	setScrollOrigin:(Point2)visibleOrigin
+{
+	assert(!isnan(visibleOrigin.x));
+	assert(!isnan(visibleOrigin.y));
+	Point2	currentOrigin = [self getVisibleRect].origin;
+	
+	if(currentOrigin.x == visibleOrigin.x &&
+		currentOrigin.y == visibleOrigin.y)
+		return;
+
+	[self scrollPoint:NSMakePoint(visibleOrigin.x,visibleOrigin.y)];
+}
 
 #pragma mark -
 #pragma mark DESTRUCTOR

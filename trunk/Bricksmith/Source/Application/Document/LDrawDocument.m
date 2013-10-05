@@ -5074,6 +5074,7 @@ void AppendChoicesToNewItem(
 		[glView setViewOrientation:[sourceGLView viewOrientation]];
 		[glView setProjectionMode:[sourceGLView projectionMode]];
 		[glView setZoomPercentage:[sourceGLView zoomPercentage]];
+		[glView setLocationMode:[sourceGLView locationMode]];
 	}
 	
 	[self updateViewportAutosaveNamesAndRestore:NO];
@@ -5857,6 +5858,7 @@ void AppendChoicesToNewItem(
 	
 	[affectedViewport setViewOrientation:viewOrientation];
 	[affectedViewport setViewingAngle:viewingAngle];
+	[affectedViewport setLocationMode:LocationModeModel];
 	
 }//end updateViewingAngleToMatchStep
 

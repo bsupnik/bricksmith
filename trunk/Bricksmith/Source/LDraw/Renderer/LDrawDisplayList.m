@@ -11,6 +11,7 @@
 #import "LDrawBDPAllocator.h"
 #import "LDrawShaderRenderer.h"
 #import "MeshSmooth.h"
+#import "GLMatrixMath.h"
 #import OPEN_GL_HEADER
 #import OPEN_GL_EXT_HEADER
 
@@ -112,20 +113,6 @@ static int	get_instance_cutoff()
 	return has_instancing ? INST_CUTOFF : INT32_MAX;
 }
 
-//========== applyMatrix =========================================================
-//
-// Purpose:	Apply a 4x4 matrix to a 4-component vector with copy.  
-//
-// Notes:	This routine takes data in direct "OpenGL" format.
-//
-//================================================================================
-static void applyMatrix(GLfloat dst[4], const GLfloat m[16], const GLfloat v[4])
-{
-	dst[0] = v[0] * m[0] + v[1] * m[4] + v[2] * m[8] + v[3] * m[12];
-	dst[1] = v[0] * m[1] + v[1] * m[5] + v[2] * m[9] + v[3] * m[13];
-	dst[2] = v[0] * m[2] + v[1] * m[6] + v[2] * m[10] + v[3] * m[14];
-	dst[3] = v[0] * m[3] + v[1] * m[7] + v[2] * m[11] + v[3] * m[15];
-}
 static void copy_vec3(GLfloat d[3], const GLfloat s[3]) { d[0] = s[0]; d[1] = s[1]; d[2] = s[2];			  }
 static void copy_vec4(GLfloat d[4], const GLfloat s[4]) { d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3]; }
 
@@ -878,7 +865,7 @@ static void setup_tex_spec(struct LDrawTextureSpec * spec)
 //			for speed - most of our linked lists are just NULL.
 //
 //================================================================================
-struct LDrawDLSession * LDrawDLSessionCreate(const GLfloat model_view[3])
+struct LDrawDLSession * LDrawDLSessionCreate(const GLfloat model_view[16])
 {
 	struct LDrawBDP * alloc = LDrawBDPCreate();
 	struct LDrawDLSession * session = (struct LDrawDLSession *) LDrawBDPAllocate(alloc,sizeof(struct LDrawDLSession));

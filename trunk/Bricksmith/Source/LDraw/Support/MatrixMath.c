@@ -11,6 +11,7 @@
 //==============================================================================
 #include "MatrixMath.h"
 
+#include "GLMatrixMath.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -553,6 +554,34 @@ Vector3 V3FromV4(Vector4 originalVector)
 	return newVector;
 	
 }//end V3FromV4
+
+
+//========== V3FromV4Normalize =================================================
+//
+// Purpose:		Create a new 3D vector whose components match the given 4D 
+//				vector. This function divides out the 'w' component, converting
+//				from homogenous to cartesian coordinates.
+//
+// Notes:		The only sane use for this is to get a device-coordinate point
+//				out from clip space coordinates - this function does the
+//				"perspective divide."
+//
+//==============================================================================
+Vector3 V3FromV4Normalize(Vector4 originalVector)
+{
+	Vector3 newVector;	
+	float	recip = 1.0f;
+	
+	if(originalVector.w != 0.0f)
+		recip = 1.0f / originalVector.w;
+
+	newVector.x = originalVector.x * recip;
+	newVector.y = originalVector.y * recip;
+	newVector.z = originalVector.z * recip;
+	
+	return newVector;
+	
+}//end V3FromV4Normalize
 
 
 #pragma mark -
@@ -2401,34 +2430,28 @@ bool	VolumeCanIntersectBox(
 						Matrix4		transform,
 						Box2		box)
 {
-	int     counter     = 0;
-	Box3	transformedBounds;
-	Point3  vertices[8] = {	
-							{bounds.min.x, bounds.min.y, bounds.min.z},
-							{bounds.min.x, bounds.min.y, bounds.max.z},
-							{bounds.min.x, bounds.max.y, bounds.max.z},
-							{bounds.min.x, bounds.max.y, bounds.min.z},
-							
-							{bounds.max.x, bounds.min.y, bounds.min.z},
-							{bounds.max.x, bounds.min.y, bounds.max.z},
-							{bounds.max.x, bounds.max.y, bounds.max.z},
-							{bounds.max.x, bounds.max.y, bounds.min.z},
-						  };
-	for(counter = 0; counter < 8; counter++)
-	{
-		vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transform);
-		transformedBounds = V3UnionBoxAndPoint(transformedBounds, vertices[counter]);
-	}
+	if(bounds.min.x > bounds.max.x ||
+	   bounds.min.y > bounds.max.y ||
+	   bounds.min.z > bounds.max.z)		return false;
+	   
+	GLfloat aabb_mv[6] = {	bounds.min.x, bounds.min.y, bounds.min.z,
+							bounds.max.x, bounds.max.y, bounds.max.z };
+	GLfloat aabb_ndc[6];
+	GLfloat m[16];
+	
+	Matrix4GetGLMatrix4(transform, m);
+	
+	aabbToClipbox(aabb_mv, m, aabb_ndc);
 
 	float x1 = V2BoxMinX(box);
 	float x2 = V2BoxMaxX(box);
 	float y1 = V2BoxMinY(box);
 	float y2 = V2BoxMaxY(box);
 	
-	if(x1 > transformedBounds.max.x ||
-	   x2 < transformedBounds.min.x ||
-	   y1 > transformedBounds.max.y ||
-	   y2 < transformedBounds.min.y)
+	if(x1 > aabb_ndc[3] ||
+	   x2 < aabb_ndc[0] ||
+	   y1 > aabb_ndc[4] ||
+	   y2 < aabb_ndc[1])
 	{
 		return false;
 	}
@@ -2454,24 +2477,22 @@ bool		VolumeCanIntersectPoint(
 						Box2		box,
 						float		testDepthSoFar)
 {
-	int     counter     = 0;
-	Box3	transformedBounds;
-	Point3  vertices[8] = {	
-							{bounds.min.x, bounds.min.y, bounds.min.z},
-							{bounds.min.x, bounds.min.y, bounds.max.z},
-							{bounds.min.x, bounds.max.y, bounds.max.z},
-							{bounds.min.x, bounds.max.y, bounds.min.z},
-							
-							{bounds.max.x, bounds.min.y, bounds.min.z},
-							{bounds.max.x, bounds.min.y, bounds.max.z},
-							{bounds.max.x, bounds.max.y, bounds.max.z},
-							{bounds.max.x, bounds.max.y, bounds.min.z},
-						  };
-	for(counter = 0; counter < 8; counter++)
-	{
-		vertices[counter] = V3MulPointByProjMatrix(vertices[counter], transform);
-		transformedBounds = V3UnionBoxAndPoint(transformedBounds, vertices[counter]);
-	}
+	if(bounds.min.x > bounds.max.x ||
+	   bounds.min.y > bounds.max.y ||
+	   bounds.min.z > bounds.max.z)		return false;
+
+	// We gotta use clipped conversion to NDC coordinates to get our device-space
+	// bounding box.  If we don't, geometry behind the camera will mirror around the
+	// XZ and YZ planes and cause chaos.
+	   
+	GLfloat aabb_mv[6] = {	bounds.min.x, bounds.min.y, bounds.min.z,
+							bounds.max.x, bounds.max.y, bounds.max.z };
+	GLfloat aabb_ndc[6];
+	GLfloat m[16];
+	
+	Matrix4GetGLMatrix4(transform, m);
+	
+	aabbToClipbox(aabb_mv, m, aabb_ndc);
 
 	float x1 = V2BoxMinX(box);
 	float x2 = V2BoxMaxX(box);
@@ -2479,11 +2500,11 @@ bool		VolumeCanIntersectPoint(
 	float y2 = V2BoxMaxY(box);
 	
 
-	if(x1 > transformedBounds.max.x ||
-	   x2 < transformedBounds.min.x ||
-	   y1 > transformedBounds.max.y ||
-	   y2 < transformedBounds.min.y ||
-	   testDepthSoFar < transformedBounds.min.z)
+	if(x1 > aabb_ndc[3] ||
+	   x2 < aabb_ndc[0] ||
+	   y1 > aabb_ndc[4] ||
+	   y2 < aabb_ndc[1] ||
+	   testDepthSoFar < aabb_ndc[2])		// If the test depth is LESS than our MIN Z then we ALERADY are closer than this entire test model - skip this model!
 	{
 		return false;
 	}

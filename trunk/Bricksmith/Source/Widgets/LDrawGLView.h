@@ -14,6 +14,7 @@
 #import "BricksmithUtilities.h"
 #import "ColorLibrary.h"
 #import "LDrawGLRenderer.h"
+#import "LDrawGLCamera.h"
 #import "LDrawUtilities.h"
 #import "MatrixMath.h"
 #import "ToolPalette.h"
@@ -30,7 +31,7 @@
 //		LDrawGLView
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawGLView : NSOpenGLView <LDrawColorable, LDrawGLRendererDelegate>
+@interface LDrawGLView : NSOpenGLView <LDrawColorable, LDrawGLRendererDelegate, LDrawGLCameraScroller>
 {
 @private
 	// The renderer is responsible for viewport math and OpenGL calls. Because 
@@ -78,6 +79,7 @@
 - (LDrawDirective *) LDrawDirective;
 - (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
+- (LocationModeT) locationMode;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
 - (CGFloat) zoomPercentage;
@@ -91,6 +93,7 @@
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
 - (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
+- (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setTarget:(id)target;
 - (void) setViewingAngle:(Tuple3)newAngle;
 - (void) setViewOrientation:(ViewOrientationT) newAngle;
