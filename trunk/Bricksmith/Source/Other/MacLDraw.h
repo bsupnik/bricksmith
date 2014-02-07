@@ -186,9 +186,12 @@
 // to re-resolve their references.
 #define LDrawPartLibraryReloaded						@"LDrawPartLibraryReloaded"
 
-// The LSynth selection criteria changed.  Selected LSynth
+// The LSynth selection appearance changed.  Selected LSynth
 // parts need to update to reflect this
 #define LSynthSelectionDisplayDidChangeNotification    @"LSynthSelectionDisplayDidChangeNotification"
+
+// The LSynth parts need to resynthesize for some reason - maybe config or exe changes
+#define LSynthResynthesisRequiredNotification          @"LSynthResynthesisRequiredNotification"
 
 ////////////////////////////////////////////////////////////////////////////////
 //

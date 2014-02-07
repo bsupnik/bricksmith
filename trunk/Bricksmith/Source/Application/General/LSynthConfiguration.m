@@ -102,20 +102,41 @@ static LSynthConfiguration* instance = nil;
 	self = [super init];
     if (self)
 	{
-        parts                   = [[NSMutableArray alloc] init];
-        hose_constraints        = [[NSMutableArray alloc] init];
-        hose_types              = [[NSMutableArray alloc] init];
-        band_constraints        = [[NSMutableArray alloc] init];
-        band_types              = [[NSMutableArray alloc] init];
-
-        quickRefBands           = [[NSMutableArray alloc] init];
-        quickRefHoses           = [[NSMutableArray alloc] init];
-        quickRefParts           = [[NSMutableArray alloc] init];
-        quickRefBandConstraints = [[NSMutableArray alloc] init];
-        quickRefHoseConstraints = [[NSMutableArray alloc] init];
+        [self initializeArrays];
     }
     return self;
 }
+
+
+//========== initializeArrays ==================================================
+//
+// Purpose:		initialize the LSynthConfiguration arrays.
+//
+//==============================================================================
+-(void)initializeArrays
+{
+    parts                   = [[NSMutableArray alloc] init];
+    hose_constraints        = [[NSMutableArray alloc] init];
+    hose_types              = [[NSMutableArray alloc] init];
+    band_constraints        = [[NSMutableArray alloc] init];
+    band_types              = [[NSMutableArray alloc] init];
+    
+    quickRefBands           = [[NSMutableArray alloc] init];
+    quickRefHoses           = [[NSMutableArray alloc] init];
+    quickRefParts           = [[NSMutableArray alloc] init];
+    quickRefBandConstraints = [[NSMutableArray alloc] init];
+    quickRefHoseConstraints = [[NSMutableArray alloc] init];
+} // end initializeArrays
+
+//========== defaultConfigPath =================================================
+//
+// Purpose:		Return the default config path in the main bundle
+//
+//==============================================================================
+-(NSString *)defaultConfigPath
+{
+    return [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];;
+} // end defaultConfigPath
 
 //========== parseLsynthConfig: ================================================
 //
@@ -130,6 +151,9 @@ static LSynthConfiguration* instance = nil;
 //==============================================================================
 -(void) parseLsynthConfig:(NSString *)lsynthConfigurationPath
 {
+    // Initialise all arrays, since we may be called after a config file change
+    [self initializeArrays];
+    
     // Read the file in
    	NSString   *fileContents = [LDrawUtilities stringFromFile:lsynthConfigurationPath];
     NSArray    *lines        = [fileContents componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];

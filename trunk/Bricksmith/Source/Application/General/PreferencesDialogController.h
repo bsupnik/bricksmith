@@ -29,7 +29,7 @@ typedef enum {
 // class PreferencesDialogController
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface PreferencesDialogController : NSObject <NSToolbarDelegate>
+@interface PreferencesDialogController : NSObject <NSToolbarDelegate, NSTextFieldDelegate>
 {
     IBOutlet NSWindow		*preferencesWindow;
 	
@@ -74,6 +74,7 @@ typedef enum {
     // Miscellaneous
 	IBOutlet NSView			*folderChooserAccessoryView;
     IBOutlet NSView         *lsynthExecutableChooserAccessoryView;
+    IBOutlet NSView         *lsynthConfigurationChooserAccessoryView;
     NSTextField             *lsynthTransparencyNumberChanged;
 }
 //Initialization
@@ -113,16 +114,17 @@ typedef enum {
 - (IBAction) partBrowserStyleChanged:(id)sender;
 
 // - LSynth Tab
-- (IBAction)lsynthChooseExecutable:(id)sender;
-- (IBAction)lsynthTransparencySliderChanged:(id)sender;
-- (IBAction)lsynthTransparencyTextChanged:(id)sender;
-- (IBAction)lsynthSelectionColorWellClicked:(id)sender;
-- (IBAction)lsynthSelectionModeChanged:(id)sender;
-- (IBAction)lsynthSaveSynthesizedPartsChanged:(id)sender;
+- (IBAction) lsynthChooseExecutable:(id)sender;
+- (IBAction) lsynthChooseConfiguration:(id)sender;
+- (IBAction) lsynthTransparencySliderChanged:(id)sender;
+- (IBAction) lsynthTransparencyTextChanged:(id)sender;
+- (IBAction) lsynthSelectionColorWellClicked:(id)sender;
+- (IBAction) lsynthSelectionModeChanged:(id)sender;
+- (IBAction) lsynthSaveSynthesizedPartsChanged:(id)sender;
 
 //Utilities
 + (void) ensureDefaults;
 - (void) changeLDrawFolderPath:(NSString *) folderPath;
-- (void)selectPanelWithIdentifier:(NSString *)itemIdentifier;
+- (void) selectPanelWithIdentifier:(NSString *)itemIdentifier;
 
 @end

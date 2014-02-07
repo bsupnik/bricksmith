@@ -52,7 +52,13 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(selectionDisplayOptionsDidChange:)
                                                  name:LSynthSelectionDisplayDidChangeNotification
-                                               object:nil ];
+                                               object:nil];
+
+    // Observe requests for resynthesis
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(requiresResynthesis:)
+                                                 name:LSynthResynthesisRequiredNotification
+                                               object:nil];
 
     return self;
 }//end init
@@ -169,6 +175,7 @@
                       parserState == PARSER_PARSING_SYNTHESIZED)) {
 
                 // Either way, create a part
+                parserState = PARSER_PARSING_CONSTRAINTS;
                 CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:currentLine];
                 commandRange = [CommandClass rangeOfDirectiveBeginningAtIndex:lineIndex
                                                                       inLines:lines
@@ -196,7 +203,7 @@
             //
 
             else {
-                NSLog(@"Unexpected line in LSynth definition at line %lu: %@", (long)lineIndex, currentLine);
+                NSLog(@"Unexpected line in LSynth definition at line %lu: %@ (state: %i)", (long)lineIndex, currentLine, parserState);
             }
 
             lineIndex += 1;
@@ -898,6 +905,7 @@
     // Path to lsynth.  If it's unset or whitespace use the built-in default
     NSUserDefaults *userDefaults   = [NSUserDefaults standardUserDefaults];
     NSString       *executablePath = [userDefaults stringForKey:LSYNTH_EXECUTABLE_PATH_KEY];
+    NSString       *configPath     = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
     NSString       *lsynthPath;
     if ([executablePath length] == 0 || [executablePath isMatchedByRegex:@"^\\s+$"]) {
         lsynthPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"lsynthcp"];
@@ -930,19 +938,29 @@
     NSPipe *errorPipe = nil;
     NSFileHandle *inFile;
     NSFileHandle *outFile;
+    NSFileHandle *errorFile;
 
-    inPipe = [NSPipe new];
-    outPipe = [NSPipe new];
+    inPipe    = [NSPipe new];
+    outPipe   = [NSPipe new];
     errorPipe = [NSPipe new];
 
+    // Add custom configuration arguments if required
+    NSMutableArray *arguments = [[NSMutableArray alloc] init];
+    if ([configPath length]) {
+        [arguments addObjectsFromArray:[NSArray arrayWithObjects:@"-c", configPath, nil]];
+    }
+    [arguments addObject:@"-"]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
+    
     [task setStandardInput:inPipe];
     [task setStandardOutput:outPipe];
     [task setStandardError:errorPipe];
     [task setLaunchPath:lsynthPath];
-    [task setArguments:[NSArray arrayWithObject:@"-"]]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
+    [task setArguments:arguments];
+    //    [task setArguments:[NSArray arrayWithObject:@"-"]]; // Our built-in LSynth accepts STDIN/STDOUT with this argument
 
     inFile = [inPipe fileHandleForWriting];
     outFile = [outPipe fileHandleForReading];
+    errorFile = [errorPipe fileHandleForReading];
 
     [inPipe release];
     [outPipe release];
@@ -954,6 +972,24 @@
     // Write the LSynth part to LSynth's STDIN
     [inFile writeData: [input dataUsingEncoding: NSASCIIStringEncoding]];
     [inFile closeFile];
+
+    // Read standard error
+    NSMutableData *errorData = [[NSMutableData alloc] init];
+    NSData *readErrorData;
+
+    while ((readErrorData = [errorFile availableData])
+            && [readErrorData length]) {
+        [errorData appendData: readErrorData];
+    }
+
+    NSString *lsynthErrorOutput;
+    lsynthErrorOutput = [[NSString alloc]
+            initWithData: errorData
+                encoding: NSASCIIStringEncoding];
+
+    if ([lsynthErrorOutput length]) {
+        NSLog(@"LSynth generated standard error output:\n%@", lsynthErrorOutput);
+    }
 
     // Read the synthesized file back in from LSynth's STDOUT
     NSMutableData *data = [[NSMutableData alloc] init];
@@ -1412,7 +1448,22 @@
 {
     [self colorSelectedSynthesizedParts:([self isSelected] || self->subdirectiveSelected)];
     [self noteNeedsDisplay];
-}
+} // end selectionDisplayOptionsDidChange:
+
+//========== requiresResynthesis: ==============================================
+//
+// Purpose:		LSynth parts need resynthesized explicitly for some reason.
+//              We get here via a LSynthResynthesisRequiredNotification
+//              probably sent from the preferences controller in response to an
+//              executable or config file change.
+//
+//==============================================================================
+-(void)requiresResynthesis:(id)sender
+{
+    [self synthesize];
+    [self colorSelectedSynthesizedParts:([self isSelected] || self->subdirectiveSelected)];
+    [self noteNeedsDisplay];
+} // end requiresResynthesis:
 
 #pragma mark -
 #pragma mark DESTRUCTOR

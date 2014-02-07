@@ -54,14 +54,14 @@
 #import "MacLDraw.h"
 #import "PartLibrary.h"
 #import "PartLibraryController.h"
+#import "LSynthConfiguration.h"
 #import "UserDefaultsCategory.h"
 #import "WindowCategory.h"
-
+#import "RegexKitLite.h"
 
 @implementation PreferencesDialogController
 
 #define PREFERENCES_WINDOW_AUTOSAVE_NAME	@"PreferencesWindow"
-
 
 //The shared preferences window. We need to store this reference here so that 
 // we can simply bring the window to the front when it is already onscreen, 
@@ -273,6 +273,7 @@ PreferencesDialogController *preferencesDialog = nil;
 
     // Set control values
     [lsynthExecutablePath       setStringValue:executablePath];
+    [lsynthConfigurationPath    setStringValue:configurationPath];
     [lsynthSelectionModeMatrix  selectCellWithTag:selectionMode];
     [lsynthSelectionColorWell   setColor:selectionColor];
     [lsynthTransparencySlider   setIntegerValue:selectionTransparency];
@@ -663,6 +664,48 @@ PreferencesDialogController *preferencesDialog = nil;
     }
 }
 
+//========== lsynthChooseConfiguration: ==========================================
+//
+// Purpose:		The user wishes to choose their own LSynth configuration file.
+//
+//==============================================================================
+- (IBAction)lsynthChooseConfiguration:(id)sender
+{
+    NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
+    NSString *currentConfiguration  = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
+    
+    //Create a standard "Choose" dialog.
+    NSOpenPanel *lsynthConfigurationChooser = [NSOpenPanel openPanel];
+    [lsynthConfigurationChooser setCanChooseFiles:YES];
+    [lsynthConfigurationChooser setCanChooseDirectories:NO];
+    
+    //Tell the poor user what this dialog does!
+    [lsynthConfigurationChooser setTitle:NSLocalizedString(@"Choose an LSynth configuration file", nil)];
+    [lsynthConfigurationChooser setMessage:NSLocalizedString(@"lsynthConfigurationChooserMessage", nil)];
+    [lsynthConfigurationChooser setAccessoryView:lsynthConfigurationChooserAccessoryView];
+    [lsynthConfigurationChooser setPrompt:NSLocalizedString(@"Choose", nil)];
+    
+    //Run the dialog.
+    if([lsynthConfigurationChooser runModal] == NSOKButton)
+    {
+        // Get the file selected.
+        NSURL	*lsynthConfigurationURL = [[lsynthConfigurationChooser URLs] objectAtIndex:0];
+        
+        // TODO: validation?
+        if([lsynthConfigurationURL isFileURL]) {
+            [lsynthConfigurationPath setStringValue:[lsynthConfigurationURL path]];
+            [userDefaults setObject:[lsynthConfigurationURL path] forKey:LSYNTH_CONFIGURATION_PATH_KEY];
+
+            // reload config if changed
+            if ([currentConfiguration isEqualToString:[lsynthConfigurationURL path]]) {
+                [[LSynthConfiguration sharedInstance] parseLsynthConfig:[lsynthConfigurationURL path]];
+            }
+        }
+        else
+            NSBeep(); // sanity check
+    }
+}
+
 //========== lsynthTransparencySliderChanged: ==================================
 //
 // Purpose:		The user has changed the LSynth selection transparency
@@ -732,7 +775,8 @@ PreferencesDialogController *preferencesDialog = nil;
 //========== lsynthRequiresRedisplay ===========================================
 //
 // Purpose:		Convenience method to notify LSynth parts that they may need
-//              redisplay if the selection highlighting has changed
+//              redisplay if the selection highlighting has changed, or executable
+//              or config files have changed.
 //
 //==============================================================================
 - (void) lsynthRequiresRedisplay
@@ -740,8 +784,20 @@ PreferencesDialogController *preferencesDialog = nil;
     [[NSNotificationCenter defaultCenter]
             postNotificationName:LSynthSelectionDisplayDidChangeNotification
                           object:NSApp ];
-}
+} // end lsynthRequiresRedisplay
 
+//========== lsynthRequiresResynthesis =========================================
+//
+// Purpose:		Convenience method to notify LSynth parts that they need to
+//              resyntheisze if the  executable or config files have changed.
+//
+//==============================================================================
+- (void) lsynthRequiresResynthesis
+{
+    [[NSNotificationCenter defaultCenter]
+            postNotificationName:LSynthResynthesisRequiredNotification
+                          object:NSApp ];
+} // end lsynthRequiresResynthesis
 
 #pragma mark -
 #pragma mark TOOLBAR DELEGATE
@@ -1116,6 +1172,87 @@ PreferencesDialogController *preferencesDialog = nil;
 	
 }//end selectPanelWithIdentifier
 
+#pragma mark -
+#pragma mark <NSTextFieldDelegate>
+#pragma mark -
+
+//========== controlTextDidEndEditing: =========================================
+//
+// Purpose:		The user finished editing a text field.  Used specifically by
+//              the LSynth pane to validate and resynthesize in a timely fashion.
+//
+//==============================================================================
+- (void)controlTextDidEndEditing:(NSNotification *)aNotification
+{
+    NSTextField *textField          = [aNotification object];
+    NSUserDefaults *userDefaults    = [NSUserDefaults standardUserDefaults];
+    NSString *currentExecutable     = [userDefaults stringForKey:LSYNTH_EXECUTABLE_PATH_KEY];
+    NSString *currentConfiguration  = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
+
+    // The user manually changed the LSynth executable path
+    // TODO: run validating synthesis
+    if (textField == lsynthExecutablePath) {
+        NSURL *executablePathAsURL = [NSURL fileURLWithPath:[lsynthExecutablePath stringValue]];
+        if([executablePathAsURL isFileURL] && ![currentExecutable isEqualToString:[executablePathAsURL path]]) {
+            [userDefaults setObject:[executablePathAsURL path] forKey:LSYNTH_EXECUTABLE_PATH_KEY];
+            [self lsynthRequiresResynthesis];
+        }
+
+        // No path - it's been deleted
+        else if (([[executablePathAsURL path] length] == 0 || [[executablePathAsURL path] isMatchedByRegex:@"^\\s+$"])
+                && executablePathAsURL
+                && ![currentExecutable isEqualToString:[executablePathAsURL path]]) {
+            [userDefaults setObject:@"" forKey:LSYNTH_EXECUTABLE_PATH_KEY];
+            [self lsynthRequiresResynthesis];
+        }
+
+        else if (executablePathAsURL) {
+            NSBeep(); // sanity check
+        }
+    }
+
+    // The user manually changed the LSynth config path
+    // TODO: run validating synthesis
+    else if (textField == lsynthConfigurationPath) {
+        NSURL *configPathAsURL = [NSURL fileURLWithPath:[lsynthConfigurationPath stringValue]];
+        if([configPathAsURL isFileURL]) {
+            [userDefaults setObject:[configPathAsURL path] forKey:LSYNTH_CONFIGURATION_PATH_KEY];
+            
+            // reload config if changed
+            if (![currentConfiguration isEqualToString:[configPathAsURL path]]) {
+                [[LSynthConfiguration sharedInstance] parseLsynthConfig:[configPathAsURL path]];
+                [[NSApp delegate] populateLSynthModelMenus];
+                [self lsynthRequiresResynthesis];
+            }
+        }
+
+        // No path - it's been deleted
+        else if (!configPathAsURL || [[configPathAsURL path] length] == 0) {
+            [userDefaults setObject:@"" forKey:LSYNTH_CONFIGURATION_PATH_KEY];
+            [[LSynthConfiguration sharedInstance] parseLsynthConfig:[[LSynthConfiguration sharedInstance] defaultConfigPath]];
+            [[NSApp delegate] populateLSynthModelMenus];
+            [self lsynthRequiresResynthesis];
+        }
+        
+        else {
+            NSBeep(); // sanity check
+        }
+    }
+
+
+    
+    
+    
+    
+//    NSView *nextKeyView = [textField nextKeyView];
+//    NSUInteger whyEnd = [[[aNotification userInfo] objectForKey:@"NSTextMovement"] unsignedIntValue];
+//    BOOL returnKeyPressed = (whyEnd == NSReturnTextMovement);
+//    BOOL tabOrBacktabToSelf = ((whyEnd == NSTabTextMovement || whyEnd == NSBacktabTextMovement) && (nextKeyView == nil || nextKeyView == textField));
+//    if (returnKeyPressed || tabOrBacktabToSelf)
+//        NSLog(@"focus stays");
+//    else
+//        NSLog(@"focus leaves");
+}
 
 #pragma mark -
 #pragma mark DESTRUCTOR

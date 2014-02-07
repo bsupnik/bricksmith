@@ -440,9 +440,15 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		// a new one.
 	}
 	
-    // Parse the LSynth config file, using the bundled lsynth.mpd
-    // TODO: make the location a preference
-    NSString *lsynthConfigPath = [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];
+    // Parse the LSynth config file, using the bundled lsynth.mpd or a custom config file
+    NSString *lsynthConfigPath;
+    if ([[userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY] length] == 0) {
+        lsynthConfigPath = [[LSynthConfiguration sharedInstance] defaultConfigPath];
+//        lsynthConfigPath = [[NSBundle mainBundle] pathForResource:@"lsynth" ofType:@"mpd"];
+    }
+    else {
+        lsynthConfigPath = [userDefaults stringForKey:LSYNTH_CONFIGURATION_PATH_KEY];
+    }
     [self->lsynthConfiguration parseLsynthConfig:lsynthConfigPath];
 
 	// Register for Notifications
@@ -775,6 +781,8 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		NSInteger	tag				= [[menuSpec objectForKey:@"tag"] integerValue];
 		NSMenu		*elementMenu	= [[lsynthMenu itemWithTag:tag] submenu]; // one for each of part, constraint, hose, band etc.
 		
+        [elementMenu removeAllItems];
+        
 		// Retrieve the appropriate data for each menu entry, based on the getter given above
 		
 		for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])])

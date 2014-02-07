@@ -45,6 +45,7 @@ typedef enum
 #pragma mark Instance Methods
 #pragma mark -
 
+-(NSString *)defaultConfigPath;
 -(void) parseLsynthConfig:(NSString *)lsynthConfigurationPath;
 -(BOOL) isLSynthConstraint:(LDrawPart *)part;
 
