@@ -192,7 +192,7 @@
             //
 
             else {
-                NSLog(@"Unexpected line in LSynth definition at line %i: %@", lineIndex, currentLine);
+                NSLog(@"Unexpected line in LSynth definition at line %lu: %@", (long)lineIndex, currentLine);
             }
 
             lineIndex += 1;
@@ -887,7 +887,7 @@
     Class CommandClass = Nil;
 
     // Path to lsynth
-    NSString *lsynthPath = [[NSBundle mainBundle] pathForResource:@"lsynthcp" ofType:nil];
+    NSString *lsynthPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"lsynthcp"];
 
     // We run LSynth as follows:
     // - Create an LDraw file in memory
@@ -1337,6 +1337,8 @@
 //==============================================================================
 -(LSynthClassT)partClass
 {
+	LSynthClassT class = self->lsynthClass;
+	
     if (self->lsynthClass == LSYNTH_PART) {
         NSArray *partTypes = [[LSynthConfiguration sharedInstance] getParts];
 
@@ -1344,16 +1346,18 @@
         // use that part's class.
         for (NSDictionary *part in partTypes) {
             if ([[self lsynthType] isEqualToString:[part valueForKey:@"LSYNTH_TYPE"]]) {
-                return [[part valueForKey:@"LSYNTH_CLASS"] integerValue];
+                class = [[part valueForKey:@"LSYNTH_CLASS"] integerValue];
+				break;
             }
         }
     }
+	else
+	{
+		// For some reason we've been called when we're not a Part so trust that
+		// we have the correct class.
+	}
 
-    // For some reason we've been called when we're not a Part so trust that
-    // we have the correct class.
-    else {
-        return self->lsynthClass;
-    }
+	return class;
 }
 
 

@@ -382,7 +382,9 @@ void AppendChoicesToNewItem(
 		[[self documentContents] optimizeOpenGL];
 		
 		optimizeTime = CFAbsoluteTimeGetCurrent() - startTime;
+#if DEBUG
 		NSLog(@"optimize time = %f", optimizeTime);
+#endif
 	}
 	
 	return success;
@@ -461,7 +463,9 @@ void AppendChoicesToNewItem(
 			newFile     = [LDrawFile parseFromFileContents:fileContents];
 			parseTime   = CFAbsoluteTimeGetCurrent() - startTime;
 			
+#if DEBUG
 			NSLog(@"parse time = %f", parseTime);
+#endif
 			
 			if(newFile != nil)
 			{
@@ -1334,7 +1338,9 @@ void AppendChoicesToNewItem(
 	NSArray			*missingParts		= [partReport missingParts];
 
 	partReportTime = CFAbsoluteTimeGetCurrent() - startTime;
+#if DEBUG
 	NSLog(@"resolve time = %f", partReportTime);
+#endif
 
 	NSArray			*missingNames		= nil;
 	NSMutableString	*informativeString	= nil;
@@ -2820,7 +2826,6 @@ void AppendChoicesToNewItem(
 //==============================================================================
 -(void) insertINSIDEOUTSIDELSynthDirective:(id)sender
 {
-    NSLog(@"addINSIDEOUTSIDELSynthDirective");
     if(self->lastSelectedPart != nil) {
         LDrawLSynthDirective *direction = [[LDrawLSynthDirective alloc] init];
 

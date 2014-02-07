@@ -213,6 +213,7 @@
 		0BB010E11352BC9F006F3122 /* GridFineTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0BB010DE1352BC9F006F3122 /* GridFineTemplate.pdf */; };
 		0BB010E21352BC9F006F3122 /* GridMediumTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0BB010DF1352BC9F006F3122 /* GridMediumTemplate.pdf */; };
 		0BB129EA0D7BD208004E8CEC /* Spin.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0BB129E90D7BD208004E8CEC /* Spin.tiff */; };
+		0BB7E281189B817C00C2490A /* lsynth.mpd in Copy LSynth */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
 		0BBCFE801529492D00728A54 /* TableViewCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BBCFE7E1529492D00728A54 /* TableViewCategory.h */; };
 		0BBCFE811529492D00728A54 /* TableViewCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BBCFE7F1529492D00728A54 /* TableViewCategory.m */; };
 		0BC6992B08B5719000DAF996 /* LDrawMPDModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B6F384107C82025007B1075 /* LDrawMPDModel.h */; };
@@ -283,22 +284,18 @@
 		2BF2E3180AB0FCAB0026D5DB /* TransformerIntMinus1.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E3140AB0FCAB0026D5DB /* TransformerIntMinus1.m */; };
 		737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772074B205C7AB55711CFE /* LSynthHoseConstraint.tiff */; };
 		737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772C25D6D43398DCA3E163 /* LSynthPart.tiff */; };
-		737726AC692EF27FD80B47C7 /* ComputationalGeometry.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772E30A6856B15E73A951A /* ComputationalGeometry.h */; };
 		737726E8FC931A7828531671 /* ComputationalGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */; };
 		7377276DD2BFF116BEE36F0A /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 73772F01F06AC293E3F650C4 /* libicucore.dylib */; };
-		7377282209E6A7302CD897B9 /* InspectionLSynth.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 73772D9444E1E3B92321011F /* InspectionLSynth.h */; };
 		737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 7377270E2122E758D4D9AE9D /* LSynthBandConstraint.tiff */; };
 		73772B77F842475786994924 /* InspectionLSynth.m in Sources */ = {isa = PBXBuildFile; fileRef = 737728C3A3DF6166BE9183ED /* InspectionLSynth.m */; };
 		73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 73772CEA26F165C87F8AE5B9 /* LSynthDirection.tiff */; };
 		73772E2FDEFC3AB2B54D58D3 /* RegexKitLite.m in Sources */ = {isa = PBXBuildFile; fileRef = 737725695C55F263D18C33B9 /* RegexKitLite.m */; };
-		73772E30CD9A3193A4212A56 /* RegexKitLite.h in Copy Frameworks (1) */ = {isa = PBXBuildFile; fileRef = 7377248D1A5C278143C65104 /* RegexKitLite.h */; };
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
-		95D893AC165532B100AA055B /* lsynthcp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
-		95D893AE1655334500AA055B /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
+		95D893AC165532B100AA055B /* lsynthcp in Copy LSynth */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
 		95D893B816555F3E00AA055B /* LSynthConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 95D893B616555F3E00AA055B /* LSynthConfiguration.h */; };
 		95D893B916555F3E00AA055B /* LSynthConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D893B716555F3E00AA055B /* LSynthConfiguration.m */; };
 		95D893CA16569CFD00AA055B /* LDrawLSynth.h in Headers */ = {isa = PBXBuildFile; fileRef = 95D893C816569CFD00AA055B /* LDrawLSynth.h */; };
@@ -373,21 +370,20 @@
 			files = (
 				0BC71D910E6CC8340007F10D /* AMSProgressBar.framework in Copy Frameworks (1) */,
 				0B040CCE164F529F000CA89A /* Sparkle.framework in Copy Frameworks (1) */,
-				737726AC692EF27FD80B47C7 /* ComputationalGeometry.h in Copy Frameworks (1) */,
-				7377282209E6A7302CD897B9 /* InspectionLSynth.h in Copy Frameworks (1) */,
-				73772E30CD9A3193A4212A56 /* RegexKitLite.h in Copy Frameworks (1) */,
 			);
 			name = "Copy Frameworks (1)";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		95D893AB165532A400AA055B /* CopyFiles */ = {
+		95D893AB165532A400AA055B /* Copy LSynth */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 7;
+			dstSubfolderSpec = 6;
 			files = (
-				95D893AC165532B100AA055B /* lsynthcp in CopyFiles */,
+				0BB7E281189B817C00C2490A /* lsynth.mpd in Copy LSynth */,
+				95D893AC165532B100AA055B /* lsynthcp in Copy LSynth */,
 			);
+			name = "Copy LSynth";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -1469,7 +1465,7 @@
 				8D15AC300486D014006FF6A4 /* Sources */,
 				8D15AC330486D014006FF6A4 /* Frameworks */,
 				0BB5926D08AD93610049B708 /* Copy Frameworks (1) */,
-				95D893AB165532A400AA055B /* CopyFiles */,
+				95D893AB165532A400AA055B /* Copy LSynth */,
 			);
 			buildRules = (
 			);
@@ -1584,7 +1580,6 @@
 				0B9FE59C08AD97670046511D /* LDrawLogo.tiff in Resources */,
 				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
 				0B9FE5B708AD97770046511D /* Line.tiff in Resources */,
-				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
 				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
 				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
 				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
@@ -2025,7 +2020,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)\"",
 					"\"$(SRCROOT)/../ThirdParty\"",
 					"\"$(SRCROOT)/../ThirdParty/Sparkle\"",
 				);
@@ -2036,11 +2030,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Other/Mac LDraw_Prefix.pch";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)/AMSProgressBar.framework/Headers\"";
 				IBC_NOTICES = NO;
 				IBC_WARNINGS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",
@@ -2058,7 +2052,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)\"",
 					"\"$(SRCROOT)/../ThirdParty\"",
 					"\"$(SRCROOT)/../ThirdParty/Sparkle\"",
 				);
@@ -2067,11 +2060,11 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Source/Other/Mac LDraw_Prefix.pch";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../AMSProgressBar/build/$(CONFIGURATION)/AMSProgressBar.framework/Headers\"";
 				IBC_NOTICES = NO;
 				IBC_WARNINGS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",

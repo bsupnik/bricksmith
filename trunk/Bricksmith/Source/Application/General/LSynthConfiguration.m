@@ -143,7 +143,6 @@ static LSynthConfiguration* instance = nil;
     // LSynth sscanf()-specific line scanning variables
     char        product[126],
                 title[128],
-                method[128],
                 type[128],
                 stretch[128],
                 fill[128];

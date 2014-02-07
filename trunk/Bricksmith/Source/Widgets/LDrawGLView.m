@@ -2508,7 +2508,7 @@ static NSSize Size2ToNSSize(Size2 size)
 
     // this doesn't cause a redraw.  Would be nice if it did.
     for (LDrawDirective *directive in [delegate selectedObjects]) {
-        NSLog(@"directive: %@", directive);
+//        NSLog(@"directive: %@", directive);
         [directive sendMessageToObservers:MessageObservedChanged];
     }
 
