@@ -151,7 +151,7 @@
 //========== copyWithZone: =====================================================
 //
 // Purpose:		Returns a duplicate of this object. 
-//				This thing has issules. Note caveats in LDrawContainer.
+//				This thing has issues. Note caveats in LDrawContainer.
 //
 //==============================================================================
 - (id) copyWithZone:(NSZone *)zone
