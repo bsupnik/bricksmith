@@ -515,37 +515,117 @@ static PartLibrary *SharedPartLibrary = nil;
 //==============================================================================
 - (BOOL) reloadParts
 {
-	NSFileManager		*fileManager		= [[[NSFileManager alloc] init] autorelease];
-	NSString			*ldrawPath			= [[LDrawPaths sharedPaths] preferredLDrawPath];
+	NSFileManager	*fileManager			= [[[NSFileManager alloc] init] autorelease];
+	LDrawPaths		*sharedPaths			= [LDrawPaths sharedPaths];
+	NSString		*ldrawPath				= [sharedPaths preferredLDrawPath];
+	NSMutableArray	*searchPaths			= [NSMutableArray array];
+	
+	NSString		*prefix_primitives48	= [NSString stringWithFormat:@"%@\\", PRIMITIVES_48_DIRECTORY_NAME];
+	NSString		*prefix_subparts		= [NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME];
 	
 	//make sure the LDraw folder is still valid; otherwise, why bother doing anything?
-	if([[LDrawPaths sharedPaths] validateLDrawFolder:ldrawPath] == NO)
+	if([sharedPaths validateLDrawFolder:ldrawPath] == NO)
 		return NO;
 	
-	//assemble all the pathnames to be searched.
-	NSString            *primitivesPath             = [[LDrawPaths sharedPaths] primitivesPathForDomain:LDrawOfficial];
-	NSString            *primitives48Path           = [[LDrawPaths sharedPaths] primitives48PathForDomain:LDrawOfficial];
-	NSString            *partsPath                  = [[LDrawPaths sharedPaths] partsPathForDomain:LDrawOfficial];
-	NSString            *subpartsPath               = [[LDrawPaths sharedPaths] subpartsPathForDomain:LDrawOfficial];
 	
-	//search unofficial directories as well.
-	NSString            *unofficialPrimitivesPath   = [[LDrawPaths sharedPaths] primitivesPathForDomain:LDrawUnofficial];
-	NSString            *unofficialPrimitives48Path = [[LDrawPaths sharedPaths] primitives48PathForDomain:LDrawUnofficial];
-	NSString            *unofficialPartsPath        = [[LDrawPaths sharedPaths] partsPathForDomain:LDrawUnofficial];
-	NSString            *unofficialSubpartsPath     = [[LDrawPaths sharedPaths] subpartsPathForDomain:LDrawUnofficial];
+	// Parts
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths partsPathForDomain:LDrawUserOfficial],					@"path",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths partsPathForDomain:LDrawUserUnofficial],				@"path",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths partsPathForDomain:LDrawInternalOfficial],				@"path",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths partsPathForDomain:LDrawInternalUnofficial],			@"path",
+								nil]];
+
+	// Primitives
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitivesPathForDomain:LDrawUserOfficial],			@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								nil]];
+								
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitivesPathForDomain:LDrawUserUnofficial],			@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								nil]];
 	
-	NSString            *partCatalogPath            = [[LDrawPaths sharedPaths] partCatalogPath];
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitivesPathForDomain:LDrawInternalOfficial],		@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								nil]];
+								
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitivesPathForDomain:LDrawInternalUnofficial],		@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								nil]];
+	
+	// Primitives 48
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitives48PathForDomain:LDrawUserOfficial],			@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								prefix_primitives48,												@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitives48PathForDomain:LDrawUserUnofficial],		@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								prefix_primitives48,												@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitives48PathForDomain:LDrawInternalOfficial],		@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								prefix_primitives48,												@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths primitives48PathForDomain:LDrawInternalUnofficial],	@"path",
+								NSLocalizedString(Category_Primitives, nil),						@"category",
+								prefix_primitives48,												@"prefix",
+								nil]];
+
+	// Subparts
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths subpartsPathForDomain:LDrawUserOfficial],				@"path",
+								NSLocalizedString(Category_Subparts, nil),							@"category",
+								prefix_subparts,													@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths subpartsPathForDomain:LDrawUserUnofficial],			@"path",
+								NSLocalizedString(Category_Subparts, nil),							@"category",
+								prefix_subparts,													@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths subpartsPathForDomain:LDrawInternalOfficial],			@"path",
+								NSLocalizedString(Category_Subparts, nil),							@"category",
+								prefix_subparts,													@"prefix",
+								nil]];
+
+	[searchPaths addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+								[sharedPaths subpartsPathForDomain:LDrawInternalUnofficial],		@"path",
+								NSLocalizedString(Category_Subparts, nil),							@"category",
+								prefix_subparts,													@"prefix",
+								nil]];
+
+	NSString            *partCatalogPath            = [sharedPaths partCatalogPath];
 	NSMutableDictionary *newPartCatalog             = [NSMutableDictionary dictionary];
 	
+	NSUInteger			partCount					= 0;
+	
 	// Start the progress bar so that we know what's happening.
-	NSUInteger			partCount					=		[[fileManager contentsOfDirectoryAtPath:primitivesPath				error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:primitives48Path			error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:partsPath					error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:subpartsPath				error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:unofficialPrimitivesPath	error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:unofficialPrimitives48Path	error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:unofficialPartsPath			error:NULL] count]
-														+	[[fileManager contentsOfDirectoryAtPath:unofficialSubpartsPath		error:NULL] count];
+	for(NSString *path in [searchPaths valueForKey:@"path"])
+	{
+		partCount += [[fileManager contentsOfDirectoryAtPath:path error:NULL] count];
+	}
 	[delegate partLibrary:self maximumPartCountToLoad:partCount];
 	
 	
@@ -553,49 +633,14 @@ static PartLibrary *SharedPartLibrary = nil;
 	[newPartCatalog setObject:[NSMutableDictionary dictionary] forKey:PARTS_CATALOG_KEY];
 	[newPartCatalog setObject:[NSMutableDictionary dictionary] forKey:PARTS_LIST_KEY];
 	
-	
 	// Scan for each part folder.
-	[self addPartsInFolder:primitivesPath
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Primitives, nil) //override all internal categories
-				namePrefix:nil ];
-	
-	[self addPartsInFolder:primitives48Path
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Primitives, nil) //override all internal categories
-				namePrefix:[NSString stringWithFormat:@"%@\\", PRIMITIVES_48_DIRECTORY_NAME] ];
-	
-	[self addPartsInFolder:partsPath
-				 toCatalog:newPartCatalog
-			 underCategory:nil //pick up category names defined by parts
-				namePrefix:nil ];
-	
-	[self addPartsInFolder:subpartsPath
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Subparts, nil)
-				namePrefix:[NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME] ]; //prefix subpart numbers with the DOS path "s\"; that's just how it is. Yuck!
-	
-	
-	//Scan unofficial part folders.
-	[self addPartsInFolder:unofficialPrimitivesPath
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Primitives, nil) //groups unofficial primitives with official primitives
-			    namePrefix:nil ]; //a directory deeper, but no DOS path separators to manage
-	
-	[self addPartsInFolder:unofficialPrimitives48Path
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Primitives, nil)
-				namePrefix:[NSString stringWithFormat:@"%@\\", PRIMITIVES_48_DIRECTORY_NAME] ];
-	
-	[self addPartsInFolder:unofficialPartsPath
-				 toCatalog:newPartCatalog
-			 underCategory:nil
-				namePrefix:nil ];
-	
-	[self addPartsInFolder:unofficialSubpartsPath
-				 toCatalog:newPartCatalog
-			 underCategory:NSLocalizedString(Category_Subparts, nil) //groups unofficial subparts with official subparts
-				namePrefix:[NSString stringWithFormat:@"%@\\", SUBPARTS_DIRECTORY_NAME] ];
+	for(NSDictionary *record in searchPaths)
+	{
+		[self addPartsInFolder:[record objectForKey:@"path"]
+					 toCatalog:newPartCatalog
+				 underCategory:[record objectForKey:@"category"] //override all internal categories
+					namePrefix:[record objectForKey:@"prefix"] ];
+	}
 	
 	NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
 	[newPartCatalog setObject:version forKey:VERSION_KEY];
@@ -605,8 +650,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	[newPartCatalog writeToFile:partCatalogPath atomically:YES];
 	[self setPartCatalog:newPartCatalog];
 	
-	[[NSNotificationCenter defaultCenter]
-			postNotificationName:LDrawPartLibraryReloaded object:self ];
+	[[NSNotificationCenter defaultCenter] postNotificationName:LDrawPartLibraryReloaded object:self ];
 	
 	// We succeeded in loading the parts!
 	return YES;
@@ -1339,26 +1383,29 @@ static PartLibrary *SharedPartLibrary = nil;
 				//---------- Catalog the part ----------------------------------
 				
 				NSString *category = [categoryRecord objectForKey:PART_CATEGORY_KEY];
-				catalog_category = [catalog_categories objectForKey:category];
-				if(catalog_category == nil)
+				if(category)
 				{
-					//We haven't encountered this category yet. Initialize it now.
-					catalog_category = [NSMutableArray array];
-					[catalog_categories setObject:catalog_category forKey:category ];
+					catalog_category = [catalog_categories objectForKey:category];
+					if(catalog_category == nil)
+					{
+						//We haven't encountered this category yet. Initialize it now.
+						catalog_category = [NSMutableArray array];
+						[catalog_categories setObject:catalog_category forKey:category ];
+					}
+					
+					// For some reason, I made each entry in the category a
+					// dictionary with part info. This was a database design
+					// mistake; it should have been an array of part reference
+					// numbers, if not just built up at runtime.
+					NSString *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
+																		  forKey:PART_NUMBER_KEY];
+					[catalog_category addObject:categoryEntry];
+					
+					
+					// Also file the part in a master list by reference name.
+					[catalog_partNumbers setObject:categoryRecord
+											forKey:[categoryRecord objectForKey:PART_NUMBER_KEY] ];
 				}
-				
-				// For some reason, I made each entry in the category a 
-				// dictionary with part info. This was a database design 
-				// mistake; it should have been an array of part reference 
-				// numbers, if not just built up at runtime. 
-				NSString *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
-																	  forKey:PART_NUMBER_KEY];
-				[catalog_category addObject:categoryEntry];
-				
-				
-				// Also file the part in a master list by reference name.
-				[catalog_partNumbers setObject:categoryRecord
-										forKey:[categoryRecord objectForKey:PART_NUMBER_KEY] ];
 										
 //				NSLog(@"processed %@", [partNames objectAtIndex:counter]);
 			}

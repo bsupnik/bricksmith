@@ -208,6 +208,7 @@
 		0B9FE5D308AD97990046511D /* Bricksmith.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0B9FE5CA08AD97990046511D /* Bricksmith.icns */; };
 		0BA24BEA0EFF2A6500BF9915 /* StringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BA24BE80EFF2A6500BF9915 /* StringUtilities.h */; };
 		0BA24BEB0EFF2A6500BF9915 /* StringUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BA24BE90EFF2A6500BF9915 /* StringUtilities.m */; };
+		0BA3BE5E1772B3E10087579B /* LDraw in Resources */ = {isa = PBXBuildFile; fileRef = 0BA3BE421772B3E10087579B /* LDraw */; };
 		0BB010E01352BC9F006F3122 /* GridCoarseTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0BB010DD1352BC9F006F3122 /* GridCoarseTemplate.pdf */; };
 		0BB010E11352BC9F006F3122 /* GridFineTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0BB010DE1352BC9F006F3122 /* GridFineTemplate.pdf */; };
 		0BB010E21352BC9F006F3122 /* GridMediumTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0BB010DF1352BC9F006F3122 /* GridMediumTemplate.pdf */; };
@@ -602,6 +603,7 @@
 		0B9FE5CA08AD97990046511D /* Bricksmith.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Bricksmith.icns; sourceTree = "<group>"; };
 		0BA24BE80EFF2A6500BF9915 /* StringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringUtilities.h; sourceTree = "<group>"; };
 		0BA24BE90EFF2A6500BF9915 /* StringUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StringUtilities.m; sourceTree = "<group>"; };
+		0BA3BE421772B3E10087579B /* LDraw */ = {isa = PBXFileReference; lastKnownFileType = folder; path = LDraw; sourceTree = "<group>"; };
 		0BB010DD1352BC9F006F3122 /* GridCoarseTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = GridCoarseTemplate.pdf; sourceTree = "<group>"; };
 		0BB010DE1352BC9F006F3122 /* GridFineTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = GridFineTemplate.pdf; sourceTree = "<group>"; };
 		0BB010DF1352BC9F006F3122 /* GridMediumTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = GridMediumTemplate.pdf; sourceTree = "<group>"; };
@@ -1256,6 +1258,7 @@
 				2BF2E2CC0AB0FBB50026D5DB /* MLCad.ini */,
 				0BC6AACC0987296700505A88 /* Help */,
 				0B04E9461093BB4200E201EE /* Interface */,
+				0BA3BE421772B3E10087579B /* LDraw */,
 				0B6F427107CDAE8C007B1075 /* Graphics */,
 				0B9FE5C308AD97990046511D /* Icon */,
 				8D15AC360486D014006FF6A4 /* Info.plist */,
@@ -1485,6 +1488,8 @@
 /* Begin PBXProject section */
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 2BB5975109FEFD180077A885 /* Build configuration list for PBXProject "Bricksmith" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1536,9 +1541,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B9FE55008AD971E0046511D /* InfoPlist.strings in Resources */,
-				0B9FE56608AD97280046511D /* Credits.rtf in Resources */,
-				0BC6AAEB0987296700505A88 /* Help in Resources */,
+				0B2700E8098203320058A7BE /* Arrow.tiff in Resources */,
 				0B9FE58D08AD97670046511D /* ArrowE+.tiff in Resources */,
 				0B9FE58E08AD97670046511D /* ArrowE.tiff in Resources */,
 				0B9FE58F08AD97670046511D /* ArrowN-.tiff in Resources */,
@@ -1551,45 +1554,72 @@
 				0B9FE59608AD97670046511D /* ArrowSW.tiff in Resources */,
 				0B9FE59708AD97670046511D /* ArrowW-.tif in Resources */,
 				0B9FE59808AD97670046511D /* ArrowW.tiff in Resources */,
+				0B9FE5B308AD97770046511D /* Brick.tiff in Resources */,
+				0B9FE5D308AD97990046511D /* Bricksmith.icns in Resources */,
+				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
+				0B2FAE60101972DF007BA948 /* Bum.ldr in Resources */,
+				0B4EE02F0DBD8AB800399F88 /* ColorDroplet.tiff in Resources */,
+				0B9FE5B408AD97770046511D /* Comment.tiff in Resources */,
+				0B9FE5B508AD97770046511D /* ConditionalLine.tiff in Resources */,
+				0B05899C09849F5A0089FD81 /* Crosshair.tiff in Resources */,
+				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
+				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
+				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
+				0B9FE5B608AD97770046511D /* Document.tiff in Resources */,
+				0B4BFB4B10D46C2E0002D482 /* DragAndDrop.tiff in Resources */,
+				0B06F6200F5BB425004E7DD7 /* FavoriteAdd.pdf in Resources */,
+				0B06F6240F5D0588004E7DD7 /* FavoriteRemove.pdf in Resources */,
+				0BB010E01352BC9F006F3122 /* GridCoarseTemplate.pdf in Resources */,
+				0BB010E11352BC9F006F3122 /* GridFineTemplate.pdf in Resources */,
+				0BB010E21352BC9F006F3122 /* GridMediumTemplate.pdf in Resources */,
+				0B2700E7098203320058A7BE /* Hand.tiff in Resources */,
+				0BF246931355624A0043AAAF /* InsertCommentTemplate.pdf in Resources */,
+				0B70D0A7135A616800BC8B0A /* InsertModelTemplate.pdf in Resources */,
+				0BF246941355624A0043AAAF /* InsertPrimitiveTemplate.pdf in Resources */,
+				0BF246951355624A0043AAAF /* InsertReferenceTemplate.pdf in Resources */,
+				0BF246961355624A0043AAAF /* InsertStepTemplate.pdf in Resources */,
+				0B9907630DD7EDBB003F6B13 /* LDConfig.ldr in Resources */,
+				0BA3BE5E1772B3E10087579B /* LDraw in Resources */,
+				0B9FE5D208AD97990046511D /* LDraw Document.icns in Resources */,
 				0B9FE59C08AD97670046511D /* LDrawLogo.tiff in Resources */,
+				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
+				0B9FE5B708AD97770046511D /* Line.tiff in Resources */,
+				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
+				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
+				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
+				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
+				957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */,
+				737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */,
+				2BF2E2CD0AB0FBB50026D5DB /* MLCad.ini in Resources */,
+				0B9FE5BD08AD977F0046511D /* OneBrick.tiff in Resources */,
+				0BFD363A0EEA49E100A1AAF5 /* PartBrowser.png in Resources */,
+				0B639758106F3CF800C93F6E /* PlacardButtonClose12.pdf in Resources */,
+				0B639759106F3CF800C93F6E /* PlacardButtonSplit12.pdf in Resources */,
+				0B30E0D40EDA746900470615 /* Quadrilateral.pdf in Resources */,
 				0B9FE59D08AD97670046511D /* Rotate+X.tiff in Resources */,
 				0B9FE59E08AD97670046511D /* Rotate+Y.tiff in Resources */,
 				0B9FE59F08AD97670046511D /* Rotate+Z.tiff in Resources */,
 				0B9FE5A008AD97670046511D /* Rotate-X.tiff in Resources */,
 				0B9FE5A108AD97670046511D /* Rotate-Y.tiff in Resources */,
 				0B9FE5A208AD97670046511D /* Rotate-Z.tiff in Resources */,
-				0B9FE5A308AD97670046511D /* Snap To Grid.png in Resources */,
-				0B9FE5A408AD97670046511D /* SyntaxColoring.tiff in Resources */,
-				0B9FE5B308AD97770046511D /* Brick.tiff in Resources */,
-				0B9FE5B408AD97770046511D /* Comment.tiff in Resources */,
-				0B9FE5B508AD97770046511D /* ConditionalLine.tiff in Resources */,
-				0B9FE5B608AD97770046511D /* Document.tiff in Resources */,
-				0B9FE5B708AD97770046511D /* Line.tiff in Resources */,
-				0B9FE5BA08AD97770046511D /* Unknown.tiff in Resources */,
-				0B9FE5BD08AD977F0046511D /* OneBrick.tiff in Resources */,
-				0B9FE5D208AD97990046511D /* LDraw Document.icns in Resources */,
-				0B9FE5D308AD97990046511D /* Bricksmith.icns in Resources */,
-				0B34306708B2E93D00A06A40 /* Localizable.strings in Resources */,
-				0B8EBCF10938383000D87E0C /* ZoomInCursor.tiff in Resources */,
-				0B8EBCF20938383000D87E0C /* ZoomOutCursor.tiff in Resources */,
-				0B8EBD010938393800D87E0C /* ZoomCursor.tiff in Resources */,
-				0B2700E7098203320058A7BE /* Hand.tiff in Resources */,
-				0B2700E8098203320058A7BE /* Arrow.tiff in Resources */,
-				0B05899C09849F5A0089FD81 /* Crosshair.tiff in Resources */,
-				2BF2E2CD0AB0FBB50026D5DB /* MLCad.ini in Resources */,
-				0BB129EA0D7BD208004E8CEC /* Spin.tiff in Resources */,
-				0B4EE02F0DBD8AB800399F88 /* ColorDroplet.tiff in Resources */,
-				0B9907630DD7EDBB003F6B13 /* LDConfig.ldr in Resources */,
 				0B17D2490ECE89C000F8B5FA /* RotationStep.pdf in Resources */,
 				0B17D2FF0ED0D4C400F8B5FA /* RotationStepEnd.pdf in Resources */,
+				0B9FE5A308AD97670046511D /* Snap To Grid.png in Resources */,
+				0BB129EA0D7BD208004E8CEC /* Spin.tiff in Resources */,
+				0B9FE5A408AD97670046511D /* SyntaxColoring.tiff in Resources */,
+				D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */,
+				0B9524781585873800F3EE79 /* Texture.pdf in Resources */,
 				0B30E08B0ED90D3000470615 /* Triangle.pdf in Resources */,
-				0B30E0D40EDA746900470615 /* Quadrilateral.pdf in Resources */,
-				0BFD363A0EEA49E100A1AAF5 /* PartBrowser.png in Resources */,
-				0B06F6200F5BB425004E7DD7 /* FavoriteAdd.pdf in Resources */,
-				0B06F6240F5D0588004E7DD7 /* FavoriteRemove.pdf in Resources */,
-				0B2FAE60101972DF007BA948 /* Bum.ldr in Resources */,
-				0B639758106F3CF800C93F6E /* PlacardButtonClose12.pdf in Resources */,
-				0B639759106F3CF800C93F6E /* PlacardButtonSplit12.pdf in Resources */,
+				0B9FE5BA08AD97770046511D /* Unknown.tiff in Resources */,
+				0B8EBD010938393800D87E0C /* ZoomCursor.tiff in Resources */,
+				0BF246B31355670B0043AAAF /* ZoomIn.pdf in Resources */,
+				0B8EBCF10938383000D87E0C /* ZoomInCursor.tiff in Resources */,
+				0BF246B41355670B0043AAAF /* ZoomOut.pdf in Resources */,
+				0B8EBCF20938383000D87E0C /* ZoomOutCursor.tiff in Resources */,
+				0B9FE55008AD971E0046511D /* InfoPlist.strings in Resources */,
+				0B9FE56608AD97280046511D /* Credits.rtf in Resources */,
+				0BC6AAEB0987296700505A88 /* Help in Resources */,
+				0B34306708B2E93D00A06A40 /* Localizable.strings in Resources */,
 				0B04E97B1093BB4200E201EE /* ColorPanel.xib in Resources */,
 				0B04E97C1093BB4200E201EE /* Dimensions.xib in Resources */,
 				0B04E97D1093BB4200E201EE /* Donation.xib in Resources */,
@@ -1615,31 +1645,7 @@
 				0B04E9911093BB4200E201EE /* Preferences.xib in Resources */,
 				0B04E9921093BB4200E201EE /* RotationPanel.xib in Resources */,
 				0B04E9931093BB4200E201EE /* ToolPalette.xib in Resources */,
-				0B4BFB4B10D46C2E0002D482 /* DragAndDrop.tiff in Resources */,
-				0BB010E01352BC9F006F3122 /* GridCoarseTemplate.pdf in Resources */,
-				0BB010E11352BC9F006F3122 /* GridFineTemplate.pdf in Resources */,
-				0BB010E21352BC9F006F3122 /* GridMediumTemplate.pdf in Resources */,
-				0BF246931355624A0043AAAF /* InsertCommentTemplate.pdf in Resources */,
-				0BF246941355624A0043AAAF /* InsertPrimitiveTemplate.pdf in Resources */,
-				0BF246951355624A0043AAAF /* InsertReferenceTemplate.pdf in Resources */,
-				0BF246961355624A0043AAAF /* InsertStepTemplate.pdf in Resources */,
-				0BF246B31355670B0043AAAF /* ZoomIn.pdf in Resources */,
-				0BF246B41355670B0043AAAF /* ZoomOut.pdf in Resources */,
-				0B70D0A7135A616800BC8B0A /* InsertModelTemplate.pdf in Resources */,
-				0B9524781585873800F3EE79 /* Texture.pdf in Resources */,
-				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
-				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
-				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
-				D6EDBA0D164DF86F00B4062B /* test.glsl in Resources */,
-				0B040CD7164F5511000CA89A /* Bricksmith_Sparkle_signature_public.pem in Resources */,
-				95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */,
-				95D893AE1655334500AA055B /* lsynth.mpd in Resources */,
-				737721916EB272405BEC2767 /* LSynthPart.tiff in Resources */,
-				737729AF104D09B8C9BE461E /* LSynthBandConstraint.tiff in Resources */,
-				737721608B15F736FDE3D573 /* LSynthHoseConstraint.tiff in Resources */,
-				73772C35C91BE7B7B6A56DB0 /* LSynthDirection.tiff in Resources */,
 				0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */,
-				957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */,
 				D687D424170A6DF3007300E2 /* related.ldr in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2042,7 +2048,6 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.7;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2074,7 +2079,6 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
-				SDKROOT = macosx10.7;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2091,7 +2095,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.8;
 			};
 			name = Debug;
 		};
@@ -2106,7 +2110,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.7;
+				SDKROOT = macosx10.8;
 			};
 			name = Release;
 		};

@@ -51,6 +51,24 @@
 #pragma mark ACCESSORS
 #pragma mark -
 
+//========== internalLDrawPath =================================================
+//
+// Purpose:		References an LDraw folder baked into Bricksmith to distribute 
+//				some unofficial parts. 
+//
+//==============================================================================
+- (NSString *) internalLDrawPath
+{
+	NSBundle		*mainBundle		= nil;
+	NSString		*builtInPath	= nil;
+	
+	mainBundle	= [NSBundle mainBundle];
+	builtInPath	= [[mainBundle resourcePath] stringByAppendingPathComponent:LDRAW_DIRECTORY_NAME];
+	
+	return builtInPath;
+}
+
+
 //========== preferredLDrawPath ================================================
 //==============================================================================
 - (NSString *) preferredLDrawPath
@@ -80,16 +98,26 @@
 //==============================================================================
 - (NSString *) partsPathForDomain:(LDrawDomain)domain
 {
-	NSString *path = nil;
-
-	if(domain == LDrawOfficial)
+	NSString	*baseLDrawPath	= nil;
+	NSString	*path			= nil;
+	
+	if(domain == LDrawUserOfficial || domain == LDrawUserUnofficial)
 	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:PARTS_DIRECTORY_NAME];
+		baseLDrawPath = self->preferredLDrawPath;
 	}
 	else
 	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:UNOFFICIAL_DIRECTORY_NAME];
-		path = [path                     stringByAppendingPathComponent:PARTS_DIRECTORY_NAME];
+		baseLDrawPath = [self internalLDrawPath];
+	}
+
+	if(domain == LDrawUserOfficial || domain == LDrawInternalOfficial)
+	{
+		path = [baseLDrawPath stringByAppendingPathComponent:PARTS_DIRECTORY_NAME];
+	}
+	else
+	{
+		path = [baseLDrawPath stringByAppendingPathComponent:UNOFFICIAL_DIRECTORY_NAME];
+		path = [path          stringByAppendingPathComponent:PARTS_DIRECTORY_NAME];
 	}
 	
 	return path;
@@ -100,16 +128,26 @@
 //==============================================================================
 - (NSString *) primitivesPathForDomain:(LDrawDomain)domain
 {
-	NSString *path = nil;
-
-	if(domain == LDrawOfficial)
+	NSString	*baseLDrawPath	= nil;
+	NSString	*path			= nil;
+	
+	if(domain == LDrawUserOfficial || domain == LDrawUserUnofficial)
 	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:PRIMITIVES_DIRECTORY_NAME];
+		baseLDrawPath = self->preferredLDrawPath;
 	}
 	else
 	{
-		path = [self->preferredLDrawPath stringByAppendingPathComponent:UNOFFICIAL_DIRECTORY_NAME];
-		path = [path                     stringByAppendingPathComponent:PRIMITIVES_DIRECTORY_NAME];
+		baseLDrawPath = [self internalLDrawPath];
+	}
+	
+	if(domain == LDrawUserOfficial || domain == LDrawInternalOfficial)
+	{
+		path = [baseLDrawPath stringByAppendingPathComponent:PRIMITIVES_DIRECTORY_NAME];
+	}
+	else
+	{
+		path = [baseLDrawPath stringByAppendingPathComponent:UNOFFICIAL_DIRECTORY_NAME];
+		path = [path          stringByAppendingPathComponent:PRIMITIVES_DIRECTORY_NAME];
 	}
 	
 	return path;
@@ -342,13 +380,24 @@
 //==============================================================================
 - (NSString *) pathForPartName:(NSString *)partName
 {
-	NSFileManager   *fileManager                = [[[NSFileManager alloc] init] autorelease];
-	NSString        *primitivesPath             = [self primitivesPathForDomain:LDrawOfficial];
-	NSString        *partsPath                  = [self partsPathForDomain:LDrawOfficial];
-	NSString        *unofficialPrimitivesPath   = [self primitivesPathForDomain:LDrawUnofficial];
-	NSString        *unofficialPartsPath        = [self partsPathForDomain:LDrawUnofficial];
-	NSMutableString *fixedPartName              = [NSMutableString stringWithString:partName];
-	NSString        *partPath                   = nil;
+	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
+	static NSArray	*searchPaths	= nil;
+	NSMutableString *fixedPartName	= [NSMutableString stringWithString:partName];
+	NSString		*partPath		= nil;
+	
+	if(searchPaths == nil)
+	{
+		searchPaths = [[NSArray alloc] initWithObjects:
+							[self partsPathForDomain:LDrawUserOfficial],
+							[self primitivesPathForDomain:LDrawUserOfficial],
+							[self partsPathForDomain:LDrawUserUnofficial],
+							[self primitivesPathForDomain:LDrawUserUnofficial],
+							[self partsPathForDomain:LDrawInternalOfficial],
+							[self primitivesPathForDomain:LDrawInternalOfficial],
+							[self partsPathForDomain:LDrawInternalUnofficial],
+							[self primitivesPathForDomain:LDrawInternalUnofficial],
+							nil];
+	}
 	
 	// LDraw references parts in subfolders by their relative pathnames in DOS 
 	// (e.g., "s\765s01.dat"). Convert to UNIX for simple searching.
@@ -367,19 +416,13 @@
 	{
 		//We have a file path name; try each directory.
 		
-		primitivesPath              = [primitivesPath			stringByAppendingPathComponent:fixedPartName];
-		partsPath                   = [partsPath				stringByAppendingPathComponent:fixedPartName];
-		unofficialPrimitivesPath    = [unofficialPrimitivesPath	stringByAppendingPathComponent:fixedPartName];
-		unofficialPartsPath         = [unofficialPartsPath		stringByAppendingPathComponent:fixedPartName];
-		
-		if([fileManager fileExistsAtPath:partsPath])
-			partPath = partsPath;
-		else if([fileManager fileExistsAtPath:primitivesPath])
-			partPath = primitivesPath;
-		else if([fileManager fileExistsAtPath:unofficialPartsPath])
-			partPath = unofficialPartsPath;
-		else if([fileManager fileExistsAtPath:unofficialPrimitivesPath])
-			partPath = unofficialPrimitivesPath;
+		for(NSString *basePath in searchPaths)
+		{
+			NSString *testPath = [basePath stringByAppendingPathComponent:fixedPartName];
+			
+			if([fileManager fileExistsAtPath:testPath])
+				partPath = testPath;
+		}
 	}
 	
 	return partPath;
