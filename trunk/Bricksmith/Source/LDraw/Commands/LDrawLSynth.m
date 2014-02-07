@@ -1302,8 +1302,9 @@
     // Only add valid parts as constraints; invalid ones are passed to our container
     // This arises if a synth part is selected and a part is dragged from the
     // part chooser to the view.
-    if ([[LSynthConfiguration sharedInstance] isLSynthConstraint:directive]
-        || [directive isKindOfClass:[LDrawLSynthDirective class]]) {
+    if (	([directive isKindOfClass:[LDrawPart class]] && [[LSynthConfiguration sharedInstance] isLSynthConstraint:(LDrawPart*)directive])
+        ||	[directive isKindOfClass:[LDrawLSynthDirective class]])
+	{
         return YES;
     }
     return NO;

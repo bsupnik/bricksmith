@@ -2642,6 +2642,7 @@ void AppendChoicesToNewItem(
 		
 }//end modelSelected
 
+
 #pragma mark Models Menu - LSynth Submenu
 
 //========== insertSynthesizableDirective: =====================================
@@ -2654,18 +2655,13 @@ void AppendChoicesToNewItem(
 //==============================================================================
 - (void) insertSynthesizableDirective:(id)sender
 {
-    LDrawLSynth         *synthesizedObject = [[[LDrawLSynth alloc] init] autorelease];
-    //NSUndoManager       *undoManager   = [self undoManager];
+    LDrawLSynth		*synthesizedObject	= [[[LDrawLSynth alloc] init] autorelease];
+	NSDictionary	*synthEntry			= [sender representedObject];
+	NSString		*type				= [synthEntry objectForKey:@"LSYNTH_TYPE"];
+    LDrawColor		*selectedColor		= [[LDrawColorPanel sharedColorPanel] LDrawColor];
+    NSUndoManager	*undoManager		= [self undoManager];
+	NSString		*undoName			= nil;
 
-    // TODO: fixup colour choice for synthesizable parts
-    // from partbrowserdatasource:
-    // [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
-    //LDrawColor          *selectedColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
-    // Allow for no color selected
-    LDrawColor *selectedColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
-    NSString *type = [[sender representedObject] objectForKey:@"LSYNTH_TYPE"];
-
-    //[synthesizedObject setImageName:[[sender representedObject] objectForKey:@"title"]];
     [synthesizedObject setLDrawColor:selectedColor];
     [synthesizedObject setLsynthType:type];
 
@@ -2683,58 +2679,13 @@ void AppendChoicesToNewItem(
     else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
         [synthesizedObject setLsynthClass:LSYNTH_PART];
     }
+	
+	[self addStepComponent:synthesizedObject parent:nil index:NSNotFound];
 
-    // Check we're being called sensibly (i.e. from a menu)
-    if (sender != nil && [sender representedObject] != nil) {
+	undoName = [NSString stringWithFormat:NSLocalizedString(@"UndoAddLSynth", nil), [synthEntry objectForKey:@"title"]];
+	[undoManager setActionName:undoName];
+	[[self documentContents] noteNeedsDisplay];
 
-        // NEW
-        LDrawContainer *parent = nil;
-        NSInteger index = 0;
-
-        // Step selected
-        if ([[fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]] isMemberOfClass:[LDrawStep class]]) {
-            parent = [fileContentsOutline itemAtRow:[fileContentsOutline selectedRow]];
-            index = [[parent subdirectives] count];
-        }
-
-        // No selection, add it at the bottom
-        else if (self->lastSelectedPart == nil) {
-            parent = nil;       // leave it up to the addStepComponent: method to add our Synth step correctly
-            index = NSNotFound; // add at the end
-        }
-        
-        // LDrawLSynth is selected
-        // - Add it after
-        // - Parent is the LDrawLSynth's parent step
-        else if ([self->lastSelectedPart isMemberOfClass:[LDrawLSynth class]]) {
-            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            LDrawLSynth *synthPart = (LDrawLSynth *)self->lastSelectedPart;
-            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
-        }
-        
-        // Constraint is selected, add it after the containing LDrawLSynth
-        else if ([self->lastSelectedPart isMemberOfClass:[LDrawPart class]] &&
-                 [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
-            parent = [fileContentsOutline parentForItem:[fileContentsOutline parentForItem:self->lastSelectedPart]];
-            LDrawLSynth *synthPart = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            index = [[parent subdirectives] indexOfObject:synthPart] + 1;
-        }
-
-        // Don't know what it is.  Probably a part.
-        else {
-            NSLog(@"no idea");
-            parent = nil;
-            index = NSNotFound;
-        }
-
-        // tidy up to conform to other addStepComponent: calls and do the same with constraint adding to open up the tree
-        //[self addStepComponent:synthesizedObject parent:nil index:NSNotFound];
-
-        [self addStepComponent:synthesizedObject
-                        parent:parent
-                         index:index];
-    }
-    
 }//end insertSynthesizedDirective:
 
 
