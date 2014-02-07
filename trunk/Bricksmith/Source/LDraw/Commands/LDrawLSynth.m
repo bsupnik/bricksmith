@@ -626,14 +626,24 @@
 // Purpose:		Returns a representation of the directive as a short string
 //				which can be presented to the user.
 //
-//===========================   ===================================================
+//==============================================================================
 - (NSString *) browsingDescription
 {
+    LSynthConfiguration	*config			= [LSynthConfiguration sharedInstance];
+	NSDictionary		*entry			= [config typeForTypeName:self->synthType];
+	NSString			*description	= nil;
+	
+	if(entry)
+		description = [entry objectForKey:@"title"];
+	
+	if(description == nil)
+		description = self->synthType;
+	
     // Show the number of parts
     // TODO: allow for single-piece objects like tubes/string etc.  Meanwhile just show the part type
     // The part type's <fill> param (FIXED or STRETCH( should serve in deciding this.
     //return [NSString stringWithFormat:@"%@ (%i pieces)", self->synthType, [synthesizedParts count]];
-    return self->synthType;
+    return description;
 
 }//end browsingDescription
 
