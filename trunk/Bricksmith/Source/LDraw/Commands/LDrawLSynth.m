@@ -175,7 +175,6 @@
                       parserState == PARSER_PARSING_SYNTHESIZED)) {
 
                 // Either way, create a part
-                parserState = PARSER_PARSING_CONSTRAINTS;
                 CommandClass = [LDrawUtilities classForDirectiveBeginningWithLine:currentLine];
                 commandRange = [CommandClass rangeOfDirectiveBeginningAtIndex:lineIndex
                                                                       inLines:lines
@@ -203,7 +202,7 @@
             //
 
             else {
-                NSLog(@"Unexpected line in LSynth definition at line %lu: %@ (state: %i)", (long)lineIndex, currentLine, parserState);
+                NSLog(@"Unexpected line in LSynth definition at line %lu: %@ (state: %i)", (long)(lineIndex + 1), currentLine, parserState);
             }
 
             lineIndex += 1;
@@ -1368,11 +1367,10 @@
 //==============================================================================
 -(void)cleanupAfterDropIsDonor:(NSNumber *)isDonor
 {
-    if ([isDonor boolValue] == YES) {
-        [self setSelected:NO];
-    }
-    else if ([isDonor boolValue] == NO) {
-        [self setSelected:YES];
+    [self setSelected:NO];
+
+    if ([isDonor boolValue] == NO) {
+        [self setSubdirectiveSelected:YES];
     }
 } //end cleanupAfterDrop
 
