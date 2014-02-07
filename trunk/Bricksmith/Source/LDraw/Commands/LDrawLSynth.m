@@ -362,18 +362,13 @@
 //==============================================================================
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index
 {
+    [self setSelected:NO]; // Explicitly deselect ourselves.  The newly added constraint gets selected.
+    
     // Pick a badge icon depending on the LSynth class (band or hose)
     [directive setIconName:[self determineIconName:directive]];
 
-    [directive setEnclosingDirective:self];
-    [[self subdirectives] insertObject:directive atIndex:index];
-    [directive addObserver:self];
-    [self setSelected:YES];
-    [self invalCache:(ContainerInvalid || CacheFlagBounds)];
-
-    [[NSNotificationCenter defaultCenter]
-            postNotificationName:LDrawDirectiveDidChangeNotification
-                          object:self];
+    [super insertDirective:directive atIndex:index];
+    [self invalCache:CacheFlagBounds|DisplayList|ContainerInvalid];
 
 }//end insertDirective:atIndex:
 
@@ -389,9 +384,9 @@
 
     // TODO: Should we select the constraint at the previous index?
     [self setSubdirectiveSelected:NO];
-    [self setSelected:YES];
+    [self setSelected:NO]; // remove ourselves from the selection so that we can be selected by the user.
     [self invalCache:ContainerInvalid];
-
+    
     [[NSNotificationCenter defaultCenter]
             postNotificationName:LDrawDirectiveDidChangeNotification
                           object:self];
@@ -427,7 +422,7 @@
         // it's lazy (in a good way), and means resynthesis only occurs when we actually need it.
         if([self revalCache:ContainerInvalid] == ContainerInvalid) {
             [self synthesize];
-            [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected == YES)];
+            [self colorSelectedSynthesizedParts:([self isSelected] || self->subdirectiveSelected == YES)];
         }
 
         // Draw any synthesized parts as well
@@ -498,18 +493,28 @@
     LDrawPart   *currentDirective   = nil;
     NSUInteger  counter             = 0;
 
+    // Do constraints
     for(counter = 0; counter < commandCount; counter++)
     {
         currentDirective = [commands objectAtIndex:counter];
-        if ([currentDirective boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:self hits:hits]) {
+        if ([currentDirective boxTest:bounds
+                            transform:transform
+                           boundsOnly:boundsOnly
+                         creditObject:self
+                                 hits:hits]) {
             if(creditObject != nil) {
                 return TRUE;
             }
         };
     }
 
+    // Also check synthesized parts
     for (LDrawPart *part in synthesizedParts) {
-        if ([part boxTest:bounds transform:transform boundsOnly:boundsOnly creditObject:self hits:hits]) {
+        if ([part boxTest:bounds
+                transform:transform
+               boundsOnly:boundsOnly
+             creditObject:self
+                     hits:hits]) {
             if(creditObject != nil) {
                 return TRUE;
             }
@@ -540,7 +545,12 @@
     for(counter = 0; counter < commandCount; counter++)
     {
         currentDirective = [commands objectAtIndex:counter];
-        [currentDirective depthTest:testPt inBox:bounds transform:transform creditObject:creditObject bestObject:bestObject bestDepth:bestDepth];
+        [currentDirective depthTest:testPt
+                              inBox:bounds
+                          transform:transform
+                       creditObject:creditObject
+                         bestObject:bestObject
+                          bestDepth:bestDepth];
     }
 
     // Now do the synthesized pieces.  We take the credit.
@@ -758,7 +768,7 @@
 {
     [super setSelected:flag];
     // We don't need to resynthesize just to change the colours
-    [self colorSynthesizedPartsTranslucent:flag];
+    [self colorSelectedSynthesizedParts:flag];
 }//end setSelected:
 
 //========== setSubdirectiveSelected: =========================================
@@ -770,7 +780,7 @@
 - (void) setSubdirectiveSelected:(BOOL)flag
 {
     self->subdirectiveSelected = flag;
-    [self colorSynthesizedPartsTranslucent:flag];
+    [self colorSelectedSynthesizedParts:flag];
 }
 
 #pragma mark <LDrawColorable> protocol methods
@@ -788,7 +798,7 @@
     [self->color release];
     self->color = newColor;
 
-    [self colorSynthesizedPartsTranslucent:[self isSelected]];
+    [self colorSelectedSynthesizedParts:[self isSelected]];
 }//end setLDrawColor:
 
 //========== LDrawColor ========================================================
@@ -1193,13 +1203,14 @@
     return @"Brick";
 }//end determineIconName:
 
-//========== colorSynthesizedPartsTranslucent: =================================
+//========== colorSelectedSynthesizedParts: ====================================
 //
-// Purpose:		Make synthesized parts transparent so that we can better see
-//              constraints.
+// Purpose:		Change the appearance of selected synthesized parts according
+//              to user preferences so that they can better see the object and
+//              its constraints.
 //
 //==============================================================================
-- (void)colorSynthesizedPartsTranslucent:(BOOL)yesNo
+- (void)colorSelectedSynthesizedParts:(BOOL)yesNo
 {
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     LSynthSelectionModeT selectionMode = [userDefaults integerForKey:LSYNTH_SELECTION_MODE_KEY];
@@ -1246,7 +1257,7 @@
         [part setLDrawColor:theColor];
     }
 
-} //end colorSynthesizedPartsTranslucent:
+} //end colorSelectedSynthesizedParts:
 
 //========== transformationMatrix ==============================================
 //
@@ -1374,7 +1385,7 @@
 //==============================================================================
 -(void)selectionDisplayOptionsDidChange:(id)sender
 {
-    [self colorSynthesizedPartsTranslucent:([self isSelected] || self->subdirectiveSelected)];
+    [self colorSelectedSynthesizedParts:([self isSelected] || self->subdirectiveSelected)];
     [self noteNeedsDisplay];
 }
 

@@ -84,7 +84,7 @@ typedef enum
 
 // Utilities
 - (void) synthesize;
-- (void) colorSynthesizedPartsTranslucent:(BOOL)yesNo;
+- (void)colorSelectedSynthesizedParts:(BOOL)yesNo;
 - (NSString *)determineIconName:(LDrawDirective *)directive;
 - (NSMutableArray *)prepareAutoHullData;
 -(int)synthesizedPartsCount;
