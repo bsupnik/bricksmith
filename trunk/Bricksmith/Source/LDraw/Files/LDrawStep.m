@@ -35,6 +35,7 @@
 #import "LDrawModel.h"
 #import "LDrawUtilities.h"
 #import "StringCategory.h"
+#import "LDrawLSynthDirective.h"
 
 
 @implementation LDrawStep
@@ -981,6 +982,20 @@
 	return isStep;
 }
 
+//========== acceptsDroppedDirective: ==========================================
+//
+// Purpose:		Returns YES if this container will accept a directive dropped on
+//              it.  Explicitly excludes LDrawLSynthDirectives such as INSIDE/OUTSIDE
+//
+//==============================================================================
+-(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
+{
+    // explicitly disregard LSynth directives
+    if ([directive isKindOfClass:[LDrawLSynthDirective class]]) {
+        return NO;
+    }
+    return YES;
+}
 
 //========== lineIsRotationStepTerminator: =====================================
 //

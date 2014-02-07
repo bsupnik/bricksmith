@@ -30,6 +30,7 @@
 #import "LDrawUtilities.h"
 #import "PartReport.h"
 #import "StringCategory.h"
+#import "LDrawLSynthDirective.h"
 
 
 @implementation LDrawFile
@@ -784,6 +785,21 @@
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
+
+//========== acceptsDroppedDirective: ==========================================
+//
+// Purpose:		Returns YES if this container will accept a directive dropped on
+//              it.  Explicitly excludes LDrawLSynthDirectives such as INSIDE/OUTSIDE
+//
+//==============================================================================
+-(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
+{
+    // explicitly disregard LSynth directives
+    if ([directive isKindOfClass:[LDrawLSynthDirective class]]) {
+        return NO;
+    }
+    return YES;
+}
 
 //========== boundingBox3 ======================================================
 //

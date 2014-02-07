@@ -30,6 +30,7 @@
 #import "LDrawUtilities.h"
 #import "LDrawVertexes.h"
 #import "StringCategory.h"
+#import "LDrawLSynthDirective.h"
 
 // This disables culling and box approximations for small bricks.  Normally
 // we want this on, but for the purpose of measuring heads-up video card
@@ -1313,6 +1314,22 @@
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
+
+//========== acceptsDroppedDirective: ==========================================
+//
+// Purpose:		Returns YES if this container will accept a directive dropped on
+//              it.  Explicitly excludes LDrawLSynthDirectives such as INSIDE/OUTSIDE
+//
+//==============================================================================
+-(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
+{
+    // explicitly disregard LSynth directives
+    if ([directive isKindOfClass:[LDrawLSynthDirective class]]) {
+        return NO;
+    }
+    return YES;
+}
+
 
 //========== maxStepIndexToOutput ==============================================
 //

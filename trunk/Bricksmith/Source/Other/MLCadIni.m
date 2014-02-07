@@ -128,7 +128,7 @@ static MLCadIni *sharedIniFile = nil;
 // Purpose:		Returns the type names of LSynth elements which we should show 
 //				in the UI. The LSynth.mpd configuration file includes 
 //				definitions for a number of deprecated names that we don't want 
-//				to show, so this list should the the authoritative filter.
+//				to show, so this list should be the authoritative filter.
 //
 //==============================================================================
 - (NSArray *) lsynthVisibleTypes
