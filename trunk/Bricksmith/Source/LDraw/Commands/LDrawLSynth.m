@@ -610,6 +610,10 @@
         [written appendString:@"0 SYNTH SYNTHESIZED BEGIN"];
         [written appendString:CRLF];
         for (LDrawPart *part in self->synthesizedParts) {
+            // Parts aren't smart enough to know that they're temporarily coloured differently
+            // during Synth part selection, so we force the parent color in.  It's reset when the
+            // part selection changes, anyway.
+            [part setLDrawColor:self->color];
             [written appendString:[part write]];
             [written appendString:CRLF];
         }
