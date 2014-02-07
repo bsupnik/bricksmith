@@ -50,6 +50,17 @@
 
 @implementation LDrawPart
 
+
+//========== defaultIconName ===================================================
+//
+// Purpose:		The default icon name for this class.
+//
+//==============================================================================
++(NSString *)defaultIconName
+{
+    return @"Brick";
+} // end defaultIconName
+
 #pragma mark -
 #pragma mark INITIALIZATION
 #pragma mark -

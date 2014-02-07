@@ -16,6 +16,16 @@
 	
 @implementation LDrawDirective
 
+//========== init ==============================================================
+//
+// Purpose:		Return the base icon name for this type of LDraw directive
+//
+//==============================================================================
++(NSString *)defaultIconName
+{
+    return nil;
+}
+
 
 #pragma mark -
 #pragma mark INITIALIZATION

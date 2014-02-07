@@ -5835,7 +5835,16 @@ void AppendChoicesToNewItem(
 			if(real_index != NSNotFound)	real_index += counter;
 			data			= [objects objectAtIndex:counter];
 			currentObject	= [NSKeyedUnarchiver unarchiveObjectWithData:data];
-			
+
+            // Reset the object icon if we can.  New parents get a chance later (in e.g. outlineView:acceptDrop:)
+            // to change them if they want
+            if ([[currentObject class] respondsToSelector:@selector(defaultIconName)]) {
+                NSString *iconName = [[currentObject class] performSelector:@selector(defaultIconName)];
+                if (iconName) {
+                    [currentObject setIconName:iconName];
+                }
+            }
+
 			//Now pop the data into our file.
 			if([currentObject isKindOfClass:[LDrawModel class]])
                 [self addModel:currentObject atIndex:real_index preventNameCollisions:renameModels];

@@ -176,6 +176,9 @@ typedef enum Message {
 	
 }
 
+// Class methods
++(NSString *)defaultIconName;
+
 // Initialization
 - (id) initWithLines:(NSArray *)lines inRange:(NSRange)range;
 - (id) initWithLines:(NSArray *)lines inRange:(NSRange)range parentGroup:(dispatch_group_t)parentGroup;
