@@ -639,8 +639,9 @@
 			
 			//Update the active model and note that something happened.
 			activeModel = newModel;
-			[notificationCenter postNotificationName:LDrawFileActiveModelDidChangeNotification
-											  object:self];
+			if(postsNotifications)
+				[notificationCenter postNotificationName:LDrawFileActiveModelDidChangeNotification
+												  object:self];
 		}
 	}
 	else if (newModel == nil)

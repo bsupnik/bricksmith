@@ -22,9 +22,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawContainer : LDrawDirective <NSCoding, NSCopying, LDrawObserver>
 {
+	@protected
+	BOOL				postsNotifications;
+	
 	@private
 	NSMutableArray		*containedObjects;
-	BOOL				postsNotifications;
 }
 
 //Accessors

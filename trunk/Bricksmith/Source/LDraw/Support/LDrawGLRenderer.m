@@ -799,13 +799,16 @@
 - (void) setLDrawDirective:(LDrawDirective *)newFile
 {
 	BOOL    virginView  = (self->fileBeingDrawn == nil);
+	Box3	bounds		= InvalidBox;
 	
 	//Update our variable.
 	[newFile retain];
 	[self->fileBeingDrawn release];
 	self->fileBeingDrawn = newFile;
 	
-	[camera setModelSize:[newFile boundingBox3]];
+	if(newFile)
+		bounds = [newFile boundingBox3];
+	[camera setModelSize:bounds];
 
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
