@@ -1,16 +1,17 @@
+//==============================================================================
 //
-// Created by rmacharg on 30/09/2012.
+// File:		LDrawLSynthDirective.h
 //
-// To change the template use AppCode | Preferences | File Templates.
+// Purpose:		Represent LSynth meta-directives such as
+//              SHOW/HIDE/INSIDE/OUTSIDE/CROSS.
 //
-
+// Created by: Robin Macharg 30/09/2012.
+//
+//==============================================================================
 
 #import <Foundation/Foundation.h>
 #import "LDrawMetaCommand.h"
 
-
 @interface LDrawLSynthDirective : LDrawMetaCommand
-
-
 
 @end

@@ -1291,7 +1291,8 @@
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
 {
     // We only accept constraints
-    if ([directive isKindOfClass:[LDrawPart class]]) {
+    if ([directive isKindOfClass:[LDrawPart class]]
+        || [directive isKindOfClass:[LDrawLSynthDirective class]]) {
         return YES; // TODO: make more discriminatory and only accept appropriate constraints
     }
     return NO;
