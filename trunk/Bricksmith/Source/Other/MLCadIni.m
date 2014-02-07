@@ -33,6 +33,7 @@
 // a section header in MLCad.ini is enclosed in brackets (i.e., [HATS])
 
 // - Minifigure generator
+#define MLCAD_SECTION_LSYNTH							@"LSYNTH"
 #define MLCAD_SECTION_MINIFIGURE_HATS					@"HATS"
 #define MLCAD_SECTION_MINIFIGURE_HEAD					@"HEAD"
 #define MLCAD_SECTION_MINIFIGURE_TORSO					@"BODY"
@@ -121,6 +122,19 @@ static MLCadIni *sharedIniFile = nil;
 #pragma mark -
 #pragma mark ACCESSORS
 #pragma mark -
+
+//========== lsynthVisibleTypes ================================================
+//
+// Purpose:		Returns the type names of LSynth elements which we should show 
+//				in the UI. The LSynth.mpd configuration file includes 
+//				definitions for a number of deprecated names that we don't want 
+//				to show, so this list should the the authoritative filter.
+//
+//==============================================================================
+- (NSArray *) lsynthVisibleTypes
+{
+	return lsynthVisibleTypes;
+}
 
 //========== minifigureHats ====================================================
 //
@@ -376,33 +390,22 @@ static MLCadIni *sharedIniFile = nil;
 //==============================================================================
 - (void) parseFromPath:(NSString *) path
 {
-	NSString        *fileString             = [LDrawUtilities stringFromFile:path];
-	NSArray         *rawLines               = [fileString separateByLine];
-	NSMutableArray  *lines                  = [NSMutableArray arrayWithCapacity:[rawLines count]];
-	NSString        *currentLine            = nil;
-	NSString        *trimmed                = nil;
-	NSUInteger      lineCount               = [rawLines count];
-	NSUInteger      counter                 = 0;
-	NSCharacterSet  *whitespaceCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+	NSString		*fileString 		= [LDrawUtilities stringFromFile:path];
+	NSArray 		*rawLines			= [fileString separateByLine];
+	NSDictionary	*sections			= 0;
 	
-	NSDictionary    *listsForSections       = nil;
-	NSArray         *sectionKeys            = nil;
-	NSString        *currentSectionKey      = nil;
-	NSArray         *sectionLines           = nil;
-	NSArray         *sectionParts           = nil;
+	NSDictionary	*listsForSections	= nil;
+	NSArray 		*sectionKeys		= nil;
+	NSString		*currentSectionKey	= nil;
+	NSArray 		*sectionLines		= nil;
+	NSArray 		*sectionParts		= nil;
 	
 	//---------- cull out all the comments and blank lines ---------------------
 	
-	for(counter = 0; counter < lineCount; counter++)
-	{
-		currentLine	= [rawLines objectAtIndex:counter];
-		trimmed		= [currentLine stringByTrimmingCharactersInSet:whitespaceCharacterSet];
-		
-		if([trimmed length] > 0 && [trimmed hasPrefix:@";"] == NO)
-			[lines addObject:trimmed];
-	}
+	sections = [self sectionsFromLines:rawLines];
+
 	
-	//---------- Parse out each section ----------------------------------------
+	//---------- Parse Minifigure Sections -------------------------------------
 
 					//this array associates the key for each section with the list 
 					// into which its parts should be stored.
@@ -425,59 +428,120 @@ static MLCadIni *sharedIniFile = nil;
 						nil	];
 	sectionKeys		= [listsForSections allKeys];
 	
-	for(counter = 0; counter < [sectionKeys count]; counter++)
+	for(currentSectionKey in sectionKeys)
 	{
-		currentSectionKey	= [sectionKeys objectAtIndex:counter];
-		
-		sectionLines		= [self readSection:currentSectionKey fromLines:lines];
+		sectionLines		= [sections objectForKey:currentSectionKey];
 		sectionParts		= [self partsFromMinifigureLines:sectionLines];
 		
 		[self				setParts:sectionParts
 			  intoMinifigurePartList:[listsForSections objectForKey:currentSectionKey]];
 	}
 	
+	//---------- Parse LSynth Section ------------------------------------------
+	
+	sectionLines = [sections objectForKey:MLCAD_SECTION_LSYNTH];
+	self->lsynthVisibleTypes = [[self lsynthTypesFromLines:sectionLines] retain];
+
 }//end parseFromPath:
 
 
 #pragma mark -
 
-//========== readSection:fromLines: ============================================
+//========== sectionsFromLines: ================================================
 //
-// Purpose:		Isolates the lines pertaining to the given section. 
+// Purpose:		Returns a dictionary with each section name as a keys, and lines 
+//				as values.
 //
 //==============================================================================
-- (NSArray *) readSection:(NSString *)sectionName
-				fromLines:(NSArray *)lines
+- (NSDictionary *) sectionsFromLines:(NSArray *)lines
 {
-	NSString        *sectionHeader  = [NSString stringWithFormat:@"[%@]", sectionName];
-	NSString        *currentLine    = nil;
-	NSMutableArray  *sectionLines   = [NSMutableArray array];
-	BOOL            compileList     = NO;
-	NSUInteger      lineCount       = [lines count];
-	NSUInteger      counter         = 0;
+	NSString			*currentLine			= nil;
+	NSCharacterSet		*whitespaceCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+	NSString			*currentSectionName 	= nil;
+	NSMutableArray		*currentSectionLines	= nil;
+	NSMutableDictionary *sections				= [NSMutableDictionary dictionary];
 	
-	for(counter = 0; counter < lineCount; counter++)
+	for(currentLine in lines)
 	{
-		currentLine	= [lines objectAtIndex:counter];
-		
-		//once we pass the start of the section, start including lines.
-		if([currentLine isEqualToString:sectionHeader])
+		// cull out all the comments and blank lines
+		currentLine = [currentLine stringByTrimmingCharactersInSet:whitespaceCharacterSet];
+		if([currentLine length] > 0 && [currentLine hasPrefix:@";"] == NO)
 		{
-			compileList = YES;
-		}
-		//already in the section; include lines until we hit the next section.
-		else if(compileList == YES)
-		{
-			if([currentLine hasPrefix:@"["] == NO)
-				[sectionLines addObject:currentLine];
+			//once we pass the start of the section, start including lines.
+			if([currentLine hasPrefix:@"["])
+			{
+				// Finish previous section
+				if(currentSectionName)
+					[sections setObject:currentSectionLines forKey:currentSectionName];
+				
+				// Start new section
+				NSScanner *scanner = [NSScanner scannerWithString:currentLine];
+				[scanner scanString:@"[" intoString:NULL];
+				[scanner scanUpToString:@"]" intoString:&currentSectionName];
+				currentSectionLines = [NSMutableArray array];
+			}
 			else
-				break;
+			{
+				[currentSectionLines addObject:currentLine];
+			}
 		}
 	}
 	
-	return sectionLines;
+	// Finish last section
+	if(currentSectionName)
+		[sections setObject:currentSectionLines forKey:currentSectionName];
 	
-}//end readSection:fromLines:
+	return sections;
+}
+
+
+//========== lsynthTypesFromLines: =============================================
+//
+// Purpose:		Reads LSynth types out of the LSynth info block. Lines have the 
+//				following format: 
+//				02 - ELECTRIC_NXT_CABLE = SYNTH BEGIN ELECTRIC_NXT_CABLE 16
+//
+//				We return the type name after SYNTH BEGIN.
+//
+// Notes:		There are a few other things in the MLCad.ini [LSYNTH] section 
+//				that we don't care about. This method current returns only those 
+//				lines which start with a number, denoting supported synthesis 
+//				types.
+//
+//==============================================================================
+- (NSArray *) lsynthTypesFromLines:(NSArray *)lines
+{
+	NSMutableArray	*namesInList	= [NSMutableArray arrayWithCapacity:[lines count]];
+	NSString		*currentLine	= nil;
+	NSScanner		*scanner		= nil;
+	NSInteger		typeNumber		= 0;
+	NSString		*displayName	= nil;
+	NSString		*actualName 	= nil;
+	NSCharacterSet	*whitespaceSet	= [NSCharacterSet whitespaceCharacterSet];
+	BOOL			success 		= NO;
+	
+	for(currentLine in lines)
+	{
+		scanner		= [NSScanner scannerWithString:currentLine];
+		
+		success = [scanner scanInteger:&typeNumber];
+		if(success)
+		{
+			success = [scanner scanString:@"-" intoString:NULL];
+			success = [scanner scanUpToCharactersFromSet:whitespaceSet intoString:&displayName];
+			success = [scanner scanString:@"= SYNTH BEGIN" intoString:NULL];
+			if(success) // ignore 00 - VERSION 3.1 line
+			{
+				[scanner scanUpToCharactersFromSet:whitespaceSet intoString:&actualName];
+				
+				[namesInList addObject:actualName];
+			}
+		}
+	}
+	
+	return namesInList;
+	
+}//end lsynthTypesFromLines:
 
 
 //========== partsFromMinifigureLines: =========================================

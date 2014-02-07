@@ -13,6 +13,8 @@
 
 @interface MLCadIni : NSObject
 {
+	NSArray				*lsynthVisibleTypes;
+	
 	//Minifigure Generator
 	NSMutableArray		*minifigureHats;
 	NSMutableArray		*minifigureHeads;
@@ -35,6 +37,7 @@
 + (MLCadIni *) iniFile;
 
 //Accessors
+- (NSArray *) lsynthVisibleTypes;
 - (NSArray *) minifigureHats;
 - (NSArray *) minifigureHeads;
 - (NSArray *) minifigureNecks;
