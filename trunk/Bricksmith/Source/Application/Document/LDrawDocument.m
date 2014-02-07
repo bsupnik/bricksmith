@@ -191,9 +191,6 @@ void AppendChoicesToNewItem(
 
     [super windowControllerDidLoadNib:aController];
 	
-    // Create and populate the Model->LSynth menus
-    [self populateLSynthModelMenus];
-
 	// Create the toolbar.
 	toolbar = [[[NSToolbar alloc] initWithIdentifier:@"LDrawDocumentToolbar"] autorelease];
 	[toolbar setAutosavesConfiguration:YES];
@@ -4348,10 +4345,7 @@ void AppendChoicesToNewItem(
 {
 	[self updateInspector];
 
-    [self populateLSynthModelMenus];
-
 	[self addModelsToMenus];
-
 	[self buildRelatedPartsMenus];
 	
 }//end windowDidBecomeMain:
@@ -4591,12 +4585,14 @@ void AppendChoicesToNewItem(
 			enable = [menuItem submenu] != nil;
 			break;
 
-        case lsynthSynthesizableMenuTag:
+		case lsynthHoseMenuTag:
+		case lsynthBandMenuTag:
             // We can only add synthesizable parts below a step so ensure we've not selected a model
             enable = (selectedPart != nil) && (![selectedPart isKindOfClass:[LDrawMPDModel class]]);
             break;
 
-        case lsynthConstraintMenuTag:
+        case lsynthHoseConstraintMenuTag:
+		case lsynthBandConstraintMenuTag:
             // We can only insert a constraint into an LDrawLSynth part.
             // Ensure it (or a constraint) is selected
             enable = ([selectedPart isKindOfClass:[LDrawLSynth class]] ||
@@ -5531,146 +5527,6 @@ void AppendChoicesToNewItem(
 	[self buildRelatedPartsMenus];
 
 }//end loadDataIntoDocumentUI
-
-
-//========== populateLSynthModelMenus ==========================================
-//
-// Purpose:		Populate the LSynth Model menus. We guard against creating
-//              more than one menu.
-//
-//==============================================================================
-- (void) populateLSynthModelMenus
-{
-    LDrawApplication *appDelegate    = [NSApp delegate];
-    NSMenu           *mainMenu       = [NSApp mainMenu];
-    NSMenu           *modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
-
-    // We recreate this menu each time we're called since the
-    // target potentially changes (different window/document)
-    // TODO: make this once per document?
-
-    if ([modelMenu itemWithTag:lsynthMenuTag]) {
-        [modelMenu removeItemAtIndex:[modelMenu indexOfItemWithTag:lsynthMenuTag]];
-    }
-
-    if (! [modelMenu itemWithTag:lsynthMenuTag])
-	{
-        NSMenu    *lsynthMenu     = [[[NSMenu alloc] init] autorelease];
-
-        // A declarative encoding of our LSynth menus
-        // We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
-        NSArray *menus = [NSArray arrayWithObjects:
-                          [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Parts", @"getParts", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthPartMenuTag], nil]
-                                  forKeys:
-                                          [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
-                          [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Hose", @"getHoseTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
-                                                      forKeys:
-                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
-                          [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Hose Constraint", @"getHoseConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
-                                                      forKeys:
-                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
-                          [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Band", @"getBandTypes", @"title", @"insertSynthesizableDirective:", [NSNumber numberWithInt:lsynthSynthesizableMenuTag], nil]
-                                                      forKeys:
-                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
-                          [NSDictionary dictionaryWithObjects:
-                           [NSArray arrayWithObjects:@"Add Band Constraint", @"getBandConstraints", @"description", @"InsertLSynthConstraint:", [NSNumber numberWithInt:lsynthConstraintMenuTag], nil]
-                                                      forKeys:
-                           [NSArray arrayWithObjects:@"title", @"getter", @"entry_key", @"action", @"tag", nil]],
-
-                          nil];
-
-        for (NSDictionary *menuSpec in menus) {
-            NSMenu *menu = [[[NSMenu alloc] init] autorelease]; // one for each of part, constraint, hose, band etc.
-
-            // Retrieve the appropriate data for each menu entry, based on the getter given above
-            // See e.g. http://stackoverflow.com/questions/2175818/add-method-selector-into-a-dictionary
-            // for an alternative that could avoid the use of NSSelectorFromString by storing the selectors
-            // directly in a dictionary.
-
-            for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])]) {
-                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
-                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
-                [entryMenuItem setRepresentedObject:entry];
-                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
-                [entryMenuItem setTarget:self];
-                // Should these be unique, i.e. add a loop index to a base value? Don't need them to be, yet.
-                [entryMenuItem setTag:[[menuSpec objectForKey:@"tag"] integerValue]];
-                [menu addItem:entryMenuItem];
-            }
-            NSMenuItem *subMenu = [[[NSMenuItem alloc] init] autorelease];
-            [subMenu setTitle:[menuSpec objectForKey:@"title"]];
-            [subMenu setSubmenu:menu];
-
-            [menu setAutoenablesItems:YES]; // TODO: set it so that LSynth submenus are validated.
-            //[menu setDelegate:self];
-
-            [lsynthMenu addItem:subMenu]; // a menuItem
-        }
-
-        //
-        // Add INSIDE/OUTSIDE menus
-        //
-
-        // Main menu and menuItem
-
-        NSMenu *insideOutsideMenu = [[[NSMenu alloc] init] autorelease];
-        NSMenuItem *insideOutsideMenuItem = [[[NSMenuItem alloc] init] autorelease];
-        [insideOutsideMenuItem setTitle:@"Inside/Outside"];
-        [lsynthMenu setSubmenu:insideOutsideMenu forItem:insideOutsideMenuItem];
-        [lsynthMenu addItem:insideOutsideMenuItem];
-
-        // Menu entries
-
-// TODO: Add these in later
-//        NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
-//        [surroundSelectionItem setTitle:@"Surround Selection"];
-//        [surroundSelectionItem setTarget:self];
-//        [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
-//        [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
-//        [insideOutsideMenu addItem:surroundSelectionItem];
-//
-//        NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
-//        [invertSelectionItem setTitle:@"Invert Selection"];
-//        [invertSelectionItem setTarget:self];
-//        [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
-//        [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
-//        [insideOutsideMenu addItem:invertSelectionItem];
-
-        NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
-        [addInsideItem setTitle:@"Insert INSIDE"];
-        [addInsideItem setTarget:self];
-        [addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
-        [addInsideItem setTag:lsynthInsertINSIDETag];
-        [insideOutsideMenu addItem:addInsideItem];
-
-        NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
-        [addOutsideItem setTitle:@"Insert OUTSIDE"];
-        [addOutsideItem setTarget:self];
-        [addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
-        [addOutsideItem setTag:lsynthInsertOUTSIDETag];
-        [insideOutsideMenu addItem:addOutsideItem];
-
-        NSMenuItem *addCrossItem = [[[NSMenuItem alloc] init] autorelease];
-        [addCrossItem setTitle:@"Insert CROSS"];
-        [addCrossItem setTarget:self];
-        [addCrossItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
-        [addCrossItem setTag:lsynthInsertCROSSTag];
-        [insideOutsideMenu addItem:addCrossItem];
-
-        // Add in the main LSynth menu to the Model menu
-        NSMenuItem *lsynthSubMenu = [[[NSMenuItem alloc] init] autorelease];
-        [lsynthSubMenu setTitle:@"LSynth"];
-        [lsynthSubMenu setTag:lsynthMenuTag];
-        [modelMenu setSubmenu:lsynthMenu forItem:lsynthSubMenu];
-        // Add it at the top.  Should it go at the bottom?  It's my favourite
-        // feature but may not be everyone's
-        [modelMenu insertItem:lsynthSubMenu atIndex:0];
-    }
-}//end populateLSynthModelMenus
 
 
 //========== selectedContainer =================================================

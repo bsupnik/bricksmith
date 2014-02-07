@@ -465,6 +465,8 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	BOOL				 showPartBrowser	= [userDefaults boolForKey:PART_BROWSER_PANEL_SHOW_AT_LAUNCH];
 	
+	[self populateLSynthModelMenus];
+	
 	if(		showPartBrowser == YES
 	   &&	[userDefaults integerForKey:PART_BROWSER_STYLE_KEY] == PartBrowserShowAsPanel)
 	{
@@ -712,6 +714,125 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	}
 	
 }//end findLDrawPath
+
+
+//========== populateLSynthModelMenus ==========================================
+//
+// Purpose:		Populate the LSynth Model menus dynamically from configuration
+//				file.
+//
+//==============================================================================
+- (void) populateLSynthModelMenus
+{
+    LDrawApplication	*appDelegate    = [NSApp delegate];
+    NSMenu				*mainMenu       = [NSApp mainMenu];
+    NSMenu				*modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
+	NSMenu				*lsynthMenu     = [[modelMenu itemWithTag:lsynthMenuTag] submenu];
+	
+	// A declarative encoding of our LSynth menus
+	// We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
+	NSArray *menus = [NSArray arrayWithObjects:
+					  
+					  [NSDictionary dictionaryWithObjectsAndKeys:
+							   [NSNumber numberWithInt:lsynthPartMenuTag], @"tag",
+							   @"getParts", @"getter",
+							   @"title", @"entry_key",
+							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
+							   nil],
+					  
+					  [NSDictionary dictionaryWithObjectsAndKeys:
+							   [NSNumber numberWithInt:lsynthHoseMenuTag], @"tag",
+							   @"getHoseTypes", @"getter",
+							   @"title", @"entry_key",
+							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
+							   nil],
+					  
+					  [NSDictionary dictionaryWithObjectsAndKeys:
+							   [NSNumber numberWithInt:lsynthHoseConstraintMenuTag], @"tag",
+							   @"getHoseConstraints", @"getter",
+							   @"description", @"entry_key",
+							   NSStringFromSelector(@selector(InsertLSynthConstraint:)), @"action",
+							   nil],
+					  
+					  [NSDictionary dictionaryWithObjectsAndKeys:
+							   [NSNumber numberWithInt:lsynthBandMenuTag], @"tag",
+							   @"getBandTypes", @"getter",
+							   @"title", @"entry_key",
+							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
+							   nil],
+					  
+					  [NSDictionary dictionaryWithObjectsAndKeys:
+							   [NSNumber numberWithInt:lsynthBandConstraintMenuTag], @"tag",
+							   @"getBandConstraints", @"getter",
+							   @"description", @"entry_key",
+							   NSStringFromSelector(@selector(InsertLSynthConstraint:)), @"action",
+							   nil],
+					  
+					  nil];
+	
+	for (NSDictionary *menuSpec in menus)
+	{
+		NSInteger	tag				= [[menuSpec objectForKey:@"tag"] integerValue];
+		NSMenu		*elementMenu	= [[lsynthMenu itemWithTag:tag] submenu]; // one for each of part, constraint, hose, band etc.
+		
+		// Retrieve the appropriate data for each menu entry, based on the getter given above
+		
+		for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])])
+		{
+			NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+			[entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
+			[entryMenuItem setRepresentedObject:entry];
+			[entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
+			[entryMenuItem setTarget:nil]; // direct to responder chain, e.g. foremost LDrawDocument
+			[elementMenu addItem:entryMenuItem];
+		}
+
+		[elementMenu setAutoenablesItems:YES];
+	}
+	
+	//
+	// Add INSIDE/OUTSIDE menus
+	//
+	
+	NSMenu *insideOutsideMenu = [[lsynthMenu itemWithTag:lsynthInsideOutsideMenuTag] submenu];
+	
+	// TODO: Add these in later
+//  NSMenuItem *surroundSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//  [surroundSelectionItem setTitle:@"Surround Selection"];
+//  [surroundSelectionItem setTarget:self];
+//  [surroundSelectionItem setAction:@selector(surroundLSynthConstraints:)];
+//  [surroundSelectionItem setTag:lsynthSurroundINSIDEOUTSIDETag];
+//  [insideOutsideMenu addItem:surroundSelectionItem];
+//
+//  NSMenuItem *invertSelectionItem = [[[NSMenuItem alloc] init] autorelease];
+//  [invertSelectionItem setTitle:@"Invert Selection"];
+//  [invertSelectionItem setTarget:self];
+//  [invertSelectionItem setAction:@selector(invertLSynthConstraintSelection:)];
+//  [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
+//  [insideOutsideMenu addItem:invertSelectionItem];
+	
+	NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
+	[addInsideItem setTitle:@"Insert INSIDE"];
+	[addInsideItem setTarget:nil];
+	[addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+	[addInsideItem setTag:lsynthInsertINSIDETag];
+	[insideOutsideMenu addItem:addInsideItem];
+	
+	NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
+	[addOutsideItem setTitle:@"Insert OUTSIDE"];
+	[addOutsideItem setTarget:nil];
+	[addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+	[addOutsideItem setTag:lsynthInsertOUTSIDETag];
+	[insideOutsideMenu addItem:addOutsideItem];
+	
+	NSMenuItem *addCrossItem = [[[NSMenuItem alloc] init] autorelease];
+	[addCrossItem setTitle:@"Insert CROSS"];
+	[addCrossItem setTarget:nil];
+	[addCrossItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
+	[addCrossItem setTag:lsynthInsertCROSSTag];
+	[insideOutsideMenu addItem:addCrossItem];
+	
+}//end populateLSynthModelMenus
 
 
 //========== userName ==========================================================

@@ -330,7 +330,11 @@ static RelatedParts * SharedRelatedParts = nil;
 				relName = [line stringByTrimmingCharactersInSet:whitespaceCharacterSet];			
 			}
 			else
+			{
+#if DEBUG
 				printf("Unparsable META command: %s\n", [orig_line UTF8String]);
+#endif
+			}
 			
 		}
 		else if([parsedField compare:@"1"] == NSOrderedSame)
