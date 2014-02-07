@@ -62,6 +62,7 @@
 #define LSYNTH_SELECTION_COLOR_KEY                  @"LSynth Selection Color"
 #define LSYNTH_SELECTION_MODE_KEY                   @"LSynth Selection Mode"
 #define LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY           @"LSynth Save Synthesized Parts"
+#define LSYNTH_SHOW_BASIC_PARTS_LIST_KEY            @"LSynth Show Basic Parts List"
 
 #define MINIFIGURE_HAS_HAT							@"Minifigure Has Hat"
 #define MINIFIGURE_HAS_HEAD							@"Minifigure Has Head"

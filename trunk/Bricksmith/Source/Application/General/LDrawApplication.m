@@ -31,6 +31,7 @@
 #import "PreferencesDialogController.h"
 #import "ToolPalette.h"
 #import "TransformerIntMinus1.h"
+#import "MLCadIni.h"
 
 //==============================================================================
 // Define a weak link to the 3DConnexion driver. See link below for more info on weak linking
@@ -734,7 +735,8 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
     NSMenu				*mainMenu       = [NSApp mainMenu];
     NSMenu				*modelMenu      = [[mainMenu itemWithTag:modelsMenuTag] submenu];
 	NSMenu				*lsynthMenu     = [[modelMenu itemWithTag:lsynthMenuTag] submenu];
-	
+    NSUserDefaults	    *userDefaults   = [NSUserDefaults standardUserDefaults];
+
 	// A declarative encoding of our LSynth menus
 	// We process this, along with associated LSynthConfiguration data to generate our Model LSynth menu
 	NSArray *menus = [NSArray arrayWithObjects:
@@ -744,6 +746,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   @"getParts", @"getter",
 							   @"title", @"entry_key",
 							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
+                               @YES, @"shouldFilter",
 							   nil],
 					  
 					  [NSDictionary dictionaryWithObjectsAndKeys:
@@ -751,13 +754,15 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   @"getHoseTypes", @"getter",
 							   @"title", @"entry_key",
 							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
-							   nil],
+                               @YES, @"shouldFilter",
+                               nil],
 					  
 					  [NSDictionary dictionaryWithObjectsAndKeys:
 							   [NSNumber numberWithInt:lsynthHoseConstraintMenuTag], @"tag",
 							   @"getHoseConstraints", @"getter",
 							   @"description", @"entry_key",
 							   NSStringFromSelector(@selector(insertLSynthConstraint:)), @"action",
+                               @NO, @"shouldFilter",
 							   nil],
 					  
 					  [NSDictionary dictionaryWithObjectsAndKeys:
@@ -765,6 +770,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   @"getBandTypes", @"getter",
 							   @"title", @"entry_key",
 							   NSStringFromSelector(@selector(insertSynthesizableDirective:)), @"action",
+                               @YES, @"shouldFilter",
 							   nil],
 					  
 					  [NSDictionary dictionaryWithObjectsAndKeys:
@@ -772,28 +778,44 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   @"getBandConstraints", @"getter",
 							   @"description", @"entry_key",
 							   NSStringFromSelector(@selector(insertLSynthConstraint:)), @"action",
+                               @NO, @"shouldFilter",
 							   nil],
 					  
 					  nil];
 	
 	for (NSDictionary *menuSpec in menus)
 	{
-		NSInteger	tag				= [[menuSpec objectForKey:@"tag"] integerValue];
+        NSInteger	tag				= [[menuSpec objectForKey:@"tag"] integerValue];
 		NSMenu		*elementMenu	= [[lsynthMenu itemWithTag:tag] submenu]; // one for each of part, constraint, hose, band etc.
 		
         [elementMenu removeAllItems];
         
 		// Retrieve the appropriate data for each menu entry, based on the getter given above
-		
-		for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])])
+
+        NSArray *lsynthMLCADDefaults = [[MLCadIni iniFile] lsynthVisibleTypes];
+
+        for (NSDictionary *entry in [[appDelegate lsynthConfiguration] performSelector:NSSelectorFromString([menuSpec objectForKey:@"getter"])])
 		{
-			NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
-			[entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
-			[entryMenuItem setRepresentedObject:entry];
-			[entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
-			[entryMenuItem setTarget:nil]; // direct to responder chain, e.g. foremost LDrawDocument
-			[entryMenuItem setTag:tag]; // give all items the same tag for validation purposes
-			[elementMenu addItem:entryMenuItem];
+			// The MLCad.ini file contains a list of semi-official LSynth types.  The lsynth.mpd file also contains legacy entries
+			// for backward compatibility.  We want to filter out non-semi-official synth parts unless the user has turned this off
+			// in the preferences.  Parts get filtered, constraints don't.
+            if (([[menuSpec valueForKey:@"shouldFilter"] boolValue]
+                    && [lsynthMLCADDefaults indexOfObject:[entry valueForKey:@"LSYNTH_TYPE"]] != NSNotFound)
+                    ||
+                    // This menu should not be filtered
+                    ![[menuSpec valueForKey:@"shouldFilter"] boolValue]
+                    ||
+                    // User has turned off filtering in prefs
+                    ![userDefaults boolForKey:LSYNTH_SHOW_BASIC_PARTS_LIST_KEY])
+            {
+                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+                [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
+                [entryMenuItem setRepresentedObject:entry];
+                [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
+                [entryMenuItem setTarget:nil]; // direct to responder chain, e.g. foremost LDrawDocument
+                [entryMenuItem setTag:tag]; // give all items the same tag for validation purposes
+                [elementMenu addItem:entryMenuItem];
+            }
 		}
 
 		[elementMenu setAutoenablesItems:YES];
