@@ -4592,8 +4592,8 @@ void AppendChoicesToNewItem(
 
 		case lsynthHoseMenuTag:
 		case lsynthBandMenuTag:
-            // We can only add synthesizable parts below a step so ensure we've not selected a model
-            enable = (selectedPart != nil) && (![selectedPart isKindOfClass:[LDrawMPDModel class]]);
+            // This is just like inserting a part
+			enable = YES;
             break;
 
         case lsynthHoseConstraintMenuTag:

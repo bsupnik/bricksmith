@@ -784,6 +784,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 			[entryMenuItem setRepresentedObject:entry];
 			[entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
 			[entryMenuItem setTarget:nil]; // direct to responder chain, e.g. foremost LDrawDocument
+			[entryMenuItem setTag:tag]; // give all items the same tag for validation purposes
 			[elementMenu addItem:entryMenuItem];
 		}
 
