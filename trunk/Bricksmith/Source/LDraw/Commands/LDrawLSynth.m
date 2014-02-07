@@ -1299,10 +1299,12 @@
 //==============================================================================
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
 {
-    // We only accept constraints
-    if ([directive isKindOfClass:[LDrawPart class]]
+    // Only add valid parts as constraints; invalid ones are passed to our container
+    // This arises if a synth part is selected and a part is dragged from the
+    // part chooser to the view.
+    if ([[LSynthConfiguration sharedInstance] isLSynthConstraint:directive]
         || [directive isKindOfClass:[LDrawLSynthDirective class]]) {
-        return YES; // TODO: make more discriminatory and only accept appropriate constraints
+        return YES;
     }
     return NO;
 }
