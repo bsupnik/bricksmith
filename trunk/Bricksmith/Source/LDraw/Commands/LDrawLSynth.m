@@ -66,6 +66,7 @@
 // 0 SYNTH BEGIN <SYNTH_TYPE> <COLOR_CODE>
 // 0 SYNTH SHOW
 // 1 <CONSTRAINT PART>
+// 0 SYNTH INSIDE/OUTSIDE
 // ...
 //
 // <OPTIONALLY:>
@@ -149,7 +150,7 @@
             else if (parserState == PARSER_PARSING_CONSTRAINTS &&
                 [currentLine isMatchedByRegex:@"0\\s+SYNTH\\s+(INSIDE|OUTSIDE|CROSS)"]) {
 
-                NSString *direction = [[currentLine arrayOfCaptureComponentsMatchedByRegex:@"(INSIDE|OUTSIDE|CROSS)"] objectAtIndex:1];
+                NSString *direction = [[[currentLine arrayOfCaptureComponentsMatchedByRegex:@"(INSIDE|OUTSIDE|CROSS)"] objectAtIndex:0] objectAtIndex:0];
                 LDrawLSynthDirective *directive = [[LDrawLSynthDirective alloc] init];
                 [directive setStringValue:direction];
                 [[self subdirectives] addObject:directive];
@@ -884,8 +885,16 @@
     NSString *input = @"";
     Class CommandClass = Nil;
 
-    // Path to lsynth
-    NSString *lsynthPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"lsynthcp"];
+    // Path to lsynth.  If it's unset or whitespace use the built-in default
+    NSUserDefaults *userDefaults   = [NSUserDefaults standardUserDefaults];
+    NSString       *executablePath = [userDefaults stringForKey:LSYNTH_EXECUTABLE_PATH_KEY];
+    NSString       *lsynthPath;
+    if ([executablePath length] == 0 || [executablePath isMatchedByRegex:@"^\\s+$"]) {
+        lsynthPath = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"lsynthcp"];
+    }
+    else {
+        lsynthPath = executablePath;
+    }
 
     // We run LSynth as follows:
     // - Create an LDraw file in memory
