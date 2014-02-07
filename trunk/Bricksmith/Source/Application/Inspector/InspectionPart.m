@@ -126,6 +126,9 @@
  	[self setRotationAngles];
 	
 	[super revert:sender];
+
+    // Someone else might care that the part's changed
+    [representedObject sendMessageToObservers:MessageObservedChanged];
 	
 }//end revert:
 
@@ -220,6 +223,9 @@
 		[rotationYField setDoubleValue:0.0];
 		[rotationZField setDoubleValue:0.0];
 	}
+
+    // Someone else might care that the part's orientation has changed
+    [representedObject sendMessageToObservers:MessageObservedChanged];
 	
 }//end applyRotationClicked:
 
