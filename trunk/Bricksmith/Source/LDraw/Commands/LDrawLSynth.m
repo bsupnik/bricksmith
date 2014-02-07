@@ -580,7 +580,8 @@
     NSString		*commandString	= nil;
     NSUInteger      numberCommands  = 0;
     NSUInteger      counter         = 0;
-
+    NSUserDefaults *userDefaults    = [NSUserDefaults standardUserDefaults];
+    
     // Start
 
     [written appendFormat:@"0 SYNTH BEGIN %@ %d%@", [self lsynthType], (int)[self->color colorCode], CRLF];
@@ -597,7 +598,8 @@
 
     // Write out synthesized parts, if there are any to write out
     // TODO: Make dependent on a preference or as part of an Export command
-    if ([self->synthesizedParts count] > 0) {
+    if ([self->synthesizedParts count] > 0
+        && [userDefaults integerForKey:LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY] == YES) {
         [written appendString:@"0 SYNTH SYNTHESIZED BEGIN"];
         [written appendString:CRLF];
         for (LDrawPart *part in self->synthesizedParts) {

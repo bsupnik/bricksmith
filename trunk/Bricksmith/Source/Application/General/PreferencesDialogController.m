@@ -627,7 +627,6 @@ PreferencesDialogController *preferencesDialog = nil;
 
 #pragma mark -
 #pragma mark LSynth Tab
-#pragma mark -
 
 //========== lsynthChooseExecutable: ==========================================
 //
