@@ -56,11 +56,7 @@
 
 - (float) armAngleForTorsoName:(NSString *)torsoName;
 
-- (void) setParts:(NSArray *)parts intoMinifigurePartList:(NSMutableArray *)partList;
-
 //Parsing
 - (void) parseFromPath:(NSString *) path;
-- (NSArray *) readSection:(NSString *)sectionName fromLines:(NSArray *)lines;
-- (NSArray *) partsFromMinifigureLines:(NSArray *)lines;
 
 @end
