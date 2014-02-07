@@ -2689,7 +2689,7 @@ void AppendChoicesToNewItem(
 }//end insertSynthesizedDirective:
 
 
-//========== InsertLSynthConstraint: =======================================
+//========== insertLSynthConstraint: =======================================
 //
 // Purpose:		Insert a synthesizable directive constraint into the model.
 //              We don't distinguish between hose or band constraints since
@@ -2698,66 +2698,76 @@ void AppendChoicesToNewItem(
 // Parameters:	sender: an NSMenuItem representing the constraint to insert
 //
 //==============================================================================
--(void) InsertLSynthConstraint:(id)sender
+-(void) insertLSynthConstraint:(id)sender
 {
+    NSUndoManager	*undoManager		= [self undoManager];
+	
     // We are fussier than for synthesizable containers; we can *only* be added to them.
     // We just have to worry about the relative position
 
-    if(self->lastSelectedPart != nil) {
+    if(self->lastSelectedPart != nil)
+	{
         LDrawPart *constraint = [[LDrawPart alloc] init];
         [constraint setDisplayName:[[sender representedObject] objectForKey:@"partName"]];
         [constraint setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]]; // parent's colour
-
+		
         LDrawContainer *parent = nil;
         NSInteger index = NSNotFound;
         LDrawLSynth *synthesizablePart = nil;
         TransformComponents transformation = [lastSelectedPart transformComponents];
         [constraint setTransformComponents:transformation];
-
+		
         // LDrawLSynth part selected, add at the end
-        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]])
+		{
             parent = (LDrawLSynth *)self->lastSelectedPart;
             index = [[parent subdirectives] count];
             synthesizablePart = (LDrawLSynth *)parent;
-
+			
             //  Add our constraint, resynthesize and mark as needing display
-            [constraint setEnclosingDirective:parent];
-            [constraint addObserver:parent];
-            [parent insertDirective:constraint atIndex:index];
+			[self addDirective:constraint toParent:parent atIndex:index];
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
-
-            // Show the new element
-            [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
-            [constraint setSelected:YES];
         }
-
+		
         // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
-        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
-                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+        else if (	[self->lastSelectedPart isKindOfClass:[LDrawDirective class]]
+				 &&	[[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]])
+		{
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
             int row = [parent indexOfDirective:self->lastSelectedPart];
             index = row + 1;
             synthesizablePart = (LDrawLSynth *)parent;
-
+			
             //  Add our constraint, resynthesize and mark as needing display
-            [constraint addObserver:parent];
-            [parent insertDirective:constraint atIndex:index];
-            [self updateInspector];
+			[self addDirective:constraint toParent:parent atIndex:index];
             [synthesizablePart synthesize];
             [[self documentContents] noteNeedsDisplay];
-            [fileContentsOutline expandItem:parent];
-            [fileContentsOutline selectObjects:[NSArray arrayWithObject:constraint]];
-            [constraint setSelected:YES];
         }
-
+		
         else {
             NSLog(@"BIG FAT CONSTRAINT ADDING ERROR");
         }
-        [constraint release];
+		
+		// Show the new element.
+		if(parent)
+		{
+			[fileContentsOutline expandItem:parent];
+			
+			// Select it too.
+			NSInteger rowForItem = [fileContentsOutline rowForItem:constraint];
+			[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
+							 byExtendingSelection:NO];
+			
+			// Allow us to immediately use the keyboard to move the new part.
+			[[self foremostWindow] makeFirstResponder:mostRecentLDrawView];
+			
+			[undoManager setActionName:NSLocalizedString(@"UndoAddLSynthConstraint", nil)];
+		}
+		
+		[constraint release];
     }
-} // end InsertLSynthConstraint
+} // end insertLSynthConstraint
 
 -(void) surroundLSynthConstraints:(id)sender
 {

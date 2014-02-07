@@ -751,7 +751,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   [NSNumber numberWithInt:lsynthHoseConstraintMenuTag], @"tag",
 							   @"getHoseConstraints", @"getter",
 							   @"description", @"entry_key",
-							   NSStringFromSelector(@selector(InsertLSynthConstraint:)), @"action",
+							   NSStringFromSelector(@selector(insertLSynthConstraint:)), @"action",
 							   nil],
 					  
 					  [NSDictionary dictionaryWithObjectsAndKeys:
@@ -765,7 +765,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 							   [NSNumber numberWithInt:lsynthBandConstraintMenuTag], @"tag",
 							   @"getBandConstraints", @"getter",
 							   @"description", @"entry_key",
-							   NSStringFromSelector(@selector(InsertLSynthConstraint:)), @"action",
+							   NSStringFromSelector(@selector(insertLSynthConstraint:)), @"action",
 							   nil],
 					  
 					  nil];
