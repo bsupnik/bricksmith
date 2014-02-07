@@ -2787,45 +2787,65 @@ void AppendChoicesToNewItem(
 //==============================================================================
 -(void) insertINSIDEOUTSIDELSynthDirective:(id)sender
 {
-    if(self->lastSelectedPart != nil) {
-        LDrawLSynthDirective *direction = [[LDrawLSynthDirective alloc] init];
+    NSUndoManager	*undoManager		= [self undoManager];
+
+    if(self->lastSelectedPart != nil)
+	{
+        LDrawLSynthDirective	*direction	= [[LDrawLSynthDirective alloc] init];
+        LDrawContainer			*parent		= nil;
+        NSInteger				index		= NSNotFound;
+		NSString				*undoName	= nil;
 
         // Set direction based on menuItem tag
         if ([(NSMenuItem *)sender tag] == lsynthInsertINSIDETag) {
             [direction setStringValue:@"INSIDE"];
+			undoName = NSLocalizedString(@"UndoAddLSynthInside", nil);
         }
         else if ([(NSMenuItem *)sender tag] == lsynthInsertOUTSIDETag) {
             [direction setStringValue:@"OUTSIDE"];
+			undoName = NSLocalizedString(@"UndoAddLSynthOutside", nil);
         }
         else if ([(NSMenuItem *)sender tag] == lsynthInsertCROSSTag) {
             [direction setStringValue:@"CROSS"];
+			undoName = NSLocalizedString(@"UndoAddLSynthCross", nil);
         }
-        LDrawContainer *parent = nil;
-        NSInteger index = NSNotFound;
 
         // LDrawLSynth part selected, add at the end
-        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]]) {
+        if ([self->lastSelectedPart isKindOfClass:[LDrawLSynth class]])
+		{
             parent = (LDrawLSynth *)self->lastSelectedPart;
             index = [[parent subdirectives] count];
-
         }
 
         // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
-        else if ([self->lastSelectedPart isKindOfClass:[LDrawDirective class]] &&
-                [[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]]) {
+        else if (	[self->lastSelectedPart isKindOfClass:[LDrawDirective class]]
+				 &&	[[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]])
+		{
             parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
             int row = [parent indexOfDirective:self->lastSelectedPart];
             index = row + 1;
         }
 
-        [direction setEnclosingDirective:parent];
-        [direction addObserver:parent];
-        [parent insertDirective:direction atIndex:index];
+		[self addDirective:direction toParent:parent atIndex:index];
         [(LDrawLSynth *)parent synthesize];
         [[self documentContents] noteNeedsDisplay];
-        [fileContentsOutline expandItem:parent];
-        [fileContentsOutline selectObjects:[NSArray arrayWithObject:direction]];
-        [direction setSelected:YES];
+		
+		// Show the new element.
+		if(parent)
+		{
+			[fileContentsOutline expandItem:parent];
+			
+			// Select it too.
+			NSInteger rowForItem = [fileContentsOutline rowForItem:direction];
+			[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
+							 byExtendingSelection:NO];
+			
+			// Allow us to immediately use the keyboard to move the new part.
+			[[self foremostWindow] makeFirstResponder:mostRecentLDrawView];
+			
+			[undoManager setActionName:undoName];
+		}
+
         [direction release];
     }
 }//end insertINSIDEOUTSIDELSynthDirective:
