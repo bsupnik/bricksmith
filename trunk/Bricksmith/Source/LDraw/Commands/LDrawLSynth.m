@@ -43,6 +43,9 @@
         synthesizedParts = [[NSMutableArray alloc] init];
         self->synthType  = [[NSString alloc] init];
         color            = [[LDrawColor alloc] init];
+        
+        self->cachedBounds = InvalidBox;
+        [self invalCache:CacheFlagBounds];
     }
 
     // Observe changes in selection display options
@@ -366,7 +369,7 @@
     [[self subdirectives] insertObject:directive atIndex:index];
     [directive addObserver:self];
     [self setSelected:YES];
-    [self invalCache:ContainerInvalid];
+    [self invalCache:(ContainerInvalid || CacheFlagBounds)];
 
     [[NSNotificationCenter defaultCenter]
             postNotificationName:LDrawDirectiveDidChangeNotification
@@ -640,32 +643,15 @@
 //========== boundingBox3 ======================================================
 //
 // Purpose:		Returns the minimum and maximum points of the box which
-//				perfectly contains this object. Returns InvalidBox if the part
-//				cannot be found.
+//				perfectly contains this object.
 //
 //==============================================================================
 - (Box3) boundingBox3 {
-    Point3 min = {0,0,0};
-    Point3 max = {0,0,0};
-    Box3 partMinMax = {min, max};
-    bool firstPass = YES;
-
-    // Find the bounding box for all constraints
-    for (LDrawDirective * constraint in [self subdirectives]) {
-        if ([constraint respondsToSelector:@selector(boundingBox3)]) {
-            partMinMax = [constraint boundingBox3];
-
-            min.x = (partMinMax.min.x < min.x || firstPass) ? partMinMax.min.x : min.x;
-            min.y = (partMinMax.min.y < min.y || firstPass) ? partMinMax.min.y : min.y;
-            min.z = (partMinMax.min.z < min.z || firstPass) ? partMinMax.min.z : min.z;
-
-            max.x = (partMinMax.max.x > max.x || firstPass) ? partMinMax.max.x : max.x;
-            max.y = (partMinMax.max.y > max.y || firstPass) ? partMinMax.max.y : max.y;
-            max.z = (partMinMax.max.z > max.z || firstPass) ? partMinMax.max.z : max.z;
-        }
-        firstPass = NO;
+    if ([self revalCache:CacheFlagBounds] == CacheFlagBounds)
+    {
+        cachedBounds = [LDrawUtilities boundingBox3ForDirectives:[self subdirectives]];
     }
-    return (Box3){min, max};
+    return cachedBounds;
 }
 
 //========== setLsynthClass: ====================================================

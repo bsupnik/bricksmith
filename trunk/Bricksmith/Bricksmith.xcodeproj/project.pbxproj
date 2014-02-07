@@ -293,6 +293,7 @@
 		73772F8E91836860E4330407 /* LDrawLSynthDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 737720E867742FB944EB62C7 /* LDrawLSynthDirective.m */; };
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+		9506E0E0189BD6480006CE9C /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
 		957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		95D893AC165532B100AA055B /* lsynthcp in Copy LSynth */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
@@ -1642,6 +1643,7 @@
 				0B04E9931093BB4200E201EE /* ToolPalette.xib in Resources */,
 				0B30C6BF16DC61000023B3A6 /* InspectorLSynth.xib in Resources */,
 				D687D424170A6DF3007300E2 /* related.ldr in Resources */,
+				9506E0E0189BD6480006CE9C /* lsynth.mpd in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
