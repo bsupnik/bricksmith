@@ -125,8 +125,8 @@ SearchPanel *sharedSearchPanel = nil;
     
     NSArray *colorFilter = nil;
     NSArray *partFilter = nil;
-    NSMutableArray *selectedParts = [[NSMutableArray alloc] init];
-    NSMutableArray *searchableObjects = [[NSMutableArray alloc] init];
+    NSMutableArray *selectedParts = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *searchableObjects = [[[NSMutableArray alloc] init] autorelease];
     
     // Where to search - File, Model and Step
     if (scope != ScopeSelection) {
@@ -171,7 +171,7 @@ SearchPanel *sharedSearchPanel = nil;
     
     // Search within the selection, so just take it wholesale
     else {
-        searchableObjects = [selectedObjects mutableCopy];
+        searchableObjects = [[selectedObjects mutableCopy] autorelease];
     }
     
     // Color
@@ -224,7 +224,7 @@ SearchPanel *sharedSearchPanel = nil;
     // Collect up all potential matches
     //
     
-    NSMutableArray *matchables = [[NSMutableArray alloc] init];
+    NSMutableArray *matchables = [[[NSMutableArray alloc] init] autorelease];
     for (id searchableObject in searchableObjects) {
         // Parts
         if ([searchableObject isKindOfClass:[LDrawPart class]]) {
@@ -246,7 +246,7 @@ SearchPanel *sharedSearchPanel = nil;
     // Filter potential matches against our criteria
     //
     
-    NSMutableArray *nonMatchingParts = [[NSMutableArray alloc] init];
+    NSMutableArray *nonMatchingParts = [[[NSMutableArray alloc] init] autorelease];
     
     for (id part in matchables) {
         
@@ -257,7 +257,7 @@ SearchPanel *sharedSearchPanel = nil;
         }
         
         // Filter on part criterion
-        NSString *name;
+        NSString *name = nil;
         if ([part isKindOfClass:[LDrawPart class]]) {
             name = [part referenceName];
         }
@@ -315,7 +315,7 @@ SearchPanel *sharedSearchPanel = nil;
 //==============================================================================
 -(NSArray *)partsInContainer:(LDrawContainer *)container
 {
-    NSMutableArray *parts = [[NSMutableArray alloc] init];
+    NSMutableArray *parts = [[[NSMutableArray alloc] init] autorelease];
     for (id directive in [container subdirectives]) {
         if ([directive isKindOfClass:[LDrawPart class]]) {
             [parts addObject:directive];
@@ -450,7 +450,7 @@ SearchPanel *sharedSearchPanel = nil;
 - (BOOL)prepareForDragOperation:(id<NSDraggingInfo>)sender
 {
     NSArray        *archivedDirectives = nil;
-    NSMutableArray *directiveNames     = [[NSMutableArray alloc] init];
+    NSMutableArray *directiveNames     = [[[NSMutableArray alloc] init] autorelease];
     NSUInteger      directiveCount     = 0;
 	NSUInteger      counter            = 0;
 	id              currentObject      = nil;
