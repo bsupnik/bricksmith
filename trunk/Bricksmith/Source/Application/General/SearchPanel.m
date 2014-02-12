@@ -74,8 +74,10 @@ SearchPanel *sharedSearchPanel = nil;
     [self setWorksWhenModal:YES];
     [self setLevel:NSStatusWindowLevel];
     [self setBecomesKeyOnlyIfNeeded:NO];
-    
+
     // Set the initial state of the UI
+    // IB doesn't seem to honour this setting so force it
+    [[colorWell cell] setShowsStateBy:NSPushOnPushOffButton];
     NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
     LDrawDocument        *currentDocument    = [documentController currentDocument];
     NSArray              *selectedObjects    = [currentDocument selectedObjects];
@@ -113,9 +115,9 @@ SearchPanel *sharedSearchPanel = nil;
     NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
     LDrawDocument        *currentDocument    = [documentController currentDocument];
     NSArray              *selectedObjects    = [currentDocument selectedObjects];
-    ScopeT                scope              = [[scopeMatrix selectedCell] tag];
-    SearchPartCriteriaT   criterion          = [[findTypeMatrix selectedCell] tag];
-    ColorFilterT          colorCriterion     = [[colorMatrix selectedCell] tag];
+    ScopeT                scope              = (ScopeT)[[scopeMatrix selectedCell] tag];
+    SearchPartCriteriaT   criterion          = (SearchPartCriteriaT)[[findTypeMatrix selectedCell] tag];
+    ColorFilterT          colorCriterion     = (ColorFilterT)[[colorMatrix selectedCell] tag];
     
     //
     // Determine our search criteria
@@ -341,6 +343,9 @@ SearchPanel *sharedSearchPanel = nil;
 //==============================================================================
 - (void) updateInterfaceForSelection:(NSArray *)selectedObjects
 {
+    // The selection's changed which means we shouldn't be the active color well anymore
+    [LDrawColorWell setActiveColorWell:nil];
+    
     // We may have selected multiple objects at any level of the tree, or we may have
     // selected none.  Some search scopes don't make sense:  Step, when no parts  are
     // selected, Selection, Step and Model when nothing is selected.
@@ -406,30 +411,6 @@ SearchPanel *sharedSearchPanel = nil;
         [[findTypeMatrix cellWithTag:SearchSelectedParts] setEnabled:NO];
     }
 } // end updateInterfaceForSelection:
-
-#pragma mark -
-#pragma mark <NSWindowDelegate>
-#pragma mark -
-
-//========== windowDidBecomeKey: ===============================================
-//
-// Purpose:		We received focus, so tell the color picker about our color well
-//
-//==============================================================================
--(void)windowDidBecomeKey:(NSNotification *)notification
-{
-    [LDrawColorWell setActiveColorWell:colorWell];
-} // end windowDidBecomeKey:
-
-//========== windowDidResignKey: ===============================================
-//
-// Purpose:		We lost focus, so clear the color picker's color well
-//
-//==============================================================================
--(void)windowDidResignKey:(NSNotification *)notification
-{
-    [LDrawColorWell setActiveColorWell:nil];
-} // end windowDidResignKey:
 
 #pragma mark -
 #pragma mark <NSDraggingDestination>

@@ -200,9 +200,13 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	//in any event open the color panel.
 	[[LDrawColorPanel sharedColorPanel] orderFront:self];
 	
-	
+
 	if([[self cell] showsStateBy] == NSNoCellMask) //not a toggle button
 	{
+        // Why are these *two* lines needed?  It works, but I'm not entirely sure why.
+        [LDrawColorWell setActiveColorWell:self];
+        [LDrawColorWell setActiveColorWell:nil];
+		
 		//just pass the action along.
 		handledAction = [super sendAction:theAction to:theTarget];
 	}

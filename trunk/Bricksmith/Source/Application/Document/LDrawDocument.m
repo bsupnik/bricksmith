@@ -3601,10 +3601,12 @@ void AppendChoicesToNewItem(
 	for(counter = 0; counter < [self->selectedDirectives count]; counter++)
 		[[selectedDirectives objectAtIndex:counter] setSelected:YES];
 	
-	//Update things which need to take into account the entire selection.
+	// Update things which need to take into account the entire selection.
+    // The order matters: the search panel unregisters itself as the active colorwell
+    // before the inspector or color panel do their thing.
+    [[SearchPanel sharedSearchPanel] updateInterfaceForSelection:selectedObjects];
 	[[LDrawApplication sharedInspector] inspectObjects:selectedObjects];
 	[[LDrawColorPanel sharedColorPanel] updateSelectionWithObjects:selectedObjects];
-    [[SearchPanel sharedSearchPanel] updateInterfaceForSelection:selectedObjects];
     
 	if(selectedModel != nil)
 	{
