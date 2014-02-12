@@ -294,6 +294,9 @@
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		9506E0E0189BD6480006CE9C /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
+		9506E0F018A3F4130006CE9C /* SearchPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 9506E0EE18A3F4130006CE9C /* SearchPanel.h */; };
+		9506E0F118A3F4130006CE9C /* SearchPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9506E0EF18A3F4130006CE9C /* SearchPanel.m */; };
+		9506E0FC18AA74BE0006CE9C /* SearchPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */; };
 		957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
 		95D893AC165532B100AA055B /* lsynthcp in Copy LSynth */ = {isa = PBXBuildFile; fileRef = 95D893A71655325100AA055B /* lsynthcp */; };
@@ -683,6 +686,9 @@
 		73772F01F06AC293E3F650C4 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = ../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9506E0EE18A3F4130006CE9C /* SearchPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchPanel.h; sourceTree = "<group>"; };
+		9506E0EF18A3F4130006CE9C /* SearchPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchPanel.m; sourceTree = "<group>"; };
+		9506E0FD18AA74BE0006CE9C /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/SearchPanel.xib; sourceTree = "<group>"; };
 		957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthIcon.tiff; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
 		95D8939E1655325000AA055B /* LSynth.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LSynth.xcodeproj; path = ../ThirdParty/LSynth/LSynth.xcodeproj; sourceTree = "<group>"; };
@@ -745,6 +751,7 @@
 			isa = PBXGroup;
 			children = (
 				952AA8F5169D552E0087919E /* Inspectors */,
+				9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */,
 				0B04E9471093BB4200E201EE /* ColorPanel.xib */,
 				0B04E9491093BB4200E201EE /* Dimensions.xib */,
 				0B04E94B1093BB4200E201EE /* Donation.xib */,
@@ -1162,6 +1169,8 @@
 				0B2700860981FCEA0058A7BE /* ToolPalette.m */,
 				D6C0C5CD16DABE70007E4266 /* RelatedParts.h */,
 				D6C0C5CE16DABE70007E4266 /* RelatedParts.m */,
+				9506E0EE18A3F4130006CE9C /* SearchPanel.h */,
+				9506E0EF18A3F4130006CE9C /* SearchPanel.m */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -1349,6 +1358,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B83E9B907E3BB0D009C2384 /* LDrawComment.h in Headers */,
+				9506E0F018A3F4130006CE9C /* SearchPanel.h in Headers */,
 				0B491DA407F5555B00AC0C10 /* MatrixMath.h in Headers */,
 				0BCD0C6507FD0BA10066A536 /* LDrawContainer.h in Headers */,
 				0B6770EE0817588D0044A0E0 /* Mac LDraw_Prefix.pch in Headers */,
@@ -1485,8 +1495,6 @@
 /* Begin PBXProject section */
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 2BB5975109FEFD180077A885 /* Build configuration list for PBXProject "Bricksmith" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1561,6 +1569,7 @@
 				0B05899C09849F5A0089FD81 /* Crosshair.tiff in Resources */,
 				D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */,
 				D65CE86F158EBBCC001A1D7D /* CrosshairPlus.tiff in Resources */,
+				9506E0FC18AA74BE0006CE9C /* SearchPanel.xib in Resources */,
 				D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */,
 				0B9FE5B608AD97770046511D /* Document.tiff in Resources */,
 				0B4BFB4B10D46C2E0002D482 /* DragAndDrop.tiff in Resources */,
@@ -1686,6 +1695,7 @@
 				0B8EBE5C093C0FAD00D87E0C /* InspectionQuadrilateral.m in Sources */,
 				0B8EBE5E093C0FAD00D87E0C /* InspectionTriangle.m in Sources */,
 				0B8EBE60093C0FAD00D87E0C /* InspectionUnknownCommand.m in Sources */,
+				9506E0F118A3F4130006CE9C /* SearchPanel.m in Sources */,
 				0B8EBE62093C0FAD00D87E0C /* Inspector.m in Sources */,
 				0B8EBE64093C0FAD00D87E0C /* ObjectInspectionController.m in Sources */,
 				0B8EBE7E093C100100D87E0C /* DialogPanel.m in Sources */,
@@ -2013,6 +2023,15 @@
 			);
 			name = Help;
 			sourceTree = "<group>";
+		};
+		9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9506E0FD18AA74BE0006CE9C /* en */,
+			);
+			name = SearchPanel.xib;
+			path = /Users/rmacharg/dev/bricksmith_merge_20140131/Bricksmith/Resources/Interface;
+			sourceTree = "<absolute>";
 		};
 /* End PBXVariantGroup section */
 

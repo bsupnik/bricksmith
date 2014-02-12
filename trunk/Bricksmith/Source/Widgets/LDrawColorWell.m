@@ -72,8 +72,13 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	
 	sharedActiveColorWell = newWell;
 	
-	//the color panel must now reflect this color well
-	[[LDrawColorPanel sharedColorPanel] setLDrawColor:[newWell LDrawColor]];
+	// The color panel must now reflect this Color Well
+    // If there's no Color Well, well... perhaps we don't want to change the selection's color
+    // An example is the search dialog, where the colour well is explicitly unset when the
+    // dialog resigns key, and we thereby avoid changing the selection's color.
+    if (newWell) {
+        [[LDrawColorPanel sharedColorPanel] setLDrawColor:[newWell LDrawColor]];
+    }
 	
 }//end setActiveColorWell:
 

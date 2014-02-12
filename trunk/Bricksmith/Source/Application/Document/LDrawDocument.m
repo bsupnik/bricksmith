@@ -66,6 +66,7 @@
 #import "LDrawDragHandle.h"
 #import "LDrawContainer.h"
 #import "LDrawLSynthDirective.h"
+#import "SearchPanel.h"
 #if WANT_RELATED_PARTS
 #import "RelatedParts.h"
 #endif
@@ -1744,6 +1745,16 @@ void AppendChoicesToNewItem(
 	
 }//end duplicate:
 
+//========== find: ========================================================
+//
+// Purpose:		Opens the Find Parts dialog
+//
+//==============================================================================
+- (IBAction) find:(id)sender
+{
+    SearchPanel *searchPanel = [SearchPanel sharedSearchPanel];
+    [searchPanel makeKeyAndOrderFront:sender];
+} // end find:
 
 //========== splitStep: ========================================================
 //
@@ -3593,6 +3604,8 @@ void AppendChoicesToNewItem(
 	//Update things which need to take into account the entire selection.
 	[[LDrawApplication sharedInspector] inspectObjects:selectedObjects];
 	[[LDrawColorPanel sharedColorPanel] updateSelectionWithObjects:selectedObjects];
+    [[SearchPanel sharedSearchPanel] updateInterfaceForSelection:selectedObjects];
+    
 	if(selectedModel != nil)
 	{
 		// Put the selection on screen (if we need to)

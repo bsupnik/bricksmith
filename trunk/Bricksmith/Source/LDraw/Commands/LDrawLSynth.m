@@ -604,7 +604,6 @@
     }
 
     // Write out synthesized parts, if there are any to write out
-    // TODO: Make dependent on a preference or as part of an Export command
     if ([self->synthesizedParts count] > 0
         && [userDefaults integerForKey:LSYNTH_SAVE_SYNTHESIZED_PARTS_KEY] == YES) {
         [written appendString:@"0 SYNTH SYNTHESIZED BEGIN"];
@@ -976,23 +975,23 @@
     [inFile writeData: [input dataUsingEncoding: NSASCIIStringEncoding]];
     [inFile closeFile];
 
-    // Read standard error
-    NSMutableData *errorData = [[NSMutableData alloc] init];
-    NSData *readErrorData;
-
-    while ((readErrorData = [errorFile availableData])
-            && [readErrorData length]) {
-        [errorData appendData: readErrorData];
-    }
-
-    NSString *lsynthErrorOutput;
-    lsynthErrorOutput = [[NSString alloc]
-            initWithData: errorData
-                encoding: NSASCIIStringEncoding];
-
-    if ([lsynthErrorOutput length]) {
-        NSLog(@"LSynth generated standard error output:\n%@", lsynthErrorOutput);
-    }
+    // Read standard error - causing a race condition?
+//    NSMutableData *errorData = [[NSMutableData alloc] init];
+//    NSData *readErrorData;
+//
+//    while ((readErrorData = [errorFile availableData])
+//            && [readErrorData length]) {
+//        [errorData appendData: readErrorData];
+//    }
+//
+//    NSString *lsynthErrorOutput;
+//    lsynthErrorOutput = [[NSString alloc]
+//            initWithData: errorData
+//                encoding: NSASCIIStringEncoding];
+//
+//    if ([lsynthErrorOutput length]) {
+//        NSLog(@"LSynth generated standard error output:\n%@", lsynthErrorOutput);
+//    }
 
     // Read the synthesized file back in from LSynth's STDOUT
     NSMutableData *data = [[NSMutableData alloc] init];
