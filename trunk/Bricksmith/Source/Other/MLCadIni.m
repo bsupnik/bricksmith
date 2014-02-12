@@ -99,21 +99,21 @@ static MLCadIni *sharedIniFile = nil;
 	
 	//these are mutable simply so I can fill them easier. Their mutability is 
 	// not exposed via the accessors.
-	minifigureHats					= [NSMutableArray array];
-	minifigureHeads					= [NSMutableArray array];
-	minifigureTorsos				= [NSMutableArray array];
-	minifigureHips					= [NSMutableArray array];
-	minifigureNecks					= [NSMutableArray array];
-	minifigureArmsLeft				= [NSMutableArray array];
-	minifigureArmsRight				= [NSMutableArray array];
-	minifigureHandsLeft				= [NSMutableArray array];
-	minifigureHandsLeftAccessories	= [NSMutableArray array];
-	minifigureHandsRight			= [NSMutableArray array];
-	minifigureHandsRightAccessories	= [NSMutableArray array];
-	minifigureLegsLeft				= [NSMutableArray array];
-	minifigureLegsLeftAcessories	= [NSMutableArray array];
-	minifigureLegsRight				= [NSMutableArray array];
-	minifigureLegsRightAccessories	= [NSMutableArray array];
+	minifigureHats					= [[NSMutableArray alloc] init];
+	minifigureHeads					= [[NSMutableArray alloc] init];
+	minifigureTorsos				= [[NSMutableArray alloc] init];
+	minifigureHips					= [[NSMutableArray alloc] init];
+	minifigureNecks					= [[NSMutableArray alloc] init];
+	minifigureArmsLeft				= [[NSMutableArray alloc] init];
+	minifigureArmsRight				= [[NSMutableArray alloc] init];
+	minifigureHandsLeft				= [[NSMutableArray alloc] init];
+	minifigureHandsLeftAccessories	= [[NSMutableArray alloc] init];
+	minifigureHandsRight			= [[NSMutableArray alloc] init];
+	minifigureHandsRightAccessories	= [[NSMutableArray alloc] init];
+	minifigureLegsLeft				= [[NSMutableArray alloc] init];
+	minifigureLegsLeftAcessories	= [[NSMutableArray alloc] init];
+	minifigureLegsRight				= [[NSMutableArray alloc] init];
+	minifigureLegsRightAccessories	= [[NSMutableArray alloc] init];
 
 	return self;
 }//end init
