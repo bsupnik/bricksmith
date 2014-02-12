@@ -209,7 +209,7 @@ static LSynthConfiguration* instance = nil;
                         // TODO: harden
                         NSString *desc = [[previousLine componentsSeparatedByString:@"- Type "] objectAtIndex:1];
                         
-                        NSDictionary *hose_constraint = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:
+                        NSMutableDictionary *hose_constraint = [NSMutableDictionary dictionaryWithObjects:[NSArray arrayWithObjects:
 
                                 // flip
                                 [NSNumber numberWithInt:flip],
@@ -255,6 +255,22 @@ static LSynthConfiguration* instance = nil;
                             forKeys:[NSArray arrayWithObjects:@"flip", @"offset", @"orient", @"partName", @"description", @"LSYNTH_CONSTRAINT_CLASS", nil]
                         ]; // end hose_constraint
 
+                        // A little post-processing
+                        NSString *description = [hose_constraint valueForKey:@"description"];
+                        description = [description stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+                        NSArray *descriptionParts = [description componentsSeparatedByString:@"-"];
+
+                        // Skip constraints without a description.  It would be better to rely on the lsynth.mpd for
+                        // correct constraints rather than enshrine it in code.  Hopefully these lines are short-lived
+                        if ([descriptionParts count] == 1) {
+                            lineIndex++;
+                            continue;
+                        }
+                        
+                        // Use our processed description
+                        [hose_constraint setValue:description forKey:@"description"];
+                        
+                        
                         [hose_constraints addObject:hose_constraint];
                         [quickRefHoseConstraints addObject:[[NSString stringWithCString:type encoding:NSUTF8StringEncoding] lowercaseString]];
                     }
