@@ -5292,7 +5292,6 @@ void AppendChoicesToNewItem(
 		if(		selectedContainer != nil
 		   &&	[selectedContainer isKindOfClass:[LDrawFile class]] == NO
 		   &&	[selectedContainer isKindOfClass:[LDrawModel class]] == NO
-		   &&	[selectedContainer isKindOfClass:[LDrawStep class]] == NO
            &&   [selectedContainer acceptsDroppedDirective:newDirective] == YES)
 		{
 			// If we have an "interesting" container selected -- like a texture 
@@ -5302,6 +5301,17 @@ void AppendChoicesToNewItem(
 			// have one selected, you should continue working within it.
 			targetContainer = selectedContainer;
 		}
+        
+        // Special case for trying to add LSynth or non-constraint to LSynth: get the enclosing step
+        else if ([selectedContainer isKindOfClass:[LDrawLSynth class]] &&
+                 ([newDirective isKindOfClass:[LDrawLSynth class]]
+                  ||
+                  ([newDirective isKindOfClass:[LDrawPart class]] &&
+                   ![[LSynthConfiguration sharedInstance] isLSynthConstraint:((LDrawPart *)newDirective)]))) {
+            targetContainer = [selectedContainer enclosingStep];
+        }
+        
+        // We can't find a container that wants this part so add it to the bottom of the model
 		else
 		{
 			targetContainer = [selectedModel visibleStep];
