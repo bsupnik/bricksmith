@@ -656,7 +656,9 @@
 {
 	assert(!isnan(newPercentage));
 	assert(!isinf(newPercentage));
-	assert(newPercentage > 0.0);
+
+	if(newPercentage < 1.0f)		// Hard clamp against crazy-small zoom-out.
+		newPercentage = 1.0f;
 	
 	CGFloat currentZoomPercentage   = self->zoomFactor;
 	
