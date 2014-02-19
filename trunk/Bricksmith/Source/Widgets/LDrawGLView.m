@@ -1954,11 +1954,15 @@ static NSSize Size2ToNSSize(Size2 size)
 		
 		NSPoint windowPoint     = [theEvent locationInWindow];
 		NSPoint viewPoint       = [self convertPoint:windowPoint fromView:nil];
-		CGFloat magnification   = [theEvent deltaY] / 20; // 1 = increase 100%; -1 = decrease 100%
+		// Negative means scroll down/zoom out
+		CGFloat scrollDelta		= [theEvent deltaY];
+		// 1 = increase 100%; -1 = decrease 100%
+		// Magnification function has asymptotes at y = -1 and y = 1 so that the
+		// zoomChange will never be a negative number.
+		CGFloat magnification   = scrollDelta / (fabs(scrollDelta) + 17);
 		CGFloat zoomChange      = 1.0 + magnification;
 		CGFloat currentZoom     = [self->renderer zoomPercentage];
 		
-		// Negative means down
 		[self->renderer setZoomPercentage:(currentZoom * zoomChange)
 							preservePoint:V2Make(viewPoint.x, viewPoint.y)];
 	}
