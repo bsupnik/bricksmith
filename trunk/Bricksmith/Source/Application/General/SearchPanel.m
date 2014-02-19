@@ -215,13 +215,15 @@ SearchPanel *sharedSearchPanel = nil;
     // What to search for
     if (criterion == SearchSpecificPart) {
 
+        // Split the text field on commas
         NSArray *tmpParts = [[partName stringValue] componentsSeparatedByString:@","];
         __block NSMutableArray *partNames = [[NSMutableArray alloc] init];
         __block NSString *part = nil;
         
+        // Add ".dat" to parts without a recognised suffix
         [tmpParts enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             part = [[obj stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
-            if (![part hasSuffix:@".dat"]) {
+            if (![part hasSuffix:@".dat"] && ![part hasSuffix:@".ldr"]) {
                 part = [NSString stringWithFormat:@"%@.dat", part];
             }
             [partNames addObject:part];
