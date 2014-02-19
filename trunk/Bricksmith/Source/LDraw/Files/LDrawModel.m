@@ -26,6 +26,7 @@
 #import "LDrawLine.h"
 #import "LDrawQuadrilateral.h"
 #import "LDrawStep.h"
+#import "LDrawPart.h"
 #import "LDrawTriangle.h"
 #import "LDrawUtilities.h"
 #import "LDrawVertexes.h"
@@ -1319,6 +1320,7 @@
 //
 // Purpose:		Returns YES if this container will accept a directive dropped on
 //              it.  Explicitly excludes LDrawLSynthDirectives such as INSIDE/OUTSIDE
+//              and self-referencing model "parts"
 //
 //==============================================================================
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
@@ -1327,6 +1329,20 @@
     if ([directive isKindOfClass:[LDrawLSynthDirective class]]) {
         return NO;
     }
+    
+    // explicitly disregard self-references if the dropped directive is a model "part"
+    else if ([directive isKindOfClass:[LDrawPart class]]) {
+        NSString *referenceName = [((LDrawPart *)directive) referenceName];
+        NSString *enclosingModelName = @"";
+        if ([[self enclosingModel] respondsToSelector:@selector(modelName)]) {
+            enclosingModelName = [[self enclosingModel] performSelector:@selector(modelName)];
+        }
+        
+        if ([enclosingModelName isEqualToString:referenceName]) {
+            return NO;
+        }
+    }
+    
     return YES;
 }
 

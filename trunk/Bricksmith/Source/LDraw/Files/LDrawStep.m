@@ -33,6 +33,8 @@
 
 #import "LDrawKeywords.h"
 #import "LDrawModel.h"
+#import "LDrawMPDModel.h"
+#import "LDRawPart.h"
 #import "LDrawUtilities.h"
 #import "StringCategory.h"
 #import "LDrawLSynthDirective.h"
@@ -986,6 +988,7 @@
 //
 // Purpose:		Returns YES if this container will accept a directive dropped on
 //              it.  Explicitly excludes LDrawLSynthDirectives such as INSIDE/OUTSIDE
+//              and self-referencing model "parts"
 //
 //==============================================================================
 -(BOOL)acceptsDroppedDirective:(LDrawDirective *)directive
@@ -994,6 +997,13 @@
     if ([directive isKindOfClass:[LDrawLSynthDirective class]]) {
         return NO;
     }
+    
+    // explicitly disregard self-references if the dropped directive is a model "part"
+    else if ([directive isKindOfClass:[LDrawPart class]] &&
+        [[((LDrawPart *)directive) referenceName] isEqualToString:[((LDrawMPDModel *)[self enclosingModel]) modelName]]) {
+        return NO;
+    }
+    
     return YES;
 }
 
