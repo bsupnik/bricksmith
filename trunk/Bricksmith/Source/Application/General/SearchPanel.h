@@ -39,13 +39,21 @@ typedef enum {
     IBOutlet LDrawColorWell *colorWell;
     IBOutlet NSMatrix *findTypeMatrix;
     IBOutlet NSButton *searchInsideLSynthContainers;
+    IBOutlet NSButton *searchHiddenParts;
     IBOutlet NSTextField *partName;
+    IBOutlet NSTextField *warningText;
 }
-
-- (IBAction)doSearchAndSelect:(id)sender;
-- (void) updateInterfaceForSelection:(NSArray *)selectedObjects;
 
 //Initialization
 + (SearchPanel *) sharedSearchPanel;
+
+// Actions
+- (IBAction)doSearchAndSelect:(id)sender;
+- (IBAction)scopeChanged:(id)sender;
+- (IBAction)colorOptionChanged:(id)sender;
+- (IBAction)findTypeOptionChanged:(id)sender;
+
+// Utility
+- (void) updateInterfaceForSelection:(NSArray *)selectedObjects;
 
 @end

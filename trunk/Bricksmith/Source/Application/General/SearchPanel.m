@@ -114,7 +114,7 @@ SearchPanel *sharedSearchPanel = nil;
 - (IBAction)doSearchAndSelect:(id)sender {
     NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
     LDrawDocument        *currentDocument    = [documentController currentDocument];
-    NSArray              *selectedObjects    = [currentDocument selectedObjects];
+    NSArray              *selectedObjects    = [self selectedObjects];
     ScopeT                scope              = (ScopeT)[[scopeMatrix selectedCell] tag];
     SearchPartCriteriaT   criterion          = (SearchPartCriteriaT)[[findTypeMatrix selectedCell] tag];
     ColorFilterT          colorCriterion     = (ColorFilterT)[[colorMatrix selectedCell] tag];
@@ -122,20 +122,42 @@ SearchPanel *sharedSearchPanel = nil;
     //
     // Determine our search criteria
     //
-    
+
     NSArray *colorFilter = nil;
     NSArray *partFilter = nil;
     NSMutableArray *selectedParts = [[[NSMutableArray alloc] init] autorelease];
     NSMutableArray *searchableObjects = [[[NSMutableArray alloc] init] autorelease];
     
+    // First up, adjust the options if there's no selection
+    if ([selectedObjects count] == 0) {
+        if (scope == ScopeStep || scope == ScopeSelection) {
+            scope = ScopeFile;
+        }
+        
+        if (colorCriterion == ColorSelectionFilter) {
+            colorCriterion = ColorNoFilter;
+        }
+        
+        if (criterion == SearchSelectedParts) {
+            criterion = SearchAllParts;
+        }
+    }
+    
     // Where to search - File, Model and Step
     if (scope != ScopeSelection) {
         
-        // Nothing selected?  Default to searching the entire file
+        // Nothing selected?  Search the current model or default to searching the entire file
         if (![selectedObjects count]) {
-            if ([currentDocument  documentContents]) {
-                [searchableObjects addObject:[currentDocument  documentContents]];
-            };
+            if (scope == ScopeModel) {
+                if ([[currentDocument documentContents] activeModel]) {
+                    [searchableObjects addObject:[[currentDocument documentContents] activeModel]];
+                }
+            }
+            else {
+                if ([currentDocument  documentContents]) {
+                    [searchableObjects addObject:[currentDocument  documentContents]];
+                };
+            }
         }
         
         // filter non-parts from the selection (we can't search *for* steps, but we can search
@@ -267,11 +289,51 @@ SearchPanel *sharedSearchPanel = nil;
         
         if (partFilter && [partFilter indexOfObject:name] == NSNotFound) {
             [nonMatchingParts addObject:part];
+            continue;
         }
     }
+
+    // Filter hidden parts out if appropriate
+    if ([searchHiddenParts state] == NSOnState) {
+        [matchables enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            if ([obj respondsToSelector:@selector(setHidden:)] && [obj isHidden] &&
+                [nonMatchingParts indexOfObject:obj] == NSNotFound) {
+                [nonMatchingParts addObject:obj];
+            }
+        }];
+    }
+    
     [matchables removeObjectsInArray:nonMatchingParts];
+    
     [currentDocument selectDirectives:matchables];
 } // end doSearchAndSelect:
+
+//========== scopeChanged: =====================================================
+//
+// Purpose:		Update the UI in response to the user changing the search scope
+//
+//==============================================================================
+- (IBAction)scopeChanged:(id)sender {
+    [self updateInterfaceForSelection:[self selectedObjects]];
+} // end scopeChanged:
+
+//========== colorOptionChanged: ===============================================
+//
+// Purpose:		Update the UI in response to the user changing the search color option
+//
+//==============================================================================
+- (IBAction)colorOptionChanged:(id)sender {
+    [self updateInterfaceForSelection:[self selectedObjects]];
+} // end colorOptionChanged:
+
+//========== findTypeOptionChanged: ============================================
+//
+// Purpose:		Update the UI in response to the user changing the search part option
+//
+//==============================================================================
+- (IBAction)findTypeOptionChanged:(id)sender {
+    [self updateInterfaceForSelection:[self selectedObjects]];
+} // end findTypeOptionChanged:
 
 #pragma mark -
 #pragma mark DELEGATES
@@ -338,7 +400,8 @@ SearchPanel *sharedSearchPanel = nil;
 //========== updateInterfaceForSelection: ======================================
 //
 // Purpose:		The Document lets us know when the selection changes.  We can in
-//              turn update the UI appropriately
+//              turn update the UI appropriately.  We don't change the user's
+//              options, merely warn them what we'll do.
 //
 //==============================================================================
 - (void) updateInterfaceForSelection:(NSArray *)selectedObjects
@@ -346,71 +409,71 @@ SearchPanel *sharedSearchPanel = nil;
     // The selection's changed which means we shouldn't be the active color well anymore
     [LDrawColorWell setActiveColorWell:nil];
     
-    // We may have selected multiple objects at any level of the tree, or we may have
-    // selected none.  Some search scopes don't make sense:  Step, when no parts  are
-    // selected, Selection, Step and Model when nothing is selected.
+    // No selection so display a suitable warning message and disable the UI elements
+    NSMutableArray *warningComponents = [[NSMutableArray alloc] init];
 
-    __block BOOL partSelected = NO;
-    __block BOOL stepSelected = NO;
-    __block BOOL modelSelected = NO;
-    
-    [selectedObjects enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        if ([obj isKindOfClass:[LDrawPart class]] || [obj isKindOfClass:[LDrawLSynth class]]) {
-            partSelected = YES;
-        }
-        else if ([obj isKindOfClass:[LDrawStep class]]) {
-            stepSelected = YES;
-        }
-        else if ([obj isKindOfClass:[LDrawModel class]]) {
-            modelSelected = YES;
-        }
-    }];
-    
-    // Turn everything on by default, then selectively disable bits of the interface.
-    [scopeMatrix setEnabled:YES];
-    [colorMatrix setEnabled:YES];
-    [findTypeMatrix setEnabled:YES];
-    
-    // No part selected
-    if ([selectedObjects count] == 0 || !partSelected) {
-        [[scopeMatrix cellWithTag:ScopeSelection] setEnabled:NO];
-        [[scopeMatrix cellWithTag:ScopeStep] setEnabled:NO];
-        [[scopeMatrix cellWithTag:ScopeModel] setEnabled:NO];
-        [[colorMatrix cellWithTag:ColorSelectionFilter] setEnabled:NO];
-        [[findTypeMatrix cellWithTag:SearchSelectedParts] setEnabled:NO];
+    if ([selectedObjects count] == 0
+        &&
+        // Even if we have nothing selected the combination of options might not be cause for alarm
+        ([scopeMatrix selectedTag] == ScopeSelection ||
+         [scopeMatrix selectedTag] == ScopeStep ||
+         [colorMatrix selectedTag] == ColorSelectionFilter ||
+         [findTypeMatrix selectedTag] == SearchSelectedParts)
+        ) {
         
-        // Change the scope, color and search type selection
-        if ([scopeMatrix selectedTag] != ScopeFile) {
-            [scopeMatrix selectCellWithTag:ScopeFile];
-        }
-        if ([colorMatrix selectedTag] == ColorSelectionFilter) {
-            [colorMatrix selectCellWithTag:ColorNoFilter];
-        }
-        if ([findTypeMatrix selectedTag] == SearchSelectedParts) {
-            [findTypeMatrix selectCellWithTag:SearchAllParts];
-        }
-    }
-    
-    // no parts selected
-    if (stepSelected) {
+        [warningComponents addObject:NSLocalizedString(@"SearchWarningRoot", @"")];
         
-        [[scopeMatrix cellWithTag:ScopeSelection] setEnabled:NO];
-        [[scopeMatrix cellWithTag:ScopeStep] setEnabled:YES];
-        [[scopeMatrix cellWithTag:ScopeModel] setEnabled:YES];
-        [[colorMatrix cellWithTag:ColorSelectionFilter] setEnabled:NO];
-        [[findTypeMatrix cellWithTag:SearchSelectedParts] setEnabled:NO];
+        // The "what"
+        if ([findTypeMatrix selectedTag] == SearchAllParts || [findTypeMatrix selectedTag] == SearchSelectedParts) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningAllParts", @"")];
+        }
+        else if ([findTypeMatrix selectedTag] == SearchSpecificPart) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningSpecifiedParts", @"")];
+        }
         
-        // Change the scope, color and search type selection
+        [warningComponents addObject:@"of"]; // preposition
+        
+        // The color
+        if ([colorMatrix selectedTag] == ColorNoFilter || [colorMatrix selectedTag] == ColorSelectionFilter) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningAnyColor", @"")];
+        }
+        else if ([colorMatrix selectedTag] == ColorFilter) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningSpecifiedColor", @"")];
+        }
+        
+        [warningComponents addObject:@"in"]; // preposition
+        
+        // The "where"
+        if ([scopeMatrix selectedTag] == ScopeFile || [scopeMatrix selectedTag] == ScopeStep || [scopeMatrix selectedTag] == ScopeSelection) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningFileScope", @"")];
+        }
+        else if ([scopeMatrix selectedTag] == ScopeModel) {
+            [warningComponents addObject:NSLocalizedString(@"SearchWarningModelScope", @"")];
+        }
+
+        [warningText setStringValue:[[warningComponents componentsJoinedByString:@" "] stringByAppendingString:@"."]];
+        [warningText setHidden:NO];
         
     }
     
-    if (modelSelected) {
-        [[scopeMatrix cellWithTag:ScopeStep] setEnabled:NO];
-        [[scopeMatrix cellWithTag:ScopeModel] setEnabled:YES];
-        [[colorMatrix cellWithTag:ColorSelectionFilter] setEnabled:NO];
-        [[findTypeMatrix cellWithTag:SearchSelectedParts] setEnabled:NO];
+    // No warnings
+    else {
+        [warningText setHidden:YES];
     }
 } // end updateInterfaceForSelection:
+
+//========== selectedObjects ===================================================
+//
+// Purpose:		Convenience method to return all selected objects in the document
+//
+//==============================================================================
+-(NSArray *)selectedObjects
+{
+    NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
+    LDrawDocument        *currentDocument    = [documentController currentDocument];
+
+    return [currentDocument selectedObjects];
+} // end selectedObjects
 
 #pragma mark -
 #pragma mark <NSDraggingDestination>
