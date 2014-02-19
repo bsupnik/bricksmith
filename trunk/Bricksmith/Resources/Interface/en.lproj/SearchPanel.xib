@@ -153,7 +153,7 @@
 							</object>
 							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 							<bool key="NSControlAutosetMaxLayoutWidth">YES</bool>
-							<double key="NSPreferredMaxLayoutWidth">90</double>
+							<double key="NSPreferredMaxLayoutWidth">399</double>
 						</object>
 						<object class="NSTextField" id="978295750">
 							<reference key="NSNextResponder" ref="422726490"/>
@@ -614,7 +614,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 						<object class="NSMatrix" id="346430665">
 							<reference key="NSNextResponder" ref="422726490"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{38, 118}, {295, 58}}</string>
+							<string key="NSFrame">{{38, 118}, {302, 58}}</string>
 							<reference key="NSSuperview" ref="422726490"/>
 							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="51853124"/>
@@ -747,7 +747,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 								<object class="NSButtonCell" id="197644034">
 									<int key="NSCellFlags">67108864</int>
 									<int key="NSCellFlags2">131072</int>
-									<string key="NSContents">Find all occurances of parts in the current selection</string>
+									<string key="NSContents">Find all occurrences of parts in the current selection</string>
 									<reference key="NSSupport" ref="26"/>
 									<reference key="NSControlView" ref="346430665"/>
 									<int key="NSTag">3</int>
@@ -779,7 +779,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 									<int key="NSPeriodicInterval">75</int>
 								</object>
 							</array>
-							<string key="NSCellSize">{295, 18}</string>
+							<string key="NSCellSize">{302, 18}</string>
 							<string key="NSIntercellSpacing">{4, 2}</string>
 							<int key="NSMatrixFlags">1151868928</int>
 							<string key="NSCellClass">NSActionCell</string>
@@ -973,7 +973,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 							</object>
 							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 							<bool key="NSControlAutosetMaxLayoutWidth">YES</bool>
-							<double key="NSPreferredMaxLayoutWidth">90</double>
+							<double key="NSPreferredMaxLayoutWidth">399</double>
 						</object>
 						<object class="NSButton" id="1014285200">
 							<reference key="NSNextResponder" ref="422726490"/>
