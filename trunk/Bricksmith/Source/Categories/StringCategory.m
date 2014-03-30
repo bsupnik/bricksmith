@@ -16,7 +16,7 @@
 @implementation NSString (StringCategory)
 
 
-//========== containsString_AMS:options: =======================================
+//========== ams_containsString:options: =======================================
 //
 // Purpose:		For quick searches.
 //
@@ -36,7 +36,7 @@
 //				as a subset and would break Bricksmith. 
 //
 //==============================================================================
-- (BOOL) containsString_AMS:(NSString *)substring options:(NSUInteger)mask
+- (BOOL) ams_containsString:(NSString *)substring options:(NSUInteger)mask
 {
 	NSRange foundRange = [self rangeOfString:substring options:mask];
 	
@@ -48,7 +48,7 @@
 	else
 		return YES;
 		
-}//end containsString_AMS:options:
+}//end ams_containsString:options:
 
 
 //---------- CRLF ----------------------------------------------------[static]--
@@ -98,7 +98,8 @@
 	NSString        *isolatedLine;
 	NSInteger       lineLength          = 0;
 	
-	while(nextlineStartIndex < stringLength){
+	while(nextlineStartIndex < stringLength)
+	{
 		//Read the first line. LDraw files are in DOS format. Oh the agony.
 		// But Cocoa is nice to us.
 		[self getLineStart: &lineStartIndex
@@ -116,13 +117,16 @@
 }//end separateStringByLine
 
 
-//========== stringByRemovingWhitespace ========================================
+//========== ams_stringByRemovingWhitespace ====================================
 //
 // Purpose:		Returns a new string equal to the receiver, except that it 
-//				contains no whitespace charaters. 
+//				contains no whitespace charaters.
+//
+// Note:		Ben Supnik reports name conflicts on 
+//				"stringByRemovingWhitespace" too.
 //
 //==============================================================================
-- (NSString *) stringByRemovingWhitespace
+- (NSString *) ams_stringByRemovingWhitespace
 {
 	NSInteger       originalLength      = [self length];
 	unichar         *resultBuffer       = malloc( sizeof(unichar) * originalLength );
@@ -152,7 +156,7 @@
 	
 	return strippedString;
 	
-}//end stringByRemovingWhitespace
+}//end ams_stringByRemovingWhitespace
 
 
 @end

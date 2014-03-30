@@ -830,7 +830,7 @@
 	NSString        *partSansWhitespace     = nil;
 	NSString		*category				= nil;
 	NSMutableArray  *matchingParts          = nil;
-	NSString        *searchSansWhitespace   = [searchString stringByRemovingWhitespace];
+	NSString        *searchSansWhitespace   = [searchString ams_stringByRemovingWhitespace];
 	
 	if([searchString length] == 0)
 	{
@@ -849,7 +849,7 @@
 			record				= [partRecords objectAtIndex:counter];
 			partNumber			= [record objectForKey:PART_NUMBER_KEY];
 			partDescription		= [record objectForKey:PART_NAME_KEY];
-			partSansWhitespace	= [partDescription stringByRemovingWhitespace];
+			partSansWhitespace	= [partDescription ams_stringByRemovingWhitespace];
 			category			= [record objectForKey:PART_CATEGORY_KEY];
 			
 			if([excludedParts containsObject:partNumber] == NO)
@@ -870,8 +870,8 @@
      	       __block BOOL matches = TRUE;
         	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
     	            matches = matches && 
-                	        ([partNumber            containsString_AMS:word options:NSCaseInsensitiveSearch] ||	
-            	             [partSansWhitespace    containsString_AMS:word options:NSCaseInsensitiveSearch]);
+                	        ([partNumber            ams_containsString:word options:NSCaseInsensitiveSearch] ||	
+            	             [partSansWhitespace    ams_containsString:word options:NSCaseInsensitiveSearch]);
         	    }];            
 				if(matches)
 					[matchingParts addObject:record];
@@ -881,7 +881,7 @@
 					
 					for(NSString* keyword in keywords)
 					{
-						if([[keyword stringByRemovingWhitespace] containsString_AMS:searchSansWhitespace options:NSCaseInsensitiveSearch])
+						if([[keyword ams_stringByRemovingWhitespace] ams_containsString:searchSansWhitespace options:NSCaseInsensitiveSearch])
 						{
 							[matchingParts addObject:record];
 							break;
