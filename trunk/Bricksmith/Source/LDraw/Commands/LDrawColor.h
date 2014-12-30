@@ -149,6 +149,7 @@ typedef enum LDrawColorMaterial
 
 // Accessors
 
+- (GLfloat)				alpha;
 - (LDrawColorT)			colorCode;
 - (LDrawColor *)		complimentColor;
 - (LDrawColorT)			edgeColorCode;

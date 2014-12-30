@@ -19,6 +19,19 @@
 #import "MacLDraw.h"
 #import "StringCategory.h"
 
+typedef enum
+{
+	MaterialTypeAll			= 0,
+	MaterialTypeSolid		= 1,
+	MaterialTypeTransparent = 2,
+	MaterialTypeChrome		= 3,
+	MaterialTypePearlescent	= 4,
+	MaterialTypeRubber		= 5,
+	MaterialTypeMetal		= 6,
+	MaterialTypeOther		= 7,
+	
+} MaterialPopUpTagT;
+
 #define COLOR_SORT_DESCRIPTORS_KEY @"ColorTable Sort Ordering"
 
 @implementation LDrawColorPanel
@@ -42,6 +55,8 @@ LDrawColorPanel *sharedColorPanel = nil;
 	NSTableColumn	*colorColumn	= [colorTable tableColumnWithIdentifier:@"colorCode"];
 	
 	[colorColumn setDataCell:colorCell];
+	
+	[materialPopUpButton selectItemWithTag:MaterialTypeAll];
 	
 	//Remember, this method is called twice for an LDrawColorPanel; the first time 
 	// is for the File's Owner, which is promptly overwritten.
@@ -194,6 +209,16 @@ LDrawColorPanel *sharedColorPanel = nil;
 }//end focusSearchField:
 
 
+//========== materialPopUpButtonChanged: =======================================
+//
+// Purpose:		Chose a different material filter for the color search.
+//
+//==============================================================================
+- (void) materialPopUpButtonChanged:(id)sender
+{
+	[self updateColorFilter];
+}
+
 //========== orderOut: =========================================================
 //
 // Purpose:		The color panel is being closed. If there is an active color 
@@ -269,26 +294,7 @@ LDrawColorPanel *sharedColorPanel = nil;
 //==============================================================================
 - (IBAction) searchFieldChanged:(id)sender
 {
-	NSString    *searchString               = [sender stringValue];
-	NSPredicate *searchPredicate            = nil;
-	LDrawColor  *currentColor               = [self LDrawColor];
-	NSInteger   indexOfPreviousSelection    = 0;
-	
-	searchPredicate = [self predicateForSearchString:searchString];
-	
-	//Update the table with our results.
-	[self->colorListController setFilterPredicate:searchPredicate];
-	
-	// The array controller will automatically maintain the selection if it can. 
-	// But if it can't, we need to come up a reasonable new answer. 
-	indexOfPreviousSelection = [self indexOfColor:currentColor];
-	// If the previous color is no longer in the list, what should we do? I have 
-	// chosen to automatically select the first color, since I don't want to 
-	// introduce the UI confusion of empty selection. 
-	if(indexOfPreviousSelection == NSNotFound)
-	{
-		[self->colorListController setSelectionIndex:0];
-	}
+	[self updateColorFilter];
 	
 }//end searchFieldChanged:
 
@@ -410,11 +416,18 @@ LDrawColorPanel *sharedColorPanel = nil;
 //
 //==============================================================================
 - (NSPredicate *) predicateForSearchString:(NSString *)searchString
+								  material:(MaterialPopUpTagT)material
 {
-	NSPredicate *searchPredicate    = nil;
-	BOOL        searchByCode        = NO; //color name search by default.
-	NSScanner   *digitScanner       = nil;
-	NSInteger   colorCode           = 0;
+	NSString		*keywordFormat		= nil;
+	NSArray 		*keywordArguments	= nil;
+	NSString		*materialFormat 	= nil;
+	NSArray 		*materialArguments	= nil;
+	NSMutableString *predicateFormat	= nil;
+	NSMutableArray	*predicateArguments = nil;
+	NSPredicate 	*searchPredicate	= nil;
+	BOOL			searchByCode		= NO; //color name search by default.
+	NSScanner		*digitScanner		= nil;
+	NSInteger		colorCode			= 0;
 	
 	// If there is no string, then clear the search predicate (find all).
 	if([searchString length] == 0)
@@ -432,20 +445,125 @@ LDrawColorPanel *sharedColorPanel = nil;
 		// search number entered. 
 		if(searchByCode == YES)
 		{
-			searchPredicate = [NSPredicate predicateWithFormat:@"%K == %ld", @"colorCode", (long)colorCode];
+			keywordFormat		= @"%K == %@";
+			keywordArguments	= [NSArray arrayWithObjects:NSStringFromSelector(@selector(colorCode)), @(colorCode), nil];
 		}
 		else
 		{
 			// This is a search based on color names. If we can find the search 
 			// string in any component of the color string, we consider it a 
 			// match. 
-			searchPredicate = [NSPredicate predicateWithFormat:@"%K CONTAINS[cd] %@", @"localizedName", searchString];
+			keywordFormat		= @"%K CONTAINS[cd] %@";
+			keywordArguments	= [NSArray arrayWithObjects:NSStringFromSelector(@selector(localizedName)), searchString, nil];
 		}
+	}
+	
+	switch(material)
+	{
+		case MaterialTypeAll:
+			// nothing
+			break;
+			
+		case MaterialTypeSolid:
+			materialFormat = @"(%K == %@) AND (%K == 1.0)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialNone), NSStringFromSelector(@selector(alpha)), nil];
+			break;
+			
+		case MaterialTypeTransparent:
+			materialFormat = @"(%K == %@) AND (%K < 1.0)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialNone), NSStringFromSelector(@selector(alpha)), nil];
+			break;
+			
+		case MaterialTypeChrome:
+			materialFormat = @"(%K == %@)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialChrome), nil];
+			break;
+		
+		case MaterialTypePearlescent:
+			materialFormat = @"(%K == %@)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialPearlescent), nil];
+			break;
+			
+		case MaterialTypeRubber:
+			materialFormat = @"(%K == %@)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialRubber), nil];
+			break;
+		
+		case MaterialTypeMetal:
+			materialFormat = @"(%K == %@) OR (%K == %@)";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialMetal), NSStringFromSelector(@selector(material)), @(LDrawColorMaterialMatteMetallic), nil];
+			break;
+		
+		case MaterialTypeOther:
+			materialFormat = @"((%K == %@) OR (%K == %@) OR (%K == %@))";
+			materialArguments = [NSArray arrayWithObjects:NSStringFromSelector(@selector(material)), @(LDrawColorMaterialCustom),
+								 NSStringFromSelector(@selector(colorCode)), @(LDrawCurrentColor),
+								 NSStringFromSelector(@selector(colorCode)), @(LDrawEdgeColor),
+								 nil];
+			break;
+	}
+	
+	if(keywordFormat || materialFormat)
+	{
+		predicateFormat 	= [NSMutableString string];
+		predicateArguments	= [NSMutableArray array];
+	}
+	
+	if(keywordFormat)
+	{
+		[predicateFormat appendString:keywordFormat];
+		[predicateArguments addObjectsFromArray:keywordArguments];
+	}
+	
+	if(materialFormat)
+	{
+		if([predicateFormat length])
+			[predicateFormat appendString:@"AND "];
+		
+		[predicateFormat appendFormat:@"(%@)", materialFormat];
+		[predicateArguments addObjectsFromArray:materialArguments];
+	}
+	
+	if(predicateFormat)
+	{
+		searchPredicate = [NSPredicate predicateWithFormat:predicateFormat argumentArray:predicateArguments];
 	}
 	
 	return searchPredicate;
 	
 }//end predicateForSearchString:
+
+
+//========== updateColorFilter =================================================
+//
+// Purpose:		Searches the global color list for colors matching the selected 
+//				parameters.
+//
+//==============================================================================
+- (void) updateColorFilter
+{
+	NSString			*searchString				= [searchField stringValue];
+	MaterialPopUpTagT	materialType				= [[materialPopUpButton selectedItem] tag];
+	NSPredicate 		*searchPredicate			= nil;
+	LDrawColor			*currentColor				= [self LDrawColor];
+	NSInteger			indexOfPreviousSelection	= 0;
+	
+	searchPredicate = [self predicateForSearchString:searchString material:materialType];
+	
+	//Update the table with our results.
+	[self->colorListController setFilterPredicate:searchPredicate];
+	
+	// The array controller will automatically maintain the selection if it can.
+	// But if it can't, we need to come up a reasonable new answer.
+	indexOfPreviousSelection = [self indexOfColor:currentColor];
+	// If the previous color is no longer in the list, what should we do? I have
+	// chosen to automatically select the first color, since I don't want to
+	// introduce the UI confusion of empty selection.
+	if(indexOfPreviousSelection == NSNotFound)
+	{
+		[self->colorListController setSelectionIndex:0];
+	}
+}//end updateColorFilter
 
 
 #pragma mark -
