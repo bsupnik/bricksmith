@@ -807,8 +807,10 @@
 	self->fileBeingDrawn = newFile;
 	
 	if(newFile)
+	{
 		bounds = [newFile boundingBox3];
-	[camera setModelSize:bounds];
+		[camera setModelSize:bounds];
+	}
 
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
@@ -821,25 +823,28 @@
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawDirectiveDidChangeNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawFileActiveModelDidChangeNotification object:nil];
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:LDrawModelRotationCenterDidChangeNotification object:nil];
+	
+	if(self->fileBeingDrawn != nil)
+	{	
+		[[NSNotificationCenter defaultCenter]
+				addObserver:self
+				   selector:@selector(displayNeedsUpdating:)
+					   name:LDrawDirectiveDidChangeNotification
+					 object:self->fileBeingDrawn ];
 		
-	[[NSNotificationCenter defaultCenter]
-			addObserver:self
-			   selector:@selector(displayNeedsUpdating:)
-				   name:LDrawDirectiveDidChangeNotification
-				 object:self->fileBeingDrawn ];
+		[[NSNotificationCenter defaultCenter]
+				addObserver:self
+				   selector:@selector(activeModelDidChange:)
+					   name:LDrawFileActiveModelDidChangeNotification
+					 object:self->fileBeingDrawn ];
+		
+		[[NSNotificationCenter defaultCenter]
+				addObserver:self
+				   selector:@selector(rotationCenterChanged:)
+					   name:LDrawModelRotationCenterDidChangeNotification
+					 object:self->fileBeingDrawn ];
+	}
 	
-	[[NSNotificationCenter defaultCenter]
-			addObserver:self
-			   selector:@selector(activeModelDidChange:)
-				   name:LDrawFileActiveModelDidChangeNotification
-				 object:self->fileBeingDrawn ];
-	
-	[[NSNotificationCenter defaultCenter]
-			addObserver:self
-			   selector:@selector(rotationCenterChanged:)
-				   name:LDrawModelRotationCenterDidChangeNotification
-				 object:self->fileBeingDrawn ];
-				 
 	[self updateRotationCenter];
 	
 }//end setLDrawDirective:
@@ -1852,7 +1857,8 @@
 - (void) activeModelDidChange:(NSNotification *)notification
 {
 	[self updateRotationCenter];
-	[camera setModelSize:[fileBeingDrawn boundingBox3]];
+	if(fileBeingDrawn != nil)
+		[camera setModelSize:[fileBeingDrawn boundingBox3]];
 
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
