@@ -31,21 +31,23 @@ typedef enum {
     SearchSelectedParts = 3
 } SearchPartCriteriaT;
 
-@interface SearchPanel : NSPanel <NSWindowDelegate, NSDraggingDestination>
+@interface SearchPanelController : NSWindowController <NSWindowDelegate, NSDraggingDestination>
 {
-    IBOutlet SearchPanel *searchPanel;
-    IBOutlet NSMatrix *scopeMatrix;
-    IBOutlet NSMatrix *colorMatrix;
-    IBOutlet LDrawColorWell *colorWell;
-    IBOutlet NSMatrix *findTypeMatrix;
-    IBOutlet NSButton *searchInsideLSynthContainers;
-    IBOutlet NSButton *searchHiddenParts;
-    IBOutlet NSTextField *partName;
-    IBOutlet NSTextField *warningText;
+	IBOutlet NSMatrix		*scopeMatrix;
+	IBOutlet NSMatrix		*colorMatrix;
+	IBOutlet LDrawColorWell *colorWell;
+	IBOutlet NSMatrix		*findTypeMatrix;
+	IBOutlet NSButton		*searchInsideLSynthContainers;
+	IBOutlet NSButton		*searchHiddenParts;
+	IBOutlet NSTextField	*partName;
+	IBOutlet NSTextField	*warningText;
 }
 
 //Initialization
-+ (SearchPanel *) sharedSearchPanel;
++ (SearchPanelController *) searchPanel;
+
+// Accessors
++ (BOOL) isVisible;
 
 // Actions
 - (IBAction)doSearchAndSelect:(id)sender;

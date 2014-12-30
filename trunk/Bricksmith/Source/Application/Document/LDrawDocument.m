@@ -18,22 +18,6 @@
 //==============================================================================
 #import "LDrawDocument.h"
 
-#import "LDrawFile.h"
-#import "LDrawModel.h"
-#import "LDrawMPDModel.h"
-#import "LDrawStep.h"
-
-#import "LDrawColor.h"
-#import "LDrawComment.h"
-#import "LDrawConditionalLine.h"
-#import "LDrawDirective.h"
-#import "LDrawDrawableElement.h"
-#import "LDrawLine.h"
-#import "LDrawPart.h"
-#import "LDrawQuadrilateral.h"
-#import "LDrawTriangle.h"
-#import "LDrawLSynth.h"
-
 #import <AMSProgressBar/AMSProgressBar.h>
 
 #import "DimensionsPanel.h"
@@ -43,30 +27,44 @@
 #import "IconTextCell.h"
 #import "Inspector.h"
 #import "LDrawApplication.h"
+#import "LDrawColor.h"
 #import "LDrawColorPanel.h"
+#import "LDrawComment.h"
+#import "LDrawConditionalLine.h"
+#import "LDrawContainer.h"
+#import "LDrawDirective.h"
 #import "LDrawDocumentWindow.h"
+#import "LDrawDragHandle.h"
+#import "LDrawDrawableElement.h"
+#import "LDrawFile.h"
 #import "LDrawFileOutlineView.h"
 #import "LDrawGLView.h"
+#import "LDrawLine.h"
+#import "LDrawLSynth.h"
+#import "LDrawLSynthDirective.h"
+#import "LDrawModel.h"
+#import "LDrawMPDModel.h"
+#import "LDrawPart.h"
+#import "LDrawQuadrilateral.h"
+#import "LDrawStep.h"
+#import "LDrawTriangle.h"
 #import "LDrawUtilities.h"
+#import "LSynthConfiguration.h"
 #import "MacLDraw.h"
 #import "MinifigureDialogController.h"
+#import "ModelManager.h"
 #import "MovePanel.h"
 #import "PartBrowserDataSource.h"
 #import "PartBrowserPanelController.h"
 #import "PartReport.h"
-#import "ModelManager.h"
 #import "PieceCountPanel.h"
 #import "RotationPanelController.h"
 #import "ScrollViewCategory.h"
+#import "SearchPanelController.h"
 #import "StringUtilities.h"
 #import "UserDefaultsCategory.h"
 #import "ViewportArranger.h"
 #import "WindowCategory.h"
-#import "LSynthConfiguration.h"
-#import "LDrawDragHandle.h"
-#import "LDrawContainer.h"
-#import "LDrawLSynthDirective.h"
-#import "SearchPanel.h"
 #if WANT_RELATED_PARTS
 #import "RelatedParts.h"
 #endif
@@ -1752,8 +1750,8 @@ void AppendChoicesToNewItem(
 //==============================================================================
 - (IBAction) find:(id)sender
 {
-    SearchPanel *searchPanel = [SearchPanel sharedSearchPanel];
-    [searchPanel makeKeyAndOrderFront:sender];
+    SearchPanelController *searchPanel = [SearchPanelController searchPanel];
+    [[searchPanel window] makeKeyAndOrderFront:sender];
 } // end find:
 
 //========== splitStep: ========================================================
@@ -3604,7 +3602,10 @@ void AppendChoicesToNewItem(
 	// Update things which need to take into account the entire selection.
     // The order matters: the search panel unregisters itself as the active colorwell
     // before the inspector or color panel do their thing.
-    [[SearchPanel sharedSearchPanel] updateInterfaceForSelection:selectedObjects];
+	if([SearchPanelController isVisible])
+	{
+		[[SearchPanelController searchPanel] updateInterfaceForSelection:selectedObjects];
+	}
 	[[LDrawApplication sharedInspector] inspectObjects:selectedObjects];
 	[[LDrawColorPanel sharedColorPanel] updateSelectionWithObjects:selectedObjects];
     

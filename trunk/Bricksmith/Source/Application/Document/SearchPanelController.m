@@ -5,8 +5,8 @@
 // Purpose:		Search for parts in a file.  Structure copied from ColorPanel.
 //
 //==============================================================================
+#import "SearchPanelController.h"
 
-#import "SearchPanel.h"
 #import "LDrawDocument.h"
 #import "LDrawMPDModel.h"
 #import "LDrawFile.h"
@@ -20,9 +20,9 @@
 #import "PartBrowserTableView.h"
 #import "MacLDraw.h"
 
-@implementation SearchPanel
+@implementation SearchPanelController
 
-SearchPanel *sharedSearchPanel = nil;
+SearchPanelController *sharedSearchPanel = nil;
 
 //========== awakeFromNib ======================================================
 //
@@ -35,23 +35,29 @@ SearchPanel *sharedSearchPanel = nil;
 - (void) awakeFromNib
 {
     // Register for dragging operations - we want to be able to drag parts into the search box
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:LDrawDirectivePboardType, LDrawDraggingPboardType, nil]];
+    [[self window] registerForDraggedTypes:[NSArray arrayWithObjects:LDrawDirectivePboardType, LDrawDraggingPboardType, nil]];
     
+	// Set the initial state of the UI
+	NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
+	LDrawDocument        *currentDocument    = [documentController currentDocument];
+	NSArray              *selectedObjects    = [currentDocument selectedObjects];
+	[self updateInterfaceForSelection:selectedObjects];
+	
 }//end awakeFromNib
 
 #pragma mark -
 #pragma mark INITIALIZATION
 #pragma mark -
 
-//---------- sharedSearchPanel ----------------------------------------[static]--
+//---------- sharedSearchPanel ---------------------------------------[static]--
 //
 // Purpose:		Returns the global instance of the search panel.
 //
 //------------------------------------------------------------------------------
-+ (SearchPanel *) sharedSearchPanel
++ (SearchPanelController *) searchPanel
 {
     if(sharedSearchPanel == nil)
-        sharedSearchPanel = [[SearchPanel alloc] init];
+        sharedSearchPanel = [[SearchPanelController alloc] init];
 
     return sharedSearchPanel;
 
@@ -64,36 +70,25 @@ SearchPanel *sharedSearchPanel = nil;
 //==============================================================================
 - (id) init
 {
-    id oldself = [super init];
-
-    [NSBundle loadNibNamed:@"SearchPanel" owner:self];
-
-    self = searchPanel;
-
-    [self setDelegate:self];
-    [self setWorksWhenModal:YES];
-    [self setLevel:NSStatusWindowLevel];
-    [self setBecomesKeyOnlyIfNeeded:NO];
-
-    // Set the initial state of the UI
-    // IB doesn't seem to honour this setting so force it
-    [[colorWell cell] setShowsStateBy:NSPushOnPushOffButton];
-    NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
-    LDrawDocument        *currentDocument    = [documentController currentDocument];
-    NSArray              *selectedObjects    = [currentDocument selectedObjects];
-    [self updateInterfaceForSelection:selectedObjects];
-    
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    
-    [notificationCenter addObserver:self
-                           selector:@selector(applicationWillTerminate:)
-                               name:NSApplicationWillTerminateNotification
-                             object:NSApp];
-
-
-    [oldself release];
+	self = [super initWithWindowNibName:@"SearchPanel"];
+	if(self)
+	{
+	}
     return self;
 }// end init
+
+#pragma mark - ACCESSORS -
+
+//---------- isVisible -----------------------------------------------[static]--
+//
+// Purpose:		Returns whether the shared search panel object is visible or 
+//				not.
+//
+//------------------------------------------------------------------------------
++ (BOOL) isVisible
+{
+	return (sharedSearchPanel != nil);
+}
 
 #pragma mark -
 #pragma mark ACTIONS
@@ -111,7 +106,8 @@ SearchPanel *sharedSearchPanel = nil;
 //              - Select the remaining matching parts
 //
 //==============================================================================
-- (IBAction)doSearchAndSelect:(id)sender {
+- (IBAction)doSearchAndSelect:(id)sender
+{
     NSDocumentController *documentController = [NSDocumentController sharedDocumentController];
     LDrawDocument        *currentDocument    = [documentController currentDocument];
     NSArray              *selectedObjects    = [self selectedObjects];
@@ -342,6 +338,19 @@ SearchPanel *sharedSearchPanel = nil;
 #pragma mark -
 
 //**** NSWindow ****
+//========== windowWillClose: ==================================================
+//
+// Purpose:		Window is closing; clean up.
+//
+//==============================================================================
+- (void) windowWillClose:(NSNotification *)notification
+{
+	[self autorelease];
+	sharedSearchPanel = nil;
+}
+
+
+//**** NSWindow ****
 //========== windowWillReturnUndoManager: ======================================
 //
 // Purpose:		Allows Undo to keep working transparently through this window by
@@ -357,20 +366,7 @@ SearchPanel *sharedSearchPanel = nil;
 }//end windowWillReturnUndoManager:
 
 
-//========== applicationWillTerminate: =========================================
-//
-// Purpose:		It seems we have some memory to mange.
-//
-//==============================================================================
-- (void) applicationWillTerminate:(NSNotification *)notification
-{
-    [self release];
-
-}//end applicationWillTerminate:
-
-#pragma mark -
-#pragma mark UTILITY
-#pragma mark -
+#pragma mark - UTILITIES -
 
 //========== partsInContainer: =================================================
 //

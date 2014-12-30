@@ -294,8 +294,8 @@
 		8D15AC320486D014006FF6A4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A37F4B0FDCFA73011CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
 		9506E0E0189BD6480006CE9C /* lsynth.mpd in Resources */ = {isa = PBXBuildFile; fileRef = 95D893AD1655334500AA055B /* lsynth.mpd */; };
-		9506E0F018A3F4130006CE9C /* SearchPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 9506E0EE18A3F4130006CE9C /* SearchPanel.h */; };
-		9506E0F118A3F4130006CE9C /* SearchPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9506E0EF18A3F4130006CE9C /* SearchPanel.m */; };
+		9506E0F018A3F4130006CE9C /* SearchPanelController.h in Headers */ = {isa = PBXBuildFile; fileRef = 9506E0EE18A3F4130006CE9C /* SearchPanelController.h */; };
+		9506E0F118A3F4130006CE9C /* SearchPanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9506E0EF18A3F4130006CE9C /* SearchPanelController.m */; };
 		9506E0FC18AA74BE0006CE9C /* SearchPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */; };
 		957B8E3416E739A0005CF6C8 /* LSynthIcon.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */; };
 		95D8939316550B6400AA055B /* Legonian Ruler.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 95D8939216550B6400AA055B /* Legonian Ruler.pdf */; };
@@ -686,8 +686,8 @@
 		73772F01F06AC293E3F650C4 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = ../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
 		8D15AC360486D014006FF6A4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		8D15AC370486D014006FF6A4 /* Bricksmith.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bricksmith.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9506E0EE18A3F4130006CE9C /* SearchPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchPanel.h; sourceTree = "<group>"; };
-		9506E0EF18A3F4130006CE9C /* SearchPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchPanel.m; sourceTree = "<group>"; };
+		9506E0EE18A3F4130006CE9C /* SearchPanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchPanelController.h; sourceTree = "<group>"; };
+		9506E0EF18A3F4130006CE9C /* SearchPanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchPanelController.m; sourceTree = "<group>"; };
 		9506E0FD18AA74BE0006CE9C /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SearchPanel.xib; sourceTree = "<group>"; };
 		957B8E3316E739A0005CF6C8 /* LSynthIcon.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = LSynthIcon.tiff; sourceTree = "<group>"; };
 		95D8939216550B6400AA055B /* Legonian Ruler.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Legonian Ruler.pdf"; sourceTree = "<group>"; };
@@ -750,11 +750,10 @@
 		0B04E9461093BB4200E201EE /* Interface */ = {
 			isa = PBXGroup;
 			children = (
-				952AA8F5169D552E0087919E /* Inspectors */,
-				9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */,
 				0B04E9471093BB4200E201EE /* ColorPanel.xib */,
 				0B04E9491093BB4200E201EE /* Dimensions.xib */,
 				0B04E94B1093BB4200E201EE /* Donation.xib */,
+				952AA8F5169D552E0087919E /* Inspectors */,
 				0B04E9611093BB4200E201EE /* LDrawDocument.xib */,
 				0B04E9631093BB4200E201EE /* LDrawGLViewAccessories.xib */,
 				0B04E9651093BB4200E201EE /* MainMenu.xib */,
@@ -766,6 +765,7 @@
 				0B04E9711093BB4200E201EE /* PieceCountPanel.xib */,
 				0B04E9731093BB4200E201EE /* Preferences.xib */,
 				0B04E9751093BB4200E201EE /* RotationPanel.xib */,
+				9506E0FE18AA74BE0006CE9C /* SearchPanel.xib */,
 				0B04E9771093BB4200E201EE /* ToolPalette.xib */,
 			);
 			path = Interface;
@@ -1136,6 +1136,8 @@
 				0B356AEE08D385B900695EEB /* PieceCountPanel.m */,
 				2BF2E3010AB0FC5E0026D5DB /* RotationPanelController.h */,
 				2BF2E3020AB0FC5E0026D5DB /* RotationPanelController.m */,
+				9506E0EE18A3F4130006CE9C /* SearchPanelController.h */,
+				9506E0EF18A3F4130006CE9C /* SearchPanelController.m */,
 			);
 			path = Document;
 			sourceTree = "<group>";
@@ -1169,8 +1171,6 @@
 				0B2700860981FCEA0058A7BE /* ToolPalette.m */,
 				D6C0C5CD16DABE70007E4266 /* RelatedParts.h */,
 				D6C0C5CE16DABE70007E4266 /* RelatedParts.m */,
-				9506E0EE18A3F4130006CE9C /* SearchPanel.h */,
-				9506E0EF18A3F4130006CE9C /* SearchPanel.m */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -1358,7 +1358,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B83E9B907E3BB0D009C2384 /* LDrawComment.h in Headers */,
-				9506E0F018A3F4130006CE9C /* SearchPanel.h in Headers */,
+				9506E0F018A3F4130006CE9C /* SearchPanelController.h in Headers */,
 				0B491DA407F5555B00AC0C10 /* MatrixMath.h in Headers */,
 				0BCD0C6507FD0BA10066A536 /* LDrawContainer.h in Headers */,
 				0B6770EE0817588D0044A0E0 /* Mac LDraw_Prefix.pch in Headers */,
@@ -1695,7 +1695,7 @@
 				0B8EBE5C093C0FAD00D87E0C /* InspectionQuadrilateral.m in Sources */,
 				0B8EBE5E093C0FAD00D87E0C /* InspectionTriangle.m in Sources */,
 				0B8EBE60093C0FAD00D87E0C /* InspectionUnknownCommand.m in Sources */,
-				9506E0F118A3F4130006CE9C /* SearchPanel.m in Sources */,
+				9506E0F118A3F4130006CE9C /* SearchPanelController.m in Sources */,
 				0B8EBE62093C0FAD00D87E0C /* Inspector.m in Sources */,
 				0B8EBE64093C0FAD00D87E0C /* ObjectInspectionController.m in Sources */,
 				0B8EBE7E093C100100D87E0C /* DialogPanel.m in Sources */,
