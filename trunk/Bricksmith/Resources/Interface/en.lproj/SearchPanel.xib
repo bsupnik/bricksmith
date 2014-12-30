@@ -646,7 +646,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 								<object class="NSButtonCell" id="497334477">
 									<int key="NSCellFlags">67108864</int>
 									<int key="NSCellFlags2">131072</int>
-									<string key="NSContents">Search for specific part types:</string>
+									<string key="NSContents">Search for specific part names:</string>
 									<reference key="NSSupport" ref="26"/>
 									<reference key="NSControlView" ref="346430665"/>
 									<int key="NSTag">2</int>
@@ -930,7 +930,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 							<string key="NSFrame">{{37, 131}, {191, 20}}</string>
 							<reference key="NSSuperview" ref="422726490"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
+							<reference key="NSNextKeyView" ref="116239854"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="852366039">
@@ -969,7 +969,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 							<object class="NSTextFieldCell" key="NSCell" id="364005395">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272891904</int>
-								<string key="NSContents">Bendable parts such as chains can contain other parts you may wish to search for, such as gears.  Select this option to include them in the search.</string>
+								<string key="NSContents">Bendable parts such as chains can contain other parts you may wish to search for, such as gears. Select this option to include them in the search.</string>
 								<reference key="NSSupport" ref="26"/>
 								<string key="NSCellIdentifier">_NS:9</string>
 								<reference key="NSControlView" ref="116239854"/>
@@ -1044,7 +1044,7 @@ y7bMNcy1zTXNtc42zrbPN8+40DnQutE80b7SP9LB00TTxtRJ1MvVTtXR1lXW2Ndc1+DYZNjo2WzZ8dp2
 							<object class="NSTextFieldCell" key="NSCell" id="590507668">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272629760</int>
-								<string key="NSContents">Note: You have no parts selected.  Defaulting to all parts of any color in the file.</string>
+								<string key="NSContents">Note: You have no parts selected. Defaulting to all parts of any color in the file.</string>
 								<reference key="NSSupport" ref="26"/>
 								<string key="NSCellIdentifier">_NS:397</string>
 								<reference key="NSControlView" ref="255453386"/>
