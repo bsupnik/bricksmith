@@ -23,7 +23,7 @@
 //==============================================================================
 #import "ToolPalette.h"
 
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 #import "LDrawColorWell.h"
 #import "MacLDraw.h"
 #import "StringCategory.h"
@@ -41,7 +41,7 @@ ToolPalette *sharedToolPalette = nil;
 {
 	NSNotificationCenter	*notificationCenter	= [NSNotificationCenter defaultCenter];
 	
-	[self->colorWell setLDrawColor:[[LDrawColorPanel sharedColorPanel] LDrawColor]];
+	[self->colorWell setLDrawColor:[[LDrawColorPanelController sharedColorPanel] LDrawColor]];
 	
 	
 	[notificationCenter addObserver:self
@@ -266,7 +266,7 @@ ToolPalette *sharedToolPalette = nil;
 //==============================================================================
 - (void) colorDidChange:(NSNotification *)notification
 {
-	LDrawColor	 *newColor = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor	 *newColor = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	
 	[self->colorWell setLDrawColor:newColor];
 	

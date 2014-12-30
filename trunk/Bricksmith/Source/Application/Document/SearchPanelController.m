@@ -14,7 +14,7 @@
 #import "LDrawModel.h"
 #import "LDrawPart.h"
 #import "LDrawLSynth.h"
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 #import "LDrawGLView.h"
 #import "LDrawFileOutlineView.h"
 #import "PartBrowserTableView.h"

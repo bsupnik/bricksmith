@@ -37,7 +37,7 @@
 	
 	[partPreview setAcceptsFirstResponder:NO];
 	
-	//Remember, this method is called twice for an LDrawColorPanel; the first time 
+	//Remember, this method is called twice for an LDrawColorPanelController; the first time 
 	// is for the File's Owner, which is promptly overwritten.
 	
 }//end awakeFromNib

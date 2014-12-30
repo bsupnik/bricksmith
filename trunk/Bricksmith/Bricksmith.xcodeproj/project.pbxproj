@@ -259,8 +259,8 @@
 		0BF729BB08AD849300E3DA53 /* LDrawDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729AA08AD849300E3DA53 /* LDrawDocument.m */; };
 		0BF729BC08AD849300E3DA53 /* LDrawApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729AC08AD849300E3DA53 /* LDrawApplication.h */; };
 		0BF729BD08AD849300E3DA53 /* LDrawApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729AD08AD849300E3DA53 /* LDrawApplication.m */; };
-		0BF729BE08AD849300E3DA53 /* LDrawColorPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729AE08AD849300E3DA53 /* LDrawColorPanel.h */; };
-		0BF729BF08AD849300E3DA53 /* LDrawColorPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729AF08AD849300E3DA53 /* LDrawColorPanel.m */; };
+		0BF729BE08AD849300E3DA53 /* LDrawColorPanelController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729AE08AD849300E3DA53 /* LDrawColorPanelController.h */; };
+		0BF729BF08AD849300E3DA53 /* LDrawColorPanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729AF08AD849300E3DA53 /* LDrawColorPanelController.m */; };
 		0BF729C008AD849300E3DA53 /* PartBrowserDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729B008AD849300E3DA53 /* PartBrowserDataSource.h */; };
 		0BF729C108AD849300E3DA53 /* PartBrowserDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729B108AD849300E3DA53 /* PartBrowserDataSource.m */; };
 		0BF729C208AD849300E3DA53 /* PartChooserPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729B208AD849300E3DA53 /* PartChooserPanel.h */; };
@@ -641,8 +641,8 @@
 		0BF729AA08AD849300E3DA53 /* LDrawDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDocument.m; sourceTree = "<group>"; };
 		0BF729AC08AD849300E3DA53 /* LDrawApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawApplication.h; sourceTree = "<group>"; };
 		0BF729AD08AD849300E3DA53 /* LDrawApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawApplication.m; sourceTree = "<group>"; };
-		0BF729AE08AD849300E3DA53 /* LDrawColorPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawColorPanel.h; sourceTree = "<group>"; };
-		0BF729AF08AD849300E3DA53 /* LDrawColorPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawColorPanel.m; sourceTree = "<group>"; };
+		0BF729AE08AD849300E3DA53 /* LDrawColorPanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawColorPanelController.h; sourceTree = "<group>"; };
+		0BF729AF08AD849300E3DA53 /* LDrawColorPanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawColorPanelController.m; sourceTree = "<group>"; };
 		0BF729B008AD849300E3DA53 /* PartBrowserDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PartBrowserDataSource.h; sourceTree = "<group>"; };
 		0BF729B108AD849300E3DA53 /* PartBrowserDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PartBrowserDataSource.m; sourceTree = "<group>"; };
 		0BF729B208AD849300E3DA53 /* PartChooserPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PartChooserPanel.h; sourceTree = "<group>"; };
@@ -1153,8 +1153,8 @@
 				0B2FADD210196C2E007BA948 /* DonationDialogController.m */,
 				0BF729AC08AD849300E3DA53 /* LDrawApplication.h */,
 				0BF729AD08AD849300E3DA53 /* LDrawApplication.m */,
-				0BF729AE08AD849300E3DA53 /* LDrawColorPanel.h */,
-				0BF729AF08AD849300E3DA53 /* LDrawColorPanel.m */,
+				0BF729AE08AD849300E3DA53 /* LDrawColorPanelController.h */,
+				0BF729AF08AD849300E3DA53 /* LDrawColorPanelController.m */,
 				2BF2E30D0AB0FC840026D5DB /* MinifigureDialogController.h */,
 				2BF2E30E0AB0FC840026D5DB /* MinifigureDialogController.m */,
 				0BF729B008AD849300E3DA53 /* PartBrowserDataSource.h */,
@@ -1366,7 +1366,7 @@
 				0BF729B808AD849300E3DA53 /* DocumentToolbarController.h in Headers */,
 				0BF729BA08AD849300E3DA53 /* LDrawDocument.h in Headers */,
 				0BF729BC08AD849300E3DA53 /* LDrawApplication.h in Headers */,
-				0BF729BE08AD849300E3DA53 /* LDrawColorPanel.h in Headers */,
+				0BF729BE08AD849300E3DA53 /* LDrawColorPanelController.h in Headers */,
 				0BF729C008AD849300E3DA53 /* PartBrowserDataSource.h in Headers */,
 				0BF729C208AD849300E3DA53 /* PartChooserPanel.h in Headers */,
 				0BF729C608AD849300E3DA53 /* PreferencesDialogController.h in Headers */,
@@ -1681,7 +1681,7 @@
 				0BF729B908AD849300E3DA53 /* DocumentToolbarController.m in Sources */,
 				0BF729BB08AD849300E3DA53 /* LDrawDocument.m in Sources */,
 				0BF729BD08AD849300E3DA53 /* LDrawApplication.m in Sources */,
-				0BF729BF08AD849300E3DA53 /* LDrawColorPanel.m in Sources */,
+				0BF729BF08AD849300E3DA53 /* LDrawColorPanelController.m in Sources */,
 				0BF729C108AD849300E3DA53 /* PartBrowserDataSource.m in Sources */,
 				0BF729C308AD849300E3DA53 /* PartChooserPanel.m in Sources */,
 				0BF729C708AD849300E3DA53 /* PreferencesDialogController.m in Sources */,

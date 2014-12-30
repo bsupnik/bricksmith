@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		LDrawColorPanel.h
+// File:		LDrawColorPanelController.h
 //
 // Purpose:		Color-picker for Bricksmith.
 //
@@ -15,12 +15,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Class:		LDrawColorPanel
+// Class:		LDrawColorPanelController
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawColorPanel : NSPanel <LDrawColorable, NSWindowDelegate>
+@interface LDrawColorPanelController : NSWindowController <LDrawColorable>
 {
-	IBOutlet	LDrawColorPanel		*colorPanel;
 	IBOutlet	LDrawColorBar		*colorBar;
 	IBOutlet	NSPopUpButton		*materialPopUpButton;
 	IBOutlet	NSTableView			*colorTable;
@@ -34,7 +33,7 @@
 }
 
 //Initialization
-+ (LDrawColorPanel *) sharedColorPanel;
++ (LDrawColorPanelController *) sharedColorPanel;
 
 //Actions
 - (void) focusSearchField:(id)sender;

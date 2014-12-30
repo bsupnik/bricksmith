@@ -26,7 +26,7 @@
 #import "ExtendedScrollView.h"
 #import "IconTextCell.h"
 #import "LDrawApplication.h"
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
 #import "MacLDraw.h"
@@ -1115,7 +1115,7 @@
 	NSString		*partName			= [self selectedPartName];
 	LDrawPart		*newPart			= nil;
 	NSData			*partData			= nil;
-	LDrawColor		*selectedColor		= [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor		*selectedColor		= [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	BOOL			 success			= NO;
 	
 	//We got a part; let's add it!

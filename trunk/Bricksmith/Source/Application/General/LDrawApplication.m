@@ -20,7 +20,7 @@
 
 #import "DonationDialogController.h"
 #import "Inspector.h"
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 #import "LDrawDocument.h"
 #import "LDrawPaths.h"
 #import "MacLDraw.h"
@@ -336,9 +336,9 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //==============================================================================
 - (IBAction) showColors:(id)sender
 {
-	LDrawColorPanel *colorPanel = [LDrawColorPanel sharedColorPanel];
+	LDrawColorPanelController *colorPanel = [LDrawColorPanelController sharedColorPanel];
 	
-	[colorPanel makeKeyAndOrderFront:sender];
+	[[colorPanel window] makeKeyAndOrderFront:sender];
 	
 	// It seems some DOS old-timers want to enter colors WITHOUT EVER CLICKING 
 	// THE MOUSE. So, we assume that if the color panel was summoned by its key 

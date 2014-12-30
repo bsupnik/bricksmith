@@ -27,7 +27,7 @@
 #import "LDrawColorWell.h"
 
 #import "LDrawColor.h"
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 
 @implementation LDrawColorWell
 
@@ -77,7 +77,7 @@ static LDrawColorWell *sharedActiveColorWell = nil;
     // An example is the search dialog, where the colour well is explicitly unset when the
     // dialog resigns key, and we thereby avoid changing the selection's color.
     if (newWell) {
-        [[LDrawColorPanel sharedColorPanel] setLDrawColor:[newWell LDrawColor]];
+        [[LDrawColorPanelController sharedColorPanel] setLDrawColor:[newWell LDrawColor]];
     }
 	
 }//end setActiveColorWell:
@@ -156,9 +156,9 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 //========== changeLDrawColorWell: =============================================
 //
 // Purpose:		This is a special action called specifically by the 
-//				LDrawColorPanel to inform the active color well that it should 
-//				change its current color. The color well's action should be sent 
-//				in response to this message.
+//				LDrawColorPanelController to inform the active color well that 
+//				it should change its current color. The color well's action 
+//				should be sent in response to this message. 
 //
 //==============================================================================
 - (void) changeLDrawColorWell:(id)sender
@@ -198,7 +198,7 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	BOOL handledAction	= NO;
 	
 	//in any event open the color panel.
-	[[LDrawColorPanel sharedColorPanel] orderFront:self];
+	[[[LDrawColorPanelController sharedColorPanel] window] orderFront:self];
 	
 
 	if([[self cell] showsStateBy] == NSNoCellMask) //not a toggle button

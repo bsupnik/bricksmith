@@ -1,6 +1,6 @@
 //==============================================================================
 //
-// File:		LDrawColorPanel.m
+// File:		LDrawColorPanelController.m
 //
 // Purpose:		Color-picker for Bricksmith. The color panel is used to browse, 
 //				select, and apply LDraw colors. The colors are presented by 
@@ -9,7 +9,7 @@
 //  Created by Allen Smith on 2/26/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 
 #import "ColorLibrary.h"
 #import "LDrawColor.h"
@@ -34,13 +34,13 @@ typedef enum
 
 #define COLOR_SORT_DESCRIPTORS_KEY @"ColorTable Sort Ordering"
 
-@implementation LDrawColorPanel
+@implementation LDrawColorPanelController
 
 //There is supposed to be only one of these.
-LDrawColorPanel *sharedColorPanel = nil;
+LDrawColorPanelController *sharedColorPanel = nil;
 
 
-//========== awakeFromNib ======================================================
+//========== windowDidLoad =====================================================
 //
 // Purpose:		Brings the LDraw color panel to life.
 //
@@ -49,7 +49,7 @@ LDrawColorPanel *sharedColorPanel = nil;
 //				table's data is even loaded, so you can't sort the data here.
 //
 //==============================================================================
-- (void) awakeFromNib
+- (void) windowDidLoad
 {
 	LDrawColorCell	*colorCell		= [[[LDrawColorCell alloc] init] autorelease];
 	NSTableColumn	*colorColumn	= [colorTable tableColumnWithIdentifier:@"colorCode"];
@@ -58,8 +58,9 @@ LDrawColorPanel *sharedColorPanel = nil;
 	
 	[materialPopUpButton selectItemWithTag:MaterialTypeAll];
 	
-	//Remember, this method is called twice for an LDrawColorPanel; the first time 
-	// is for the File's Owner, which is promptly overwritten.
+	[(NSPanel*)[self window] setWorksWhenModal:YES];
+	[(NSPanel*)[self window] setLevel:NSStatusWindowLevel];
+	[(NSPanel*)[self window] setBecomesKeyOnlyIfNeeded:YES];
 	
 }//end awakeFromNib
 
@@ -73,10 +74,10 @@ LDrawColorPanel *sharedColorPanel = nil;
 // Purpose:		Returns the global instance of the color panel.
 //
 //------------------------------------------------------------------------------
-+ (LDrawColorPanel *) sharedColorPanel
++ (LDrawColorPanelController *) sharedColorPanel
 {
 	if(sharedColorPanel == nil)
-		sharedColorPanel = [[LDrawColorPanel alloc] init];
+		sharedColorPanel = [[LDrawColorPanelController alloc] init];
 	
 	return sharedColorPanel;
 	
@@ -90,22 +91,22 @@ LDrawColorPanel *sharedColorPanel = nil;
 //==============================================================================
 - (id) init
 {
-	id              oldself         = [super init];
-	ColorLibrary    *colorLibrary   = [ColorLibrary sharedColorLibrary];
-	NSArray         *colorList      = [colorLibrary colors];
-
-	[NSBundle loadNibNamed:@"ColorPanel" owner:self];
-	
-	self = colorPanel; //this don't look good, but it works.
-						//this takes the place of calling [super init]
-						// Note that connections in the Nib file must be made 
-						// to the colorPanel, not to the File's Owner!
-						
-	//While the data is being loaded in the table, a color will automatically 
-	// be selected. We do not want this color-selection to generate a 
-	// changeColor: message, so we turn on this flag.
-	updatingToReflectFile = YES;
-	
+	self = [super initWithWindowNibName:@"ColorPanel"];
+	if(self)
+	{
+		ColorLibrary    *colorLibrary   = [ColorLibrary sharedColorLibrary];
+		NSArray         *colorList      = [colorLibrary colors];
+		
+		//While the data is being loaded in the table, a color will automatically
+		// be selected. We do not want this color-selection to generate a
+		// changeColor: message, so we turn on this flag.
+		updatingToReflectFile = YES;
+		
+		// The application's selected color state is stored in an 
+		// NSArrayController that is instantiated by the nib. So no lazy loading 
+		// for us. Force nib to load now.
+		[self window];
+		
 		// Set the list of colors to display.
 		[self->colorListController setContent:colorList];
 		[self->colorListController addObserver:self forKeyPath:@"selectedObjects" options:kNilOptions context:NULL];
@@ -114,17 +115,8 @@ LDrawColorPanel *sharedColorPanel = nil;
 		[self loadInitialSortDescriptors];
 		
 		[self setLDrawColor:[colorLibrary colorForCode:LDrawRed]];
-	updatingToReflectFile = NO;
-	
-	[self setDelegate:self];
-	[self setWorksWhenModal:YES];
-	[self setLevel:NSStatusWindowLevel];
-	[self setBecomesKeyOnlyIfNeeded:YES];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillTerminate:) name:NSApplicationWillTerminateNotification object:NSApp];
-	
-	[oldself release];
-	
+		updatingToReflectFile = NO;
+	}
 	return self;
 	
 }//end init
@@ -204,7 +196,7 @@ LDrawColorPanel *sharedColorPanel = nil;
 //==============================================================================
 - (void) focusSearchField:(id)sender
 {
-	[self makeFirstResponder:self->searchField];
+	[[self window] makeFirstResponder:self->searchField];
 	
 }//end focusSearchField:
 
@@ -218,23 +210,6 @@ LDrawColorPanel *sharedColorPanel = nil;
 {
 	[self updateColorFilter];
 }
-
-//========== orderOut: =========================================================
-//
-// Purpose:		The color panel is being closed. If there is an active color 
-//				well, it needs to deactivate.
-//
-//==============================================================================
-- (void) orderOut:(id)sender
-{
-	//deactivate active color well.
-	if([LDrawColorWell activeColorWell] != nil)
-		[LDrawColorWell setActiveColorWell:nil];
-	
-	[super orderOut:sender];
-	
-}//end orderOut:
-
 
 //========== sendAction ========================================================
 //
@@ -609,8 +584,23 @@ LDrawColorPanel *sharedColorPanel = nil;
 	
 }//end observeValueForKeyPath:ofObject:change:context:
 
+#pragma mark - NSWindow -
 
-//**** NSWindow ****
+//========== windowWillClose: ==================================================
+//
+// Purpose:		The color panel is being closed. If there is an active color
+//				well, it needs to deactivate.
+//
+//==============================================================================
+- (void) windowWillClose:(NSNotification *)notification
+{
+	//deactivate active color well.
+	if([LDrawColorWell activeColorWell] != nil)
+		[LDrawColorWell setActiveColorWell:nil];
+	
+}//end orderOut:
+
+
 //========== windowWillReturnUndoManager: ======================================
 //
 // Purpose:		Allows Undo to keep working transparently through this window by 
@@ -624,18 +614,6 @@ LDrawColorPanel *sharedColorPanel = nil;
 	return [currentDocument undoManager];
 	
 }//end windowWillReturnUndoManager:
-
-
-//========== applicationWillTerminate: =========================================
-//
-// Purpose:		It seems we have some memory to mange. 
-//
-//==============================================================================
-- (void) applicationWillTerminate:(NSNotification *)notification
-{
-	[self release];
-	
-}//end applicationWillTerminate:
 
 
 #pragma mark -

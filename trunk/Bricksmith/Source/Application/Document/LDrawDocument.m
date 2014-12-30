@@ -28,7 +28,7 @@
 #import "Inspector.h"
 #import "LDrawApplication.h"
 #import "LDrawColor.h"
-#import "LDrawColorPanel.h"
+#import "LDrawColorPanelController.h"
 #import "LDrawComment.h"
 #import "LDrawConditionalLine.h"
 #import "LDrawContainer.h"
@@ -1153,9 +1153,9 @@ void AppendChoicesToNewItem(
 //========== changeLDrawColor: =================================================
 //
 // Purpose:		Responds to color-change messages sent down the responder chain 
-//				by the LDrawColorPanel. Upon the receipt of this message, the 
-//				window should change the color of all the selected objects to 
-//				the new color specified in the panel.
+//				by the LDrawColorPanelController. Upon the receipt of this 
+//				message, the window should change the color of all the selected 
+//				objects to the new color specified in the panel. 
 //
 //==============================================================================
 - (void) changeLDrawColor:(id)sender
@@ -2400,7 +2400,7 @@ void AppendChoicesToNewItem(
 {
 	LDrawLine       *newLine        = [[[LDrawLine alloc] init] autorelease];
 	NSUndoManager   *undoManager    = [self undoManager];
-	LDrawColor      *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor      *selectedColor  = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	Point3          position        = ZeroPoint3;
 	
 	if(self->lastSelectedPart)
@@ -2429,7 +2429,7 @@ void AppendChoicesToNewItem(
 {
 	LDrawTriangle	*newTriangle	= [[[LDrawTriangle alloc] init] autorelease];
 	NSUndoManager	*undoManager	= [self undoManager];
-	LDrawColor      *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor      *selectedColor  = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	Point3          position        = ZeroPoint3;
 	
 	if(self->lastSelectedPart)
@@ -2460,7 +2460,7 @@ void AppendChoicesToNewItem(
 {
 	LDrawQuadrilateral  *newQuadrilateral   = [[[LDrawQuadrilateral alloc] init] autorelease];
 	NSUndoManager       *undoManager        = [self undoManager];
-	LDrawColor          *selectedColor      = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor          *selectedColor      = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	Point3              position            = ZeroPoint3;
 	
 	if(self->lastSelectedPart)
@@ -2492,7 +2492,7 @@ void AppendChoicesToNewItem(
 {
 	LDrawConditionalLine    *newConditional = [[[LDrawConditionalLine alloc] init] autorelease];
 	NSUndoManager           *undoManager    = [self undoManager];
-	LDrawColor              *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor              *selectedColor  = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	
 	[newConditional setLDrawColor:selectedColor];
 	
@@ -2550,15 +2550,16 @@ void AppendChoicesToNewItem(
 - (IBAction) addRelatedPartClicked:(id)sender
 {
 #if WANT_RELATED_PARTS
-	RelatedPart *		relatedPart		= [sender representedObject];	
+	RelatedPart *		relatedPart 	= [sender representedObject];	
 	NSString *			partName		= [relatedPart child];
-	NSUndoManager       *undoManager    = [self undoManager];
-	LDrawColor          *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
-	TransformComponents transformation  = IdentityComponents;
-	NSMutableIndexSet * newPartIndices	= [NSMutableIndexSet indexSet];							// Indices of all new parts.
-	id					parentPart = nil;
-	LDrawPart *			newPart = nil;
-	NSUInteger			i, counter;
+	NSUndoManager		*undoManager	= [self undoManager];
+	LDrawColor			*selectedColor	= [[LDrawColorPanelController sharedColorPanel] LDrawColor];
+	TransformComponents transformation	= IdentityComponents;
+	NSMutableIndexSet * newPartIndices	= [NSMutableIndexSet indexSet]; 						// Indices of all new parts.
+	id					parentPart		= nil;
+	LDrawPart * 		newPart 		= nil;
+	NSUInteger			i				= 0;
+	NSUInteger			counter 		= 0;
 
 	// We have to save the selection up-front - as we go adding parts, the selection
 	// will change out from under us.
@@ -2667,7 +2668,7 @@ void AppendChoicesToNewItem(
     LDrawLSynth		*synthesizedObject	= [[[LDrawLSynth alloc] init] autorelease];
 	NSDictionary	*synthEntry			= [sender representedObject];
 	NSString		*type				= [synthEntry objectForKey:@"LSYNTH_TYPE"];
-    LDrawColor		*selectedColor		= [[LDrawColorPanel sharedColorPanel] LDrawColor];
+    LDrawColor		*selectedColor		= [[LDrawColorPanelController sharedColorPanel] LDrawColor];
     NSUndoManager	*undoManager		= [self undoManager];
 	NSString		*undoName			= nil;
 
@@ -3607,7 +3608,7 @@ void AppendChoicesToNewItem(
 		[[SearchPanelController searchPanel] updateInterfaceForSelection:selectedObjects];
 	}
 	[[LDrawApplication sharedInspector] inspectObjects:selectedObjects];
-	[[LDrawColorPanel sharedColorPanel] updateSelectionWithObjects:selectedObjects];
+	[[LDrawColorPanelController sharedColorPanel] updateSelectionWithObjects:selectedObjects];
     
 	if(selectedModel != nil)
 	{
@@ -5233,7 +5234,7 @@ void AppendChoicesToNewItem(
 {
 	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
 	NSUndoManager       *undoManager    = [self undoManager];
-	LDrawColor          *selectedColor  = [[LDrawColorPanel sharedColorPanel] LDrawColor];
+	LDrawColor          *selectedColor  = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	TransformComponents transformation  = IdentityComponents;
 	
 	//We got a part; let's add it!
@@ -5690,7 +5691,7 @@ void AppendChoicesToNewItem(
 	NSArray *selectedObjects = [self selectedObjects];
 	
 	[[LDrawApplication sharedInspector] inspectObjects:selectedObjects];
-	[[LDrawColorPanel sharedColorPanel] updateSelectionWithObjects:selectedObjects];
+	[[LDrawColorPanelController sharedColorPanel] updateSelectionWithObjects:selectedObjects];
 	
 }//end updateInspector
 
