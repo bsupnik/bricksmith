@@ -18,7 +18,7 @@
 //				enable interapplication drags.
 //
 //==============================================================================
-- (NSUInteger)draggingSourceOperationMaskForLocal:(BOOL)isLocal
+- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal
 {
 	if(isLocal == NO)
 		return NSDragOperationCopy;

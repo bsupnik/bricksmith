@@ -1397,7 +1397,7 @@ static PartLibrary *SharedPartLibrary = nil;
 					// dictionary with part info. This was a database design
 					// mistake; it should have been an array of part reference
 					// numbers, if not just built up at runtime.
-					NSString *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
+					NSDictionary *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
 																		  forKey:PART_NUMBER_KEY];
 					[catalog_category addObject:categoryEntry];
 					
