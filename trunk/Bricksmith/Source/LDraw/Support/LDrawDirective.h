@@ -102,6 +102,12 @@ typedef enum CacheFlags {
 	CacheFlagBounds      = 1,
 	DisplayList		     = 2,
     ContainerInvalid     = 4  // Subdirectives have changed in a way that may invalidate the cache
+	
+	// Ben says: ContainerInvalid is _not_ a good cache flag because it is not truly recursive - it is ONLY
+	// invoked on LDrawLSynth directives and should probably be private to that class.
+	// The flag "works" because the class maps the MessageObservedChanged message to inval itself, and 
+	// MessageObservedChanged has been specifically put into LDrawPart, which is the only thing an LSynth 
+	// actually cares about.
 } CacheFlagsT;
 
 typedef enum Message {
@@ -116,6 +122,7 @@ typedef enum Message {
     // The observed have changed in a way that may require the observer to
     // update its representation (e.g. an LSynth constraint has moved and
     // requires resynthesis)
+	// Ben says: this is really LSynth specific, e.g. part -> parent synth
     MessageObservedChanged = 2
 } MessageT;
 
