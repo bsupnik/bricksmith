@@ -370,7 +370,34 @@ static ModelManager *SharedModelManager = nil;
 	if(t)
 	{
 		//NSLog(@"Accepting sign-out for doc %p\n", doc);
+		
+		// Ben says: the extra retain/release matter!!  If we don't retain "t", then
+		// the ONLY strong reference to T comes frmo the servicesTables dictionary 
+		// (the logical owner of all service tables) - removing the object at key 
+		// releases the last ref and deletes the service table.
+		//
+		// Buuuuuuut!  The dealloc method of the service table kills off sub-files by
+		// calling...wait for it...documentSignOut!  The child will go and try to
+		// remove _its_ own services table.
+		//
+		// At this point we are calling removeObjectForKey on an object from INSIDE
+		// the callstack of removeObjectForKey on the same object.  In other words,
+		// we're single threaded but still re-entrant.  Is this okay?
+		//
+		// The answer seems to be: NO for 10.6.8 but MAYBE for 10.7 and later.  
+		// NSMutableDictionary is Implemented via a CFMutableDictionary, and the code
+		// got a rework from 10.6.8 to 10.7.5.  I haven't found any docs saying it's
+		// okay to re-entrantly remove keys, but the newer code looks like it could
+		// be plausibly safe - it sets all keys to nulls (recursive) first and then
+		// winds down the hash table.  The old code mixed container mutation and 
+		// callbacks, which seems dangerous.
+		//
+		// Either way we can MOOT the issue by simply retaining t.  When we remove
+		// it from the dictionary, now WE own the last reference, and our release
+		// triggers the recursive-dealloc.  This happens outside a CF container call.
+		[t retain];
 		[serviceTables removeObjectForKey:[NSValue valueWithPointer:doc]];
+		[t release];
 	}
 }
 
