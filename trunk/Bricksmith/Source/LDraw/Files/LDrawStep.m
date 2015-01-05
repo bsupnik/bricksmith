@@ -842,6 +842,13 @@
 - (void) setRotationAngle:(Tuple3)newAngle
 {
 	self->rotationAngle = newAngle;
+
+	if(self->postsNotifications)
+	{
+		[[NSNotificationCenter defaultCenter]
+						postNotificationName:LDrawStepDidChangeNotification
+									  object:self];
+	}
 	
 }//end setRotationAngle:
 
@@ -901,7 +908,13 @@
 - (void) setStepFlavor:(LDrawStepFlavorT)newFlavor
 {
 	self->stepFlavor = newFlavor;
-	
+
+	if(self->postsNotifications)
+	{
+		[[NSNotificationCenter defaultCenter]
+						postNotificationName:LDrawStepDidChangeNotification
+									  object:self];
+	}
 }//end setStepFlavor:
 
 
@@ -916,6 +929,13 @@
 - (void) setStepRotationType:(LDrawStepRotationT)newValue
 {
 	self->stepRotationType = newValue;
+
+	if(self->postsNotifications)
+	{
+		[[NSNotificationCenter defaultCenter]
+						postNotificationName:LDrawStepDidChangeNotification
+									  object:self];
+	}
 	
 }//end setStepRotationType:
 

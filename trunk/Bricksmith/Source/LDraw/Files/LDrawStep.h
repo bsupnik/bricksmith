@@ -13,6 +13,12 @@
 #import "ColorLibrary.h"
 #import "LDrawContainer.h"
 
+// This notification is sent by steps when step-specific meta-data (e.g. the viewing
+// angle changes.  It is only sent when notification is legal to avoid GCD threading
+// problems.  If the step changes by a directive being inserted the more generic
+// LDrawDirectiveDidChangeNotification is sent out by the base container class.
+#define LDrawStepDidChangeNotification				@"LDrawStepDidChangeNotification"
+
 @class LDrawModel;
 
 ////////////////////////////////////////////////////////////////////////////////

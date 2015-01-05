@@ -83,10 +83,7 @@
 		NSArray			*selectedDirectivesBeforeCopyDrag;
 		gridSpacingModeT gridMode;
 		LDrawGLView		*mostRecentLDrawView; //file graphic view which most recently had focus. Weak link.
-		BOOL			lockViewingAngle;		// hack to fix unexpected view changes during inserts
 		NSArray		*	markedSelection;		// if we are mid-marquee selection, this is an array of the previously selected directives before drag started
-		NSInteger		notificationLockCount;// this is a recursive lock count for locking out notifications temporarily
-		BOOL				lockSkippedPartChanged;// this flag is set when a part change was deferred due to the lock
 }
 
 // Accessors
@@ -195,6 +192,8 @@
 
 //Notifications
 - (void)partChanged:(NSNotification *)notification;
+- (void)docChanged:(NSNotification *)notification;
+- (void)stepChanged:(NSNotification *)notification;
 - (void)syntaxColorChanged:(NSNotification *)notification;
 
 //Menus
@@ -228,7 +227,5 @@
 - (void) updateViewingAngleToMatchStep;
 - (void) writeDirectives:(NSArray *)directives toPasteboard:(NSPasteboard *)pasteboard;
 - (NSArray *) pasteFromPasteboard:(NSPasteboard *) pasteboard preventNameCollisions:(BOOL)renameModels parent:(LDrawContainer*)parent index:(NSInteger)insertAtIndex;
-- (void) lockNotifications;
-- (void) unlockNotifications;
 
 @end

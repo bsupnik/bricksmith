@@ -298,8 +298,18 @@ void AppendChoicesToNewItem(
 							 object:nil ];
 	
 	[notificationCenter addObserver:self
+						   selector:@selector(docChanged:)
+							   name:LDrawDirectiveDidChangeNotification
+							 object:[self documentContents] ];
+
+	[notificationCenter addObserver:self
 						   selector:@selector(partChanged:)
 							   name:LDrawDirectiveDidChangeNotification
+							 object:nil ];
+
+	[notificationCenter addObserver:self
+						   selector:@selector(stepChanged:)
+							   name:LDrawStepDidChangeNotification
 							 object:nil ];
 	
 	[notificationCenter addObserver:self
@@ -833,8 +843,6 @@ void AppendChoicesToNewItem(
 	NSArray         *selectedObjects    = [self selectedObjects];
 	LDrawDirective  *currentObject      = nil;
 	NSInteger       counter             = 0;
-
-	[self lockNotifications];
 	
 	//find the nudgable items
 	for(counter = 0; counter < [selectedObjects count]; counter++)
@@ -846,8 +854,6 @@ void AppendChoicesToNewItem(
 			[self moveDirective: (LDrawDrawableElement*)currentObject
 					inDirection: movementVector];
 	}
-
-	[self unlockNotifications];
 	
 }//end moveSelectionBy:
 
@@ -985,8 +991,6 @@ void AppendChoicesToNewItem(
 		if(fixedCenter != NULL)
 			rotationCenter = *fixedCenter;
 	}
-
-	[self lockNotifications];
 	
 	//rotate everything that can be rotated. That would be parts and only parts.
 	for(counter = 0; counter < [selectedObjects count]; counter++)
@@ -1003,8 +1007,6 @@ void AppendChoicesToNewItem(
 				 aroundPoint:rotationCenter ];
 		}
 	}
-
-	[self unlockNotifications];
 	
 }//end rotateSelection:mode:fixedCenter:
 
@@ -1134,8 +1136,6 @@ void AppendChoicesToNewItem(
 	NSArray     *selectedObjects    = [self selectedObjects];
 	id          currentObject       = nil;
 	NSInteger   counter             = 0;
-
-	[self lockNotifications];
 	
 	for(counter = 0; counter < [selectedObjects count]; counter++)
 	{
@@ -1143,9 +1143,7 @@ void AppendChoicesToNewItem(
 		if([currentObject respondsToSelector:@selector(setHidden:)])
 			[self setElement:currentObject toHidden:hideFlag]; //undoable hook.
 	}
-	
-	[self unlockNotifications];
-	
+		
 }//end setSelectionToHidden:
 
 
@@ -1182,8 +1180,6 @@ void AppendChoicesToNewItem(
 	id          currentObject       = nil;
 	LDrawColor  *newColor           = [sender LDrawColor];
 	NSInteger   counter             = 0;
-
-	[self lockNotifications];
 	
 	for(counter = 0; counter < [selectedObjects count]; counter++)
 	{
@@ -1194,8 +1190,6 @@ void AppendChoicesToNewItem(
 	}
 	if([selectedObjects count] > 0)
 		[[self documentContents] noteNeedsDisplay];
-
-	[self unlockNotifications];
 		
 }//end changeLDrawColor:
 
@@ -1691,8 +1685,6 @@ void AppendChoicesToNewItem(
 	LDrawDirective  *currentObject      = nil;
 	NSInteger       counter;
 
-	[self lockNotifications];
-
 	// Clear the selection FIRST.  We already have a copy of the doomed objects;
 	// if we don't clear the selection, deleting the objs OUT of the selection
 	// will cause massive thrash of the outliner.
@@ -1711,9 +1703,7 @@ void AppendChoicesToNewItem(
 	}
 	
 	[[self documentContents] noteNeedsDisplay];
-	
-	[self unlockNotifications];
-	
+		
 }//end delete:
 
 
@@ -2282,8 +2272,6 @@ void AppendChoicesToNewItem(
 			degreesToRotate	= GRID_ROTATION_COARSE;	//90 degrees
 			break;
 	}
-
-	[self lockNotifications];
 	
 	//nudge everything that can be rotated. That would be parts and only parts.
 	for(counter = 0; counter < [selectedObjects count]; counter++)
@@ -2302,9 +2290,7 @@ void AppendChoicesToNewItem(
 	}//end update loop
 	
 	[[self documentContents] noteNeedsDisplay];
-	
-	[self unlockNotifications];
-	
+		
 }//end snapSelectionToGrid
 
 
@@ -2933,7 +2919,6 @@ void AppendChoicesToNewItem(
 	NSUndoManager	*undoManager	= [self undoManager];
 	
 	[[self documentContents] lockForEditing];
-	self->lockViewingAngle = YES;
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 			deleteDirective:newDirective ];
@@ -2949,7 +2934,6 @@ void AppendChoicesToNewItem(
 		[self->documentContents optimizeVertexes];
 		
 	}
-	self->lockViewingAngle = NO;
 	CGLUnlockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
 	[[self documentContents] unlockEditor];
 	
@@ -2976,7 +2960,6 @@ void AppendChoicesToNewItem(
 	NSInteger       index           = [[parent subdirectives] indexOfObject:doomedDirective];
 	
 	[[self documentContents] lockForEditing];
-	self->lockViewingAngle = YES;
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 				addDirective:doomedDirective
@@ -2987,7 +2970,6 @@ void AppendChoicesToNewItem(
 
 		[self->documentContents optimizeVertexes];
 	}
-	self->lockViewingAngle = NO;
 	[[self documentContents] unlockEditor];
 
 	// After a directive is deleted, we need to resynchronize our step field - maybe the current step changed.
@@ -4309,73 +4291,105 @@ void AppendChoicesToNewItem(
 //========== partChanged: ======================================================
 //
 // Purpose:		Somewhere, somehow, a part (or some other LDrawDirective) was 
-//				changed. There is some possibility that our data could be stale 
-//				now. 
+//				changed.  This method handles updating the UI.
+//
+// Notes:		partChanged is called for -any- part being changed; as a result
+//				it gets called a lot.  To keep things fast, partChanged does
+//				basically no work directly.  Instead it reposts a notification
+//				on the top level LDrawFile for this document.  
+//
+//				The reposted notification is queued and coalesced with 
+//				NSNotificationQueue; the result is that we get one big change
+//				notification on our document after many change notifications
+//				on parts.  See docChanged for more.
 //
 //==============================================================================
 - (void) partChanged:(NSNotification *)notification
 {
 	LDrawDirective *changedDirective = [notification object];
-	
-	if([[changedDirective ancestors] containsObject:[self documentContents]])
-	{
-		// This general-purpose work is expensive and overly general; defer it
-		// and consolidate.
-		if(notificationLockCount > 0)
-		{
-			lockSkippedPartChanged = TRUE;
-		}
-		else
-		{
-			// Ensure that even if the outline contents have changed (for instance a
-			// container that inserts directives automatically) the original selection
-			// is maintained
-			[fileContentsOutline selectObjects:selectedDirectives];
-			[fileContentsOutline reloadData];
+	LDrawFile *docContents = [self documentContents];
 
-			if(changedDirective != [self documentContents])
-			{
-				// When sub-directives are changed, we convert this into a 
-				// whole-document change.  The LDrawGLView/Renderer needs 
-				// this because it is only looking at the top-level file for
-				// notifications to redraw.
-				[[self documentContents] noteNeedsDisplay];
-			}
-			else
-			{
-				// Also update the inspector.  Do this in the non-doc case
-				// only for now to avoid doing this twice per change.
-				// Ideally someday the inspector would observe only the
-				// inspected directive.
-				[self updateInspector];			
-			}
-		}
-
-		// These part change notifications depend on the particular directive
-		// tickled; we have to handle this now synchronously to avoid having to
-		// stashing every directive that goes by.
-
-		//Model menu needs to change if:
-		//	*model list changes (in the file)
-		//	*model name changes (in the model)
-		if(		[[notification object] isKindOfClass:[LDrawFile class]]
-			||	[[notification object] isKindOfClass:[LDrawModel class]])
+	// Since the document sends out part changes too, make sure it isn't the doc
+	// itself sending - if it is, we'd get into an endless loop.  (Because we 
+	// listen to ALL LDrawDirectiveDidChangeNotification notifications, posting
+	// calls us again, with changedDirective == docContents).
+	if(changedDirective != docContents)
+	{	
+		// Since we listen to all parts, we have to check whether this part is
+		// from our document or some other document.
+		if([[changedDirective ancestors] containsObject:docContents])		
 		{
-			[self addModelsToMenus];
-		}
-		// If step display attributes changed and we're in step display, we need 
-		// to reset the step's viewing angle. 
-		// Note: Unfortunately, this is called when the step's content array 
-		//		 changes, and we have no way of distinguishing that case except 
-		//		 for a cheesy hack ivar "lockViewingAngle".
-		else if(	[[notification object] isKindOfClass:[LDrawStep class]]
-				&&	[[[self documentContents] activeModel] stepDisplay] == YES
-				&&	self->lockViewingAngle == NO)
-		{
-			[self updateViewingAngleToMatchStep];
+			// Post a notification that our doc changed; LDrawGLView needs this 
+			// to refresh drawing, and we ned it to redo our menus.
+			NSNotification * doc_notification = 
+				[NSNotification notificationWithName:LDrawDirectiveDidChangeNotification 
+											 object:docContents];
+		
+			// Notification is queued and coalesced; 
+			[[NSNotificationQueue defaultQueue] 
+				   enqueueNotification:doc_notification 
+						  postingStyle:NSPostASAP 
+						 coalesceMask:NSNotificationCoalescingOnName|NSNotificationCoalescingOnSender
+							forModes:NULL];
 		}
 	}
 }//end partChanged:
+
+
+//========== docChanged: =======================================================
+//
+// Purpose:		This notification is sent to us when something in our document
+//				has changed; it's the asynchronous coalesced result of
+//				partChanged being called within our document.
+//
+// Notes:		This notification is always asynchronous and coalesced; the 
+//				result is that it happens about once for an entire edit or undo
+//				operation.  This is where we do the expensive stuff like
+//				resync the hierarchy and update the menus.
+//
+//==============================================================================
+- (void)docChanged:(NSNotification *)notification
+{
+	// This functionality was in partChanged through Bricksmith 3.0.
+	[fileContentsOutline selectObjects:selectedDirectives];
+	[fileContentsOutline reloadData];
+
+	[self updateInspector];
+
+	// Technically we don't need to redo the model menu on every UI edit.  In the
+	// future we should add specific notifications or directive observations to
+	// detect this case. But 3.0 and earlier ran this once for every edit (when
+	// part changes were escalated to doc changes) and then twice on real model
+	// changes (because we'd hit the case on the model and again on the doc).
+	//
+	// In practice it doesn't matter - for now, for the test cases we have,
+	// rebuilding the menus is relatively cheap.  A user can only add so many
+	// MPD parts to a file without going completely insane.
+	[self addModelsToMenus];
+
+}//end docChanged:
+
+
+//========== stepChanged: ======================================================
+//
+// Purpose:		A step changed its numeric attributes, e.g. the viewing angle,
+//				typically by the inspector editing.  We get a direct 
+//				notification from the step and can resync our viewing angles
+//				if needed.
+//
+//==============================================================================
+- (void)stepChanged:(NSNotification *)notification
+{
+	LDrawDirective *changedDirective = [notification object];
+	LDrawFile *docContents = [self documentContents];
+
+	if([[changedDirective ancestors] containsObject:docContents])		
+	if([[docContents activeModel] stepDisplay] == YES)
+	{
+		// TODO: new notification for this to get out of hot path?!?
+		[self updateViewingAngleToMatchStep];
+	}
+}//end stepChanged:
 
 
 //========== syntaxColorChanged: ===============================================
@@ -5896,9 +5910,7 @@ void AppendChoicesToNewItem(
 	NSData          *data           = nil;
 	NSMutableArray  *addedObjects   = [NSMutableArray array];
 	NSInteger       counter         = 0;
-	
-	[self lockNotifications];
-	
+		
 	//We must make sure we have the proper pasteboard type available.
  	if([[pasteboard types] containsObject:LDrawDirectivePboardType])
 	{
@@ -5941,66 +5953,10 @@ void AppendChoicesToNewItem(
 	//As this is the centralized conduit through which all "pasting" operations 
 	// flow, this is where we refresh.
 	[[self documentContents] noteNeedsDisplay];
-
-	[self unlockNotifications];
 	
 	return addedObjects;
 	
 }//end pasteFromPasteboard:
-
-
-//========== lockNotifications: ================================================
-//
-// Purpose:		Locks the document out from reacting to partChanged 
-//				notifications.  The "lock" is re-entrant - calling this 
-//				multiple times is legal and must be balanced with an equal
-//				number of unlockNotifications calls.  The intention is to make
-//				nested locking work.
-//
-// Notes:		When editing a large number of directives (e.g. nudging a large
-//				selection) the synchronous dispatch of partChanged 
-//				notifications to the document causes serious performance 
-//				problems.  The notification lock lets an operation defer the 
-//				notification until later; the mechanism consolidates 
-//				notifications until the lock is released, at which point a 
-//				single partChanged notification is resent.
-//
-//				The next step in improving performance is to start to handle
-//				some notifications via a coalesced notification queue; until
-//				then manual locking is necessry.
-//
-//==============================================================================
-- (void) lockNotifications
-{
-	if(notificationLockCount++ == 0)
-	{
-		lockSkippedPartChanged = FALSE;
-	}
-}//end lockNotifications
-
-
-//========== unlockNotifications: ==============================================
-//
-// Purpose:		Decrements the lock count on the notification lock.  Once the
-//				lock hits zero, one partChanged notification is sent for the
-//				document's LDrawFile if any were sent during the locking 
-//				period.
-//
-// Notes:		The lock should be released once an editing operation is 
-//				completed.
-//
-//==============================================================================
-- (void) unlockNotifications
-{
-	if(--notificationLockCount == 0)
-	{
-		if(lockSkippedPartChanged)
-		{
-			lockSkippedPartChanged = FALSE;			
-			[[self documentContents] noteNeedsDisplay];
-		}
-	}
-}//end unlockNotifications
 
 
 #pragma mark -
