@@ -228,4 +228,6 @@
 - (void) writeDirectives:(NSArray *)directives toPasteboard:(NSPasteboard *)pasteboard;
 - (NSArray *) pasteFromPasteboard:(NSPasteboard *) pasteboard preventNameCollisions:(BOOL)renameModels parent:(LDrawContainer*)parent index:(NSInteger)insertAtIndex;
 
+- (void) flushDocChangesAndSelect:(NSArray*)directives;
+
 @end

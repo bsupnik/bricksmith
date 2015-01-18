@@ -1830,18 +1830,10 @@ void AppendChoicesToNewItem(
 		[self addDirective:child toParent:newStep];
 	}
 
-	[fileContentsOutline expandItem:newStep];
-	
-	newPartIndices = [NSMutableIndexSet indexSet];
-	for(id newPart in movedDirectives)
-	{
-		[newPartIndices addIndex:[fileContentsOutline rowForItem:newPart]];
-	}
-	
-	[fileContentsOutline selectRowIndexes:newPartIndices byExtendingSelection:NO];
-		
 	[undoManager setActionName:NSLocalizedString(@"UndoSplitStep", nil)];
-	[[self documentContents] noteNeedsDisplay];
+	
+	[self flushDocChangesAndSelect:movedDirectives];
+
 }//end splitStep:
 
 
@@ -2308,7 +2300,6 @@ void AppendChoicesToNewItem(
 
 	[self addModel:newModel atIndex:NSNotFound preventNameCollisions:YES];
 	[self setActiveModel:newModel];
-	[[self documentContents] noteNeedsDisplay];
 	
 }//end modelSelected
 
@@ -2436,7 +2427,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newLine parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddLine", nil)];
-	[[self documentContents] noteNeedsDisplay];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newLine]];
 	
 }//end addLineClicked:
 
@@ -2466,7 +2457,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newTriangle parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddTriangle", nil)];
-	[[self documentContents] noteNeedsDisplay];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newTriangle]];
 	
 }//end addTriangleClicked:
 
@@ -2498,7 +2489,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newQuadrilateral parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddQuadrilateral", nil)];
-	[[self documentContents] noteNeedsDisplay];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newQuadrilateral]];
 	
 }//end addQuadrilateralClicked:
 
@@ -2520,7 +2511,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newConditional parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddConditionalLine", nil)];
-	[[self documentContents] noteNeedsDisplay];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newConditional]];
 	
 }//end addConditionalClicked:
 
@@ -2538,6 +2529,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newComment parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddComment", nil)];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newComment]];		
 }//end addCommentClicked:
 
 
@@ -2554,6 +2546,7 @@ void AppendChoicesToNewItem(
 	[self addStepComponent:newCommand parent:nil index:NSNotFound];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAddMetaCommand", nil)];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newCommand]];
 }//end addCommentClicked:
 
 
@@ -2576,7 +2569,6 @@ void AppendChoicesToNewItem(
 	NSUndoManager		*undoManager	= [self undoManager];
 	LDrawColor			*selectedColor	= [[LDrawColorPanelController sharedColorPanel] LDrawColor];
 	TransformComponents transformation	= IdentityComponents;
-	NSMutableIndexSet * newPartIndices	= [NSMutableIndexSet indexSet]; 						// Indices of all new parts.
 	id					parentPart		= nil;
 	LDrawPart * 		newPart 		= nil;
 	NSUInteger			i				= 0;
@@ -2614,20 +2606,8 @@ void AppendChoicesToNewItem(
 		}
 	}
 
-	// Step 2: go select every new part.  This way the user can pick "insert related"
-	// again, e.g. to add tires to newly added wheels.
-
-	counter = [newParts count];
-	for(i = 0; i < counter; ++i)
-	{
-		[newPartIndices addIndex:[fileContentsOutline rowForItem:[newParts objectAtIndex:i]]];
-	}
-	
-	[fileContentsOutline selectRowIndexes:newPartIndices byExtendingSelection:NO];
-		
+	[self flushDocChangesAndSelect:newParts];
 	[undoManager setActionName:NSLocalizedString(@"UndoAddRelatedPart", nil)];
-	[[self documentContents] noteNeedsDisplay];
-
 #endif	
 }//end addRelatedPartClicked
 
@@ -2715,7 +2695,7 @@ void AppendChoicesToNewItem(
 
 	undoName = [NSString stringWithFormat:NSLocalizedString(@"UndoAddLSynth", nil), [synthEntry objectForKey:@"title"]];
 	[undoManager setActionName:undoName];
-	[[self documentContents] noteNeedsDisplay];
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:synthesizedObject]];
 
 }//end insertSynthesizedDirective:
 
@@ -2758,22 +2738,22 @@ void AppendChoicesToNewItem(
             //  Add our constraint, resynthesize and mark as needing display
 			[self addDirective:constraint toParent:parent atIndex:index];
             [synthesizablePart synthesize];
-            [[self documentContents] noteNeedsDisplay];
+			[synthesizablePart noteNeedsDisplay];
         }
 		
         // If a constraint is selected (i.e. a part with an LDrawLSynth parent) add ourselves after it
         else if (	[self->lastSelectedPart isKindOfClass:[LDrawDirective class]]
 				 &&	[[fileContentsOutline parentForItem:self->lastSelectedPart] isMemberOfClass:[LDrawLSynth class]])
 		{
-            parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
-            int row = [parent indexOfDirective:self->lastSelectedPart];
-            index = row + 1;
-            synthesizablePart = (LDrawLSynth *)parent;
-			
-            //  Add our constraint, resynthesize and mark as needing display
+			parent = [fileContentsOutline parentForItem:self->lastSelectedPart];
+			int row = [parent indexOfDirective:self->lastSelectedPart];
+			index = row + 1;
+			synthesizablePart = (LDrawLSynth *)parent;
+
+			//  Add our constraint, resynthesize and mark as needing display
 			[self addDirective:constraint toParent:parent atIndex:index];
-            [synthesizablePart synthesize];
-            [[self documentContents] noteNeedsDisplay];
+			[synthesizablePart synthesize];
+			[synthesizablePart noteNeedsDisplay];
         }
 		
         else {
@@ -2783,16 +2763,7 @@ void AppendChoicesToNewItem(
 		// Show the new element.
 		if(parent)
 		{
-			[fileContentsOutline expandItem:parent];
-			
-			// Select it too.
-			NSInteger rowForItem = [fileContentsOutline rowForItem:constraint];
-			[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
-							 byExtendingSelection:NO];
-			
-			// Allow us to immediately use the keyboard to move the new part.
-			[[self foremostWindow] makeFirstResponder:mostRecentLDrawView];
-			
+			[self flushDocChangesAndSelect:[NSArray arrayWithObject:constraint]];
 			[undoManager setActionName:NSLocalizedString(@"UndoAddLSynthConstraint", nil)];
 		}
 		
@@ -2859,18 +2830,12 @@ void AppendChoicesToNewItem(
 
 		[self addDirective:direction toParent:parent atIndex:index];
         [(LDrawLSynth *)parent synthesize];
-        [[self documentContents] noteNeedsDisplay];
+        [parent noteNeedsDisplay];
 		
 		// Show the new element.
 		if(parent)
 		{
-			[fileContentsOutline expandItem:parent];
-			
-			// Select it too.
-			NSInteger rowForItem = [fileContentsOutline rowForItem:direction];
-			[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
-							 byExtendingSelection:NO];
-			
+			[self flushDocChangesAndSelect:[NSArray arrayWithObject:direction]];			
 			// Allow us to immediately use the keyboard to move the new part.
 			[[self foremostWindow] makeFirstResponder:mostRecentLDrawView];
 			
@@ -2923,9 +2888,6 @@ void AppendChoicesToNewItem(
 		[[undoManager prepareWithInvocationTarget:self]
 			deleteDirective:newDirective ];
 	
-		// Turn off change notifications while mutating steps. Fixes Step 
-		// Display bug in which the viewing angle changes whenever inserting a 
-		// part. 
 		[parent insertDirective:newDirective atIndex:index];
 	}
 	CGLLockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
@@ -3208,7 +3170,7 @@ void AppendChoicesToNewItem(
 	//a step or model (or something); return the nth directives command
 	else if([item isKindOfClass:[LDrawContainer class]])
 		numberOfChildren = [[item subdirectives] count];
-		
+
 	return numberOfChildren;
 	
 }//end outlineView:numberOfChildrenOfItem:
@@ -3251,7 +3213,7 @@ void AppendChoicesToNewItem(
 	//a container; return the nth subdirective.	
 	else if([item isKindOfClass:[LDrawContainer class]])
 		children = [item subdirectives];
-	
+
 	return [children objectAtIndex:index];
 	
 }//end outlineView:child:ofItem:
@@ -5242,6 +5204,13 @@ void AppendChoicesToNewItem(
 	}
 	
 	// Select the new model.
+	// Ben says: why is it legal for us to directly synchronously select the mode? (This is one of the 
+	// only cases where we do?)  Adding a directive to the parent file (which is what adding a model
+	// does) causes us to get a notification _directly_ off of the doc's file. Notifications off of 
+	// the doc's file are handled synchronously, so by the time we get here, we are totally UI-synced.
+	//
+	// This is good because we are also going to hierarchy-expand our new model to reveal its first
+	// step, so we this code is going to have to talk to the outliner no matter what.
 	[fileContentsOutline expandItem:newModel];
 	rowForItem = [fileContentsOutline rowForItem:newModel];
 	[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
@@ -5279,14 +5248,8 @@ void AppendChoicesToNewItem(
 		[self addDirective:newStep toParent:selectedModel atIndex:insertAtIndex];
 	}
 	
-	// Select the new step.
-	[fileContentsOutline expandItem:selectedModel];
-	[fileContentsOutline expandItem:newStep];
-	NSInteger rowForItem = [fileContentsOutline rowForItem:newStep];
-	[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
-					 byExtendingSelection:NO];
-	
-	[undoManager setActionName:NSLocalizedString(@"UndoAddStep", nil)];
+	[undoManager setActionName:NSLocalizedString(@"UndoAddStep", nil)];	
+	[self flushDocChangesAndSelect:[NSArray arrayWithObject:newStep]];
 	
 }//end addStep:
 
@@ -5324,7 +5287,7 @@ void AppendChoicesToNewItem(
 		[self addStepComponent:newPart parent:nil index:NSNotFound];
 		
 		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
-		[[self documentContents] noteNeedsDisplay];
+		[self flushDocChangesAndSelect:[NSArray arrayWithObject:newPart]];
 	}
 }//end addPartNamed:
 
@@ -5339,6 +5302,13 @@ void AppendChoicesToNewItem(
 //				parent - requested target step; if nil, uses the default behavior
 //				insertAtIndex - index in parent.
 //
+// Note:			This routine _no longer_ selects the added step component!  All
+//				code that calls addStepComponent must manage selection on its
+//				own.  Selection has been pulled out of addStepComponent because
+//				many operations involve a large number of step components;
+//				editing the selection per directive turns into a huge
+//				performance problem.
+//
 //==============================================================================
 - (void) addStepComponent:(LDrawDirective *)newDirective
 				   parent:(LDrawContainer*)parent
@@ -5346,7 +5316,6 @@ void AppendChoicesToNewItem(
 {
 	LDrawContainer	*targetContainer	= parent;
 	LDrawMPDModel	*selectedModel		= [self selectedModel];
-	NSInteger		rowForItem			= 0;
 
 	// Synchronize our addition with the model currently active.
 	if(selectedModel == nil)
@@ -5379,7 +5348,6 @@ void AppendChoicesToNewItem(
 			targetContainer = [selectedModel visibleStep];
 		}
 	}
-		
 	if(insertAtIndex == NSNotFound)
 	{
 		// At a user's request, all new components are inserted in the last 
@@ -5391,15 +5359,10 @@ void AppendChoicesToNewItem(
 		[self addDirective:newDirective toParent:targetContainer atIndex:insertAtIndex ];
 	}
 
-	// Show the new element.
-	[fileContentsOutline expandItem:selectedModel];
-	[fileContentsOutline expandItem:targetContainer];
-	
-	// Select it too.
-	rowForItem = [fileContentsOutline rowForItem:newDirective];
-	[fileContentsOutline selectRowIndexes:[NSIndexSet indexSetWithIndex:rowForItem]
-					 byExtendingSelection:NO];
-					 
+	// This code used to do a synchronous doc update and select the part right here.
+	// This has been removed and hoisted out to the calling code - pretty much anyone
+	// calling this should call flushDocChangesAndSelect.
+
 	// Allow us to immediately use the keyboard to move the new part.
 	[[self foremostWindow] makeFirstResponder:mostRecentLDrawView];
 	
@@ -5946,17 +5909,58 @@ void AppendChoicesToNewItem(
 			[addedObjects addObject:currentObject];
 		}
 		
-		//Select all the objects which have been added.
-		[fileContentsOutline selectObjects:addedObjects];
-	}
+		[self flushDocChangesAndSelect:addedObjects];
 
-	//As this is the centralized conduit through which all "pasting" operations 
-	// flow, this is where we refresh.
-	[[self documentContents] noteNeedsDisplay];
+	}
 	
 	return addedObjects;
 	
 }//end pasteFromPasteboard:
+
+
+//========== flushDocChangesAndSelect: =========================================
+//
+// Purpose:		This routine does two tasks that are almost always done 
+//				together in most UI code:
+//
+//				(1) it "flushes" pending asynchronous UI updates by
+//					directly posting a directive change (on our doc's file)
+//					synchronously with coalescing. When this finishes, the 
+//					outliner, model menu, etc. are all "synced up".
+//
+//				(2) it then completely changes the selection to a new set
+//					of directives.  That could be 0, 1 or many directives.
+//
+// Notes:		This routine should be done once at the end of an editing
+//				function; the sync and selection change are quite affordable
+//				performance wise if they are done once per user edit.
+//
+//				This function should _not_ be done in lower level utility 
+//				functions, undoable methods, or inside an iteration loop.
+//
+//				Typical use will be to make a series of low level directive
+//				changes (all which post async doc updates) and then flush and
+//				select once when all editing work is finished.
+//==============================================================================
+- (void) flushDocChangesAndSelect:(NSArray*)directives
+{
+	LDrawFile *docContents = [self documentContents];
+
+	// Post a notification that our doc changed; LDrawGLView needs this 
+	// to refresh drawing, and we ned it to redo our menus.
+	NSNotification * doc_notification = 
+		[NSNotification notificationWithName:LDrawDirectiveDidChangeNotification 
+									 object:docContents];
+
+	// Notification is queued and coalesced; 
+	[[NSNotificationQueue defaultQueue] 
+			enqueueNotification:doc_notification 
+				postingStyle:NSPostNow 
+				coalesceMask:NSNotificationCoalescingOnName|NSNotificationCoalescingOnSender
+					forModes:NULL];
+					
+	[self selectDirectives:directives];
+}//end flushDocChangesAndSelect:
 
 
 #pragma mark -
