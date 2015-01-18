@@ -1385,26 +1385,38 @@ static PartLibrary *SharedPartLibrary = nil;
 				NSString *category = [categoryRecord objectForKey:PART_CATEGORY_KEY];
 				if(category)
 				{
-					catalog_category = [catalog_categories objectForKey:category];
-					if(catalog_category == nil)
-					{
-						//We haven't encountered this category yet. Initialize it now.
-						catalog_category = [NSMutableArray array];
-						[catalog_categories setObject:catalog_category forKey:category ];
+					// Check for dupe parts and reject later ones.  If we don't and the unofficial
+					// library has a part that has had its category edited, we'll end up with the
+					// part in BOTH categories.  This can hose us when the library changes which
+					// part is canonical vs alias.
+					NSString * partNumber = [categoryRecord objectForKey:PART_NUMBER_KEY];					
+					if([catalog_partNumbers objectForKey:partNumber] == nil)
+					{				
+						catalog_category = [catalog_categories objectForKey:category];
+						if(catalog_category == nil)
+						{
+							//We haven't encountered this category yet. Initialize it now.
+							catalog_category = [NSMutableArray array];
+							[catalog_categories setObject:catalog_category forKey:category ];
+						}
+						
+						// For some reason, I made each entry in the category a
+						// dictionary with part info. This was a database design
+						// mistake; it should have been an array of part reference
+						// numbers, if not just built up at runtime.
+						NSDictionary *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
+																			  forKey:PART_NUMBER_KEY];
+																			  
+						[catalog_category addObject:categoryEntry];
+						
+						// Also file the part in a master list by reference name.
+						[catalog_partNumbers setObject:categoryRecord
+												forKey:[categoryRecord objectForKey:PART_NUMBER_KEY] ];
 					}
-					
-					// For some reason, I made each entry in the category a
-					// dictionary with part info. This was a database design
-					// mistake; it should have been an array of part reference
-					// numbers, if not just built up at runtime.
-					NSDictionary *categoryEntry = [NSDictionary dictionaryWithObject:[categoryRecord objectForKey:PART_NUMBER_KEY]
-																		  forKey:PART_NUMBER_KEY];
-					[catalog_category addObject:categoryEntry];
-					
-					
-					// Also file the part in a master list by reference name.
-					[catalog_partNumbers setObject:categoryRecord
-											forKey:[categoryRecord objectForKey:PART_NUMBER_KEY] ];
+					else
+					{
+						//NSLog(@"Skipped part %s at path %s - duplicate part ID.\n", [partNumber UTF8String],[currentPath UTF8String]);
+					}
 				}
 										
 //				NSLog(@"processed %@", [partNames objectAtIndex:counter]);
