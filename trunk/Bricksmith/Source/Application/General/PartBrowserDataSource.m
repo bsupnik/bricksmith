@@ -841,6 +841,9 @@
 	{
 		matchingParts = [NSMutableArray array];
 		
+		NSArray * searchWords = [searchString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+		NSUInteger wordCount = [searchWords count];
+		
 		// Search through all the given records and try to find matches on the 
 		// search string. But search part names whitespace-neutral so as not to 
 		// be thrown off by goofy name spacing. 
@@ -867,12 +870,19 @@
 	            //  "four studs"    "Brick 1 x 1 with Studs on Four Sides"
 	            //  "offset plate"  "Plate 1 x 4 Offset"
 	            //  "axle pin 2x2"  "Brick 2 x 2 with Pin and Axlehole"
-     	       __block BOOL matches = TRUE;
-        	    [searchString enumerateSubstringsInRange:NSMakeRange(0, [searchString length]) options:NSStringEnumerationByWords usingBlock:^(NSString* word, NSRange wordRange, NSRange enclosingRange, BOOL* stop){
-    	            matches = matches && 
-                	        ([partNumber            ams_containsString:word options:NSCaseInsensitiveSearch] ||	
-            	             [partSansWhitespace    ams_containsString:word options:NSCaseInsensitiveSearch]);
-        	    }];            
+				
+				NSUInteger wordCounter;
+				BOOL matches = TRUE;
+				for(wordCounter = 0; matches && wordCounter < wordCount; ++wordCounter)
+				{
+					NSString * word = [searchWords objectAtIndex:wordCounter];
+					if(!(
+						[partNumber            ams_containsString:word options:NSCaseInsensitiveSearch] ||
+            	        [partSansWhitespace    ams_containsString:word options:NSCaseInsensitiveSearch])
+					)
+						matches = FALSE;
+				}
+				
 				if(matches)
 					[matchingParts addObject:record];
 				else
