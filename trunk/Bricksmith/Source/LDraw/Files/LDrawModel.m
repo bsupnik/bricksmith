@@ -496,7 +496,7 @@
 		currentDirective = [steps objectAtIndex:counter];
 		[currentDirective hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:creditObject hits:hits];
 	}
-}
+}//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
 //========== boxTest:transform:boundsOnly:creditObject:hits: ===================

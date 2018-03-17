@@ -503,7 +503,7 @@
 			[handle hitTest:pickRay transform:transform viewScale:scaleFactor boundsOnly:boundsOnly creditObject:nil hits:hits];
 		}
 	}
-}
+}//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
 //========== boxTest:transform:boundsOnly:creditObject:hits: ===================
