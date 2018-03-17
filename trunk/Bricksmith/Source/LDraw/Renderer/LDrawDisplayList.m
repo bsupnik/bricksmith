@@ -1033,12 +1033,16 @@ void LDrawDLSessionDrawAndDestroy(struct LDrawDLSession * session)
 			
 			dl->instance_head = dl->instance_tail = NULL;			
 			dl->instance_count = 0;
+			// Bug fix: bump the list head FIRST (pop front) before we blow things up, lest we use freed memory.
+			session->dl_head = dl->next_dl;
 			if(dl->flags & dl_needs_destroy)
 			{
 				LDrawDLDestroy(dl);
 			}
-			session->dl_head = dl->next_dl;
-			dl->next_dl = NULL;		
+			else
+			{
+				dl->next_dl = NULL;
+			}
 		}
 		
 		// Hardware instancing: unmap our hardware instance buffer and if we got data,
