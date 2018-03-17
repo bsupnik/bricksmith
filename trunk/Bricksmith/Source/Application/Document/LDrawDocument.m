@@ -1194,6 +1194,8 @@ void AppendChoicesToNewItem(
 }//end changeLDrawColor:
 
 
+
+
 //========== insertLDrawPart: ==================================================
 //
 // Purpose:		We are being prompted to insert a new part into the model.
@@ -1894,6 +1896,84 @@ void AppendChoicesToNewItem(
 	[self rotateSelectionAround:rotation];
 	
 }//end quickRotateClicked:
+
+
+//========== randomizeLDrawColors: =============================================
+//
+// Purpose:		Randomizes every part in the selection to be one of the parts
+//				found in the selection.
+//
+//				This is meant for a power tool, e.g. if you want to turn a big
+//				pile of 1x1 plates into "gravel", you can color the entire set
+//				gray and then change a few to the other colors (maybe black,
+//				brown, etc.).  randomimzeLDrawColors will randomize the entire
+//				set.
+//
+// Notes:		We try to avoid consecutive colors - if the underlying bricks
+//				were built "in order", this gives an author a way to avoid
+//				aestheticly ugly blocks of repeating colors that are present
+//				in true random distributions.
+//
+//				This routine depends on LDrawColors hasing into sets with
+//				deduplication.  This _does_ work for colors that come from
+//				the palettte, but I have not tested it with models that use
+//				custom colors in an LDraw directive in their MPD file.
+//
+//==============================================================================
+- (void) randomizeLDrawColors:(id)sender
+{
+	// Build a hash set of all colors
+	NSArray     *selectedObjects    = [self selectedObjects];
+	id          currentObject       = nil;
+	NSUInteger  counter             = 0;
+	NSUInteger	count				= [selectedObjects count];
+	NSMutableSet *	allColors		= [NSMutableSet setWithCapacity:count];
+	
+	if(count == 0)
+		return;
+	
+	for(counter = 0; counter < count; ++counter)
+	{
+		currentObject = [selectedObjects objectAtIndex:counter];
+		if([currentObject conformsToProtocol:@protocol(LDrawColorable)])
+		{
+			[allColors addObject:[currentObject LDrawColor]];
+		}
+	}
+
+	NSUInteger colorCount = [allColors count];
+	if(colorCount > 0)
+	{
+		NSArray * allColorsArray = [allColors allObjects];
+
+		int last = -1;
+
+		for(counter = 0; counter < count; ++counter)
+		{
+			currentObject = [selectedObjects objectAtIndex:counter];
+			if([currentObject conformsToProtocol:@protocol(LDrawColorable)])
+			{
+				int r = rand() % colorCount;
+				// Try to avoid consecutives if we have enough palette --
+				// this technically makes the distribution not random, but
+				// it probably looks better unless the parts are just super
+				// tiny.
+				while(colorCount > 1 && r == last)
+				{
+					r = rand() % colorCount;
+				}
+				last = r;
+				LDrawColor * randomColor = [allColorsArray objectAtIndex:r];
+				
+				// We don't have to worry about undo; setObject:toColor
+				// builds undo steps, and AppKit merges them into a single
+				// giant undo.
+				[self setObject:currentObject toColor:randomColor];
+			}
+		}
+		[[self documentContents] noteNeedsDisplay];
+	}
+}//end randomizeLDrawColors:
 
 
 #pragma mark -

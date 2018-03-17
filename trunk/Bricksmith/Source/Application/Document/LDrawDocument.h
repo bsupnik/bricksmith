@@ -140,6 +140,7 @@
 - (IBAction) splitStep:(id)sender;
 - (IBAction) orderFrontRotationPanel:(id)sender;
 - (IBAction) quickRotateClicked:(id)sender;
+- (IBAction) randomizeLDrawColors:(id)sender;
 - (IBAction) find:(id)sender;
 
 // - Tools menu
