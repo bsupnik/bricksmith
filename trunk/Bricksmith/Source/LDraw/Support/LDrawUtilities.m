@@ -849,16 +849,10 @@ static NSString				*defaultAuthor		= @"anonymous";
 + (void) updateNameForMovedPart:(LDrawPart *)movedPart
 {
 	NSString	*description	= [[PartLibrary sharedPartLibrary] descriptionForPart:movedPart];
-	NSString	*newName		= nil;
 	
 	if([description hasPrefix:LDRAW_MOVED_DESCRIPTION_PREFIX])
 	{
-		//isolate the new number and add the .dat library suffix.
-		newName = [description substringFromIndex:[LDRAW_MOVED_DESCRIPTION_PREFIX length]];
-		newName = [newName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-		newName = [newName stringByAppendingString:@".dat"];
-		
-		[movedPart setDisplayName:newName];
+		[movedPart followRedirectionAndUpdate];
 	}
 	
 }//end updateNameForMovedPart:

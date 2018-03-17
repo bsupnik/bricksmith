@@ -30,8 +30,10 @@
 #import "LDrawUtilities.h"
 #import "LDrawVertexes.h"
 #import "PartLibrary.h"
+#import "LDrawPaths.h"
 #import "PartReport.h"
 #import "ModelManager.h"
+#import "StringCategory.h"
 
 // This is experimental for now: one way to draw the gaps between lego bricks 
 // without using lines is to simply shrink the entire brick by a tiny amount,
@@ -1751,6 +1753,90 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		[self unresolvePart];
 		
 }//end unresolvePartIfPartLibrary
+
+
+//========== followRedirectionAndUpdate ========================================
+//
+// Purpose:		For a part whose definition is the inclusion of a single other
+//				part (e.g. a short-cut or redirect), we find that actual part
+//				and swap us to use that part, taking into account the relative
+//				transform offset and "baking" it into our pose.
+//
+// Notes:		Previous versions of Bricksmith simply used a file name
+//				substitution; when ~Moved directives include a change of origin
+//				that is not enough, and this method is better.
+//
+//				This method will fail if we can't find exactly one part usage
+//				directive, because it is ambiguous what the move is.
+///
+//==============================================================================
+- (void) followRedirectionAndUpdate
+{
+	[self resolvePart]; // We need this to have a valid cache type and make sure we are
+						// a library part.
+	if(cacheType == PartTypeLibrary)
+	{
+		// This is a little gross, but: the library doesn't have the definition of our
+		// part - it has a completely flattened soup of triangles, so that we
+		// don't have to walk a giant part tree to draw using the library.  So we
+		// can't use our cacheModel or drawable to figure out what the substitution is.
+		
+		// Instead we do it the low level way: we directly go load the original part
+		// from disk so we can see its direct contents.  We keep the part manager out
+		// of this - this is just a one-time look at a file for a one-time migration
+		// operation.
+		NSString    *partPath       = [[LDrawPaths sharedPaths] pathForPartName:referenceName];
+		NSString *  fileContents    = [LDrawUtilities stringFromFile:partPath];
+		NSArray * 	lines           = [fileContents separateByLine];
+		
+		dispatch_group_t parseGroup = dispatch_group_create();
+		LDrawFile * parsedFile      = [[LDrawFile alloc] initWithLines:lines
+															   inRange:NSMakeRange(0, [lines count])
+														   parentGroup:parseGroup];
+
+		// The part parser is insanely dangerous: it parses on a dispatch group and fills in your
+		// NS containers in the background later, with no locks. We use a dispatch group to
+		// wait until the entire mess of loading is done, synchronously, so the part is safe to look at.
+		dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
+		dispatch_release(parseGroup);
+
+		[parsedFile autorelease];	// Don't keep this around , we only want it for its part.
+
+		// We're going to go get all of the directives and try to find EXACTLY one LDrawPart.
+		NSArray * 	directives = [parsedFile allEnclosedElements];
+		NSUInteger 	count = [directives count];
+		NSUInteger 	i;
+		LDrawPart * redirect = nil;
+		for(i = 0; i < count; ++i)
+		{
+			LDrawDirective * directive = [directives objectAtIndex:i];
+			if([directive isKindOfClass:[LDrawPart class]])
+			{
+				// If we find TWO LDrawParts, just bail out - it's not clear which one
+				// is the redirect.  If anyone sees this fail in production with the real
+				// LDraw library, we need to look at whawt on earth is going on with the
+				// redirect part.
+				if (redirect == nil)
+					redirect = [directives objectAtIndex:i];
+				else
+					return;
+			}
+		}
+		
+		if(redirect != nil)
+		{
+			// We found exactly one part.  Unresolve and copy out its names for future use.
+			[self unresolvePart];
+			referenceName = [redirect referenceName];
+			displayName = [redirect displayName];
+
+			// Our new location is our old location with the relative transform of that part applied.
+			Matrix4 new_loc = Matrix4Multiply([redirect transformationMatrix], [self transformationMatrix]);
+			Matrix4GetGLMatrix4(new_loc, glTransformation);
+		}
+	}
+}// end followRedirectionAndUpdate
+
 
 #pragma mark -
 #pragma mark DESTRUCTOR

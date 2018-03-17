@@ -80,6 +80,8 @@ typedef enum PartType {
 - (void) resolvePart;
 - (void) unresolvePart;
 - (void) unresolvePartIfPartLibrary;
+- (void) followRedirectionAndUpdate;
+
 
 - (void) optimizeOpenGL;
 //- (void) removeDisplayList;
