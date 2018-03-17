@@ -263,6 +263,7 @@ extern bool		V3PointsWithinTolerance(Point3 point1, Point3 point2);
 extern float	V3SquaredLength(Vector3 v);
 extern float	V3Length(Vector3 v);
 extern Vector3	V3Negate(Vector3 v);
+extern Tuple3 	V3AntiEuler(Tuple3 v); // Return Euler that is opposite v
 extern Vector3	V3Normalize(Vector3 v);
 extern Vector3	V3Scale(Vector3 v, float);
 extern Vector3	V3Add(Vector3 a, Vector3 b);

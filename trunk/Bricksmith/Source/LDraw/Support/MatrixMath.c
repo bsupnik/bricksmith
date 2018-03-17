@@ -674,6 +674,23 @@ Vector3 V3Negate(Vector3 v)
 }//end V3Negate
 
 
+//========== V3AntiEuler =======================================================
+//
+// Purpose:		Return Euler that is opposite v
+//
+//==============================================================================
+Tuple3 	V3AntiEuler(Tuple3 v)
+{
+	Matrix4 forwardTransform = Matrix4Rotate(IdentityMatrix4, v);
+	Matrix4 inverseTransform = Matrix4Invert(forwardTransform);
+	Tuple3 inverse = Matrix4DecomposeXYZRotation(inverseTransform);
+	inverse.x = degrees(inverse.x);
+	inverse.y = degrees(inverse.y);
+	inverse.z = degrees(inverse.z);
+	return inverse;
+}//end V3AntiEuler
+
+
 //========== V3Normalize =======================================================
 //
 // Purpose:		normalizes the input vector and returns it

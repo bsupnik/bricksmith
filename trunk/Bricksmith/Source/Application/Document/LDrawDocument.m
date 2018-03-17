@@ -3038,7 +3038,7 @@ void AppendChoicesToNewItem(
 {
 
 	NSUndoManager	*undoManager		= [self undoManager];
-	Tuple3			 oppositeRotation	= V3Negate(rotationDegrees);
+	Tuple3			 oppositeRotation	= V3AntiEuler(rotationDegrees);
 	
 	[[undoManager prepareWithInvocationTarget:self]
 			rotatePart: part
