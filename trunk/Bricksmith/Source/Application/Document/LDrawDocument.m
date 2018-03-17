@@ -5978,10 +5978,27 @@ void AppendChoicesToNewItem(
 //==============================================================================
 - (void) dealloc
 {
-	[[ModelManager sharedModelManager] documentSignOut:documentContents];
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	if ([NSThread isMainThread])
+	{
+		[[ModelManager sharedModelManager] documentSignOut:documentContents];
+		[documentContents	release];
+	}
+	else
+	{
+		// This punt to the main thread tries to ensure that in the case when
+		// our doc is dropped from a worker dispatch Q.  This happens on Sierra
+		// and newer when we quit and save during the quit.
 	
-	[documentContents	release];
+		// I think if we use documentContents we capture self - which takes a ref
+		// from inside dealloc which blows up the obj-C runtime.
+		LDrawFile * doc = documentContents;
+		dispatch_async(dispatch_get_main_queue(),^{
+			[[ModelManager sharedModelManager] documentSignOut:doc];
+			[doc release];
+		});
+	}
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[lastSelectedPart	release];
 	[selectedDirectives	release];
 
