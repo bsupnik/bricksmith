@@ -1967,7 +1967,7 @@ void AppendChoicesToNewItem(
 				
 				// We don't have to worry about undo; setObject:toColor
 				// builds undo steps, and AppKit merges them into a single
-				// giant undo.
+				// giant 
 				[self setObject:currentObject toColor:randomColor];
 			}
 		}
@@ -2963,7 +2963,6 @@ void AppendChoicesToNewItem(
 {
 	NSUndoManager	*undoManager	= [self undoManager];
 	
-	[[self documentContents] lockForEditing];
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 			deleteDirective:newDirective ];
@@ -2977,7 +2976,6 @@ void AppendChoicesToNewItem(
 		
 	}
 	CGLUnlockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
-	[[self documentContents] unlockEditor];
 	
 }//end addDirective:toParent:atIndex:
 
@@ -3001,7 +2999,6 @@ void AppendChoicesToNewItem(
 	LDrawContainer  *parent         = [doomedDirective enclosingDirective];
 	NSInteger       index           = [[parent subdirectives] indexOfObject:doomedDirective];
 	
-	[[self documentContents] lockForEditing];
 	{
 		[[undoManager prepareWithInvocationTarget:self]
 				addDirective:doomedDirective
@@ -3012,7 +3009,6 @@ void AppendChoicesToNewItem(
 
 		[self->documentContents optimizeVertexes];
 	}
-	[[self documentContents] unlockEditor];
 
 	// After a directive is deleted, we need to resynchronize our step field - maybe the current step changed.
 	// There may be other places where we need this too.
@@ -3040,10 +3036,8 @@ void AppendChoicesToNewItem(
 	opposite.y = -(moveVector.y);
 	opposite.z = -(moveVector.z);
 	
-	[[self documentContents] lockForEditing];
 	{
-		[[self documentContents] unlockEditor];
-		[[undoManager prepareWithInvocationTarget:self]
+			[[undoManager prepareWithInvocationTarget:self]
 				moveDirective: object
 				  inDirection: opposite ];
 		[undoManager setActionName:NSLocalizedString(@"UndoMove", nil)];
@@ -3075,7 +3069,6 @@ void AppendChoicesToNewItem(
 {
 	NSUndoManager	*undoManager	= [self undoManager];
 
-	[[self documentContents] lockForEditing];
 	{
 		// ** Read code bottom-to-top ** //
 
@@ -3086,7 +3079,6 @@ void AppendChoicesToNewItem(
 		[[undoManager prepareWithInvocationTarget:self]
 								preserveDirectiveState:directive ];
 	}
-	[[self documentContents] unlockEditor];
 	
 }//end preserveDirectiveState:
 
@@ -3127,12 +3119,10 @@ void AppendChoicesToNewItem(
 	[undoManager setActionName:NSLocalizedString(@"UndoRotate", nil)];
 	
 	
-	[[self documentContents] lockForEditing];
 	{
 		[part rotateByDegrees:rotationDegrees centerPoint:rotationCenter];
 //		[part optimizeOpenGL];
 	}
-	[[self documentContents] unlockEditor];
 	
 	[part noteNeedsDisplay];
 	
@@ -3154,10 +3144,8 @@ void AppendChoicesToNewItem(
 	else
 		actionName = NSLocalizedString(@"UndoShowPart", nil);
 	
-	[[self documentContents] lockForEditing];
 	{
-		[[self documentContents] unlockEditor];
-		[[undoManager prepareWithInvocationTarget:self]
+			[[undoManager prepareWithInvocationTarget:self]
 			setElement:element
 			  toHidden:(!hideFlag) ];
 		[undoManager setActionName:actionName];
@@ -3184,13 +3172,11 @@ void AppendChoicesToNewItem(
 												  toColor:[object LDrawColor] ];
 	[undoManager setActionName:NSLocalizedString(@"UndoColor", nil)];
 	
-	[[self documentContents] lockForEditing];
 	{
 		[object setLDrawColor:newColor];
 		[object optimizeOpenGL];
 		[self->documentContents optimizeVertexes];
 	}
-	[[self documentContents] unlockEditor];
 	[object noteNeedsDisplay];
 
 }//end setObject:toColor:
@@ -3208,9 +3194,7 @@ void AppendChoicesToNewItem(
 	NSUndoManager		*undoManager		= [self undoManager];
 	TransformComponents	 currentComponents	= [part transformComponents];
 	
-	[[self documentContents] lockForEditing];
 	{
-		[[self documentContents] unlockEditor];
 		[part setTransformComponents:newComponents];
 //		[part optimizeOpenGL];
 		

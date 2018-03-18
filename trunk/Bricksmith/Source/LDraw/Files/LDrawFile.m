@@ -9,12 +9,6 @@
 //				written out, the MPD commands are stripped if there is only 
 //				one model in the file.
 //
-// Threading:	An LDrawFile can be drawn by multiple threads simultaneously. 
-//				What we must not do is edit while drawing or draw while editing. 
-//				To prevent such unpleasantries, bracket any editing to this File 
-//				(or any descendant directives) with calls to -lockForEditing and 
-//				-unlockEditor.
-//
 //  Created by Allen Smith on 2/19/05.
 //  Copyright (c) 2005. All rights reserved.
 //==============================================================================
@@ -111,8 +105,6 @@
 	// case, the models in the file.
 	
 	activeModel = nil;
-//	drawCount	= 0;
-//	editLock	= [[NSConditionLock alloc] initWithCondition:0];
 	
 	return self;
 	
@@ -298,22 +290,12 @@
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
 
 {
-	//this is like calling the non-existent method
-	//			[editLock setCondition:([editLock condition] + 1)]
-//	[editLock lock]; //lock unconditionally
-//	self->drawCount += 1;
-//	[editLock unlockWithCondition:(self->drawCount)]; //don't block multiple simultaneous draws!
 	//
 	// Draw!
 	//	(only the active model.)
 	//
 	[activeModel draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
 
-	//done drawing; decrement the lock's condition
-//	[editLock lock];
-//	self->drawCount -= 1;
-//	[editLock unlockWithCondition:(self->drawCount)];
-	
 }//end draw:viewScale:parentColor:
 
 
@@ -449,62 +431,6 @@
 
 
 #pragma mark -
-
-//========== lockForEditing ====================================================
-//
-// Purpose:		Aquires a mutex lock to allow safe editing. Calling this method 
-//				will guarantee that no other thread draws or edits the file 
-//				while you are modifying it. Calls to this method must  be 
-//				subsequently balanced by a call to -unlockEditor.
-//
-//				If you are editing some subdirective buried deep down the file's 
-//				hierarchy, it is still your responsibility to call this method. 
-//				For performance reasons, it does NOT happen automatically!
-//
-//==============================================================================
-- (void) lockForEditing
-{
-	// This was once a sure-fire way to hang the program if this lock code is 
-	// enabled: 
-	// 1. Create a new model
-	// 2. Add a part
-	// 3. Open Inspector for that part.
-	// 4. Click in the name field and change the part's name. DO NOT HIT RETURN 
-	//    to confirm the edit. 
-	// 5. Click back in the document.
-	// 6. Drag the part out of the document into oblivion to delete it.
-	// 7. Bricksmith deadlocks. This occurs because the program tries to commit 
-	//    the editing from step 4 immediately after deleting the part. Both 
-	//	  those operations try to aquire this lock, which they can't do because 
-	//	  it isn't recursive. 
-	//
-	// The bug here was really in step 5, in which the Inspector was erroneously 
-	// not commiting its changes. I've fixed that bug now, so this sequence 
-	// can't hang the application anymore. However, the warning still stands: 
-	// this lock is not reentrant. 
-
-	//aquire the lock once nobody is drawing the File. The condition on this lock 
-	// tracks the number of threads currently drawing the File. We don't want to 
-	// go modifying data at the same time someone else is trying to draw it!
-//	[self->editLock lockWhenCondition:0];
-	
-}//end lockForEditing
-
-
-//========== unlockEditor ======================================================
-//
-// Purpose:		Releases the mutual-exclusion lock that prevents concurrent 
-//				drawing or editing. A call to this method must be balanced by a 
-//				preceeding call to -lockForEditing.
-//
-//==============================================================================
-- (void) unlockEditor
-{
-	//the condition tracks number of outstanding draws. We aren't a draw, and 
-	// can't aquire this lock unless there are no draws. So we stay at 0.
-//	[self->editLock unlockWithCondition:0];
-	
-}//end unlockEditor
 
 
 #pragma mark -
@@ -985,7 +911,6 @@
 	[nameModelDict	release];
 	[activeModel	release];
 	[filePath		release];
-//	[editLock		release];
 	
 	[super dealloc];
 	

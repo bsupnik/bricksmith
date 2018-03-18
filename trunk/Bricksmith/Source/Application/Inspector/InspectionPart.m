@@ -188,7 +188,6 @@
 	
 	//Save out the current state.
 	[currentDocument preserveDirectiveState:representedObject];
-	[representedObject lockForEditing];
 	
 	if(rotationType == rotationRelative)
 	{
@@ -212,7 +211,6 @@
 	}
 	
 	//Note that the part has changed.
-	[representedObject unlockEditor];
 	[representedObject noteNeedsDisplay];
 	
 	//For a relative rotation, prepare for the next additive rotation by 

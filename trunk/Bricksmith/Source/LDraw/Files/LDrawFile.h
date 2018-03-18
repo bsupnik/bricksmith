@@ -31,18 +31,12 @@
 	NSDictionary	*nameModelDict;
 	LDrawMPDModel	*activeModel;
 	NSString		*filePath;			//where this file came from on disk.
-//	NSUInteger		drawCount;			//number of threads currently drawing us
-//	NSConditionLock *editLock;
 }
 
 // Initialization
 + (LDrawFile *) file;
 + (LDrawFile *) fileFromContentsAtPath:(NSString *)path;
 + (LDrawFile *) parseFromFileContents:(NSString *) fileContents;
-
-// Directives
-- (void) lockForEditing;
-- (void) unlockEditor;
 
 // Accessors
 - (LDrawMPDModel *) activeModel;

@@ -688,34 +688,6 @@
 }//end setIconName:
 
 #pragma mark -
-#pragma mark <INSPECTABLE>
-#pragma mark -
-
-//========== lockForEditing ====================================================
-//
-// Purpose:		Provide thread-safety for this object during inspection.
-//
-//==============================================================================
-- (void) lockForEditing
-{
-	[[self enclosingFile] lockForEditing];
-	
-}//end lockForEditing
-
-
-//========== unlockEditor ======================================================
-//
-// Purpose:		Provide thread-safety for this object during inspection.
-//
-//==============================================================================
-- (void) unlockEditor
-{
-	[[self enclosingFile] unlockEditor];
-	
-}//end unlockEditor
-
-
-#pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
 //This is stuff that didn't really go anywhere else.

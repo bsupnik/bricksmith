@@ -222,10 +222,6 @@ typedef enum Message {
 - (void) setSelected:(BOOL)flag;
 - (void) setIconName:(NSString *)icon;
 
-// protocol Inspectable
-- (void) lockForEditing;
-- (void) unlockEditor;
-
 // Utilities
 - (BOOL) containsReferenceTo:(NSString *)name;
 - (void) flattenIntoLines:(NSMutableArray *)lines

@@ -154,14 +154,11 @@
 	
 	//prepare: do undo stuff and thread safety.
 	[currentDocument preserveDirectiveState:representedObject];
-	[representedObject lockForEditing];
 	
 	//let the subclass have a go at it.
 	[self commitChanges:sender];
 	
-	//done editing; clean up
-	[representedObject unlockEditor];
-	
+	//done editing; clean up	
 	[representedObject noteNeedsDisplay];
 
     // Someone else might care that the part has changed
