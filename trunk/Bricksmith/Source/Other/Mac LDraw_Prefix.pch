@@ -28,7 +28,7 @@
 #import <Carbon/Carbon.h>
 
 //#define USE_BLOCKS				NS_BLOCKS_AVAILABLE
-#define USE_BLOCKS				1
+#define USE_BLOCKS				0
 
 #if !USE_BLOCKS
 	#define dispatch_queue_t    void *
