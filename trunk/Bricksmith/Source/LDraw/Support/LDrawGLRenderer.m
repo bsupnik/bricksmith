@@ -30,7 +30,6 @@
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
 #import "LDrawShaderRenderer.h"
-#include "LDrawVertexes.h"
 #include "OpenGLUtilities.h"
 #include "MacLDraw.h"
 
@@ -1397,11 +1396,6 @@
 					 
 	if(moved)
 	{
-		if([self->fileBeingDrawn respondsToSelector:@selector(optimizeVertexes)])
-		{
-			[(id)self->fileBeingDrawn optimizeVertexes];
-		}
-
 		[self->fileBeingDrawn noteNeedsDisplay];
 
 		if([self->delegate respondsToSelector:@selector(LDrawGLRenderer:dragHandleDidMove:)])
@@ -1532,9 +1526,6 @@
 	NSDate * startTime	= [NSDate date];	
 #endif
 
-#if WANT_TWOPASS_BOXTEST
-	NSArray			*fastDrawParts		= nil;
-#endif	
 	NSArray			*fineDrawParts		= nil;
 	
 	self->selectionMarquee = V2MakeBoxFromPoints(selectionMarquee.origin, point_view);
@@ -1548,19 +1539,9 @@
 		// First do hit-testing on nothing but the bounding boxes; that is very 
 		// fast and likely eliminates a lot of parts. 
 
-#if WANT_TWOPASS_BOXTEST
-		fastDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
-									 amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
-											fastDraw:YES];
-
-		fineDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
-									 amongDirectives:fastDrawParts
-											fastDraw:NO];
-#else
 		fineDrawParts = [self getDirectivesUnderRect:self->selectionMarquee
 									 amongDirectives:[NSArray arrayWithObject:self->fileBeingDrawn]
 											fastDraw:NO];
-#endif
 		[self->delegate LDrawGLRenderer:self
 				wantsToSelectDirectives:fineDrawParts
 				   selectionMode:selectionMode ];
@@ -1758,11 +1739,6 @@
 						 constrainAxis:constrainAxis];
 		if(moved)
 		{
-			if([self->fileBeingDrawn respondsToSelector:@selector(optimizeVertexes)])
-			{
-				[(id)self->fileBeingDrawn optimizeVertexes];
-			}
-			
 			[self->fileBeingDrawn noteNeedsDisplay];
 		}
 	}

@@ -390,7 +390,6 @@
 		[newPart setLDrawColor:partColor];
 		[newPart setDisplayName:partName];
 		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
-		[newPart optimizeOpenGL];
 
 		[partPreview setLDrawDirective:newPart];
 		[partPreview setLDrawColor:partColor];

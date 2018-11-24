@@ -11,8 +11,6 @@
 
 #import "LDrawContainer.h"
 
-@class LDrawVertexes;
-
 @interface LDrawTexture : LDrawContainer
 {
 	NSArray 		*fallback;
@@ -24,7 +22,6 @@
 	Point3			planePoint2;
 	Point3			planePoint3;
 	
-	LDrawVertexes	*vertexes;
 	NSArray			*dragHandles;
 	Box3			cachedBounds;		// cached bounds of the enclosed directives
 	

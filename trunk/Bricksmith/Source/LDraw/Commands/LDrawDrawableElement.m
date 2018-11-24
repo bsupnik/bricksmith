@@ -357,7 +357,6 @@
 	if(self->hidden != flag)
 	{
 		self->hidden = flag;
-		[[self enclosingDirective] setVertexesNeedRebuilding];
 		[self invalCache:(CacheFlagBounds|DisplayList)];
 	}
 	

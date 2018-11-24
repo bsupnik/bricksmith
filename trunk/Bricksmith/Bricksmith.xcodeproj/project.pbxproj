@@ -48,8 +48,6 @@
 		0B1DA5A913172DA700E14960 /* LDrawDirective.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B1DA5A313172DA700E14960 /* LDrawDirective.m */; };
 		0B1DA5AA13172DA700E14960 /* LDrawUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B1DA5A413172DA700E14960 /* LDrawUtilities.h */; };
 		0B1DA5AB13172DA700E14960 /* LDrawUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B1DA5A513172DA700E14960 /* LDrawUtilities.m */; };
-		0B1DA5AC13172DA700E14960 /* LDrawVertexes.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B1DA5A613172DA700E14960 /* LDrawVertexes.h */; };
-		0B1DA5AD13172DA700E14960 /* LDrawVertexes.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B1DA5A713172DA700E14960 /* LDrawVertexes.m */; };
 		0B25F040093D5F960099D85E /* BricksmithApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B25F03E093D5F960099D85E /* BricksmithApplication.h */; };
 		0B25F041093D5F960099D85E /* BricksmithApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B25F03F093D5F960099D85E /* BricksmithApplication.m */; };
 		0B2700870981FCEA0058A7BE /* ToolPalette.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B2700850981FCEA0058A7BE /* ToolPalette.h */; };
@@ -433,8 +431,6 @@
 		0B1DA5A313172DA700E14960 /* LDrawDirective.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDirective.m; sourceTree = "<group>"; };
 		0B1DA5A413172DA700E14960 /* LDrawUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawUtilities.h; sourceTree = "<group>"; };
 		0B1DA5A513172DA700E14960 /* LDrawUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawUtilities.m; sourceTree = "<group>"; };
-		0B1DA5A613172DA700E14960 /* LDrawVertexes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawVertexes.h; sourceTree = "<group>"; };
-		0B1DA5A713172DA700E14960 /* LDrawVertexes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawVertexes.m; sourceTree = "<group>"; };
 		0B25F03E093D5F960099D85E /* BricksmithApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BricksmithApplication.h; sourceTree = "<group>"; };
 		0B25F03F093D5F960099D85E /* BricksmithApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BricksmithApplication.m; sourceTree = "<group>"; };
 		0B2700850981FCEA0058A7BE /* ToolPalette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ToolPalette.h; sourceTree = "<group>"; };
@@ -788,8 +784,6 @@
 				0BDE0EF01371070600FDB8DB /* LDrawPaths.m */,
 				0B1DA5A413172DA700E14960 /* LDrawUtilities.h */,
 				0B1DA5A513172DA700E14960 /* LDrawUtilities.m */,
-				0B1DA5A613172DA700E14960 /* LDrawVertexes.h */,
-				0B1DA5A713172DA700E14960 /* LDrawVertexes.m */,
 				0B491DA307F5555B00AC0C10 /* MatrixMath.c */,
 				0B491DA207F5555B00AC0C10 /* MatrixMath.h */,
 				0BC75337136FC878002568B8 /* PartLibrary.h */,
@@ -1436,7 +1430,6 @@
 				0BE84A1F1300F91F004E7626 /* BricksmithUtilities.h in Headers */,
 				0B1DA5A813172DA700E14960 /* LDrawDirective.h in Headers */,
 				0B1DA5AA13172DA700E14960 /* LDrawUtilities.h in Headers */,
-				0B1DA5AC13172DA700E14960 /* LDrawVertexes.h in Headers */,
 				0B27CFAA1318AA0F005C7E1A /* LDrawDragHandle.h in Headers */,
 				0BED4743136D30C10098D353 /* LDrawKeywords.h in Headers */,
 				0BC75339136FC878002568B8 /* PartLibrary.h in Headers */,
@@ -1495,6 +1488,8 @@
 /* Begin PBXProject section */
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 2BB5975109FEFD180077A885 /* Build configuration list for PBXProject "Bricksmith" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1741,7 +1736,6 @@
 				0BE84A201300F91F004E7626 /* BricksmithUtilities.m in Sources */,
 				0B1DA5A913172DA700E14960 /* LDrawDirective.m in Sources */,
 				0B1DA5AB13172DA700E14960 /* LDrawUtilities.m in Sources */,
-				0B1DA5AD13172DA700E14960 /* LDrawVertexes.m in Sources */,
 				0B27CFAB1318AA0F005C7E1A /* LDrawDragHandle.m in Sources */,
 				0BC7533A136FC878002568B8 /* PartLibrary.m in Sources */,
 				0BDE0EF21371070600FDB8DB /* LDrawPaths.m in Sources */,
@@ -2100,8 +2094,10 @@
 		2BB5975209FEFD180077A885 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
@@ -2115,9 +2111,11 @@
 		2BB5975309FEFD180077A885 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_LDFLAGS = (
 					"-weak_framework",

@@ -20,11 +20,9 @@
 #import "LDrawQuadrilateral.h"
 #import "LDrawTexture.h"
 #import "LDrawTriangle.h"
-#import "LDrawVertexes.h"
 #import "PartLibrary.h"
 #import "LDrawLSynth.h"
 
-static LDrawVertexes        *boundingCube       = nil;
 static BOOL                 ColumnizesOutput    = NO;
 static NSString				*defaultAuthor		= @"anonymous";
 
@@ -502,101 +500,6 @@ static NSString				*defaultAuthor		= @"anonymous";
 	return outputString;
 
 }//end outputStringForFloat:
-
-
-#pragma mark -
-#pragma mark DRAWING
-#pragma mark -
-
-//---------- boundingCube --------------------------------------------[static]--
-//
-// Purpose:		Returns a drawable unit cube which may be scaled to render 
-//				bounding boxes using optimized OpenGL code. 
-//
-//------------------------------------------------------------------------------
-+ (LDrawVertexes *) boundingCube
-{
-	if(boundingCube == nil)
-	{
-		// Create it for the first time.
-		// It's easiest to co-opt existing LDraw objects for this.
-		boundingCube = [[LDrawVertexes alloc] init];
-		
-		LDrawColor  *currentColor   = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
-		Point3      vertices[8]     = {	
-										V3Make(0, 0, 0),
-										V3Make(0, 0, 1),
-										V3Make(0, 1, 1),
-										V3Make(0, 1, 0),
-										
-										V3Make(1, 0, 0),
-										V3Make(1, 0, 1),
-										V3Make(1, 1, 1),
-										V3Make(1, 1, 0),
-									  };
-
-		LDrawQuadrilateral *side0 = [[LDrawQuadrilateral alloc] init];
-		LDrawQuadrilateral *side1 = [[LDrawQuadrilateral alloc] init];
-		LDrawQuadrilateral *side2 = [[LDrawQuadrilateral alloc] init];
-		LDrawQuadrilateral *side3 = [[LDrawQuadrilateral alloc] init];
-		LDrawQuadrilateral *side4 = [[LDrawQuadrilateral alloc] init];
-		LDrawQuadrilateral *side5 = [[LDrawQuadrilateral alloc] init];
-		
-		[side0 setLDrawColor:currentColor];
-		[side1 setLDrawColor:currentColor];
-		[side2 setLDrawColor:currentColor];
-		[side3 setLDrawColor:currentColor];
-		[side4 setLDrawColor:currentColor];
-		[side5 setLDrawColor:currentColor];
-		
-		[side0 setVertex1:vertices[0]];
-		[side0 setVertex2:vertices[3]];
-		[side0 setVertex3:vertices[2]];
-		[side0 setVertex4:vertices[1]];
-		
-		[side1 setVertex1:vertices[0]];
-		[side1 setVertex2:vertices[4]];
-		[side1 setVertex3:vertices[7]];
-		[side1 setVertex4:vertices[3]];
-		
-		[side2 setVertex1:vertices[3]];
-		[side2 setVertex2:vertices[7]];
-		[side2 setVertex3:vertices[6]];
-		[side2 setVertex4:vertices[2]];
-		
-		[side3 setVertex1:vertices[2]];
-		[side3 setVertex2:vertices[6]];
-		[side3 setVertex3:vertices[5]];
-		[side3 setVertex4:vertices[1]];
-		
-		[side4 setVertex1:vertices[1]];
-		[side4 setVertex2:vertices[5]];
-		[side4 setVertex3:vertices[4]];
-		[side4 setVertex4:vertices[0]];
-		
-		[side5 setVertex1:vertices[4]];
-		[side5 setVertex2:vertices[5]];
-		[side5 setVertex3:vertices[6]];
-		[side5 setVertex4:vertices[7]];
-		
-		[boundingCube addQuadrilateral:side0];
-		[boundingCube addQuadrilateral:side1];
-		[boundingCube addQuadrilateral:side2];
-		[boundingCube addQuadrilateral:side3];
-		[boundingCube addQuadrilateral:side4];
-		[boundingCube addQuadrilateral:side5];
-		
-		[side0 release];
-		[side1 release];
-		[side2 release];
-		[side3 release];
-		[side4 release];
-		[side5 release];
-	}
-	
-	return boundingCube;
-	
-}//end boundingCube
 
 
 #pragma mark -

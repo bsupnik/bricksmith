@@ -12,7 +12,6 @@
 #import "LDrawDragHandle.h"
 #import "LDrawKeywords.h"
 #import "LDrawUtilities.h"
-#import "LDrawVertexes.h"
 #import "PartLibrary.h"
 #import "StringCategory.h"
 
@@ -299,69 +298,8 @@
 //==============================================================================
 - (void) draw:(NSUInteger)optionsMask viewScale:(float)scaleFactor parentColor:(LDrawColor *)parentColor
 {
-	NSArray 		*commands			= [self subdirectives];
-	LDrawDirective	*currentDirective	= nil;
-	Vector3 		normal				= ZeroPoint3;
-	float			length				= 0;
-	
-	// Need to load the texture here
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glBindTexture(GL_TEXTURE_2D, self->textureTag);
-	
-	normal = V3Sub(self->planePoint2, self->planePoint1);
-	length = V3Length(normal);//128./80;//
-	normal = V3Normalize(normal);
-	
-	float planeCoefficientsS[4];
-	planeCoefficientsS[0] = normal.x / length;
-	planeCoefficientsS[1] = normal.y / length;
-	planeCoefficientsS[2] = normal.z / length;
-	planeCoefficientsS[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
-	
-	// Auto texture vertex generation. This stuff needs to be dumped in favor 
-	// of a more modern solution, but it's here as a stopgap. 
-	
-	glEnable(GL_TEXTURE_GEN_S);
-	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_S, GL_EYE_PLANE, planeCoefficientsS);
-	
-	normal = V3Sub(self->planePoint3, self->planePoint1);
-	length = V3Length(normal);//128./80;//
-	normal = V3Normalize(normal);
-	
-	float planeCoefficientsT[4];
-	planeCoefficientsT[0] = normal.x / length;
-	planeCoefficientsT[1] = normal.y / length;
-	planeCoefficientsT[2] = normal.z / length;
-	planeCoefficientsT[3] = V3DistanceFromPointToPlane(ZeroPoint3, normal, self->planePoint1) / length;
-	
-	glEnable(GL_TEXTURE_GEN_T);
-	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_T, GL_EYE_PLANE, planeCoefficientsT);
-	
-	// Draw each element in the step.
-	for(currentDirective in commands)
-	{
-		[currentDirective draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
-	}
-	
-	if([self->vertexes isOptimizedForColor:parentColor] == NO)
-	{
-		[self->vertexes optimizeOpenGLWithParentColor:parentColor];
-	}
+	assert(!"Not used.");
 
-	[self->vertexes draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	if(self->dragHandles)
-	{
-		for(LDrawDragHandle *handle in self->dragHandles)
-		{
-			[handle draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
-		}
-	}
-	
 }//end draw:viewScale:parentColor:
 
 
@@ -385,6 +323,8 @@
 	Vector3 		normal				= ZeroPoint3;
 	float			length				= 0;
 
+	if(textureTag == 0)
+		textureTag = [[PartLibrary sharedPartLibrary] textureTagForTexture:self];
 
 	struct LDrawTextureSpec spec;
 	
@@ -438,6 +378,8 @@
 	Vector3 		normal				= ZeroPoint3;
 	float			length				= 0;
 
+	if(textureTag == 0)
+		textureTag = [[PartLibrary sharedPartLibrary] textureTagForTexture:self];
 
 	struct LDrawTextureSpec spec;
 	
@@ -820,8 +762,6 @@
 		[[self->dragHandles objectAtIndex:0] setPosition:newPlanePoint updateTarget:NO];
 	}
 	
-//	[[self enclosingDirective] setVertexesNeedRebuilding];
-	
 }//end setPlanePoint1:
 
 
@@ -839,8 +779,6 @@
 		[[self->dragHandles objectAtIndex:1] setPosition:newPlanePoint updateTarget:NO];
 	}
 	
-//	[[self enclosingDirective] setVertexesNeedRebuilding];
-	
 }//end setPlanePoint2:
 
 
@@ -857,8 +795,6 @@
 	{
 		[[self->dragHandles objectAtIndex:2] setPosition:newPlanePoint updateTarget:NO];
 	}
-	
-//	[[self enclosingDirective] setVertexesNeedRebuilding];
 	
 }//end setPlanePoint3:
 
@@ -897,18 +833,6 @@
 }//end setSelected:
 
 
-//========== setVertexesNeedRebuilding =========================================
-//
-// Purpose:		Marks all the optimizations of this vertex collection as needing 
-//				rebuilding. 
-//
-//==============================================================================
-- (void) setVertexesNeedRebuilding
-{
-	[self->vertexes setVertexesNeedRebuilding];
-}
-
-
 #pragma mark -
 
 //========== insertDirective:atIndex: ==========================================
@@ -921,7 +845,6 @@
 	[super insertDirective:directive atIndex:index];
 	
 	[self invalCache:CacheFlagBounds|DisplayList];
-	[vertexes addDirective:directive];
 	
 }//end insertDirective:atIndex:
 
@@ -938,7 +861,6 @@
 	[super removeDirectiveAtIndex:index];
 	
 	[self invalCache:CacheFlagBounds|DisplayList];
-	[vertexes removeDirective:directive];
 	
 	[directive release];
 	
@@ -1065,77 +987,6 @@
 	
 	return isEnd;
 }
-
-
-//========== optimizeOpenGL ====================================================
-//
-// Purpose:		Collect members into optimized OpenGL containers.
-//
-// Notes:		This method is NOT thread safe.
-//
-//==============================================================================
-- (void) optimizeOpenGL
-{
-	// Allow primitives to be visible when displaying the model itself.
-	[self optimizeVertexes];
-	
-	textureTag = [[PartLibrary sharedPartLibrary] textureTagForTexture:self];
-	
-	[super optimizeOpenGL];
-}
-
-
-//========== optimizeVertexes ==================================================
-//
-// Purpose:		Makes sure the vertexes (collected in 
-//				-optimizePrimitiveStructure) are displayable. This is called in 
-//				response to changing the vertexes, so all existing optimizations 
-//				must be destroyed. 
-//
-//==============================================================================
-- (void) optimizeVertexes
-{
-	[super optimizeVertexes];
-	
-	// We must create the vertex object HERE, because it is not thread-safe 
-	// and will ordinarily be written to when adding and removing 
-	// directives. Since the initial parse is multithreaded, we cannot allow 
-	// this object to be used until the model has been fully parsed. 
-	if(self->vertexes == nil)
-	{
-		self->vertexes = [[LDrawVertexes alloc] init];
-		
-		NSMutableArray  *lines              = [NSMutableArray array];
-		NSMutableArray  *triangles          = [NSMutableArray array];
-		NSMutableArray  *quadrilaterals     = [NSMutableArray array];
-		
-		[super flattenIntoLines:lines
-					 triangles:triangles
-				quadrilaterals:quadrilaterals
-						 other:nil
-				  currentColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
-			  currentTransform:IdentityMatrix4
-			   normalTransform:IdentityMatrix3
-					 recursive:NO];
-		
-		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:nil];
-	}
-	
-	// Allow primitives to be visible when displaying the model itself.
-	LDrawColor *parentColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
-	
-	if([vertexes isOptimizedForColor:parentColor])
-	{
-		// The vertexs have already been optimized for any referencing colors. 
-		// Just rebuild the existing color optimizations. 
-		[self->vertexes rebuildAllOptimizations];
-	}
-	else
-	{
-		// Newly-created, empty vertexes. Make a list to display the model itself. 
-		[self->vertexes optimizeOpenGLWithParentColor:parentColor];
-	}
-}//end optimizeVertexes
 
 
 //========== parsePlanarTextureFromLine: =======================================
@@ -1319,7 +1170,6 @@
 	[imageReferenceName release];
 	[glossmapName release];
 	
-	[vertexes release];
 	[dragHandles release];
 	
 	[super dealloc];

@@ -38,7 +38,6 @@
 - (NSMutableArray *) subdirectives;
 
 - (void) setPostsNotifications:(BOOL)flag;
-- (void) setVertexesNeedRebuilding;
 - (void) setSubdirectiveSelected:(BOOL)flag;
 
 //Actions
@@ -49,6 +48,5 @@
 - (void) removeDirectiveAtIndex:(NSInteger)index;
 
 - (BOOL) acceptsDroppedDirective:(LDrawDirective *)directive;
-- (void) optimizeVertexes;
 
 @end

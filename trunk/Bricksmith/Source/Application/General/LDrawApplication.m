@@ -1092,13 +1092,13 @@ void connexionMessageHandler(io_connect_t connection, natural_t messageType, voi
 							rotation.z = ((int)(rotation.z / rotationQuantum)) * rotationQuantum;
 						}
 						
-						int length = abs(V3Length(translation));
+						float length = fabsf(V3Length(translation));
 						if (length > 0)
 						{
 							[currentDocument moveSelectionBy:translation];
 							translationAccumulatedSinceLastMove = V3Make(0.0, 0.0, 0.0);
 						}
-						length = abs(V3Length(rotation));
+						length = fabsf(V3Length(rotation));
 						if (length > 0)
 						{
 							[currentDocument rotateSelection:rotation mode:RotateAroundSelectionCenter fixedCenter:NULL];

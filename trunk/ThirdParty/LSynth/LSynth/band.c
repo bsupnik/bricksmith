@@ -273,7 +273,7 @@ calc_angles(
     }
 
     if (k->layer == -2)
-      k->layer == -1;
+      k->layer = -1;
 
 #ifdef DEBUGGING_FIXED3_BANDS
   if (k->cross || ! k->inside) 

@@ -1107,7 +1107,6 @@
 		[newPart setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 		[newPart setDisplayName:selectedPartName];
 		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
-		[newPart optimizeOpenGL];
 	}
 	[partPreview setLDrawDirective:newPart];
 	

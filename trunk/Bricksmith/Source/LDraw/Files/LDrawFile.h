@@ -54,7 +54,6 @@
 
 // Utilities
 - (void) optimizeStructure;
-- (void) optimizeVertexes;
 - (void) renameModel:(LDrawMPDModel *)submodel toName:(NSString *)newName;
 
 @end

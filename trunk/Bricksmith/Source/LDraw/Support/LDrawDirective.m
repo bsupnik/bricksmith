@@ -791,36 +791,6 @@
 }//end setNeedsDisplay
 
 
-//========== optimizeOpenGL ====================================================
-//
-// Purpose:		The caller is asking this instance to optimize itself for faster 
-//				drawing. 
-//
-//				OpenGL optimization is not thread-safe. No OpenGL optimization 
-//				is ever performed during parsing because of the thread-safety 
-//				limitation, so you are responsible for calling this method on 
-//				newly-parsed models. 
-//
-//==============================================================================
-- (void) optimizeOpenGL
-{
-	// only meaningful in a subclass
-	
-}//end optimizeOpenGL
-
-
-//========== optimizeVertexes ==================================================
-//
-// Purpose:		Optimizes raw vertex data into VBOs. The model collects raw 
-//				vertex data through use of primitives. 
-//
-//==============================================================================
-- (void) optimizeVertexes
-{
-	// only meaningful in a subclass
-}
-
-
 //========== registerUndoActions: ==============================================
 //
 // Purpose:		Registers the undo actions that are unique to this subclass, 

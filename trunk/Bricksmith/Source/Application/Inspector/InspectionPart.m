@@ -74,7 +74,6 @@
 	
 	[representedObject setTransformComponents:components];
 	
-	[representedObject optimizeOpenGL];
 	[super commitChanges:sender];
 	
 }//end commitChanges:

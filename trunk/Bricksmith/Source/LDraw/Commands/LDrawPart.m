@@ -28,7 +28,6 @@
 #import "LDrawModel.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
-#import "LDrawVertexes.h"
 #import "PartLibrary.h"
 #import "LDrawPaths.h"
 #import "PartReport.h"
@@ -450,25 +449,11 @@
 //==============================================================================
 - (void) drawBoundsWithColor:(LDrawColor *)drawingColor
 {
+	assert(!"Deprecated draw path.");
 	//Pull the bounds directly from the model; we can't use the part's because 
 	// it mangles them based on rotation. In this case, we want to do a raw 
 	// draw and let the model matrix transform our drawing appropriately.
 	[self resolvePart];
-	LDrawModel	*modelToDraw	= cacheModel;
-	
-	//If the model can't be found, we can't draw good bounds for it!
-	if(modelToDraw != nil)
-	{
-		LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
-		Box3            bounds      = [modelToDraw boundingBox3];
-		Tuple3          extents     = V3Sub(bounds.max, bounds.min);
-		
-		// Expand and position the unit cube to match the model
-		glTranslatef(bounds.min.x, bounds.min.y, bounds.min.z);
-		glScalef(extents.x, extents.y, extents.z);
-		
-		[unitCube draw:DRAW_NO_OPTIONS viewScale:1.0 parentColor:drawingColor];
-	}
 }//end drawBounds
 
 
@@ -508,46 +493,7 @@
 	creditObject:(id)creditObject
 			hits:(NSMutableDictionary *)hits
 {
-	if(self->hidden == NO)
-	{
-		Matrix4     partTransform       = [self transformationMatrix];
-		Matrix4     combinedTransform   = Matrix4Multiply(partTransform, transform);
-		
-		// Credit all subgeometry to ourselves (unless we are already a child part)
-		if(creditObject == nil)
-		{
-			creditObject = self;
-		}
-
-		[self resolvePart];
-		// If we are doing a bounds test, for now get the model, not the VBO - VBO bounds test does not yet exist
-		// (which is not so good).  For parent-color parts we HAVE to get the model - there is no VBO!
-		LDrawDirective		*modelToDraw        = (cacheDrawable == nil || boundsOnly) ? cacheModel : cacheDrawable;
-		
-		if(modelToDraw)
-		{
-			if(boundsOnly == NO)
-			{			
-				[modelToDraw hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
-
-			}
-			else
-			{
-				LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
-				Box3            bounds      = [modelToDraw boundingBox3];
-				Tuple3          extents     = V3Sub(bounds.max, bounds.min);
-				Matrix4	boxTransform = IdentityMatrix4;
-				
-				// Expand and position the unit cube to match the model
-				boxTransform = Matrix4Scale(boxTransform, extents);
-				boxTransform = Matrix4Translate(boxTransform, bounds.min);
-				
-				combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
-				
-				[unitCube hitTest:pickRay transform:combinedTransform viewScale:scaleFactor boundsOnly:NO creditObject:creditObject hits:hits];
-			}
-		}		
-	}
+	assert(!"Deprecated.");
 }//end hitTest:transform:viewScale:boundsOnly:creditObject:hits:
 
 
@@ -586,27 +532,10 @@
 		[self resolvePart];
 		modelToDraw	= cacheModel;
 		
+		assert(boundsOnly == NO);
 		if(boundsOnly == NO)
 		{
 			if([modelToDraw boxTest:bounds transform:combinedTransform boundsOnly:NO creditObject:creditObject hits:hits])
-				if(creditObject != nil)
-					return TRUE;
-		}
-		else
-		{
-			// Hit test the bounding cube
-			LDrawVertexes   *unitCube   = [LDrawUtilities boundingCube];
-			Box3            bounds_3d      = [modelToDraw boundingBox3];
-			Tuple3          extents     = V3Sub(bounds_3d.max, bounds_3d.min);
-			Matrix4	boxTransform = IdentityMatrix4;
-			
-			// Expand and position the unit cube to match the model
-			boxTransform = Matrix4Scale(boxTransform, extents);
-			boxTransform = Matrix4Translate(boxTransform, bounds_3d.min);
-			
-			combinedTransform = Matrix4Multiply(boxTransform, combinedTransform);
-			
-			if([unitCube boxTest:bounds transform:combinedTransform boundsOnly:NO creditObject:creditObject hits:hits])
 				if(creditObject != nil)
 					return TRUE;
 		}
@@ -1552,62 +1481,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end collectPartReport:
 
 
-//========== optimizeOpenGL ===================================================
-//
-// Purpose:		Makes this part run faster by compiling its contents into a 
-//				display list if possible.
-//
-//				This optimization mechanism can only be managed by the 
-//				containers which hold the part. 
-//
-//==============================================================================
-- (void) optimizeOpenGL
-{
-	[self resolvePart];
-	
-	switch(self->cacheType)
-	{
-		case PartTypeSubmodel:
-		{
-			// Tell the submodel we want to draw it with our color.
-			if([self->color colorCode] != LDrawCurrentColor)
-			{
-				[[cacheModel vertexes] optimizeOpenGLWithParentColor:self->color];
-			}
-		}	break;
-	
-		case PartTypePeerFile:
-		{
-			[cacheModel optimizePrimitiveStructure];
-			[[cacheModel vertexes] optimizeOpenGLWithParentColor:self->color];
-			[cacheDrawable optimizeOpenGL];
-		}	break;
-		
-		case PartTypeLibrary:
-		{
-			// Only optimize explicitly colored parts.
-			// Uncolored parts need to use the color passed at draw time, which 
-			// can't be pre-optimized. 
-			if([self->color colorCode] != LDrawCurrentColor)
-			{
-				cacheDrawable = [[PartLibrary sharedPartLibrary] optimizedDrawableForPart:self color:self->color];
-			}
-		}	break;
-	
-		default:
-			break;
-	}
-		
-	// Make sure the bounding cube is available in our color
-	LDrawVertexes *unitCube = [LDrawUtilities boundingCube];
-	if([unitCube isOptimizedForColor:self->color] == NO)
-	{
-		[unitCube optimizeOpenGLWithParentColor:self->color];
-	}
-
-}//end optimizeOpenGL
-
-
 //========== registerUndoActions ===============================================
 //
 // Purpose:		Registers the undo actions that are unique to this subclass, 
@@ -1620,7 +1493,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	
 	[[undoManager prepareWithInvocationTarget:self] setTransformComponents:[self transformComponents]];
 	[[undoManager prepareWithInvocationTarget:self] setDisplayName:[self displayName]];
-	[[undoManager prepareWithInvocationTarget:self] optimizeOpenGL];
 	
 	[undoManager setActionName:NSLocalizedString(@"UndoAttributesPart", nil)];
 

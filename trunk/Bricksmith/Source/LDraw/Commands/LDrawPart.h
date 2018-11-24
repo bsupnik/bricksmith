@@ -83,7 +83,4 @@ typedef enum PartType {
 - (void) followRedirectionAndUpdate;
 
 
-- (void) optimizeOpenGL;
-//- (void) removeDisplayList;
-
 @end

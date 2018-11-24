@@ -83,7 +83,6 @@
 	[representedObject setVertex2:vertex2];
 	[representedObject setVertex3:vertex3];
 	
-	[[representedObject enclosingModel] optimizeVertexes];
 	[super commitChanges:sender];
 	
 }//end commitChanges:

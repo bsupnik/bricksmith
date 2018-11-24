@@ -952,8 +952,6 @@
 	[self invalCache:CacheFlagBounds|DisplayList];
 	[super insertDirective:directive atIndex:index];
 	
-	[[self enclosingModel] didAddDirective:directive];
-	
 }//end insertDirective:atIndex:
 
 
@@ -968,8 +966,6 @@
 	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
 
 	[super removeDirectiveAtIndex:index];
-	
-	[[self enclosingModel] didRemoveDirective:directive];
 	
 	[directive release];
 	

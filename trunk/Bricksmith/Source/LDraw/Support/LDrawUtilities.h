@@ -15,7 +15,6 @@
 
 @class LDrawDirective;
 @class LDrawPart;
-@class LDrawVertexes;
 
 
 // Viewing Angle
@@ -61,9 +60,6 @@ typedef enum
 // Writing
 + (NSString *) outputStringForColor:(LDrawColor *)color;
 + (NSString *) outputStringForFloat:(float)number;
-
-// Drawing
-+ (LDrawVertexes *) boundingCube;
 
 // Hit Detection
 + (void) registerHitForObject:(id)hitObject depth:(float)depth creditObject:(id)creditObject hits:(NSMutableDictionary *)hits;

@@ -234,8 +234,6 @@ typedef enum Message {
 				recursive:(BOOL)recursive;
 - (BOOL) isAncestorInList:(NSArray *)containers;
 - (void) noteNeedsDisplay;
-- (void) optimizeOpenGL;
-- (void) optimizeVertexes;
 - (void) registerUndoActions:(NSUndoManager *)undoManager;
 
 // These methods should really be "protected" methods for sub-classes to use when acting like observables.

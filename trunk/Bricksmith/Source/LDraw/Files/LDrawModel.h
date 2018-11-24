@@ -13,7 +13,6 @@
 @class ColorLibrary;
 @class LDrawFile;
 @class LDrawStep;
-@class LDrawVertexes;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -27,7 +26,6 @@
 	NSString				*author;
 	Point3					rotationCenter;
 	
-	LDrawVertexes			*vertexes;
 	ColorLibrary			*colorLibrary;			// in-scope !COLOURS local to the model
 	BOOL					 stepDisplayActive;		// YES if we are only display steps 1-currentStepDisplayed
 	NSUInteger				 currentStepDisplayed;	// display up to and including this step index
@@ -61,7 +59,6 @@
 - (Point3) rotationCenter;
 - (BOOL) stepDisplay;
 - (NSArray *) steps;
-- (LDrawVertexes *) vertexes;
 - (LDrawStep *) visibleStep;
 
 - (void) setDraggingDirectives:(NSArray *)directives;
@@ -77,16 +74,10 @@
 - (void) addStep:(LDrawStep *)newStep;
 - (void) makeStepVisible:(LDrawStep *)step;
 
-// Notifications
-- (void) didAddDirective:(LDrawDirective *)directive;
-- (void) didRemoveDirective:(LDrawDirective *)directive;
-
 //Utilities
 - (NSUInteger) maxStepIndexToOutput;
 - (NSUInteger) numberElements;
-- (void) optimizePrimitiveStructure;
 - (void) optimizeStructure;
-- (void) optimizeVertexes;
 - (NSUInteger) parseHeaderFromLines:(NSArray *)lines beginningAtIndex:(NSUInteger)index;
 - (BOOL) line:(NSString *)line isValidForHeader:(NSString *)headerKey info:(NSString**)infoPtr;
 

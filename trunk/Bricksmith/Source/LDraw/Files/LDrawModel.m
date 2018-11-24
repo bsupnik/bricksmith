@@ -29,7 +29,6 @@
 #import "LDrawPart.h"
 #import "LDrawTriangle.h"
 #import "LDrawUtilities.h"
-#import "LDrawVertexes.h"
 #import "StringCategory.h"
 #import "LDrawLSynthDirective.h"
 
@@ -67,7 +66,6 @@
 	
 	//Need to create a blank step.
 	[newModel addStep];
-	[newModel optimizePrimitiveStructure]; // initialize the vertex container
 
 	return [newModel autorelease];
 	
@@ -83,7 +81,6 @@
 {
 	self = [super init];
 	
-	self->vertexes      = nil; // not created until -optimizeOpenGL
 	self->colorLibrary  = [[ColorLibrary alloc] init];
 	self->cachedBounds = InvalidBox;
 	[self setModelDescription:@""];
@@ -285,9 +282,6 @@
 		currentDirective = [steps objectAtIndex:counter];
 		[currentDirective draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
 	}
-	
-	// Draw primitives
-	[self->vertexes draw:optionsMask viewScale:scaleFactor parentColor:parentColor];
 	
 	// Draw Drag-and-Drop pieces if we've got 'em.
 	if(self->draggingDirectives != nil)
@@ -962,18 +956,6 @@
 }//end steps
 
 
-//========== vertexes ==========================================================
-//
-// Purpose:		Returns the optimization object for representing the model's 
-//				primitives (which aren't capable of drawing themselves). 
-//
-//==============================================================================
-- (LDrawVertexes *) vertexes
-{
-	return self->vertexes;
-}
-
-
 //========== visibleStep =======================================================
 //
 // Purpose:		Returns the last step which would be drawn if this model were 
@@ -1025,15 +1007,6 @@
 								  currentTransform:IdentityMatrix4
 								   normalTransform:IdentityMatrix3
 										 recursive:NO];
-
-		for(LDrawLine *directive in lines)
-			[self->vertexes removeLine:directive];
-
-		for(LDrawTriangle *directive in triangles)
-			[self->vertexes removeTriangle:directive];
-
-		for(LDrawQuadrilateral *directive in quadrilaterals)
-			[self->vertexes removeQuadrilateral:directive];
 	}
 	
 	// When we get sent nil directives, nil out the drag step.
@@ -1070,23 +1043,12 @@
 				  currentTransform:IdentityMatrix4
 				   normalTransform:IdentityMatrix3
 						 recursive:NO];
-		
-		for(LDrawLine *directive in lines)
-			[self->vertexes addLine:directive];
-		
-		for(LDrawTriangle *directive in triangles)
-			[self->vertexes addTriangle:directive];
-		
-		for(LDrawQuadrilateral *directive in quadrilaterals)
-			[self->vertexes addQuadrilateral:directive];
 	}
 	
 	[dragStep retain];
 	[self->draggingDirectives release];
 	
 	self->draggingDirectives = dragStep;
-	
-	[self optimizeVertexes];
 	
 }//end setDraggingDirectives:
 
@@ -1197,18 +1159,6 @@
 }//end setStepDisplay:
 
 
-//========== setVertexesNeedRebuilding =========================================
-//
-// Purpose:		Marks all the optimizations of this vertex collection as needing 
-//				rebuilding. 
-//
-//==============================================================================
-- (void) setVertexesNeedRebuilding
-{
-	[self->vertexes setVertexesNeedRebuilding];
-}
-
-
 #pragma mark -
 #pragma mark ACTIONS
 #pragma mark -
@@ -1284,33 +1234,6 @@
 	[self invalCache:CacheFlagBounds|DisplayList];
 	[super insertDirective:directive atIndex:index];
 }	
-
-#pragma mark -
-#pragma mark NOTIFICATIONS
-#pragma mark -
-
-//========== didAddDirective: ==================================================
-//
-// Purpose:		One of the model's children has added a new directive which the 
-//				model is responsible for drawing. 
-//
-//==============================================================================
-- (void) didAddDirective:(LDrawDirective *)directive
-{
-	[vertexes addDirective:directive];
-}
-
-
-//========== didRemoveDirective: ===============================================
-//
-// Purpose:		One of the model's children has added a new directive which the 
-//				model is responsible for drawing. 
-//
-//==============================================================================
-- (void) didRemoveDirective:(LDrawDirective *)directive
-{
-	[vertexes removeDirective:directive];
-}
 
 #pragma mark -
 #pragma mark UTILITIES
@@ -1401,59 +1324,6 @@
 	return numberElements;
 	
 }//end numberElements
-
-
-//========== optimizeOpenGL ====================================================
-//
-// Purpose:		Collect members into optimized OpenGL containers.
-//
-// Notes:		This method is NOT thread safe.
-//
-//==============================================================================
-- (void) optimizeOpenGL
-{
-	// Allow primitives to be visible when displaying the model itself.
-	[self optimizeVertexes];
-	
-	[super optimizeOpenGL];
-}
-
-
-//========== optimizePrimitiveStructure ========================================
-//
-// Purpose:		Finds all the primitives which are direct children of the model 
-//				and records them in an optimizable vertex object. 
-//
-//==============================================================================
-- (void) optimizePrimitiveStructure
-{
-	// Collect all primitives into a single object which can draw them without 
-	// using immediate mode. 
-	if(self->vertexes == nil)
-	{
-		// We must create the vertex object HERE, because it is not thread-safe 
-		// and will ordinarily be written to when adding and removing 
-		// directives. Since the initial parse is multithreaded, we cannot allow 
-		// this object to be used until the model has been fully parsed. 
-		self->vertexes = [[LDrawVertexes alloc] init];
-		[vertexes setAcceptsNonPrimitives:NO]; // we are responsible for drawing non-primitive objects
-		
-		NSMutableArray  *lines              = [NSMutableArray array];
-		NSMutableArray  *triangles          = [NSMutableArray array];
-		NSMutableArray  *quadrilaterals     = [NSMutableArray array];
-		
-		[self flattenIntoLines:lines
-					 triangles:triangles
-				quadrilaterals:quadrilaterals
-						 other:nil // ONLY collect primitives; all other elements will be drawn in the normal draw recursion
-				  currentColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]
-			  currentTransform:IdentityMatrix4
-			   normalTransform:IdentityMatrix3
-					 recursive:NO];
-		
-		[vertexes setLines:lines triangles:triangles quadrilaterals:quadrilaterals other:nil];
-	}
-}//end optimizePrimitiveStructure
 
 
 //========== optimizeStructure =================================================
@@ -1552,35 +1422,6 @@
 	isOptimized = TRUE;
 		
 }//end optimizeStructure
-
-
-//========== optimizeVertexes ==================================================
-//
-// Purpose:		Makes sure the vertexes (collected in 
-//				-optimizePrimitiveStructure) are displayable. This is called in 
-//				response to changing the vertexes, so all existing optimizations 
-//				must be destroyed. 
-//
-//==============================================================================
-- (void) optimizeVertexes
-{
-	[super optimizeVertexes];
-
-	// Allow primitives to be visible when displaying the model itself.
-	LDrawColor *parentColor = [[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor];
-	
-	if([vertexes isOptimizedForColor:parentColor])
-	{
-		// The vertexes have already been optimized for any referencing colors. 
-		// Just rebuild the existing color optimizations. 
-		[self->vertexes rebuildAllOptimizations];
-	}
-	else
-	{
-		// Newly-created, empty vertexes. Make a list to display the model itself. 
-		[self->vertexes optimizeOpenGLWithParentColor:parentColor];
-	}
-}//end optimizeVertexes
 
 
 //========== parseHeaderFromLines:beginningAtIndex: ============================
@@ -1750,7 +1591,6 @@
 	[fileName			release];
 	[author				release];
 	
-	[vertexes			release];
 	[colorLibrary		release];
 	
 	[super dealloc];

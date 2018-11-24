@@ -239,6 +239,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	renderer = [[LDrawGLRenderer alloc] initWithBounds:NSSizeToSize2([self bounds].size)];
 	[renderer setDelegate:self withScroller:self];
 	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
+	[renderer prepareOpenGL];	
 
 	[self setViewOrientation:ViewOrientation3D];
 	
@@ -278,8 +279,6 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) prepareOpenGL
 {
-	[self->renderer prepareOpenGL];
-	
 	[self takeBackgroundColorFromUserDefaults]; //glClearColor()
 	
 }//end prepareOpenGL

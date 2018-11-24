@@ -25,7 +25,6 @@
 #import "LDrawStep.h"
 #import "LDrawTexture.h"
 #import "LDrawUtilities.h"
-#import "LDrawVertexes.h"
 #import "StringCategory.h"
 
 
@@ -1150,66 +1149,7 @@ static PartLibrary *SharedPartLibrary = nil;
 - (LDrawDirective *) optimizedDrawableForPart:(LDrawPart *) part
 										color:(LDrawColor *)color
 {
-	NSString            *referenceName  = [part referenceName];
-	LDrawVertexes       *vertexObject   = nil;
-	
-	if([referenceName length] > 0)
-	{
-		vertexObject	= [self->optimizedRepresentations objectForKey:referenceName];
-		
-		if(vertexObject == nil)
-		{
-			LDrawModel	*modelToDraw = [self modelForPartInternal:part];
-			
-			if(modelToDraw != nil)
-			{
-				vertexObject = [[LDrawVertexes alloc] init];
-				
-				// Extract the optimized structure of the model.
-				NSArray *modelSteps = [modelToDraw steps];
-				NSArray *lines      = nil;
-				NSArray *triangles  = nil;
-				NSArray *quads      = nil;
-				NSArray *allOthers  = nil;
-				
-				for(LDrawStep *currentStep in modelSteps)
-				{
-					switch([currentStep stepFlavor])
-					{
-						case LDrawStepLines:
-							lines = [currentStep subdirectives];
-							break;
-						case LDrawStepTriangles:
-							triangles = [currentStep subdirectives];
-							break;
-						case LDrawStepQuadrilaterals:
-							quads = [currentStep subdirectives];
-							break;
-						case LDrawStepAnyDirectives:
-							allOthers = [currentStep subdirectives];
-							break;
-						case LDrawStepConditionalLines: // ignore
-							break;
-					}
-				}
-				
-				[vertexObject setLines:lines triangles:triangles quadrilaterals:quads other:allOthers];
-
-				[self->optimizedRepresentations setObject:vertexObject forKey:referenceName];
-			}
-		}
-		
-		if(vertexObject != nil)
-		{
-			if([vertexObject isOptimizedForColor:color] == NO)
-			{
-				[vertexObject optimizeOpenGLWithParentColor:color];
-			}
-		}
-	}
-	
-	return vertexObject;
-	
+	assert(!"Not used.\n");
 }//end optimizedDrawableForPart:color:
 
 
@@ -1702,8 +1642,8 @@ static PartLibrary *SharedPartLibrary = nil;
 				asynchronously:(BOOL)asynchronous
 			 completionHandler:(void (^)(CGImageRef))completionBlock
 {
-	dispatch_group_t    group           = NULL;
 #if USE_BLOCKS
+	dispatch_group_t    group           = NULL;
 	__block
 #endif
 	CGImageRef			image          = nil;

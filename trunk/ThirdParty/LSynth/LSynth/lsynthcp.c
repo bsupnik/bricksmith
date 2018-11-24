@@ -225,7 +225,7 @@ parse_descr(bool custom_config, char *fullpath_progname)
         {
             char *l, *p;
 
-            for (l = p = filename; *p; *p++) {
+            for (l = p = filename; *p; p++) {
                 if (*p == '\\' || *p == '/') {
                     l = p+1;
                 }

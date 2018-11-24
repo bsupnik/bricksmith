@@ -383,17 +383,7 @@ void AppendChoicesToNewItem(
 		[self doMissingModelnameExtensionCheck:self];
 		
 		// Now that all the parts are at their final name, we can optimize.
-		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
-		
-		CFAbsoluteTime  startTime       = CFAbsoluteTimeGetCurrent();
-		CFTimeInterval  optimizeTime    = 0;
-		
-		[[self documentContents] optimizeOpenGL];
-		
-		optimizeTime = CFAbsoluteTimeGetCurrent() - startTime;
-#if DEBUG
-		NSLog(@"optimize time = %f", optimizeTime);
-#endif
+//		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
 	}
 	
 	return success;
@@ -1797,7 +1787,6 @@ void AppendChoicesToNewItem(
 	LDrawContainer			*containingModel = nil;
 	NSInteger				highestIndex = 0;
 	LDrawStep				*newStep = nil;
-	NSMutableIndexSet		*newPartIndices=nil;
 
 	[fileContentsOutline deselectAll:sender];
 
@@ -2680,8 +2669,7 @@ void AppendChoicesToNewItem(
 			[newPart setTransformComponents:transformation];
 			
 			// Add the part to our model and remember it for later.
-			[newPart optimizeOpenGL];			
-			[self addStepComponent:newPart parent:nil index:NSNotFound];			
+			[self addStepComponent:newPart parent:nil index:NSNotFound];
 			[newParts addObject:newPart]; 
 		}
 	}
@@ -2708,7 +2696,6 @@ void AppendChoicesToNewItem(
 	if(result == NSOKButton)
 	{
 		minifigure = [minifigDialog minifigure];
-		[minifigure optimizeOpenGL];
 		[self addModel:minifigure atIndex:NSNotFound preventNameCollisions:YES];
 	}
 	
@@ -2972,8 +2959,6 @@ void AppendChoicesToNewItem(
 	CGLLockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
 	{
 		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
-		[self->documentContents optimizeVertexes];
-		
 	}
 	CGLUnlockContext([[LDrawApplication sharedOpenGLContext] CGLContextObj]);
 	
@@ -3006,8 +2991,6 @@ void AppendChoicesToNewItem(
 					 atIndex:index ];
 		
 		[parent removeDirective:doomedDirective];
-
-		[self->documentContents optimizeVertexes];
 	}
 
 	// After a directive is deleted, we need to resynchronize our step field - maybe the current step changed.
@@ -3044,10 +3027,6 @@ void AppendChoicesToNewItem(
 		
 		//Do the move.
 		[object moveBy:moveVector];
-		
-		[self->documentContents optimizeVertexes];
-//		[object optimizeOpenGL];
-
 	}
 	
 	//our part changed; notify!
@@ -3073,7 +3052,6 @@ void AppendChoicesToNewItem(
 		// ** Read code bottom-to-top ** //
 
 		[[undoManager prepareWithInvocationTarget:directive] noteNeedsDisplay];
-		[[undoManager prepareWithInvocationTarget:[directive enclosingModel]] optimizeVertexes];
 		[directive registerUndoActions:undoManager];
 		
 		[[undoManager prepareWithInvocationTarget:self]
@@ -3121,7 +3099,6 @@ void AppendChoicesToNewItem(
 	
 	{
 		[part rotateByDegrees:rotationDegrees centerPoint:rotationCenter];
-//		[part optimizeOpenGL];
 	}
 	
 	[part noteNeedsDisplay];
@@ -3151,7 +3128,6 @@ void AppendChoicesToNewItem(
 		[undoManager setActionName:actionName];
 		
 		[element setHidden:hideFlag];
-		[self->documentContents optimizeVertexes];
 	}
 	[element noteNeedsDisplay];
 
@@ -3174,8 +3150,6 @@ void AppendChoicesToNewItem(
 	
 	{
 		[object setLDrawColor:newColor];
-		[object optimizeOpenGL];
-		[self->documentContents optimizeVertexes];
 	}
 	[object noteNeedsDisplay];
 
@@ -3196,7 +3170,6 @@ void AppendChoicesToNewItem(
 	
 	{
 		[part setTransformComponents:newComponents];
-//		[part optimizeOpenGL];
 		
 		//Be ready to restore the old components.
 		[[undoManager prepareWithInvocationTarget:self]
@@ -3792,8 +3765,6 @@ void AppendChoicesToNewItem(
 		[undoManager setActionName:NSLocalizedString(@"UndoDrop", nil)];
 	}
 	
-	[self->documentContents optimizeVertexes];
-
 }//end LDrawGLView:acceptDrop:
 
 
@@ -4071,8 +4042,6 @@ void AppendChoicesToNewItem(
 		success = YES;
 	}
 
-	[self->documentContents optimizeVertexes];
-	
 	return success;
 	
 }//end LDrawGLView:writeDirectivesToPasteboard:asCopy:
@@ -5346,8 +5315,6 @@ void AppendChoicesToNewItem(
 			[newPart setTransformComponents:transformation];
 		}
 		
-		[newPart optimizeOpenGL];
-		
 		[self addStepComponent:newPart parent:nil index:NSNotFound];
 		
 		[undoManager setActionName:NSLocalizedString(@"UndoAddPart", nil)];
@@ -5969,7 +5936,6 @@ void AppendChoicesToNewItem(
 				[self addStepComponent:currentObject parent:parent index:real_index];
 			}
 			
-			[currentObject optimizeOpenGL];
 			[addedObjects addObject:currentObject];
 		}
 		

@@ -19,23 +19,6 @@
 #endif
 
 
-// copy vec3: d = s.
-static inline void vec3f_copy(float * __restrict d, const float * __restrict s)
-{
-	d[0] = s[0];
-	d[1] = s[1];
-	d[2] = s[2];
-}
-
-// copy vec4: d = s
-static inline void vec4f_copy(float * __restrict d, const float * __restrict s)
-{
-	d[0] = s[0];
-	d[1] = s[1];
-	d[2] = s[2];
-	d[3] = s[3];
-}
-
 //========== applyMatrix =========================================================
 //
 // Purpose:	Apply a 4x4 matrix to a 4-component vector with copy.  
