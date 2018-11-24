@@ -1495,6 +1495,8 @@
 /* Begin PBXProject section */
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 2BB5975109FEFD180077A885 /* Build configuration list for PBXProject "Bricksmith" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -2108,7 +2110,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -2123,7 +2125,7 @@
 					"-weak_framework",
 					3DconnexionClient.framework,
 				);
-				SDKROOT = macosx10.8;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
