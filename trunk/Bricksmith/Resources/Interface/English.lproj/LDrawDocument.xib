@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="15G20015" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1040" defaultVersion="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <deployment version="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="LDrawDocument">
@@ -31,8 +33,8 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
-        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" releasedWhenClosed="NO" wantsToBeColor="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="5" userLabel="Window" customClass="LDrawDocumentWindow">
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="5" userLabel="Window" customClass="LDrawDocumentWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="44" y="274" width="1024" height="750"/>
@@ -84,7 +86,6 @@
                                                     </connections>
                                                 </outlineView>
                                             </subviews>
-                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         </clipView>
                                         <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="876">
                                             <rect key="frame" x="1" y="609" width="162" height="11"/>
@@ -133,7 +134,7 @@
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                                         <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" pullsDown="YES" selectedItem="993" id="991">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="system"/>
+                                            <font key="font" metaFont="menu"/>
                                             <menu key="menu" title="OtherViews" id="992">
                                                 <items>
                                                     <menuItem state="on" image="InsertPrimitiveTemplate" hidden="YES" id="993"/>
@@ -161,7 +162,7 @@
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                                         <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" pullsDown="YES" selectedItem="1001" id="997">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="system"/>
+                                            <font key="font" metaFont="menu"/>
                                             <menu key="menu" title="OtherViews" id="998">
                                                 <items>
                                                     <menuItem state="on" image="InsertReferenceTemplate" hidden="YES" id="1001"/>
@@ -223,7 +224,7 @@
                                                     <segmentedControl verticalHuggingPriority="750" id="532">
                                                         <rect key="frame" x="83" y="3" width="47" height="20"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                                        <segmentedCell key="cell" alignment="left" style="roundRect" trackingMode="momentary" id="848">
+                                                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="momentary" id="848">
                                                             <font key="font" metaFont="cellTitle"/>
                                                             <segments>
                                                                 <segment image="NSGoLeftTemplate" width="20"/>
@@ -303,10 +304,10 @@
                                             <outlet property="delegate" destination="-2" id="968"/>
                                         </connections>
                                     </customView>
-                                    <box autoresizesSubviews="NO" title="Box" boxType="custom" borderType="none" titlePosition="noTitle" id="1051">
+                                    <box autoresizesSubviews="NO" boxType="custom" borderType="none" title="Box" titlePosition="noTitle" id="1051">
                                         <rect key="frame" x="0.0" y="0.0" width="831" height="22"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <view key="contentView">
+                                        <view key="contentView" id="xsD-Bz-vhx">
                                             <rect key="frame" x="0.0" y="0.0" width="831" height="22"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -366,7 +367,6 @@
                                                 </textField>
                                             </subviews>
                                         </view>
-                                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                                         <color key="fillColor" red="0.9215686917" green="0.9215686917" blue="0.9215686917" alpha="1" colorSpace="deviceRGB"/>
                                     </box>
                                 </subviews>
@@ -442,7 +442,7 @@
                     <rect key="frame" x="256" y="37" width="187" height="129"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" heightSizable="YES"/>
                     <clipView key="contentView" id="99M-T0-k76">
-                        <rect key="frame" x="1" y="1" width="174" height="116"/>
+                        <rect key="frame" x="1" y="1" width="185" height="127"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <openGLView depthSize="32bit" useAuxiliaryDepthBufferStencil="NO" id="78" customClass="LDrawGLView">
@@ -464,14 +464,14 @@
                     <rect key="frame" x="144" y="5" width="102" height="161"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <clipView key="contentView" id="Jv8-pW-AJG">
-                        <rect key="frame" x="1" y="17" width="89" height="132"/>
+                        <rect key="frame" x="1" y="0.0" width="89" height="146"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveName="PartBrowserDrawerTable" rowHeight="14" headerView="888" id="25" customClass="PartBrowserTableView">
-                                <rect key="frame" x="0.0" y="0.0" width="89" height="132"/>
+                                <rect key="frame" x="0.0" y="0.0" width="89" height="129"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <size key="intercellSpacing" width="3" height="2"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                 <tableColumns>
                                     <tableColumn identifier="Part Number" editable="NO" width="52" minWidth="40" maxWidth="1000" id="26">
@@ -509,14 +509,13 @@
                                 </connections>
                             </tableView>
                         </subviews>
-                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </clipView>
                     <scroller key="horizontalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="887">
-                        <rect key="frame" x="1" y="149" width="89" height="11"/>
+                        <rect key="frame" x="1" y="146" width="89" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <scroller key="verticalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="NO" id="886">
-                        <rect key="frame" x="90" y="17" width="11" height="132"/>
+                        <rect key="frame" x="90" y="17" width="11" height="129"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <tableHeaderView key="headerView" id="888">
@@ -554,7 +553,6 @@
                                 </tableColumns>
                             </outlineView>
                         </subviews>
-                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </clipView>
                     <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="1084">
                         <rect key="frame" x="-100" y="-100" width="150" height="11"/>
@@ -613,7 +611,7 @@
                 <segmentedControl verticalHuggingPriority="750" id="430">
                     <rect key="frame" x="220" y="145" width="80" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" state="on" alignment="left" style="texturedRounded" trackingMode="selectOne" id="865">
+                    <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="selectOne" id="865">
                         <font key="font" metaFont="system"/>
                         <segments>
                             <segment image="GridFineTemplate" imageScaling="none" width="24" selected="YES"/>
@@ -685,7 +683,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="626F4980-043A-4FD1-A879-FE5A75950B36" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="872">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="7BCB2028-F436-40E4-99EC-CD7853E21302" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="872">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -711,7 +709,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="850EAE9C-6639-4ABD-9C5A-B9EF6E0E9A4D" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="871">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="D9ECAC8E-B672-4BF7-90DF-130356328033" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="871">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -737,7 +735,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="16" height="32"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="F624DC1E-908E-4BA1-B5D7-40B28A002D5B" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="870">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="B63AD1BF-FA91-4969-B2D8-9A7439227A8B" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="870">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -765,7 +763,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="91D4F3B6-8D90-4C4A-910E-3A5275FD432E" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="869">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="23C6EA0E-E012-4AF0-BFAC-AC1519DEC2F1" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="869">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -788,7 +786,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="16" height="32"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="D976603F-DA0D-4258-84A8-FE83B3B3FCEF" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="868">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="618E7267-B55E-4EB6-94B5-D4422A4E505E" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="868">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -813,7 +811,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="419CC90E-C065-4146-B95A-87C1C51A7353" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="867">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="A34F6720-E880-43A7-8E09-9CD3D5D8D270" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="867">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -846,7 +844,7 @@
                         <segmentedControl verticalHuggingPriority="750" id="972">
                             <rect key="frame" x="0.0" y="3" width="112" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <segmentedCell key="cell" alignment="left" style="texturedRounded" trackingMode="momentary" id="973">
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="momentary" id="973">
                                 <font key="font" metaFont="system"/>
                                 <segments>
                                     <segment image="ZoomOut" width="30"/>
@@ -863,7 +861,7 @@
                         <textField focusRingType="none" verticalHuggingPriority="750" id="206">
                             <rect key="frame" x="34" y="6" width="44" height="20"/>
                             <autoresizingMask key="autoresizingMask"/>
-                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" focusRingType="none" alignment="center" title="800" drawsBackground="YES" id="862">
+                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" focusRingType="none" alignment="center" title="800%" drawsBackground="YES" id="862">
                                 <numberFormatter key="formatter" formatterBehavior="10_0" positiveFormat="0%" negativeFormat="-0%" localizesFormat="NO" hasThousandSeparators="NO" thousandSeparator="," id="207">
                                     <attributedString key="attributedStringForZero">
                                         <fragment content="0%"/>
@@ -905,10 +903,10 @@
         </objectController>
     </objects>
     <resources>
-        <image name="419CC90E-C065-4146-B95A-87C1C51A7353" width="1" height="1">
+        <image name="23C6EA0E-E012-4AF0-BFAC-AC1519DEC2F1" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -982,19 +980,18 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="626F4980-043A-4FD1-A879-FE5A75950B36" width="1" height="1">
+        <image name="618E7267-B55E-4EB6-94B5-D4422A4E505E" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -1068,19 +1065,18 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="850EAE9C-6639-4ABD-9C5A-B9EF6E0E9A4D" width="1" height="1">
+        <image name="7BCB2028-F436-40E4-99EC-CD7853E21302" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -1154,19 +1150,18 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="91D4F3B6-8D90-4C4A-910E-3A5275FD432E" width="1" height="1">
+        <image name="A34F6720-E880-43A7-8E09-9CD3D5D8D270" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -1240,13 +1235,12 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
         <image name="ArrowE" width="10" height="15"/>
@@ -1261,10 +1255,10 @@ AAAAAAASXw
         <image name="ArrowSW-" width="26" height="10"/>
         <image name="ArrowW" width="10" height="15"/>
         <image name="ArrowW-" width="10" height="26"/>
-        <image name="D976603F-DA0D-4258-84A8-FE83B3B3FCEF" width="1" height="1">
+        <image name="B63AD1BF-FA91-4969-B2D8-9A7439227A8B" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -1338,19 +1332,18 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="F624DC1E-908E-4BA1-B5D7-40B28A002D5B" width="1" height="1">
+        <image name="D9ECAC8E-B672-4BF7-90DF-130356328033" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
-YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
-GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
+YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
+GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
 c1dOU0NvbG9ygAKADRIgwAAAgAOAC1Z7MSwgMX3SFQoWGFpOUy5vYmplY3RzoReABIAK0hUKGh2iGxyA
 BYAGgAkQANIgCiEiXxAUTlNUSUZGUmVwcmVzZW50YXRpb26AB4AITxEQoE1NACoAAAAOgAAgQAgIAA8B
 AAADAAAAAQABAAABAQADAAAAAQABAAABAgADAAAABAAAAMgBAwADAAAAAQAFAAABBgADAAAAAQACAAAB
@@ -1424,13 +1417,12 @@ AADoamFKUAAAAAgAAADoZW5VUwAAAAgAAADocGxQTAAAAAgAAADocHRCUgAAAAgAAADoZXNFUwAAAAgA
 AADoemhUVwAAAAgAAADocnVSVQAAAAgAAADoa29LUgAAAAgAAADoZGVERQAAAAgAAADobmxOTAAAAAgA
 AADoaXRJVAAAAAgAAADoAGkATQBhAGNtbW9kAAAAAAAABhAAAJxrAAAAAL/TkYAAAAAAAAAAAAAAAAAA
 AAAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUsIEluYy4sIDIwMDgA0iUmJyhaJGNsYXNzbmFtZVgkY2xh
-c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjKSorXxAQTlNCaXRtYXBJbWFnZVJlcFpOU0ltYWdlUmVwWE5T
-T2JqZWN00iUmLS5XTlNBcnJheaItK9IlJjAxXk5TTXV0YWJsZUFycmF5ozAtK9MzNAo1NjdXTlNXaGl0
-ZVxOU0NvbG9yU3BhY2VEMCAwABADgAzSJSY5OldOU0NvbG9yojkr0iUmPD1XTlNJbWFnZaI8K18QD05T
-S2V5ZWRBcmNoaXZlctFAQVRyb290gAEACAARABoAIwAtADIANwBGAEwAVwBeAGUAcgB5AIEAgwCFAIoA
-jACOAJUAmgClAKcAqQCrALAAswC1ALcAuQC7AMAA1wDZANsRfxGEEY8RmBGrEa8RwhHNEdYR2xHjEeYR
-6xH6Ef4SBRINEhoSHxIhEiMSKBIwEjMSOBJAEkMSVRJYEl0AAAAAAAACAQAAAAAAAABCAAAAAAAAAAAA
-AAAAAAASXw
+c3Nlc18QEE5TQml0bWFwSW1hZ2VSZXCjJykqWk5TSW1hZ2VSZXBYTlNPYmplY3TSJSYsLVdOU0FycmF5
+oiwq0iUmLzBeTlNNdXRhYmxlQXJyYXmjLywq0zIzCjQ1NldOU1doaXRlXE5TQ29sb3JTcGFjZUQwIDAA
+EAOADNIlJjg5V05TQ29sb3KiOCrSJSY7PFdOU0ltYWdlojsqXxAPTlNLZXllZEFyY2hpdmVy0T9AVHJv
+b3SAAQAIABEAGgAjAC0AMgA3AEYATABXAF4AZQByAHkAgQCDAIUAigCMAI4AlQCaAKUApwCpAKsAsACz
+ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
+EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
         <image name="FavoriteAdd" width="12" height="12"/>
@@ -1442,8 +1434,8 @@ AAAAAAASXw
         <image name="InsertPrimitiveTemplate" width="12" height="13"/>
         <image name="InsertReferenceTemplate" width="12" height="12"/>
         <image name="InsertStepTemplate" width="16" height="12"/>
-        <image name="NSGoLeftTemplate" width="9" height="9"/>
-        <image name="NSGoRightTemplate" width="9" height="9"/>
+        <image name="NSGoLeftTemplate" width="9" height="12"/>
+        <image name="NSGoRightTemplate" width="9" height="12"/>
         <image name="ZoomIn" width="8" height="8"/>
         <image name="ZoomOut" width="8" height="8"/>
     </resources>
