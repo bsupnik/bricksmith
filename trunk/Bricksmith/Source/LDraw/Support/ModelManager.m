@@ -53,14 +53,17 @@
 	NSString *				fileName;
 	NSString *				parentDirectory;
 
+	// These are the file names present in the same directory as this model.
 	NSMutableSet *			peerFileNames;		// NSString * filename
-	NSMutableDictionary *	trackedFiles;		// NSString * filename -> LDrawFile* modelfile
+	
+	// This is each file we are tracking and using as input for this model - the key is a full path on disk.
+	NSMutableDictionary *	trackedFiles;		// NSString * filepath -> LDrawFile* modelfile
 }
 
 - (id)			initWithFileName:(NSString *) fileName parentDir:(NSString *) parentDir file:(LDrawFile *) file;
 - (void)		dealloc;
-- (LDrawFile *) beginService:(NSString *) fileName;
-- (BOOL)		dropService:(NSString *) fileName;		// Returns true if it realLy did find this thing and drop it!
+- (LDrawFile *) beginService:(NSString *) relativePath;	// Weird: begin service is by partial path, drop is by full path.
+- (BOOL)		dropService:(NSString *) fullPath;		// Returns true if it really did find this thing and drop it!
 
 @end
 
@@ -119,9 +122,9 @@
 	
 	// Go through all tracked files and tell their first model's clients that
 	// they are going away.  
-	for(NSString * partName in trackedFiles)
+	for(NSString * partPath in trackedFiles)
 	{
-		LDrawFile * deadFile = [trackedFiles objectForKey:partName];		
+		LDrawFile * deadFile = [trackedFiles objectForKey:partPath];
 		[[deadFile firstModel] sendMessageToObservers:MessageScopeChanged];
 		[[ModelManager sharedModelManager] documentSignOut:deadFile];
 
@@ -144,14 +147,14 @@
 // Purpose:		Grab a peer model from a peer file for a client.
 //
 //==============================================================================
-- (LDrawFile *) beginService:(NSString *) inFileName
+- (LDrawFile *) beginService:(NSString *) inPartialPath
 {
-	//NSLog(@"%p: Loading model for part name: %@\n", self, inFileName);
-
-	NSString *		fullPath	= [parentDirectory stringByAppendingPathComponent:inFileName];
-	NSFileManager * fileManager = [[[NSFileManager alloc] init] autorelease];
-
+	// Calculate full path for this model from our root + the "partial" we were asked about.
+	//NSLog(@"%p: Loading model for part name: %@\n", self, inPartialPath);
+	NSString *		fullPath	= [parentDirectory stringByAppendingPathComponent:inPartialPath];
 	fullPath = [fullPath stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+
+	NSFileManager * fileManager = [[[NSFileManager alloc] init] autorelease];
 
 	// Quick check whether the file is still there.
 	if (![fileManager fileExistsAtPath:fullPath])
@@ -176,7 +179,7 @@
 	if(parsedFile)
 	{
 		[parsedFile setPath:fullPath];
-		[trackedFiles setObject:parsedFile forKey:inFileName];
+		[trackedFiles setObject:parsedFile forKey:fullPath];
 		[parsedFile release];			// Hash table tracked files retains the ONLY
 										// ref count - our "init" ref count gets tossed!
 		
@@ -205,9 +208,9 @@
 //				duplicate that doc.
 //
 //==============================================================================
-- (BOOL)	dropService:(NSString *) inFileName
+- (BOOL)	dropService:(NSString *) inFilePath
 {
-	LDrawFile * deadFile = [trackedFiles objectForKey:inFileName];
+	LDrawFile * deadFile = [trackedFiles objectForKey:inFilePath];
 	if(deadFile)
 	{
 		//NSLog(@"%p: drop sevice for %@\n", self,inFileName);		
@@ -216,7 +219,7 @@
 		// This releases any files that deadFile was in tunr using.
 		[[ModelManager sharedModelManager] documentSignOut:deadFile];
 
-		[trackedFiles removeObjectForKey:inFileName];
+		[trackedFiles removeObjectForKey:inFilePath];
 
 		return TRUE;
 	}
@@ -315,22 +318,20 @@ static ModelManager *SharedModelManager = nil;
 		for(NSValue * key in serviceTables)
 		{
 			ModelServiceTable * table = [serviceTables objectForKey:key];
-			if([docParentDir isEqualToString:table->parentDirectory])
+
+			//NSLog(@"Open document %@/%@ had to drop service on peer %@\n", table->parentDirectory, table->fileName, docFileName);
+			if([table dropService:docPath])
 			{
-				//NSLog(@"Open document %@/%@ had to drop service on peer %@\n", table->parentDirectory, table->fileName, docFileName);
-				if([table dropService:docFileName])
-				{
-					did_drop = true;
-					break;
-				}
+				did_drop = true;
+				break;
 			}
-		}		
+		}
 	} while(did_drop);
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
 	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
 	[newTable release];
-}
+}//end documentSignIn:withFile:
 
 
 //========== documentSignInInternal:withFile ===================================
@@ -422,24 +423,27 @@ static ModelManager *SharedModelManager = nil;
 	}
 	//NSLog(@"Part check for known file %@/%@ - wants part %@\n", table->parentDirectory, table->fileName, partName);
 	
-	NSString *	partDir 		= table->parentDirectory;
-	NSString *	partFileName	= partName;
+	NSString *		fullPath	= [table->parentDirectory stringByAppendingPathComponent:partName];
+	fullPath = [fullPath stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+	
 
 	for(LDrawFile * key in serviceTables)
 	{
 		ModelServiceTable * otherDoc = [serviceTables objectForKey:key];
 		
-		if(		[partFileName isEqualToString:otherDoc->fileName]
-		   &&	[partDir isEqualToString:otherDoc->parentDirectory])
+		NSString * otherFullPath = [otherDoc->parentDirectory stringByAppendingPathComponent:otherDoc->fileName];
+		
+		if(		[fullPath isEqualToString:otherFullPath])
 		{
 			//NSLog(@" Part was already loaded - returning.\n");
 			return [otherDoc->file firstModel];
 		}
 	}
-	
-	LDrawFile * alreadyOpenedFile = [table->trackedFiles objectForKey:partName];
+
+	LDrawFile * alreadyOpenedFile = [table->trackedFiles objectForKey:fullPath];
 	if (alreadyOpenedFile)
 		return [alreadyOpenedFile firstModel];
+	
 	
 	if (![table->peerFileNames containsObject:partName])
 	{
@@ -448,8 +452,9 @@ static ModelManager *SharedModelManager = nil;
 		if([partName rangeOfCharacterFromSet:dirChars].location == NSNotFound)
 			return nil;
 	}
-	//NSLog(@" Part may exist - trying to open. - returning.\n");
 	
+	
+	//NSLog(@" Part may exist - trying to open. - returning.\n");
 	LDrawFile * justOpenedNow = [table beginService:partName];
 	
 	if(justOpenedNow)
