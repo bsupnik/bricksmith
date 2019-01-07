@@ -60,6 +60,7 @@ typedef enum PartType {
 - (Point3) position;
 - (NSString *) referenceName;
 - (LDrawModel *) referencedMPDSubmodel;
+- (LDrawModel *) referencedPeerFile;
 - (TransformComponents) transformComponents;
 - (Matrix4) transformationMatrix;
 - (void) setDisplayName:(NSString *)newPartName;

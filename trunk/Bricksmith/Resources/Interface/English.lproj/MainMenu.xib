@@ -515,6 +515,11 @@ CA
                                     <action selector="snapSelectionToGrid:" target="-1" id="302"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Go To Model" tag="504" keyEquivalent="G" id="Tj5-vw-GLl">
+                                <connections>
+                                    <action selector="gotoModel:" target="-1" id="pqH-Cd-zc0"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -679,8 +684,5 @@ CA
                 <outlet property="delegate" destination="210" id="428"/>
             </connections>
         </customObject>
-        <menuItem title="Item" id="Tj5-vw-GLl">
-            <modifierMask key="keyEquivalentModifierMask"/>
-        </menuItem>
     </objects>
 </document>

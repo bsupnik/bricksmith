@@ -164,6 +164,7 @@
 - (IBAction) showParts:(id)sender;
 - (IBAction) hideParts:(id)sender;
 - (IBAction) showAllParts:(id)sender;
+- (IBAction) gotoModel:(id)sender;
 - (void) snapSelectionToGrid:(id)sender;
 
 // - Models menu

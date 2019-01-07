@@ -250,6 +250,7 @@ typedef enum MenuTags
 	hidePieceMenuTag				= 501,
 	showPieceMenuTag				= 502,
 	snapToGridMenuTag				= 503,
+	gotoModelMenuTag				= 504,
 	
 	// Models Menu
 	modelsMenuTag					= 6,

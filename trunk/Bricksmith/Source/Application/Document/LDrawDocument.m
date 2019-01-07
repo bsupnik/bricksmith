@@ -2300,6 +2300,49 @@ void AppendChoicesToNewItem(
 }//end showAllParts:
 
 
+//========== gotoModel: ========================================================
+//
+// Purpose:		If a single part is selected and the part is an MPD sub-model,
+//				This changes the current edited submodel to the selected parts'
+//				model.
+//
+//				If a single part is selected and it's a peer file on disk, this
+//				opens the .ldr file in a new document.
+//
+//==============================================================================
+- (IBAction) gotoModel:(id)sender
+{
+	NSArray     *selectedObjects    = [self selectedObjects];
+	
+	if([selectedObjects count] == 1)
+	{
+		id currentObject = [selectedObjects objectAtIndex:0];
+		
+		if([currentObject respondsToSelector:@selector(referencedMPDSubmodel)])
+		{
+			LDrawModel * m = [currentObject referencedMPDSubmodel];
+			if(m != nil)
+			{
+				if ([m isKindOfClass:[LDrawMPDModel class]])
+				{
+					[self setActiveModel:(LDrawMPDModel*) m];
+				}
+			}
+		}
+
+		if([currentObject respondsToSelector:@selector(referencedPeerFile)])
+		{
+			LDrawModel * m = [currentObject referencedPeerFile];
+			if(m != nil)
+			{
+				NSString * fp = [[m enclosingFile] path];
+				[[NSDocumentController sharedDocumentController] openDocumentWithContentsOfURL:[NSURL fileURLWithPath:fp  isDirectory:FALSE] display:TRUE error:nil];
+			}
+		}		
+	}
+}//end gotoModel:
+
+
 //========== snapSelectionToGrid: ==============================================
 //
 // Purpose:		Aligns all selected parts to the current grid setting.
@@ -4631,6 +4674,9 @@ void AppendChoicesToNewItem(
 			enable = (selectedPart != nil);
 			break;
 		
+		case gotoModelMenuTag:
+			enable = (selectedPart != nil && [selectedItems count] == 1);
+			break;		
 				
 		////////////////////////////////////////
 		//

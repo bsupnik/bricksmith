@@ -811,6 +811,30 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end referencedMPDSubmodel
 
 
+//========== referencedPeerFile ================================================
+//
+// Purpose:		Returns the primary model for a peer file to which this part
+//				refers, or nil if this part is not resolved/resolvable to a peer
+//				file.
+//
+// Note:		This method is ONLY intended to be used for resolving peer file
+//				references. If you want to resolve the general reference, you 
+//				should call -modelForPart: in the PartLibrary!
+//
+//				referencedPeerFile will attempt re-resolution for unresolved
+//				parts.
+//
+//==============================================================================
+- (LDrawModel *) referencedPeerFile
+{
+	if(cacheType == PartTypeUnresolved)
+		[self resolvePart];
+	if (cacheType != PartTypePeerFile)
+		return nil;
+	return cacheModel;
+}//end referencedPeerFile
+
+
 //========== transformComponents ===============================================
 //
 // Purpose:		Returns the individual components of the transformation matrix 
