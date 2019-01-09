@@ -43,6 +43,7 @@
 //Actions
 - (void) addDirective:(LDrawDirective *)directive;
 - (void) collectPartReport:(PartReport *)report;
+- (void) applyToAllParts:(LDrawPartVisitor) visitor;
 - (void) insertDirective:(LDrawDirective *)directive atIndex:(NSInteger)index;
 - (void) removeDirective:(LDrawDirective *)doomedDirective;
 - (void) removeDirectiveAtIndex:(NSInteger)index;

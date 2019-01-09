@@ -1828,6 +1828,65 @@ void AppendChoicesToNewItem(
 }//end splitStep:
 
 
+//========== splitModel: =======================================================
+//
+// Purpose:		Copy each part from a MPD sub-model into its location in the
+//				parent model.  This basically turns a reference to a sub-model
+//				into a big pile of bricks that can be directly edited.
+//
+// Notes:		Only parts are copied; any step information and primitives in
+//				the sub-module are ignored.
+//
+//==============================================================================
+- (IBAction) splitModel:(id)sender
+{
+	NSUndoManager			*undoManager		= [self undoManager];
+	NSArray					*directives			= [self selectedObjects];
+	NSMutableArray *		addedParts			= [NSMutableArray arrayWithCapacity:10];
+		
+	for(id thing in directives)
+	{
+		// Skip non-parts.
+		if(![thing isKindOfClass:[LDrawPart class]])
+			continue;
+		
+		// Skip parts that represent library bricks or that can't be resolved.
+		LDrawPart * anchor = (LDrawPart *) thing;
+		LDrawModel * model = [anchor referencedMPDSubmodel];
+		if(model == nil)
+			model = [anchor referencedPeerFile];
+		if(model == nil)
+			continue;
+		
+		// Save the transform that the whole part was under, and kill the part.
+		Matrix4 xfrm = [anchor transformationMatrix];
+		LDrawContainer * anchorParent = [anchor enclosingDirective];
+		[self deleteDirective:anchor];
+		
+		[model applyToAllParts:^(LDrawPart * part){
+		
+			// For each part, calculate its final location and add it.
+			Matrix4 local = [part transformationMatrix];
+			Matrix4 global = Matrix4Multiply(xfrm, local);
+			
+			LDrawPart *newPart        = [[[LDrawPart alloc] init] autorelease];
+			[newPart setLDrawColor:[part LDrawColor]];
+			[newPart setDisplayName:[part displayName]];
+			[newPart setTransformationMatrix:&global];
+			
+			[self addStepComponent:newPart parent:anchorParent index:NSNotFound];
+			
+			[addedParts addObject:newPart];
+		}];
+	}
+	
+	[undoManager setActionName:NSLocalizedString(@"undoSplitModel", nil)];
+	
+	[self flushDocChangesAndSelect:addedParts];
+}//end splitModel:
+
+
+
 //========== orderFrontMovePanel: ==============================================
 //
 // Purpose:		Opens the advanced rotation panel that provides fine part 
@@ -1963,6 +2022,80 @@ void AppendChoicesToNewItem(
 		[[self documentContents] noteNeedsDisplay];
 	}
 }//end randomizeLDrawColors:
+
+
+//========== changeOrigin: =====================================================
+//
+// Purpose:		Movs every part in the selection's parent model so that the
+//				selected part is at 0,0,0.
+//
+//				Also, find all uses of this MPD model and adjust their location
+//				in the opposite direction so parent models are not visually
+//				affected.
+//
+// Notes:		By moving the parts in the sub-model and moving the use of the
+//				sub-model in the opposite direction, this routine makes no
+//				visual changes to the model, while changing the point around
+//				which it rotates.
+//
+//==============================================================================
+- (IBAction) changeOrigin:(id)sender
+{
+	NSUndoManager       *	undoManager    = [self undoManager];
+	NSArray *				directives = [self selectedObjects];
+
+	id thing = [directives objectAtIndex:0];
+	if (![thing isKindOfClass:[LDrawPart class]])
+		return;
+	
+	LDrawPart * anchor = (LDrawPart *) thing;
+	
+	Matrix4 anchorMatrix = [anchor transformationMatrix];
+	Matrix4 correction = Matrix4Invert(anchorMatrix);
+	
+	LDrawModel * parentModel = [anchor enclosingModel];
+	
+	// Iterate the model and move every part based on the anchor part's
+	// inverse transform.  This also moves the anchor to 0,0,0.
+	[parentModel applyToAllParts:^(LDrawPart * part){
+		Matrix4 old = [part transformationMatrix];
+		Matrix4 newM = Matrix4Multiply(old, correction);
+		TransformComponents oldComp = [part transformComponents];
+		
+		[[undoManager prepareWithInvocationTarget:self]
+			setTransformation:oldComp forPart:part];
+		
+		[part setTransformationMatrix:&newM];
+	}];
+
+	// Iterate sub-models.  For every _other_ sub-model, search every
+	// part and apply the anchor's transform to restore the model.
+	NSArray * submodels = [[anchor enclosingFile] submodels];
+	for(LDrawModel* model in submodels)
+	{
+		if(model != parentModel)
+		{
+			[model applyToAllParts:^(LDrawPart * part){
+			
+				if([part referencedMPDSubmodel] == parentModel)
+				{
+					Matrix4 old = [part transformationMatrix];
+					Matrix4 newM = Matrix4Multiply(old, anchorMatrix);
+					TransformComponents oldComp = [part transformComponents];
+					
+					[[undoManager prepareWithInvocationTarget:self]
+						setTransformation:oldComp forPart:part];
+					
+					[part setTransformationMatrix:&newM];
+				}
+			}];
+		}
+	}
+	
+	[undoManager setActionName:NSLocalizedString(@"UndoChangeOrigin", nil)];
+	[[self documentContents] noteNeedsDisplay];
+	
+}//end changeOrigin:
 
 
 #pragma mark -
@@ -2414,6 +2547,97 @@ void AppendChoicesToNewItem(
 	[self setActiveModel:newModel];
 	
 }//end modelSelected
+
+
+//========== addModelFromSelectionClicked: =====================================
+//
+// Purpose:		Creates a new sub-model whose contents are the currently
+//				selected parts.  Parts are moved to the sub-model, using the
+//				first selected part as the origin.
+//
+//				A new part is placed in the current model referencing the newly
+//				made sub-mode.  This means the user sees the same contents, but
+//				via a reference.
+//
+//==============================================================================
+- (IBAction) addModelFromSelectionClicked:(id)sender
+{
+	NSUndoManager       *	undoManager    = [self undoManager];
+	NSArray *				directives = [self selectedObjects];
+	NSUInteger				count = [directives count];
+	NSUInteger				index;
+	LDrawPart *				anchor = nil;
+	
+	// Find the anchor directive - this will define the location of the
+	// sub-part.
+	for(index = 0; index < count; ++index)
+	{
+		id directive = [directives objectAtIndex:index];
+		if ([directive isKindOfClass:[LDrawPart class]])
+		{
+			anchor = (LDrawPart *) directive;
+			break;
+		}
+	}
+	
+	if(anchor == nil)
+		return;
+	
+	LDrawContainer * anchorParent = [anchor enclosingDirective];
+	[fileContentsOutline deselectAll:sender];
+	Matrix4 anchorMatrix = [anchor transformationMatrix];
+	Matrix4 correction = Matrix4Invert(anchorMatrix);
+
+	// Build a new model.
+	LDrawMPDModel	*newModel		= [LDrawMPDModel model];
+	[self addModel:newModel atIndex:NSNotFound preventNameCollisions:YES];
+	
+	for(index = 0; index < count; ++index)
+	{
+		// For each selected directive, find all of its sub-parts and
+		// change its transform.
+		id directive = [directives objectAtIndex:index];
+		if([directive respondsToSelector:@selector(applyToAllParts:)])
+		{
+			[directive applyToAllParts:^(LDrawPart * part){
+				Matrix4 old = [part transformationMatrix];
+				Matrix4 newM = Matrix4Multiply(old, correction);
+				TransformComponents oldComp = [part transformComponents];
+				
+				[[undoManager prepareWithInvocationTarget:self]
+					setTransformation:oldComp forPart:part];
+
+				[part setTransformationMatrix:&newM];
+			}];
+		}
+	}
+	
+	// Move each directive from the current model to the new sub-model.
+	LDrawStep * step = [[newModel steps] lastObject];
+	
+	for(index = 0; index < count; ++index)
+	{
+		LDrawDirective * d = [directives objectAtIndex:index];
+		[self deleteDirective:d];
+		
+		[self addDirective:d toParent:step atIndex:[[step subdirectives] count]];
+	}
+	
+	// Add one new part that refers to the new sub-model.
+	LDrawColor          *selectedColor  = [[LDrawColorPanelController sharedColorPanel] LDrawColor];
+	LDrawPart           *newPart        = [[[LDrawPart alloc] init] autorelease];
+	[newPart setLDrawColor:selectedColor];
+	[newPart setDisplayName:[newModel modelName]];
+	[newPart setTransformationMatrix:&anchorMatrix];
+	[self addStepComponent:newPart parent:anchorParent index:NSNotFound];
+	
+		
+	[undoManager setActionName:NSLocalizedString(@"UndoModelFromSelection", nil)];
+	
+	NSArray * movedDirectives = [NSArray arrayWithObject:newPart];
+	[self flushDocChangesAndSelect:movedDirectives];
+	
+}//end addModelFromSelectionClicked:
 
 
 //========== addStepClicked: ===================================================
@@ -4537,7 +4761,24 @@ void AppendChoicesToNewItem(
 	NSPasteboard    *pasteboard     = [NSPasteboard generalPasteboard];
 	LDrawMPDModel   *activeModel    = [[self documentContents] activeModel];
 	BOOL            enable          = NO;
-
+	NSUInteger		selCount		= [selectedItems count];
+	id				selTypes		= nil;
+	
+	if(selCount > 0)
+	{
+		selTypes = [[selectedItems objectAtIndex:0] class];
+		
+		for(id obj in selectedItems)
+		{
+			id mt = [obj class];
+			if(mt != selTypes)
+			{
+				selTypes = nil;
+				break;
+			}
+		}
+	}
+	
 	switch(tag)
 	{
         ////////////////////////////////////////
@@ -4570,6 +4811,16 @@ void AppendChoicesToNewItem(
 		case rotatePositiveZTag:
 		case rotateNegativeZTag:
 			if([selectedItems count] > 0)
+				enable = YES;
+			break;
+		
+		case changeOriginMenuTag:
+			if(selCount == 1 && selTypes == [LDrawPart class])
+				enable = YES;
+			break;
+		
+		case splitModelMenuTag:
+			if(selCount > 0 && selTypes == [LDrawPart class])
 				enable = YES;
 			break;
 		
@@ -4683,6 +4934,11 @@ void AppendChoicesToNewItem(
 		// Model Menu
 		//
 		////////////////////////////////////////
+		
+		case addModelSelectionMenuTag:
+			if(selCount > 0 && selTypes == [LDrawPart class])
+				enable = YES;
+			break;
 		
 		case submodelReferenceMenuTag:
 			//we can't insert a reference to the active model into itself.

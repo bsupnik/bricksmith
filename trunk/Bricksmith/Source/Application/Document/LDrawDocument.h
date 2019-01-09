@@ -138,10 +138,12 @@
 - (IBAction) delete:(id)sender;
 - (IBAction) duplicate:(id)sender;
 - (IBAction) splitStep:(id)sender;
+- (IBAction) splitModel:(id)sender;
 - (IBAction) orderFrontRotationPanel:(id)sender;
 - (IBAction) quickRotateClicked:(id)sender;
 - (IBAction) randomizeLDrawColors:(id)sender;
 - (IBAction) find:(id)sender;
+- (IBAction) changeOrigin:(id)sender;
 
 // - Tools menu
 - (IBAction) showInspector:(id)sender;

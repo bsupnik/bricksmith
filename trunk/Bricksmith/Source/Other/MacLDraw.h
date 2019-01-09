@@ -220,6 +220,8 @@ typedef enum MenuTags
 	selectAllMenuTag				= 206,
 	duplicateMenuTag				= 207,
 	splitStepMenuTag				= 208,
+	changeOriginMenuTag				= 209,
+	splitModelMenuTag				= 210,
 	rotatePositiveXTag				= 220,
 	rotateNegativeXTag				= 221,
 	rotatePositiveYTag				= 222,
@@ -259,6 +261,7 @@ typedef enum MenuTags
 	insertReferenceMenuTag			= 603,
 	submodelReferenceMenuTag		= 604, //used for all items in the Insert Reference menu.
 	rawCommandMenuTag               = 605,
+	addModelSelectionMenuTag		= 606,
 	relatedPartMenuTag				= 610, //used to add related parts dynamically.
 	
     lsynthMenuTag                   = 630,

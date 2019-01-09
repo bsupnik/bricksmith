@@ -203,6 +203,12 @@ CA
                                     <action selector="splitStep:" target="-1" id="441"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Split Model" tag="210" keyEquivalent="e" id="ULM-s7-ZsZ">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="splitModel:" target="-1" id="Qqh-4h-xCC"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="438">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -214,6 +220,11 @@ CA
                             <menuItem title="Rotate…" keyEquivalent="r" id="360">
                                 <connections>
                                     <action selector="orderFrontRotationPanel:" target="-1" id="361"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Make Origin" tag="209" id="Z8B-Qv-V2J">
+                                <connections>
+                                    <action selector="changeOrigin:" target="-1" id="gW5-rP-sHh"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Quick Rotate" id="378">
@@ -529,6 +540,12 @@ CA
                             <menuItem title="Add Model" tag="601" id="229">
                                 <connections>
                                     <action selector="addModelClicked:" target="-1" id="233"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Add Model From Selection" tag="606" alternate="YES" id="fJk-tZ-1r3">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                                <connections>
+                                    <action selector="addModelFromSelectionClicked:" target="-1" id="v22-Vz-O6i"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Add Step" keyEquivalent="t" id="236">

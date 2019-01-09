@@ -1505,6 +1505,18 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 }//end collectPartReport:
 
 
+//========== applyToAllParts: ==================================================
+//
+// Purpose:		This is part of a visitor API that applies a block to all parts.
+//				Since we are a part, we simply call it on ourselves.
+//
+//==============================================================================
+- (void) applyToAllParts:(LDrawPartVisitor) visitor
+{
+	visitor(self);
+}//end applyToAllParts:
+
+
 //========== registerUndoActions ===============================================
 //
 // Purpose:		Registers the undo actions that are unique to this subclass, 

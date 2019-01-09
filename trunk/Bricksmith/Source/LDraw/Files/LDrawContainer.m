@@ -277,6 +277,27 @@
 }//end collectPartReport:
 
 
+//========== applyToAllParts: ==================================================
+//
+// Purpose:		This is part of a visitor API that applies a block to all parts.
+//				Introspect our sub-directives and recurse where we can.
+//
+//==============================================================================
+- (void) applyToAllParts:(LDrawPartVisitor) visitor
+{
+	id          currentDirective    = nil;
+	NSInteger   counter             = 0;
+	
+	for(counter = 0; counter < [containedObjects count]; counter++)
+	{
+		currentDirective = [containedObjects objectAtIndex:counter];
+		
+		if([currentDirective respondsToSelector:@selector(applyToAllParts:)])
+			[currentDirective applyToAllParts:visitor];
+	}
+}//end applyToAllParts:
+
+
 //========== removeDirective: ==================================================
 //
 // Purpose:		Removes the specified LDraw directive stored in this collection.
