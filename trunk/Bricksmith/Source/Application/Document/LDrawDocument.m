@@ -1867,7 +1867,7 @@ void AppendChoicesToNewItem(
 		
 			// For each part, calculate its final location and add it.
 			Matrix4 local = [part transformationMatrix];
-			Matrix4 global = Matrix4Multiply(xfrm, local);
+			Matrix4 global = Matrix4Multiply(local, xfrm);
 			
 			LDrawPart *newPart        = [[[LDrawPart alloc] init] autorelease];
 			[newPart setLDrawColor:[part LDrawColor]];
