@@ -49,9 +49,6 @@ typedef enum
 	id<LDrawGLRendererDelegate> delegate;
 	id<LDrawGLCameraScroller>	scroller;
 	id							target;
-	SEL 						backAction;
-	SEL 						forwardAction;
-	SEL 						nudgeAction;
 	BOOL						allowsEditing;
 	
 	LDrawDirective          *fileBeingDrawn;		// Should only be an LDrawFile or LDrawModel.
@@ -81,7 +78,6 @@ typedef enum
 	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
 	Vector3                 draggingOffset;			// displacement between part 0's position and the initial click point of the drag
 	Point3                  initialDragLocation;	// point in model where part was positioned at draggingEntered
-	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
 	LDrawDragHandle			*activeDragHandle;		// drag handle hit on last mouse-down (or nil)
 }
 
@@ -99,7 +95,6 @@ typedef enum
 - (Matrix4) getMatrix;
 - (BOOL) isTrackingDrag;
 - (LDrawDirective *) LDrawDirective;
-- (Vector3) nudgeVector;
 - (ProjectionModeT) projectionMode;
 - (LocationModeT) locationMode;
 - (Box2) selectionMarquee;
@@ -110,15 +105,12 @@ typedef enum
 - (CGFloat) zoomPercentageForGL;
 
 - (void) setAllowsEditing:(BOOL)flag;
-- (void) setBackAction:(SEL)newAction;
 - (void) setBackgroundColorRed:(float)red green:(float)green blue:(float)blue;
 - (void) setDelegate:(id<LDrawGLRendererDelegate>)object withScroller:(id<LDrawGLCameraScroller>)scroller;
 - (void) setDraggingOffset:(Vector3)offsetIn;
-- (void) setForwardAction:(SEL)newAction;
 - (void) setGridSpacing:(float)newValue;
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
 - (void) setMaximumVisibleSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
-- (void) setNudgeAction:(SEL)newAction;
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
 - (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setSelectionMarquee:(Box2)newBox;

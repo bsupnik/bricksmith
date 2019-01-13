@@ -509,22 +509,6 @@
 }//end LDrawDirective
 
 
-//========== nudgeVector =======================================================
-//
-// Purpose:		Returns the direction of a keyboard part nudge. The target of 
-//				our nudgeAction queries this method to find how to nudge the 
-//				selection. 
-//
-// Notes:		This value is only valid during the nudgeAction callback.
-//
-//==============================================================================
-- (Vector3) nudgeVector
-{
-	return self->nudgeVector;
-	
-}//end nudgeVector
-
-
 //========== projectionMode ====================================================
 //
 // Purpose:		Returns the current projection mode (perspective or 
@@ -670,19 +654,6 @@
 }//end setDelegate:
 
 
-//========== setBackAction: ====================================================
-//
-// Purpose:		Sets the method called on the target when a backward swipe is 
-//				received. 
-//
-//==============================================================================
-- (void) setBackAction:(SEL)newAction
-{
-	self->backAction = newAction;
-	
-}//end setBackAction:
-
-
 //========== setBackgroundColorRed:green:blue: =================================
 //
 // Purpose:		Sets the canvas background color.
@@ -744,19 +715,6 @@
 {
 	self->draggingOffset = offsetIn;
 }
-
-
-//========== setForwardAction: =================================================
-//
-// Purpose:		Sets the method called on the target when a forward swipe is 
-//				received. 
-//
-//==============================================================================
-- (void) setForwardAction:(SEL)newAction
-{
-	self->forwardAction = newAction;
-	
-}//end setForwardAction:
 
 
 //========== setGridSpacing: ===================================================
@@ -860,21 +818,6 @@
 	[camera tickle];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
-
-
-//========== setNudgeAction: ===================================================
-//
-// Purpose:		Sets the action sent when the GLView wants to nudge a part.
-//
-//				You get the nudge vector by calling -nudgeVector within the body 
-//				of the action method. 
-//
-//==============================================================================
-- (void) setNudgeAction:(SEL)newAction
-{
-	self->nudgeAction = newAction;
-	
-}//end setNudgeAction:
 
 
 //========== setProjectionMode: ================================================
