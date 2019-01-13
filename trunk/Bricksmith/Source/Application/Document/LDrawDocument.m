@@ -2080,7 +2080,7 @@ void AppendChoicesToNewItem(
 				if([part referencedMPDSubmodel] == parentModel)
 				{
 					Matrix4 old = [part transformationMatrix];
-					Matrix4 newM = Matrix4Multiply(old, anchorMatrix);
+					Matrix4 newM = Matrix4Multiply(anchorMatrix, old);
 					TransformComponents oldComp = [part transformComponents];
 					
 					[[undoManager prepareWithInvocationTarget:self]
