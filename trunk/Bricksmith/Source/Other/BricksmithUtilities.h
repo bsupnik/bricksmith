@@ -23,6 +23,13 @@ typedef enum gridSpacingMode
 	
 } gridSpacingModeT;
 
+// Are movements aligned to the overall model or the individual selected part.
+typedef enum gridOrientationMode
+{
+	gridOrientationModel = 0,
+	gridOrientationPart = 1
+	
+} gridOrientationModeT;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

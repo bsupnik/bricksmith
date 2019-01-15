@@ -308,6 +308,8 @@
 		D619130217F004A300B5DF44 /* LDrawGLCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = D619130017F004A300B5DF44 /* LDrawGLCamera.m */; };
 		D6191B9D17F277B600B5DF44 /* GLMatrixMath.h in Headers */ = {isa = PBXBuildFile; fileRef = D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */; };
 		D6191B9E17F277B600B5DF44 /* GLMatrixMath.c in Sources */ = {isa = PBXBuildFile; fileRef = D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */; };
+		D61A46FF21ED879400C68969 /* GridPartTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = D61A46FD21ED879400C68969 /* GridPartTemplate.pdf */; };
+		D61A470021ED879400C68969 /* GridModelTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = D61A46FE21ED879400C68969 /* GridModelTemplate.pdf */; };
 		D62E73C51659C5D50044E2E9 /* LDrawDataStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */; };
 		D65CE86D158EBBCC001A1D7D /* CrosshairMinus.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */; };
 		D65CE86E158EBBCC001A1D7D /* CrosshairTimes.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D65CE86B158EBBCC001A1D7D /* CrosshairTimes.tiff */; };
@@ -699,6 +701,8 @@
 		D619130017F004A300B5DF44 /* LDrawGLCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawGLCamera.m; sourceTree = "<group>"; };
 		D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLMatrixMath.h; sourceTree = "<group>"; };
 		D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GLMatrixMath.c; sourceTree = "<group>"; };
+		D61A46FD21ED879400C68969 /* GridPartTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = GridPartTemplate.pdf; sourceTree = "<group>"; };
+		D61A46FE21ED879400C68969 /* GridModelTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = GridModelTemplate.pdf; sourceTree = "<group>"; };
 		D62E73C31659C5D50044E2E9 /* LDrawDataStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDataStream.h; sourceTree = "<group>"; };
 		D62E73C41659C5D50044E2E9 /* LDrawDataStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDataStream.m; sourceTree = "<group>"; };
 		D65CE86A158EBBCC001A1D7D /* CrosshairMinus.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = CrosshairMinus.tiff; sourceTree = "<group>"; };
@@ -1050,6 +1054,8 @@
 		0B9FE57D08AD97670046511D /* Grid */ = {
 			isa = PBXGroup;
 			children = (
+				D61A46FD21ED879400C68969 /* GridPartTemplate.pdf */,
+				D61A46FE21ED879400C68969 /* GridModelTemplate.pdf */,
 				0BB010DD1352BC9F006F3122 /* GridCoarseTemplate.pdf */,
 				0BB010DE1352BC9F006F3122 /* GridFineTemplate.pdf */,
 				0BB010DF1352BC9F006F3122 /* GridMediumTemplate.pdf */,
@@ -1575,6 +1581,7 @@
 				0BB010E21352BC9F006F3122 /* GridMediumTemplate.pdf in Resources */,
 				0B2700E7098203320058A7BE /* Hand.tiff in Resources */,
 				0BF246931355624A0043AAAF /* InsertCommentTemplate.pdf in Resources */,
+				D61A470021ED879400C68969 /* GridModelTemplate.pdf in Resources */,
 				0B70D0A7135A616800BC8B0A /* InsertModelTemplate.pdf in Resources */,
 				0BF246941355624A0043AAAF /* InsertPrimitiveTemplate.pdf in Resources */,
 				0BF246951355624A0043AAAF /* InsertReferenceTemplate.pdf in Resources */,
@@ -1614,6 +1621,7 @@
 				0B8EBD010938393800D87E0C /* ZoomCursor.tiff in Resources */,
 				0BF246B31355670B0043AAAF /* ZoomIn.pdf in Resources */,
 				0B8EBCF10938383000D87E0C /* ZoomInCursor.tiff in Resources */,
+				D61A46FF21ED879400C68969 /* GridPartTemplate.pdf in Resources */,
 				0BF246B41355670B0043AAAF /* ZoomOut.pdf in Resources */,
 				0B8EBCF20938383000D87E0C /* ZoomOutCursor.tiff in Resources */,
 				0B9FE55008AD971E0046511D /* InfoPlist.strings in Resources */,

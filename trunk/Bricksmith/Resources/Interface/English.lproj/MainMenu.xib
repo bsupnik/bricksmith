@@ -358,21 +358,37 @@ CA
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Grid Spacing" id="257">
-                                <menu key="submenu" title="Grid Spacing" id="256">
+                                <menu key="submenu" title="Grid Spacing" id="0B1-oP-8ro">
                                     <items>
-                                        <menuItem title="Fine" tag="305" keyEquivalent="1" id="255">
+                                        <menuItem title="Fine" tag="305" keyEquivalent="1" id="MUO-z7-0E5">
                                             <connections>
-                                                <action selector="gridGranularityMenuChanged:" target="-1" id="260"/>
+                                                <action selector="gridGranularityMenuChanged:" target="-1" id="VJr-lg-7bi"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Medium" tag="306" keyEquivalent="2" id="258">
+                                        <menuItem title="Medium" tag="306" keyEquivalent="2" id="qhr-w1-Xe9">
                                             <connections>
-                                                <action selector="gridGranularityMenuChanged:" target="-1" id="261"/>
+                                                <action selector="gridGranularityMenuChanged:" target="-1" id="pP5-zs-KQq"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Coarse" tag="307" keyEquivalent="3" id="259">
+                                        <menuItem title="Coarse" tag="307" keyEquivalent="3" id="Ebz-z4-PRj">
                                             <connections>
-                                                <action selector="gridGranularityMenuChanged:" target="-1" id="262"/>
+                                                <action selector="gridGranularityMenuChanged:" target="-1" id="HPT-yy-7W3"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Grid Orientation" id="Lnz-jc-Mg2">
+                                <menu key="submenu" title="Grid Orientation" id="pDN-Eg-BDT">
+                                    <items>
+                                        <menuItem title="Model" tag="308" keyEquivalent="4" id="BM4-XM-C3m">
+                                            <connections>
+                                                <action selector="gridOrientationModeChanged:" target="-1" id="gA7-PA-Arz"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Part" tag="309" keyEquivalent="5" id="uHz-G7-k2E">
+                                            <connections>
+                                                <action selector="gridOrientationModeChanged:" target="-1" id="JVi-U4-jH2"/>
                                             </connections>
                                         </menuItem>
                                     </items>

@@ -452,11 +452,11 @@
                         </subviews>
                     </clipView>
                     <scroller key="horizontalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="890">
-                        <rect key="frame" x="1" y="117" width="174" height="11"/>
+                        <rect key="frame" x="1" y="114" width="185" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" controlSize="small" horizontal="NO" id="889">
-                        <rect key="frame" x="175" y="1" width="11" height="116"/>
+                        <rect key="frame" x="172" y="1" width="14" height="127"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
@@ -464,11 +464,11 @@
                     <rect key="frame" x="144" y="5" width="102" height="161"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <clipView key="contentView" id="Jv8-pW-AJG">
-                        <rect key="frame" x="1" y="0.0" width="89" height="146"/>
+                        <rect key="frame" x="1" y="0.0" width="100" height="160"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveName="PartBrowserDrawerTable" rowHeight="14" headerView="888" id="25" customClass="PartBrowserTableView">
-                                <rect key="frame" x="0.0" y="0.0" width="89" height="129"/>
+                                <rect key="frame" x="0.0" y="0.0" width="100" height="143"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <size key="intercellSpacing" width="3" height="2"/>
                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -488,7 +488,7 @@
                                         <sortDescriptor key="sortDescriptorPrototype" selector="numericCompare:" sortKey="Part Number"/>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                     </tableColumn>
-                                    <tableColumn identifier="Part Name" editable="NO" width="31.089996337890625" minWidth="8" maxWidth="1000" id="28">
+                                    <tableColumn identifier="Part Name" editable="NO" width="42.089996337890625" minWidth="8" maxWidth="1000" id="28">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Description">
                                             <font key="font" metaFont="smallSystem"/>
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -511,15 +511,15 @@
                         </subviews>
                     </clipView>
                     <scroller key="horizontalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="887">
-                        <rect key="frame" x="1" y="146" width="89" height="14"/>
+                        <rect key="frame" x="1" y="146" width="100" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <scroller key="verticalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="NO" id="886">
-                        <rect key="frame" x="90" y="17" width="11" height="129"/>
+                        <rect key="frame" x="87" y="17" width="14" height="143"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <tableHeaderView key="headerView" id="888">
-                        <rect key="frame" x="0.0" y="0.0" width="89" height="17"/>
+                        <rect key="frame" x="0.0" y="0.0" width="100" height="17"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </tableHeaderView>
                 </scrollView>
@@ -614,9 +614,15 @@
                     <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="selectOne" id="865">
                         <font key="font" metaFont="system"/>
                         <segments>
-                            <segment image="GridFineTemplate" imageScaling="none" width="24" selected="YES"/>
-                            <segment image="GridMediumTemplate" imageScaling="none" width="24" tag="1"/>
-                            <segment image="GridCoarseTemplate" imageScaling="none" width="24" tag="2"/>
+                            <segment image="GridFineTemplate" imageScaling="none" width="24" selected="YES">
+                                <nil key="label"/>
+                            </segment>
+                            <segment image="GridMediumTemplate" imageScaling="none" width="24" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment image="GridCoarseTemplate" imageScaling="none" width="24" tag="2">
+                                <nil key="label"/>
+                            </segment>
                         </segments>
                     </segmentedCell>
                     <connections>
@@ -683,7 +689,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="86A9CA2B-EFFA-44BD-BA03-18478717BB93" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="872">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="D0134430-9A06-45BA-9344-3AC461E047DA" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="872">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -709,7 +715,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="18C09829-1D0B-4EDD-99B5-CD0599076BE0" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="871">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="83ED2837-262A-46A9-8A0F-AF6C960E8963" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="871">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -735,7 +741,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="16" height="32"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="B63A827E-FBD2-4329-B3D2-90541D34A97E" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="870">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="3D19B345-A18C-4B59-A05D-7B816C70C93F" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="870">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -763,7 +769,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="1A014290-CBF7-466F-B006-331589DA1969" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="869">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="AE1942D8-F51B-4BAD-BB1B-35CD14449F8B" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="869">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -786,7 +792,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="16" height="32"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="065F2395-5B82-4FDA-A502-51A40D6CBD96" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="868">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="15C98D16-2C1F-4C24-9E83-0101D8726856" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="868">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -811,7 +817,7 @@
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="32" height="16"/>
                     <size key="intercellSpacing" width="-1" height="-1"/>
-                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="154A1F6D-A989-404F-8929-1C0BA7308134" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="867">
+                    <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" image="8D912AC5-8F3C-4D62-A8DC-9C2853BB2090" imagePosition="only" alignment="center" borderStyle="border" tag="-1" inset="2" id="867">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system" size="10"/>
                     </buttonCell>
@@ -880,7 +886,35 @@
                         </textField>
                     </subviews>
                 </customView>
+                <segmentedControl verticalHuggingPriority="750" misplaced="YES" id="xWU-fw-VVq">
+                    <rect key="frame" x="228" y="92" width="69" height="25"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="selectOne" id="WDV-Yf-m0f">
+                        <font key="font" metaFont="system"/>
+                        <segments>
+                            <segment image="GridModelTemplate" imageScaling="none" selected="YES">
+                                <nil key="label"/>
+                            </segment>
+                            <segment image="GridPartTemplate" imageScaling="none" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                        </segments>
+                    </segmentedCell>
+                    <connections>
+                        <action selector="gridOrientationSegmentedControlClicked:" target="132" id="lz4-wV-GaL"/>
+                    </connections>
+                </segmentedControl>
+                <textField verticalHuggingPriority="750" misplaced="YES" id="OSr-5r-TNq">
+                    <rect key="frame" x="213" y="59" width="94" height="28"/>
+                    <autoresizingMask key="autoresizingMask"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="Grid Orientation" id="se7-sd-O1M">
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
+            <point key="canvasLocation" x="139" y="729.5"/>
         </customView>
         <customObject id="132" userLabel="Toolbar Controller" customClass="DocumentToolbarController">
             <connections>
@@ -889,6 +923,7 @@
                 <outlet property="nudgeXToolView" destination="125" id="150"/>
                 <outlet property="nudgeYToolView" destination="126" id="149"/>
                 <outlet property="nudgeZToolView" destination="131" id="135"/>
+                <outlet property="orientationSegmentedControl" destination="xWU-fw-VVq" id="p8b-QN-LkC"/>
                 <outlet property="zoomToolView" destination="969" id="970"/>
             </connections>
         </customObject>
@@ -903,7 +938,7 @@
         </objectController>
     </objects>
     <resources>
-        <image name="065F2395-5B82-4FDA-A502-51A40D6CBD96" width="1" height="1">
+        <image name="15C98D16-2C1F-4C24-9E83-0101D8726856" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -988,7 +1023,7 @@ ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
 EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="154A1F6D-A989-404F-8929-1C0BA7308134" width="1" height="1">
+        <image name="3D19B345-A18C-4B59-A05D-7B816C70C93F" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -1073,7 +1108,7 @@ ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
 EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="18C09829-1D0B-4EDD-99B5-CD0599076BE0" width="1" height="1">
+        <image name="83ED2837-262A-46A9-8A0F-AF6C960E8963" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -1158,7 +1193,7 @@ ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
 EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="1A014290-CBF7-466F-B006-331589DA1969" width="1" height="1">
+        <image name="8D912AC5-8F3C-4D62-A8DC-9C2853BB2090" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -1243,7 +1278,7 @@ ALUAtwC5ALsAwADXANkA2xF/EYQRjxGYEasRrxG6EcMRyBHQEdMR2BHnEesR8hH6EgcSDBIOEhASFRId
 EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
 </mutableData>
         </image>
-        <image name="86A9CA2B-EFFA-44BD-BA03-18478717BB93" width="1" height="1">
+        <image name="AE1942D8-F51B-4BAD-BB1B-35CD14449F8B" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -1340,7 +1375,7 @@ EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
         <image name="ArrowSW-" width="26" height="10"/>
         <image name="ArrowW" width="10" height="15"/>
         <image name="ArrowW-" width="10" height="26"/>
-        <image name="B63A827E-FBD2-4329-B3D2-90541D34A97E" width="1" height="1">
+        <image name="D0134430-9A06-45BA-9344-3AC461E047DA" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -1429,6 +1464,8 @@ EiASJRItEjASQhJFEkoAAAAAAAACAQAAAAAAAABBAAAAAAAAAAAAAAAAAAASTA
         <image name="GridCoarseTemplate" width="15" height="16"/>
         <image name="GridFineTemplate" width="17" height="17"/>
         <image name="GridMediumTemplate" width="15" height="16"/>
+        <image name="GridModelTemplate" width="15" height="16"/>
+        <image name="GridPartTemplate" width="15" height="16"/>
         <image name="InsertCommentTemplate" width="12" height="12"/>
         <image name="InsertModelTemplate" width="12" height="12"/>
         <image name="InsertPrimitiveTemplate" width="12" height="13"/>

@@ -52,6 +52,20 @@
 @implementation LDrawPart
 
 
+//========== floatNearGrid =====================================================
+//
+// Purpose:		Returns true if the value v is within 'epsi' of a grid with
+//				'grid' spacing going through the origin.  Used to detect
+//				nudges at standard displacements.
+//
+//==============================================================================
+int floatNearGrid(float v, float grid, float epsi)
+{
+	float hgrid = grid * 0.5f;
+	return fabsf(fmodf(v+hgrid,grid)-hgrid) < epsi;
+}//end floatNearGrid
+
+
 //========== defaultIconName ===================================================
 //
 // Purpose:		The default icon name for this class.
@@ -1087,20 +1101,18 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// vertically. These are different ratios! So I test for known 
 		// numbers, and only apply modifications if they are recognized.
 		
-		if(fmod(nudgeVector.x, 20) == 0)
-			nudgeVector.x *= 24.0 / 20.0;
-		else if(fmod(nudgeVector.x, 10) == 0)
-			nudgeVector.x *= 8.0 / 10.0;
+		float nudgeDistance = V3Length(nudgeVector);
 		
-		if(fmod(nudgeVector.y, 20) == 0)
-			nudgeVector.y *= 24.0 / 20.0;
-		else if(fmod(nudgeVector.y, 10) == 0)
-			nudgeVector.y *= 8.0 / 10.0;
+		float k_small_nudge = 0.0001;
 		
-		if(fmod(nudgeVector.z, 20) == 0)
-			nudgeVector.z *= 24.0 / 20.0;
-		else if(fmod(nudgeVector.z, 10) == 0)
-			nudgeVector.z *= 8.0 / 10.0;
+		if(floatNearGrid(nudgeDistance,20,k_small_nudge))
+		{
+			nudgeVector = V3MulScalar(nudgeVector, 24.0 / 20.0);
+		}
+		else if(floatNearGrid(nudgeDistance,10,k_small_nudge))
+		{
+			nudgeVector = V3MulScalar(nudgeVector, 8.0 / 10.0);
+		}
 	}
 
 	

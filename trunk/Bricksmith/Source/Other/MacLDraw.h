@@ -237,6 +237,8 @@ typedef enum MenuTags
 	gridFineMenuTag					= 305,
 	gridMediumMenuTag				= 306,
 	gridCoarseMenuTag				= 307,
+	coordModelMenuTag				= 308,
+	coordPartMenuTag				= 309,	
 	
 	// Views Menu
 	viewsMenuTag					= 4,

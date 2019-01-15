@@ -82,6 +82,7 @@
 		NSArray			*selectedDirectives; //mirrors the selection of the file contents outline.
 		NSArray			*selectedDirectivesBeforeCopyDrag;
 		gridSpacingModeT gridMode;
+		gridOrientationModeT gridOrientation;
 		LDrawGLView		*mostRecentLDrawView; //file graphic view which most recently had focus. Weak link.
 		NSArray		*	markedSelection;		// if we are mid-marquee selection, this is an array of the previously selected directives before drag started
 }
@@ -90,6 +91,7 @@
 - (LDrawFile *) documentContents;
 - (NSWindow *)foremostWindow;
 - (gridSpacingModeT) gridSpacingMode;
+- (gridOrientationModeT) gridOrientationMode;
 - (NSDrawer *) partBrowserDrawer;
 - (Tuple3) viewingAngle;
 
@@ -97,6 +99,7 @@
 - (void) setCurrentStep:(NSInteger)requestedStep;
 - (void) setDocumentContents:(LDrawFile *)newContents;
 - (void) setGridSpacingMode:(gridSpacingModeT)newMode;
+- (void) setGridOrientationMode:(gridOrientationModeT)newMode;
 - (void) setLastSelectedPart:(LDrawPart *)newPart;
 - (void) setMostRecentLDrawView:(LDrawGLView *)viewIn;
 - (void) setStepDisplay:(BOOL)showStepsFlag;
@@ -149,6 +152,7 @@
 - (IBAction) showInspector:(id)sender;
 - (IBAction) toggleFileContentsDrawer:(id)sender;
 - (IBAction) gridGranularityMenuChanged:(id)sender;
+- (IBAction) gridOrientationModeChanged:(id)sender;
 - (IBAction) showDimensions:(id)sender;
 - (IBAction) showPieceCount:(id)sender;
 

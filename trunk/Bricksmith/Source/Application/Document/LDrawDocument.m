@@ -579,6 +579,19 @@ void AppendChoicesToNewItem(
 }//end gridSpacingMode
 
 
+//========== gridOrientationMode ===============================================
+//
+// Purpose:		Returns the current grid orientation of the positioning grid
+//				being used in this document.
+//
+//==============================================================================
+- (gridOrientationModeT) gridOrientationMode
+{
+	return gridOrientation;
+	
+}//end gridOrientationMode
+
+
 //========== partBrowserDrawer =================================================
 //
 // Purpose:		Returns the drawer for a part browser attached to the document 
@@ -737,6 +750,20 @@ void AppendChoicesToNewItem(
 	}
 	
 }//end setGridSpacingMode:
+
+
+//========== setGridOrientationMode: ===========================================
+//
+// Purpose:		Sets the current grid orientation of the positioning grid being
+//				used in this document.
+//
+//==============================================================================
+- (void) setGridOrientationMode:(gridOrientationModeT)newMode
+{
+	self->gridOrientation = newMode;
+	[self->toolbarController setGridOrientationMode:newMode];
+	
+}//end setGridOrientationMode:
 
 
 //========== setLastSelectedPart: ==============================================
@@ -934,6 +961,45 @@ void AppendChoicesToNewItem(
 	rotation.y = rotationAxis.y * degreesToRotate;
 	rotation.z = rotationAxis.z * degreesToRotate;
 	
+	TransformComponents rotateComponents    = IdentityComponents;
+	Matrix4             addedRotation       = IdentityMatrix4;
+
+	//Create a new matrix that causes the rotation we want.
+	//  (start with identity matrix)
+	rotateComponents.rotate.x = radians(rotation.x);
+	rotateComponents.rotate.y = radians(rotation.y);
+	rotateComponents.rotate.z = radians(rotation.z);
+	addedRotation = Matrix4CreateTransformation(&rotateComponents);
+	
+	// If we are in part orientation mode with one part, try to find it and
+	// change to ITS coordinate system.
+	if([selectedObjects count] == 1 && self->gridOrientation == gridOrientationPart)
+	{
+		id obj = [selectedObjects objectAtIndex:0];
+		if([obj isKindOfClass:[LDrawPart class]])
+		{
+			LDrawPart * part = (LDrawPart *) obj;
+			Matrix4 orig = [part transformationMatrix];
+			
+			orig.element[3][0] = 0.0;
+			orig.element[3][1] = 0.0;
+			orig.element[3][2] = 0.0;
+			
+			Matrix4 origInv = Matrix4Invert(orig);
+			
+			// To make the rotation be "part relative" we basically change TO the
+			// part (inverse of part is world->part), apply the rotation, then change
+			// back (part matrix is part->world).
+			addedRotation = Matrix4Multiply(Matrix4Multiply(origInv,addedRotation),orig);
+
+			if(Matrix4DecomposeTransformation(addedRotation, &rotateComponents))
+			{
+				rotation.x = degrees(rotateComponents.rotate.x);
+				rotation.y = degrees(rotateComponents.rotate.y);
+				rotation.z = degrees(rotateComponents.rotate.z);
+			}
+		}
+	}
 	
 	//Just one part selected; rotate around that part's origin. That is 
 	// presumably what the part's author intended to be the rotation point.
@@ -1217,7 +1283,23 @@ void AppendChoicesToNewItem(
 - (void) nudge:(id)sender
 {
 	LDrawGLView *glView     = sender;
-	Vector3     nudgeVector = [glView nudgeVector];
+	LDrawPart * part;
+	Matrix4 xform = IdentityMatrix4;
+	
+	if(self->gridOrientation == gridOrientationPart)
+	{
+		NSArray * sel = [self selectedObjects];
+		if([sel count] > 0 &&
+			[(part = [sel objectAtIndex:0]) respondsToSelector:@selector(transformationMatrix)])
+		{
+			xform = [part transformationMatrix];
+			xform.element[3][0] = 0.0f;
+			xform.element[3][1] = 0.0f;
+			xform.element[3][2] = 0.0f;
+		}
+	}
+	
+	Vector3     nudgeVector = [glView nudgeVectorForMatrix:xform];
 	
 	[self nudgeSelectionBy:nudgeVector];
 	
@@ -2185,6 +2267,38 @@ void AppendChoicesToNewItem(
 	[self setGridSpacingMode:newGridMode];
 	
 }//end gridGranularityMenuChanged:
+
+
+//========== gridOrientationModeChanged: =======================================
+//
+// Purpose:		We just used the menubar to change the orientation of the grid.
+//				This is rather irritating because we need to manage the other 
+//				visual indicators of the selection:
+//				1) the checkmark in the menu itself
+//				2) the selection in the toolbar's grid widget.
+//				The menu we will handle in -validateMenuItem:.
+//				The toolbar is trickier.
+//
+//==============================================================================
+- (IBAction) gridOrientationModeChanged:(id)sender
+{
+	NSInteger				menuTag		= [sender tag];
+	gridOrientationModeT	newMode		= gridOrientationModel;
+	
+	switch(menuTag)
+	{
+		case coordModelMenuTag:
+			newMode = gridOrientationModel;
+			break;
+			
+		case coordPartMenuTag:
+			newMode = gridOrientationPart;
+			break;
+	}
+	
+	[self setGridOrientationMode:newMode];
+
+}//end gridOrientationModeChanged:
 
 
 //========== showDimensions: ===================================================
@@ -4878,7 +4992,16 @@ void AppendChoicesToNewItem(
 			[menuItem setState:(self->gridMode == gridModeCoarse)];
 			enable = YES;
 			break;
+		
+		case coordModelMenuTag:
+			[menuItem setState:(self->gridOrientation == gridOrientationModel)];
+			enable = YES;
+			break;
 			
+		case coordPartMenuTag:
+			[menuItem setState:(self->gridOrientation == gridOrientationPart)];
+			enable = YES;
+			break;
 			
 		////////////////////////////////////////
 		//

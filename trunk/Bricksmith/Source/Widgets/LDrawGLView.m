@@ -556,20 +556,167 @@ static NSSize Size2ToNSSize(Size2 size)
 }//end LDrawDirective
 
 
-//========== nudgeVector =======================================================
+//========== nudgeVectorForMatrix: =============================================
 //
 // Purpose:		Returns the direction of a keyboard part nudge. The target of 
 //				our nudgeAction queries this method to find how to nudge the 
 //				selection. 
 //
-// Notes:		This value is only valid during the nudgeAction callback.
+// Notes:		the nudge is aligned to the axes of the partMatrix passed in.
+//				This lets us nudge in part space; the client can pass the
+//				identity matrix to disable this.
 //
 //==============================================================================
-- (Vector3) nudgeVector
+- (Vector3) nudgeVectorForMatrix:(Matrix4)partMatrix
 {
-	return self->nudgeVector;
+	Matrix4 cameraMatrix = [self->renderer getMatrix];
+
+	// These 3 axes are the directions the _user_ thinks are right, down, and away, in model coordinates.
+	// Note that this assumes that the rotation elements of the camera matrix have no skew or scaling,
+	// so we can use the transpose as an inverse.
+	Vector3 xUser = V3Make(cameraMatrix.element[0][0], cameraMatrix.element[1][0], cameraMatrix.element[2][0]);
+	Vector3 yUser = V3Make(cameraMatrix.element[0][1], cameraMatrix.element[1][1], cameraMatrix.element[2][1]);
+	Vector3 zUser = V3Make(cameraMatrix.element[0][2], cameraMatrix.element[1][2], cameraMatrix.element[2][2]);
+
+	// If we are in a non-orthographic turn-table view, assume that the user's idea of up is up in model
+	// coordinates, no matter how silly the alignment is.  In turn-table view, the user really knows where
+	// the model's "up" is and eexpects to go that way.
+	if ([self projectionMode] != ProjectionModeOrthographic && USE_TURNTABLE)
+	{
+		yUser = V3Make(0, -1, 0);
+	}
 	
-}//end nudgeVector
+	// Get the axis basis vectors of the model - this is the direction we will nudge, e.g. an "x part"
+	// nudge moves the part to its own right.
+	Vector3 xPart = V3Make(partMatrix.element[0][0],partMatrix.element[0][1],partMatrix.element[0][2]);
+	Vector3 yPart = V3Make(partMatrix.element[1][0],partMatrix.element[1][1],partMatrix.element[1][2]);
+	Vector3 zPart = V3Make(partMatrix.element[2][0],partMatrix.element[2][1],partMatrix.element[2][2]);
+	
+	// Now, take lots o dot products to find the correlation between the user and model axes.
+	float xUp = V3Dot(yUser,xPart);
+	float yUp = V3Dot(yUser,yPart);
+	float zUp = V3Dot(yUser,zPart);
+	
+	float xRight = V3Dot(xUser,xPart);
+	float yRight = V3Dot(xUser,yPart);
+	float zRight = V3Dot(xUser,zPart);
+
+	float xBack = V3Dot(zUser,xPart);
+	float yBack = V3Dot(zUser,yPart);
+	float zBack = V3Dot(zUser,zPart);
+
+	// We're going to compare them and link the strongest axes together, saving the dot product that we got.
+	Vector3	xNudge = ZeroPoint3, yNudge = ZeroPoint3, zNudge = ZeroPoint3;
+	float xDot = 0.0f, yDot = 0.0f, zDot = 0.0f;
+
+	// Settle Y first, then X.  Since Y is hacked to not be in screen space for some views, there is
+	// a risk that model Y and screen Z are closely correlated.  Find the "up" vector, then take the
+	// right-most of remaining as X.
+	if(fabsf(xUp) > fabsf(yUp) && fabsf(xUp) > fabsf(zUp))
+	{
+		// CASE 1: model "X" axis is up.
+		yNudge = xPart;
+		yDot = xUp;
+		
+		// Figure out which is more "to the right" - Y or Z
+		if(fabsf(yRight) > fabsf(zRight))
+		{
+			// Y axis is to the right.
+			xNudge = yPart;
+			xDot = yRight;
+			// Z is forward
+			zNudge = zPart;
+			zDot = zBack;
+		}
+		else
+		{
+			// Z axis is to the right.
+			xNudge = zPart;
+			xDot = zRight;
+			// Y is forward
+			zNudge = yPart;
+			zDot = yBack;
+		}
+		
+	}
+	else if(fabsf(yUp) > fabsf(zUp))
+	{
+		// CASE 2: model "Y" axis is up.
+		yNudge = yPart;
+		yDot = yUp;
+		
+		if(fabsf(xRight) > fabsf(zRight))
+		{
+			// X axis is right
+			xNudge = xPart;
+			xDot = xRight;
+			// Z is forward
+			zNudge = zPart;
+			zDot = zBack;
+		}
+		else
+		{
+			// Z axis is right
+			xNudge = zPart;
+			xDot = zRight;
+			// X is forward
+			zNudge = xPart;
+			zDot = xBack;
+		}
+	}
+	else
+	{
+		// CASE 3: model "Z" axis is up.
+		yNudge = zPart;
+		yDot = zUp;
+		float yRight = V3Dot(xUser,yPart);
+		if(fabsf(xRight) > fabsf(yRight))
+		{
+			// X is right
+			xNudge = xPart;
+			xDot = xRight;
+			// Y is forward
+			zNudge = yPart;
+			zDot = yBack;
+		}
+		else
+		{
+			// Y is right
+			xNudge = yPart;
+			xDot = yRight;
+			// X is forward
+			zNudge = xPart;
+			zDot = xBack;
+		}
+	}
+	
+	// If any correlation was highly negative, the axis goes the wrong way.
+	// Flip the nudge sign.
+	
+	if(xDot < 0.0f)
+		xNudge = V3Negate(xNudge);
+	if(yDot < 0.0f)
+		yNudge = V3Negate(yNudge);
+	if(zDot < 0.0f)
+		zNudge = V3Negate(zNudge);
+
+	// Now apply the nudge - basically .x of the nudge vector from the
+	// key stroke applies xNudge, etc.
+	return V3Make(
+				self->nudgeVector.x * xNudge.x +
+				self->nudgeVector.y * yNudge.x +
+				self->nudgeVector.z * zNudge.x,
+
+				self->nudgeVector.x * xNudge.y +
+				self->nudgeVector.y * yNudge.y +
+				self->nudgeVector.z * zNudge.y,
+
+				self->nudgeVector.x * xNudge.z +
+				self->nudgeVector.y * yNudge.z +
+				self->nudgeVector.z * zNudge.z);
+
+
+}//end nudgeVectorForMatrix:
 
 
 //========== projectionMode ====================================================
@@ -1403,53 +1550,11 @@ static NSSize Size2ToNSSize(Size2 size)
 		{
 			firstCharacter	= [characters characterAtIndex:0]; //the key pressed
 			
-			if ([self projectionMode] == ProjectionModeOrthographic || !USE_TURNTABLE)
-			{
-				// find which model-coordinate directions our screen axes are best 
-				// aligned with. 
-				[self->renderer getModelAxesForViewX:&xNudge
-													Y:&yNudge
-													Z:&zNudge ];
-			} else {
+			xNudge.x = 1.0;
+			yNudge.y = 1.0;
+			zNudge.z = 1.0;
 
-				/* 
-					This view mode matches the turntable-style editing:
-					The model "horizontal" axes x & z always match x & z nudge,
-					but which one is X and which way they go match screen space
-					for sanity.
-					Up-down is ALWAYS y, with a reverse if you (insanely) flip
-					the model's pitch by > 90 degrees.
-					Since the Y axis is always Y, there is never any question 
-					whether we'll be pulling depth or height.
-					Finally: the model's Z or X axis is aligned with screen space
-					Y so that if we are looking DOWN on a model and we pull a brick
-					toward us, it moves down, which matches what we'd expect.  In
-					other words, the depth perspective matches screen space.
-				*/
-
-				Matrix4 matrix = [self->renderer getMatrix];
-				Vector4 x_model = { 1, 0, 0 };
-				Vector4 y_model = { 0, 1, 0 };
-				Vector4 z_model = { 0, 0, 1 };
-				
-				Vector4 x_screen = V4MulPointByMatrix(x_model, matrix);
-				Vector4 y_screen = V4MulPointByMatrix(y_model, matrix);
-				Vector4 z_screen = V4MulPointByMatrix(z_model, matrix);
-				
-				if(fabsf(x_screen.x) > fabsf(z_screen.x))
-				{
-					xNudge.x = (x_screen.x > 0.0f) ? 1.0f : -1.0f;
-					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
-					zNudge.z = (z_screen.y > 0.0f) ? -1.0f : 1.0f;
-				}
-				else 
-				{
-					xNudge.z = (z_screen.x > 0.0f) ? 1.0f : -1.0f;
-					yNudge.y = (y_screen.y > 0.0f) ? 1.0f : -1.0f;
-					zNudge.x = (x_screen.y < 0.0f) ? 1.0f : -1.0f;
-				}
-			}
-							
+			
 			// By holding down the option key, we transcend the two-plane 
 			// limitation presented by the arrow keys. Option-presses mean 
 			// movement along the z-axis. Note that move "in" to the screen (up 

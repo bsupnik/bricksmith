@@ -13,6 +13,7 @@
 #import "LDrawDocument.h"
 
 #define TOOLBAR_GRID_SPACING_IDENTIFIER	@"GridSpacing"
+#define TOOLBAR_GRID_ORIENTATION_IDENTIFIER	@"GridOrientation"
 #define TOOLBAR_NUDGE_X_IDENTIFIER		@"NudgeX"
 #define TOOLBAR_NUDGE_Y_IDENTIFIER		@"NudgeY"
 #define TOOLBAR_NUDGE_Z_IDENTIFIER		@"NudgeZ"
@@ -46,10 +47,12 @@
 	IBOutlet NSView					*zoomToolView; //enter zoom percentage.
 	
 	IBOutlet NSSegmentedControl		*gridSegmentedControl;
+	IBOutlet NSSegmentedControl		*orientationSegmentedControl;
 }
 
 //Button factories
 - (NSToolbarItem *) makeGridSpacingItem;
+- (NSToolbarItem *) makeGridOrientationItem;
 - (NSToolbarItem *) makeRotationPlusXItem;
 - (NSToolbarItem *) makeRotationMinusXItem;
 - (NSToolbarItem *) makeRotationPlusYItem;
@@ -66,9 +69,11 @@
 
 //Accessors
 - (void) setGridSpacingMode:(gridSpacingModeT)newMode;
+- (void) setGridOrientationMode:(gridOrientationModeT)newMode;
 
 //Actions
 - (IBAction) gridSpacingSegmentedControlClicked:(id)sender;
+- (IBAction) gridOrientationSegmentedControlClicked:(id)sender;
 - (IBAction) nudgeXClicked:(id)sender;
 - (IBAction) nudgeYClicked:(id)sender;
 - (IBAction) nudgeZClicked:(id)sender;

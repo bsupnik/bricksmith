@@ -77,7 +77,7 @@
 
 // Accessors
 - (LDrawDirective *) LDrawDirective;
-- (Vector3) nudgeVector;
+- (Vector3) nudgeVectorForMatrix:(Matrix4)partMatrix;
 - (ProjectionModeT) projectionMode;
 - (LocationModeT) locationMode;
 - (Tuple3) viewingAngle;

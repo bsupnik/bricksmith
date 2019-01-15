@@ -35,12 +35,14 @@
 	// The result is that without retains here, all these views would be 
 	// deallocated once added then removed from the toolbar!
 	[gridSegmentedControl	retain];
+	[orientationSegmentedControl retain];
 	[nudgeXToolView			retain];
 	[nudgeYToolView			retain];
 	[nudgeZToolView			retain];
 	[zoomToolView			retain];
 	
 	[gridSegmentedControl	removeFromSuperview];
+	[orientationSegmentedControl removeFromSuperview];
 	[nudgeXToolView			removeFromSuperview];
 	[nudgeYToolView			removeFromSuperview];
 	[nudgeZToolView			removeFromSuperview];
@@ -61,6 +63,7 @@
 {
 	return [NSArray arrayWithObjects:
 										TOOLBAR_GRID_SPACING_IDENTIFIER,
+										TOOLBAR_GRID_ORIENTATION_IDENTIFIER,
 										TOOLBAR_NUDGE_X_IDENTIFIER,
 										TOOLBAR_NUDGE_Y_IDENTIFIER,
 										TOOLBAR_NUDGE_Z_IDENTIFIER,
@@ -153,6 +156,9 @@
 	else if([itemIdentifier isEqualToString:TOOLBAR_GRID_SPACING_IDENTIFIER]) {
 		newItem = [self makeGridSpacingItem];
 	}
+	else if([itemIdentifier isEqualToString:TOOLBAR_GRID_ORIENTATION_IDENTIFIER]) {
+		newItem = [self makeGridOrientationItem];
+	}
 	else if([itemIdentifier isEqualToString:TOOLBAR_PART_BROWSER]) {
 		newItem = [self makePartBrowserItem];
 	}
@@ -222,6 +228,20 @@
 }//end setGridSpacingMode:
 
 
+//========== setGridOrientationMode: ===========================================
+//
+// Purpose:		Someone is telling us they changed the current grid orientation.
+//				We need to update our indicator to this new state.
+//
+//==============================================================================
+- (void) setGridOrientationMode:(gridOrientationModeT)newMode
+{
+	[self->orientationSegmentedControl selectSegmentWithTag:newMode];
+
+}//end setGridOrientationMode:
+
+
+
 #pragma mark -
 #pragma mark BUTTON FACTORIES
 #pragma mark -
@@ -247,6 +267,28 @@
 	return [newItem autorelease];
 	
 }//end makeGridSpacingItem
+
+
+//========== makeGridOrientationItem ===========================================
+//
+// Purpose:		Creates the toolbar widget used to toggle the grid orientation.
+//				Currently, this is implemented as a segmented control.
+//
+//==============================================================================
+- (NSToolbarItem *) makeGridOrientationItem
+{
+	NSToolbarItem		*newItem		= [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_GRID_ORIENTATION_IDENTIFIER];
+	gridOrientationModeT	gridMode		= [self->document gridOrientationMode];
+	
+	[self->orientationSegmentedControl selectSegmentWithTag:gridMode];
+	
+	[newItem setView:self->orientationSegmentedControl];
+	[newItem setMinSize:[[self->orientationSegmentedControl cell] cellSize]];
+	[newItem setLabel:NSLocalizedString(@"GridOrientation",nil)];
+	[newItem setPaletteLabel:NSLocalizedString(@"GridOrientation",nil)];
+	
+	return [newItem autorelease];
+}//end makeGridOrientationItem
 
 
 //========== makePartBrowserItem ===========================================
@@ -570,6 +612,22 @@
 	[self->document setGridSpacingMode:newGridMode];
 	
 }//end gridSpacingSegmentedControlClicked:
+
+
+//========== gridOrientationSegmentedControlClicked: ===========================
+//
+// Purpose:		We clicked on the toolbar's segmented control for changing the 
+//				grid orientation.
+//
+//==============================================================================
+- (IBAction) gridOrientationSegmentedControlClicked:(id)sender
+{
+	NSInteger           selectedSegment = [sender selectedSegment];
+	gridOrientationModeT    newGridMode     = [[sender cell] tagForSegment:selectedSegment];
+	
+	[self->document setGridOrientationMode:newGridMode];	
+	
+}//emd gridOrientationSegmentedControlClicked:
 
 
 //========== nudgeXClicked: ====================================================
