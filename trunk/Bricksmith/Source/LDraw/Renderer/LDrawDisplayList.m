@@ -675,6 +675,9 @@ struct LDrawDL * LDrawDLBuilderFinish(struct LDrawDLBuilder * ctx)
 	
 	for(s = ctx->head; s; s = s->next)
 	{
+		if(s->tri_head == NULL && s->line_head == NULL && s->quad_head == NULL)
+			continue;
+
 		memcpy(&cur_tex->spec, &s->spec, sizeof(struct LDrawTextureSpec));
 		
 		cur_tex->quad_off = quad_start[ti];
