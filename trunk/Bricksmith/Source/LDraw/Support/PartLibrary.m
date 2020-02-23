@@ -1674,7 +1674,7 @@ static PartLibrary *SharedPartLibrary = nil;
 	dispatch_release(group);
 #endif
 	
-	return (CGImageRef)[(id)image autorelease];
+	return image;
 	
 }//end readImageAtPath:
 
