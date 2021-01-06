@@ -1505,6 +1505,7 @@
 				Japanese,
 				French,
 				German,
+				en,
 			);
 			mainGroup = 2A37F4AAFDCFA73011CA2CEA /* Mac LDraw */;
 			projectDirPath = "";
@@ -2040,6 +2041,7 @@
 		2BB5974E09FEFD180077A885 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../ThirdParty\"",
@@ -2064,6 +2066,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
+				SDKROOT = macosx;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
@@ -2072,6 +2075,7 @@
 		2BB5974F09FEFD180077A885 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../ThirdParty\"",
@@ -2094,6 +2098,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Bricksmith;
+				SDKROOT = macosx;
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
