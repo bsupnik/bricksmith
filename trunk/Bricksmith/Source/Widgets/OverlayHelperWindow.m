@@ -64,6 +64,7 @@
 		[self setOpaque:NO];
 		[self setAlphaValue:.999];
 		[self setIgnoresMouseEvents:YES];
+		[self setBackgroundColor: [NSColor clearColor]];
 	}
 	
 	return self;
