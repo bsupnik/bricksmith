@@ -583,7 +583,12 @@ static NSSize Size2ToNSSize(Size2 size)
 	// the model's "up" is and eexpects to go that way.
 	if ([self projectionMode] != ProjectionModeOrthographic && USE_TURNTABLE)
 	{
-		yUser = V3Make(0, -1, 0);
+		// But use the original screen space Y to know if we are "upside down" and reverse THAT.  Otherwise
+		// editing the undersides of plates is insane.
+		if(yUser.y < 0.0)
+			yUser = V3Make(0, -1, 0);
+		else
+			yUser = V3Make(0, 1, 0);
 	}
 	
 	// Get the axis basis vectors of the model - this is the direction we will nudge, e.g. an "x part"
