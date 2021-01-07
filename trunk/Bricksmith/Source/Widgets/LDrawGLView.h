@@ -72,8 +72,6 @@
 
 // Drawing
 - (void) draw;
-- (void) drawFocusRing;
-- (void) strokeInsideRect:(NSRect)rect thickness:(CGFloat)borderWidth;
 
 // Accessors
 - (LDrawDirective *) LDrawDirective;
