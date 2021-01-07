@@ -1112,7 +1112,6 @@ PreferencesDialogController *preferencesDialog = nil;
 	//OpenGL viewer settings -- see -restoreConfiguration in LDrawGLView.
 	[initialDefaults setObject:[NSNumber numberWithInteger:ViewOrientationFront]		forKey:[LDRAW_GL_VIEW_ANGLE			stringByAppendingString:@" MinifigureGeneratorView"]];
 	[initialDefaults setObject:[NSNumber numberWithInteger:ProjectionModeOrthographic]	forKey:[LDRAW_GL_VIEW_PROJECTION	stringByAppendingString:@" MinifigureGeneratorView"]];
-	[initialDefaults setObject:(id)kCFBooleanFalse										forKey:@"UseThreads"];
 	
 	//
 	// COMMIT!

@@ -120,22 +120,6 @@ static NSSize Size2ToNSSize(Size2 size)
 		[superview setCopiesOnScroll:NO];
 	}
 	
-	//Machinery needed to draw Quartz overtop OpenGL. Sadly, it caused our view 
-	// to become transparent when minimizing to the dock. In the end, I didn't 
-	// need it anyway.
-//	long backgroundOrder = -1;
-//	[[self openGLContext] setValues:&backgroundOrder forParameter: NSOpenGLCPSurfaceOrder];
-//
-//
-//	NSScrollView *scrollView = [self enclosingScrollView];
-//	if(scrollView != nil){
-//		NSLog(@"making stuff transparent");
-//		[[self window] setOpaque:NO];
-//		[[self window] setAlphaValue:.999f];
-////		[[self superview] setDrawsBackground:NO];
-////		[scrollView setDrawsBackground:NO];
-//	}
-	
 }//end awakeFromNib
 
 #pragma mark -
@@ -205,10 +189,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	
 	[self setAcceptsFirstResponder:YES];
 	
-	canDrawLock				= [[NSConditionLock alloc] initWithCondition:NO];
-	keepDrawThreadAlive		= YES;
-	
-	// Set up our OpenGL context. We need to base it on a shared context so that 
+	// Set up our OpenGL context. We need to base it on a shared context so that
 	// display-list names can be shared globally throughout the application.
 	context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat
 										 shareContext:[LDrawApplication sharedOpenGLContext]];
@@ -298,99 +279,24 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) drawRect:(NSRect)rect
 {
-	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	
-	//We have the option of doing multithreaded drawing, so all the actual 
-	// drawing code is in a thread-accessible method.
-	
-	//threading isn't working out well at all. So I have a threading preference, 
-	// which will be OFF by default.
-	if([userDefaults boolForKey:@"UseThreads"] == YES)
-	{
-		// signal the render thread to wake up
-		[self->canDrawLock lockWhenCondition:NO];
-		[self->canDrawLock unlockWithCondition:YES];
-	}
-	else
-	{
-		// draw directly
-		[self draw];
-	}
+	[self draw];
 		
 }//end drawRect:
-
-
-//========== threadDrawLoop ====================================================
-//
-// Purpose:		This is the body function for highly-experimental multithreaded 
-//				drawing.
-//
-// Notes:		As of Bricksmith 2.1, this still doesn't work, even after years 
-//				of trying to get it to. It really seems like Mac OS X is at 
-//				fault.
-//
-//==============================================================================
-- (void) threadDrawLoop:(id)sender
-{
-	BOOL threadCanContinue = YES;
-	
-	while(threadCanContinue == YES)
-	{
-		[self->canDrawLock lockWhenCondition:YES];
-		{
-			NSAutoreleasePool	*pool	= [[NSAutoreleasePool alloc] init];
-			
-			[self draw];
-			
-			// the keepAlive flag is protected by our canDrawLock mutex.
-			threadCanContinue = self->keepDrawThreadAlive;
-			
-			[pool release];
-		}
-		[self->canDrawLock unlockWithCondition:NO];
-	}
-	
-}//end threadDrawLoop:
 
 
 //========== draw ==============================================================
 //
 // Purpose:		Draw the LDraw content of the view.
 //
-// Notes:		This method is, in theory at least, as thread-safe as Apple's 
-//				OpenGL implementation is. Which is to say, not very much.
-//
 //==============================================================================
 - (void) draw
 {
-	//mark another outstanding draw request, then get in line by requesting the 
-	// mutex.
-	@synchronized(self)
-	{
-		numberDrawRequests += 1;
-	}
-	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
-		
-		//any previous draw requests have now executed and let go of the mutex.
-		// if we are the LAST draw in the queue, we draw. Otherwise, we drop 
-		// ourselves, and defer to the last guy.
-		if(numberDrawRequests == 1)
-		{
-			[self->renderer draw];
-			
-		}
-		//else we just drop the draw.
+		[self->renderer draw];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-	//cleanup
-	@synchronized(self)
-	{
-		self->numberDrawRequests -= 1;
-	}
 	
 }//end draw
 
@@ -3016,40 +2922,6 @@ static NSSize Size2ToNSSize(Size2 size)
 }//end viewDidMoveToSuperview
 
 
-//========== viewDidMoveToWindow ===============================================
-//
-// Purpose:		The view is either being added to a window (on creation) or 
-//				removed from one (on destruction).
-//
-//==============================================================================
-- (void) viewDidMoveToWindow
-{
-	// Kill of any existing render thread. This is especially important for 
-	// deallocation, since the thread holds a retain on us.
-	if(hasThread == YES)
-	{
-		[self->canDrawLock lock];
-		self->keepDrawThreadAlive = NO;
-		[self->canDrawLock unlockWithCondition:YES]; // thread guard loop will die as soon as this is hit.
-		
-		self->hasThread = NO;
-	}
-	
-	// Create a new render thread if we are moving to an actual window
-	// (otherwise, we're probably being deallocated).
-	if([self window] != nil)
-	{
-		// Multithreading didn't work out too hot; it was incompatible with nested display lists.
-//		[self->canDrawLock lockWhenCondition:NO]; // wait for other thread to finish
-//		self->keepDrawThreadAlive = YES;
-//		[self->canDrawLock unlockWithCondition:NO];
-//		[NSThread detachNewThreadSelector:@selector(threadDrawLoop:) toTarget:self withObject:nil];
-//		hasThread = YES;
-	}
-	
-}//end viewDidMoveToWindow
-
-
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
@@ -3410,7 +3282,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[renderer		release];
-	[canDrawLock	release];
 	[autosaveName	release];
 
 	[super dealloc];
