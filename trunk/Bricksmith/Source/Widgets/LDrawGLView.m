@@ -279,6 +279,8 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) prepareOpenGL
 {
+	[super prepareOpenGL];
+	
 	[self takeBackgroundColorFromUserDefaults]; //glClearColor()
 	
 }//end prepareOpenGL
@@ -2943,6 +2945,8 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) reshape
 {
+	[super reshape];
+	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
@@ -2975,7 +2979,7 @@ static NSSize Size2ToNSSize(Size2 size)
 {
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
-		[[self openGLContext] update];
+		[super update];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	

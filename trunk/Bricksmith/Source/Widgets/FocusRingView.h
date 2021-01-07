@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface FocusRingView : NSView
 {
-	NSView	*focusSource;	// the view which, if in focus, prompts us to draw a focus ring.
+	NSView 	*focusSource;	// the view which, if in focus, prompts us to draw a focus ring.
 }
 
 - (void) setFocusSource:(NSView *)newObject;

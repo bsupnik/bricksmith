@@ -120,7 +120,7 @@
                 [self setLsynthType:type];
                 [self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:(LDrawColorT) [synthColor integerValue]]];
 
-                [[[NSApp delegate] lsynthConfiguration] setLSynthClassForDirective:self withType:type];
+                [[[LDrawApplication shared] lsynthConfiguration] setLSynthClassForDirective:self withType:type];
                 parserState = PARSER_PARSING_BEGUN;
             }
 

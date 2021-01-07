@@ -116,6 +116,17 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 }
 
 
+//========== shared ============================================================
+///
+/// @abstract	Returns the singleton LDrawApplication.
+///
+//==============================================================================
++ (LDrawApplication *) shared
+{
+	return (LDrawApplication *)[NSApp delegate];
+}
+
+
 //---------- sharedInspector -----------------------------------------[static]--
 //
 // Purpose:		Returns the inspector object, which is created when the 
@@ -127,7 +138,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //------------------------------------------------------------------------------
 + (Inspector *) sharedInspector
 {
-	return [[NSApp delegate] inspector];
+	return [[LDrawApplication shared] inspector];
 	
 }//end sharedInspector
 
@@ -140,7 +151,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //------------------------------------------------------------------------------
 + (NSOpenGLContext *) sharedOpenGLContext
 {
-	return [[NSApp delegate] openGLContext];
+	return [[LDrawApplication shared] openGLContext];
 	
 }//end sharedOpenGLContext
 
@@ -158,7 +169,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	//Rather than making the part library a global variable, I decided to make 
 	// it an instance variable of the Application Controller class, of which 
 	// there is only one instance. This class is the application delegate too.
-	PartLibraryController *libraryController = [[NSApp delegate] partLibraryController];
+	PartLibraryController *libraryController = [[LDrawApplication shared] partLibraryController];
 	
 	return libraryController;
 	

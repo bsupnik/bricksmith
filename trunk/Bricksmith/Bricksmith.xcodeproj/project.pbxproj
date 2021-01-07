@@ -2065,6 +2065,7 @@
 					3DconnexionClient,
 				);
 				PREBINDING = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AllenSmith.Bricksmith;
 				PRODUCT_NAME = Bricksmith;
 				SDKROOT = macosx;
 				WARNING_CFLAGS = "-Wall";
@@ -2097,6 +2098,7 @@
 					3DconnexionClient,
 				);
 				PREBINDING = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AllenSmith.Bricksmith;
 				PRODUCT_NAME = Bricksmith;
 				SDKROOT = macosx;
 				WARNING_CFLAGS = "-Wall";

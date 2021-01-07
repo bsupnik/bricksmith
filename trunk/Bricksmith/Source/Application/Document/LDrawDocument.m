@@ -3129,13 +3129,16 @@ void AppendChoicesToNewItem(
     // However we also have to consider Parts, which can be either Band Parts or Hose Parts, and
     // need to retain their Part-ness.  To this end we must do a manual lookup of the actual class.
     // TODO: another place that config should provide a convenience method for this
-    if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefHoses] containsObject:type]) {
+    if ([[[[LDrawApplication shared] lsynthConfiguration] getQuickRefHoses] containsObject:type])
+	{
         [synthesizedObject setLsynthClass:LSYNTH_HOSE];
     }
-    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefBands] containsObject:type]){
+    else if ([[[[LDrawApplication shared] lsynthConfiguration] getQuickRefBands] containsObject:type])
+	{
         [synthesizedObject setLsynthClass:LSYNTH_BAND];
     }
-    else if ([[[[NSApp delegate] lsynthConfiguration] getQuickRefParts] containsObject:type]){
+    else if ([[[[LDrawApplication shared] lsynthConfiguration] getQuickRefParts] containsObject:type])
+	{
         [synthesizedObject setLsynthClass:LSYNTH_PART];
     }
 	

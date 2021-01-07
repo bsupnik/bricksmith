@@ -778,12 +778,13 @@ PreferencesDialogController *preferencesDialog = nil;
 // Purpose:		User has toggled the 'Show simple parts list' checkbox
 //
 //==============================================================================
-- (IBAction)lsynthShowBasicPartsListChanged:(id)sender {
+- (IBAction)lsynthShowBasicPartsListChanged:(id)sender
+{
     NSUserDefaults	*userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:[lsynthShowBasicPartsList state] forKey:LSYNTH_SHOW_BASIC_PARTS_LIST_KEY];
 
     // Regenerate LSynth part menus
-    [[NSApp delegate] populateLSynthModelMenus];
+    [[LDrawApplication shared] populateLSynthModelMenus];
 } // end lsynthShowBasicPartsListChanged:
 
 //========== lsynthRequiresRedisplay ===========================================
@@ -1234,18 +1235,20 @@ PreferencesDialogController *preferencesDialog = nil;
             [userDefaults setObject:[configPathAsURL path] forKey:LSYNTH_CONFIGURATION_PATH_KEY];
             
             // reload config if changed
-            if (![currentConfiguration isEqualToString:[configPathAsURL path]]) {
+            if (![currentConfiguration isEqualToString:[configPathAsURL path]])
+			{
                 [[LSynthConfiguration sharedInstance] parseLsynthConfig:[configPathAsURL path]];
-                [[NSApp delegate] populateLSynthModelMenus];
+                [[LDrawApplication shared] populateLSynthModelMenus];
                 [self lsynthRequiresResynthesis];
             }
         }
 
         // No path - it's been deleted
-        else if (!configPathAsURL || [[configPathAsURL path] length] == 0) {
+        else if (!configPathAsURL || [[configPathAsURL path] length] == 0)
+		{
             [userDefaults setObject:@"" forKey:LSYNTH_CONFIGURATION_PATH_KEY];
             [[LSynthConfiguration sharedInstance] parseLsynthConfig:[[LSynthConfiguration sharedInstance] defaultConfigPath]];
-            [[NSApp delegate] populateLSynthModelMenus];
+            [[LDrawApplication shared] populateLSynthModelMenus];
             [self lsynthRequiresResynthesis];
         }
         

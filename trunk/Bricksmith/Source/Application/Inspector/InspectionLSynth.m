@@ -328,7 +328,7 @@
 //==============================================================================
 - (NSArray *)typesForLSynthClass:(LSynthClassT)classTag
 {
-    LSynthConfiguration *lsynthConfig = [[NSApp delegate] lsynthConfiguration];
+    LSynthConfiguration *lsynthConfig = [[LDrawApplication shared] lsynthConfiguration];
 
     // Parts
     if (classTag == LSYNTH_PART) {
