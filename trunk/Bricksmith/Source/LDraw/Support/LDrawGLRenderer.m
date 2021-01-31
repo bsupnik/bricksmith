@@ -930,6 +930,7 @@
 - (void) setZoomPercentage:(CGFloat)newPercentage
 {
 	[camera setZoomPercentage:newPercentage];
+	[delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
 
@@ -1001,8 +1002,8 @@
 	CGFloat zoomScaleFactor         = 0.0;
 	
 	// How many onscreen pixels do we have to work with?
-	maxContentSize.width    = V2BoxWidth([scroller getVisibleRect])  * [self zoomPercentage]/100.;
-	maxContentSize.height   = V2BoxHeight([scroller getVisibleRect]) * [self zoomPercentage]/100.;
+	maxContentSize.width    = V2BoxWidth([scroller getVisibleRect]);
+	maxContentSize.height   = V2BoxHeight([scroller getVisibleRect]);
 //	NSLog(@"windowVisibleRect = %@", NSStringFromRect(windowVisibleRect));
 //	NSLog(@"maxContentSize = %@", NSStringFromSize(maxContentSize));
 	

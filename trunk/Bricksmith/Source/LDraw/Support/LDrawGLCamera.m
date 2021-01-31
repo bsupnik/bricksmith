@@ -285,7 +285,7 @@
 //========== nearFrustumClippingRectFromVisibleRect: ==========================
 //
 // Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an perspective projection. The coordinates are in model 
+//				for a perspective projection. The coordinates are in model
 //				coordinates, located on the plane at
 //					z = - [self fieldDepth] / 2.
 //
@@ -427,37 +427,46 @@
 					WALKTHROUGH_NEAR,
 					WALKTHROUGH_FAR);
 	}
-	
-	else if(self->projectionMode == ProjectionModePerspective)
-	{
-		visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:[scroller getVisibleRect]];
-		
-		assert(visibilityPlane.size.width > 0.0);
-		assert(visibilityPlane.size.height > 0.0);
-		
-		buildFrustumMatrix(projection,		
-				  V2BoxMinX(visibilityPlane),	// left
-				  V2BoxMaxX(visibilityPlane),	// right
-				  V2BoxMinY(visibilityPlane),	// bottom
-				  V2BoxMaxY(visibilityPlane),	// top
-				  fabs(cameraDistance) - fieldDepth/2,	// near (closer points are clipped); distance from CAMERA LOCATION
-				  fabs(cameraDistance) + fieldDepth/2	// far (points beyond this are clipped); distance from CAMERA LOCATION
-				 );
-	}
 	else
 	{
-		visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:[scroller getVisibleRect]];
-
-		assert(visibilityPlane.size.width > 0.0);
-		assert(visibilityPlane.size.height > 0.0);
+		Box2 visibleRect = [scroller getVisibleRect];
 		
-		buildOrthoMatrix(projection,
-				V2BoxMinX(visibilityPlane),	// left
-				V2BoxMaxX(visibilityPlane),	// right
-				V2BoxMinY(visibilityPlane),	// bottom
-				V2BoxMaxY(visibilityPlane),	// top
-				fabs(cameraDistance) - fieldDepth/2,	// near (points beyond these are clipped)
-				fabs(cameraDistance) + fieldDepth/2 );	// far
+		Size2 zoomSize = visibleRect.size;
+		zoomSize.width /= (self->zoomFactor / 100.0);
+		zoomSize.height /= (self->zoomFactor / 100.0);
+		Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(visibleRect));
+
+		if(self->projectionMode == ProjectionModePerspective)
+		{
+			visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:zoomRect];
+			
+			assert(visibilityPlane.size.width > 0.0);
+			assert(visibilityPlane.size.height > 0.0);
+			
+			buildFrustumMatrix(projection,
+							   V2BoxMinX(visibilityPlane),	// left
+							   V2BoxMaxX(visibilityPlane),	// right
+							   V2BoxMinY(visibilityPlane),	// bottom
+							   V2BoxMaxY(visibilityPlane),	// top
+							   fabs(cameraDistance) - fieldDepth/2,	// near (closer points are clipped); distance from CAMERA LOCATION
+							   fabs(cameraDistance) + fieldDepth/2	// far (points beyond this are clipped); distance from CAMERA LOCATION
+							   );
+		}
+		else
+		{
+			visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:zoomRect];
+			
+			assert(visibilityPlane.size.width > 0.0);
+			assert(visibilityPlane.size.height > 0.0);
+			
+			buildOrthoMatrix(projection,
+							 V2BoxMinX(visibilityPlane),	// left
+							 V2BoxMaxX(visibilityPlane),	// right
+							 V2BoxMinY(visibilityPlane),	// bottom
+							 V2BoxMaxY(visibilityPlane),	// top
+							 fabs(cameraDistance) - fieldDepth/2,	// near (points beyond these are clipped)
+							 fabs(cameraDistance) + fieldDepth/2 );	// far
+		}
 	}
 	
 }//end makeProjection

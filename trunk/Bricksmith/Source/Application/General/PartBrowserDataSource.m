@@ -29,6 +29,7 @@
 #import "LDrawColorPanelController.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
 #import "PartLibrary.h"
 #import "StringCategory.h"
@@ -59,6 +60,11 @@
 	if(self->partsTable != nil)
 	{
 		//---------- Widget Setup ----------------------------------------------
+		
+		if(partPreview == nil)
+		{
+			partPreview = partPreviewViewport.glView;
+		}
 		
 		// - Category Table
 		

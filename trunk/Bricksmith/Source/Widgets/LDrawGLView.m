@@ -111,7 +111,8 @@ static NSSize Size2ToNSSize(Size2 size)
 {
 	id		superview	= [self superview];
 	
-	// If we are in a scroller, make sure we appear centered when smaller than 
+	// TODO: FIX SCROLL CODE
+	// If we are in a scroller, make sure we appear centered when smaller than
 	// the scroll view. 
 	[[self enclosingScrollView] centerDocumentView];
 
@@ -1631,6 +1632,7 @@ static NSSize Size2ToNSSize(Size2 size)
 			case MouseDraggingBeginImmediately:
 				if (selectionIsMarquee)
 				{
+					// TODO: FIX SCROLL CODE
 					[self autoscroll:theEvent];
 					[self mousePartSelection:theEvent];				
 				}
@@ -1644,6 +1646,7 @@ static NSSize Size2ToNSSize(Size2 size)
 				else {
 					if (selectionIsMarquee)
 					{
+						// TODO: FIX SCROLL CODE
 						[self autoscroll:theEvent];
 						[self mousePartSelection:theEvent];				
 					}
@@ -1889,6 +1892,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	}
 	else
 	{
+		// TODO: FIX SCROLL CODE
 		// Regular scrolling
 		[super scrollWheel:theEvent];
 	}
@@ -2187,7 +2191,10 @@ static NSSize Size2ToNSSize(Size2 size)
 	NSView * view = self;
 	NSEvent * event = [NSApp currentEvent];
 	if ([event type] == NSLeftMouseDragged )
+	{
+		// TODO: FIX SCROLL CODE
 		[view autoscroll:event];
+	}
 }
 
 
@@ -2809,6 +2816,9 @@ static NSSize Size2ToNSSize(Size2 size)
 {
 	[[self openGLContext] makeCurrentContext];
 	
+	// TODO: FIX SCROLL CODE
+	// -- in theory, this should be irrelevant without a scroll view. Need to
+	// make sure -setMaximumVisibleSize got called someplace.
 	NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
 	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 	
@@ -2856,8 +2866,17 @@ static NSSize Size2ToNSSize(Size2 size)
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
-				
-		NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
+			
+		NSSize maxVisibleSize = NSZeroSize;
+		// TODO: FIX SCROLL CODE
+		if([self enclosingScrollView])
+		{
+			maxVisibleSize = [[self enclosingScrollView] contentSize];
+		}
+		else
+		{
+			maxVisibleSize = [self visibleRect].size;
+		}
 		if(maxVisibleSize.width > 0 && maxVisibleSize.height > 0)
 		{
 			glViewport(0,0, maxVisibleSize.width,maxVisibleSize.height);
@@ -2902,6 +2921,7 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) viewDidMoveToSuperview
 {
+	// TODO: FIX SCROLL CODE
 	NSScrollView            *scrollView         = [self enclosingScrollView];
 	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
 	
@@ -3106,14 +3126,14 @@ static NSSize Size2ToNSSize(Size2 size)
 
 
 #pragma mark -
-#pragma mark SCROLLER PROTOCOL
+#pragma mark LDrawGLCameraScroller
 #pragma mark -
 
 
 //========== getDocumentSize ===================================================
 //
 // Purpose:		Returns the size of our document (e.g. the size of the entire
-//				model) in model coorinates.
+//				model) in model coordinates.
 //
 //==============================================================================
 - (Size2)	getDocumentSize
@@ -3132,15 +3152,16 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void)	setDocumentSize:(Size2)newDocumentSize
 {
-	assert(!isnan(newDocumentSize.width));
-	assert(!isnan(newDocumentSize.height));
-	assert(newDocumentSize.width > 0);
-	assert(newDocumentSize.height > 0);
-	NSSize sizeNow = [self frame].size;
-	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
-		return;
-
-	[self setFrameSize:Size2ToNSSize(newDocumentSize)];
+// TODO: FIX SCROLL CODE
+//	assert(!isnan(newDocumentSize.width));
+//	assert(!isnan(newDocumentSize.height));
+//	assert(newDocumentSize.width > 0);
+//	assert(newDocumentSize.height > 0);
+//	NSSize sizeNow = [self frame].size;
+//	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
+//		return;
+//
+//	[self setFrameSize:Size2ToNSSize(newDocumentSize)];
 }
 
 
@@ -3165,6 +3186,7 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (Size2)	getMaxVisibleSizeDoc
 {
+	// TODO: FIX SCROLL CODE
 	NSScrollView *scrollView = [self enclosingScrollView];
 	if(scrollView != nil)
 	{
@@ -3187,6 +3209,7 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (Size2)	getMaxVisibleSizeGL
 {
+	// TODO: FIX SCROLL CODE
 	NSScrollView *scrollView = [self enclosingScrollView];
 	if(scrollView != nil)
 	{
@@ -3203,7 +3226,7 @@ static NSSize Size2ToNSSize(Size2 size)
 //
 // Purpose:		This sets the scaling factor on our scrolling view.
 //
-// NoteS:		The camera calls this to request that a scaling factor be 
+// NoteS:		The camera calls this to request that a scaling factor be
 //				induced in NS's view system.  This makes the scale of the
 //				parent view and the document different; the scroll bars adjust
 //				appropriately.
@@ -3219,6 +3242,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	assert(newScaleFactor > 0.0);
 	assert(!isnan(newScaleFactor));
 	
+	// TODO: FIX SCROLL CODE
 	NSScrollView    *scrollView             = [self enclosingScrollView];
 	
 	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
@@ -3263,6 +3287,7 @@ static NSSize Size2ToNSSize(Size2 size)
 		currentOrigin.y == visibleOrigin.y)
 		return;
 
+	// TODO: FIX SCROLL CODE
 	[self scrollPoint:NSMakePoint(visibleOrigin.x,visibleOrigin.y)];
 }
 
@@ -3283,6 +3308,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	
 	[renderer		release];
 	[autosaveName	release];
+	[focusRingView	setFocusSource:nil];
 
 	[super dealloc];
 	
