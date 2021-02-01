@@ -39,7 +39,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="416" height="496"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="132">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="132">
                         <rect key="frame" x="31" y="0.0" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="round" title="−" bezelStyle="circular" imagePosition="above" alignment="center" borderStyle="border" id="192">
@@ -47,7 +47,7 @@
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                     </button>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="159">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="159">
                         <rect key="frame" x="73" y="0.0" width="32" height="31"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="round" bezelStyle="circular" image="FavoriteAdd" imagePosition="only" alignment="center" borderStyle="border" id="197">
@@ -55,7 +55,7 @@
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                     </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="133">
+                    <button verticalHuggingPriority="750" id="133">
                         <rect key="frame" x="335" y="1" width="76" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Insert" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" inset="2" id="193">
@@ -66,7 +66,7 @@
                             <action selector="addPartClicked:" target="55" id="142"/>
                         </connections>
                     </button>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="134">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="134">
                         <rect key="frame" x="3" y="0.0" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="round" title="+" bezelStyle="circular" imagePosition="above" alignment="center" borderStyle="border" id="194">
@@ -74,7 +74,7 @@
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                     </button>
-                    <splitView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="136" customClass="ExtendedSplitView">
+                    <splitView id="136" customClass="ExtendedSplitView">
                         <rect key="frame" x="0.0" y="33" width="416" height="463"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -82,10 +82,10 @@
                                 <rect key="frame" x="0.0" y="0.0" width="416" height="319"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
-                                    <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="23" horizontalPageScroll="10" verticalLineScroll="23" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="210">
+                                    <scrollView autohidesScrollers="YES" horizontalLineScroll="23" horizontalPageScroll="10" verticalLineScroll="23" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="210">
                                         <rect key="frame" x="0.0" y="0.0" width="137" height="293"/>
                                         <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
-                                        <clipView key="contentView" ambiguous="YES" id="Xj5-Zr-HQf">
+                                        <clipView key="contentView" id="Xj5-Zr-HQf">
                                             <rect key="frame" x="1" y="1" width="135" height="291"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -126,10 +126,10 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
-                                    <scrollView focusRingType="none" fixedFrame="YES" horizontalLineScroll="16" horizontalPageScroll="10" verticalLineScroll="16" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="114">
+                                    <scrollView focusRingType="none" horizontalLineScroll="16" horizontalPageScroll="10" verticalLineScroll="16" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="114">
                                         <rect key="frame" x="136" y="0.0" width="280" height="293"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <clipView key="contentView" ambiguous="YES" id="Nr6-g1-l4J">
+                                        <clipView key="contentView" id="Nr6-g1-l4J">
                                             <rect key="frame" x="1" y="0.0" width="267" height="292"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -189,19 +189,19 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </tableHeaderView>
                                     </scrollView>
-                                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="224" customClass="ScopeBar">
+                                    <customView id="224" customClass="ScopeBar">
                                         <rect key="frame" x="0.0" y="293" width="416" height="26"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                         <subviews>
-                                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="226">
-                                                <rect key="frame" x="111" y="4" width="48" height="17"/>
+                                            <button verticalHuggingPriority="750" id="226">
+                                                <rect key="frame" x="111" y="4" width="49" height="17"/>
                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                 <buttonCell key="cell" type="recessed" title="Steps" bezelStyle="recessed" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="229">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                                     <font key="font" metaFont="systemBold" size="12"/>
                                                 </buttonCell>
                                             </button>
-                                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="227">
+                                            <button verticalHuggingPriority="750" id="227">
                                                 <rect key="frame" x="8" y="4" width="101" height="17"/>
                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                 <buttonCell key="cell" type="recessed" title="All Categories" bezelStyle="recessed" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="228">
@@ -209,7 +209,7 @@
                                                     <font key="font" metaFont="systemBold" size="12"/>
                                                 </buttonCell>
                                             </button>
-                                            <searchField wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="128">
+                                            <searchField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="128">
                                                 <rect key="frame" x="264" y="3" width="144" height="19"/>
                                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                                 <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" bezelStyle="round" id="196">

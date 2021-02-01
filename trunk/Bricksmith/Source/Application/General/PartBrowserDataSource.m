@@ -23,7 +23,6 @@
 //==============================================================================
 #import "PartBrowserDataSource.h"
 
-#import "ExtendedScrollView.h"
 #import "IconTextCell.h"
 #import "LDrawApplication.h"
 #import "LDrawColorPanelController.h"
@@ -92,12 +91,6 @@
 		
 		[self->partPreview setAcceptsFirstResponder:NO];
 		[self->partPreview setDelegate:self];
-		if([[self->partPreview enclosingScrollView] isKindOfClass:[ExtendedScrollView class]])
-		{
-			[(ExtendedScrollView*)[self->partPreview enclosingScrollView] setPreservesScrollCenterDuringLiveResize:YES];
-			[(ExtendedScrollView*)[self->partPreview enclosingScrollView] setStoresScrollCenterAsFraction:YES];
-		}
-
 		
 		[self->zoomInButton setTarget:self->partPreview];
 		[self->zoomInButton setAction:@selector(zoomIn:)];

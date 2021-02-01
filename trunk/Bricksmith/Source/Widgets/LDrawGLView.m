@@ -3242,31 +3242,9 @@ static NSSize Size2ToNSSize(Size2 size)
 	assert(newScaleFactor > 0.0);
 	assert(!isnan(newScaleFactor));
 	
-	// TODO: FIX SCROLL CODE
-	NSScrollView    *scrollView             = [self enclosingScrollView];
-	
-	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
-	// actually changing (to avoid unnecessary re-draw) 
-	if(scrollView != nil)
-	{
-		NSClipView  *clipView       = [scrollView contentView];
-		NSRect      clipFrame       = [clipView frame];
-		NSRect      clipBounds      = [clipView bounds];
-		
-		// Change the magnification level of the clip view, which has the 
-		// effect of zooming us in and out. 
-		clipBounds.size.width	= NSWidth(clipFrame)  / newScaleFactor;
-		clipBounds.size.height	= NSHeight(clipFrame) / newScaleFactor;
-		// Note: must use -setBoundsSize:, not -setBounds:. The latter 
-		//		 causes bad things to happen when called on a collapsed 
-		//		 split view. 
-		[clipView setBoundsSize:clipBounds.size];
-		
-		// update KVO
-		[self willChangeValueForKey:@"zoomPercentage"];
-		[self didChangeValueForKey:@"zoomPercentage"];
-	}
-
+	// update KVO
+	[self willChangeValueForKey:@"zoomPercentage"];
+	[self didChangeValueForKey:@"zoomPercentage"];
 }
 
 

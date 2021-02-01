@@ -9,7 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="DonationDialogController">
             <connections>
                 <outlet property="bottomBar" destination="11" id="12"/>
-                <outlet property="bumModelView" destination="14" id="15"/>
+                <outlet property="bumViewer" destination="Eyc-Pv-Ma8" id="F0O-gf-8nE"/>
                 <outlet property="mainBackground" destination="9" id="10"/>
                 <outlet property="suppressionCheckbox" destination="30" id="33"/>
                 <outlet property="window" destination="1" id="8"/>
@@ -63,29 +63,6 @@
                                 <autoresizingMask key="autoresizingMask"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="Bricksmith" id="23"/>
                             </imageView>
-                            <scrollView ambiguous="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" id="16">
-                                <rect key="frame" x="322" y="20" width="334" height="346"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <clipView key="contentView" id="ZIv-Y9-yMD">
-                                    <rect key="frame" x="0.0" y="0.0" width="334" height="346"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <subviews>
-                                        <openGLView fixedFrame="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" translatesAutoresizingMaskIntoConstraints="NO" id="14" customClass="LDrawGLView">
-                                            <rect key="frame" x="0.0" y="0.0" width="332" height="366"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                        </openGLView>
-                                    </subviews>
-                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="18">
-                                    <rect key="frame" x="-100" y="-100" width="323" height="11"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                                <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" controlSize="small" horizontal="NO" id="17">
-                                    <rect key="frame" x="-100" y="-100" width="11" height="346"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                            </scrollView>
                             <button verticalHuggingPriority="750" ambiguous="YES" id="3">
                                 <rect key="frame" x="119" y="112" width="96" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -100,6 +77,10 @@ DQ
                                     <action selector="donateButtonClicked:" target="-2" id="21"/>
                                 </connections>
                             </button>
+                            <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Eyc-Pv-Ma8" customClass="LDrawViewerContainer">
+                                <rect key="frame" x="322" y="20" width="334" height="346"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            </customView>
                         </subviews>
                     </customView>
                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="11" customClass="BackgroundColorView">

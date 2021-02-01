@@ -25,7 +25,6 @@
 #import "ViewportArranger.h"
 
 @class DocumentToolbarController;
-@class ExtendedScrollView;
 @class ExtendedSplitView;
 @class LDrawContainer;
 @class LDrawDirective;
@@ -210,7 +209,6 @@
 - (void) buildRelatedPartsMenus;
 
 // Viewport Management
-- (NSArray *) all3DViewports;
 - (void) connectLDrawGLView:(LDrawGLView *)glView;
 - (LDrawGLView *) main3DViewport;
 - (void) updateViewportAutosaveNamesAndRestore:(BOOL)shouldRestore;

@@ -10,7 +10,6 @@
 #import <Cocoa/Cocoa.h>
 
 @class BackgroundColorView;
-@class LDrawGLView;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +21,6 @@
 {
 	IBOutlet BackgroundColorView	*mainBackground;
 	IBOutlet BackgroundColorView	*bottomBar;
-	IBOutlet LDrawGLView			*bumModelView;
 	IBOutlet NSButton				*suppressionCheckbox;
 }
 

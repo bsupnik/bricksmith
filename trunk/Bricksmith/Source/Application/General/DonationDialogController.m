@@ -14,7 +14,14 @@
 #import "LDrawApplication.h"
 #import "LDrawFile.h"
 #import "LDrawGLView.h"
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
+
+@interface DonationDialogController ()
+
+@property (nonatomic, strong) IBOutlet LDrawViewerContainer*	bumViewer;
+
+@end
 
 
 @implementation DonationDialogController
@@ -38,11 +45,11 @@
 	modelPath  = [[NSBundle mainBundle] pathForResource:@"Bum" ofType:@"ldr"];
 	bumModel   = [LDrawFile fileFromContentsAtPath:modelPath];
 	
-	[self->bumModelView		setLDrawDirective:bumModel];
-	[self->bumModelView		setAcceptsFirstResponder:NO];
+	[_bumViewer.glView		setLDrawDirective:bumModel];
+	[_bumViewer.glView		setAcceptsFirstResponder:NO];
 	
-	[self->bumModelView		reshape]; // must get projection set up to call zoomToFit:
-	[self->bumModelView		zoomToFit:nil];
+	[_bumViewer.glView		reshape]; // must get projection set up to call zoomToFit:
+	[_bumViewer.glView		zoomToFit:nil];
 	
 }//end awakeFromNib
 

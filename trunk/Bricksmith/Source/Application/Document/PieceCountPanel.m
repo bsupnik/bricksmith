@@ -16,9 +16,17 @@
 #import "LDrawGLView.h"
 #import "LDrawMPDModel.h"
 #import "LDrawPart.h"
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
 #import "PartLibrary.h"
 #import "PartReport.h"
+
+@interface PieceCountPanel ()
+
+@property (nonatomic, strong) IBOutlet NSTableView			*pieceCountTable;
+@property (nonatomic, strong) IBOutlet LDrawViewerContainer	*partPreview;
+
+@end
 
 
 @implementation PieceCountPanel
@@ -31,11 +39,11 @@
 - (void) awakeFromNib
 {
 	LDrawColorCell  *colorCell      = [[[LDrawColorCell alloc] init] autorelease];
-	NSTableColumn   *colorColumn    = [pieceCountTable tableColumnWithIdentifier:PART_REPORT_LDRAW_COLOR];
+	NSTableColumn   *colorColumn    = [_pieceCountTable tableColumnWithIdentifier:PART_REPORT_LDRAW_COLOR];
 	
 	[colorColumn setDataCell:colorCell];
 	
-	[partPreview setAcceptsFirstResponder:NO];
+	[_partPreview.glView setAcceptsFirstResponder:NO];
 	
 	//Remember, this method is called twice for an LDrawColorPanelController; the first time 
 	// is for the File's Owner, which is promptly overwritten.
@@ -203,7 +211,7 @@
 	flattened = [NSMutableArray arrayWithArray:[partReport flattenedReport]];
 	[self setTableDataSource:flattened];
 	
-	[pieceCountTable reloadData];
+	[_pieceCountTable reloadData];
 	
 }//end setPartReport:
 
@@ -220,7 +228,7 @@
 - (void) setTableDataSource:(NSMutableArray *) newReport
 {	
 	//Sort the parts based on whatever the current sort order is for the table.
-	[newReport sortUsingDescriptors:[pieceCountTable sortDescriptors]];
+	[newReport sortUsingDescriptors:[_pieceCountTable sortDescriptors]];
 	
 	//Swap out the variable
 	[newReport retain];
@@ -229,11 +237,33 @@
 	flattenedReport = newReport;
 	
 	//Update the table
-	[pieceCountTable reloadData];
+	[_pieceCountTable reloadData];
 	[self syncSelectionAndPartDisplayed];
 	
 }//end setTableDataSource
 
+
+// MARK: - ACTIONS -
+
+//========== zoomIn: ===========================================================
+///
+/// @abstract	Forward zoom to the 3D view
+///
+//==============================================================================
+- (IBAction) zoomIn:(id)sender
+{
+	[_partPreview.glView zoomIn:sender];
+}
+
+//========== zoomOut: ==========================================================
+///
+/// @abstract	Forward zoom to the 3D view
+///
+//==============================================================================
+- (IBAction) zoomOut:(id)sender
+{
+	[_partPreview.glView zoomOut:sender];
+}
 
 #pragma mark -
 #pragma mark TABLE VIEW
@@ -249,7 +279,7 @@
 	NSSavePanel *savePanel          = [NSSavePanel savePanel];
 	NSURL       *savePath           = nil;
 	NSString    *exported           = nil;
-	NSArray     *sortDescriptors    = [self->pieceCountTable sortDescriptors];
+	NSArray     *sortDescriptors    = [_pieceCountTable sortDescriptors];
 	NSInteger   result              = 0;
 	
 	//set up the save panel
@@ -371,7 +401,7 @@
 	NSString       *partName      = nil;
 	LDrawColor     *partColor     = nil;
 	LDrawPart      *newPart       = nil;
-	NSInteger      rowIndex       = [pieceCountTable selectedRow];
+	NSInteger      rowIndex       = [_pieceCountTable selectedRow];
 	
 	if(rowIndex >= 0)
 	{
@@ -391,8 +421,8 @@
 		[newPart setDisplayName:partName];
 		[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
 
-		[partPreview setLDrawDirective:newPart];
-		[partPreview setLDrawColor:partColor];
+		[_partPreview.glView setLDrawDirective:newPart];
+		[_partPreview.glView setLDrawColor:partColor];
 	}
 	
 }//end syncSelectionAndPartDisplayed

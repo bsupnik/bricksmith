@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="15G20015" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment version="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -22,7 +22,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" nonactivatingPanel="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="327" y="302" width="214" height="341"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <value key="minSize" type="size" width="139.048" height="120"/>
             <view key="contentView" id="47">
                 <rect key="frame" x="0.0" y="0.0" width="214" height="341"/>
@@ -32,11 +32,11 @@
                         <rect key="frame" x="6" y="33" width="202" height="241"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="e43-Mv-UT5">
-                            <rect key="frame" x="1" y="0.0" width="200" height="240"/>
+                            <rect key="frame" x="1" y="0.0" width="189" height="240"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" emptySelection="NO" autosaveName="ColorTable" rowHeight="14" headerView="103" id="52">
-                                    <rect key="frame" x="0.0" y="0.0" width="200" height="223"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="189" height="223"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -63,7 +63,7 @@
                                                 </binding>
                                             </connections>
                                         </tableColumn>
-                                        <tableColumn identifier="localizedName" editable="NO" width="146.0989990234375" minWidth="38.5989990234375" maxWidth="1000" id="50">
+                                        <tableColumn identifier="localizedName" editable="NO" width="135.0989990234375" minWidth="38.5989990234375" maxWidth="1000" id="50">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Name">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -98,11 +98,11 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="NO" id="101">
-                            <rect key="frame" x="187" y="17" width="14" height="223"/>
+                            <rect key="frame" x="190" y="17" width="11" height="223"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <tableHeaderView key="headerView" id="103">
-                            <rect key="frame" x="0.0" y="0.0" width="200" height="17"/>
+                            <rect key="frame" x="0.0" y="0.0" width="189" height="17"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
@@ -110,11 +110,11 @@
                         <rect key="frame" x="6" y="308" width="202" height="27"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     </customView>
-                    <searchField wantsLayer="YES" verticalHuggingPriority="750" id="62">
+                    <searchField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="62">
                         <rect key="frame" x="58" y="6" width="150" height="19"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                         <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" placeholderString="Search" bezelStyle="round" id="98">
-                            <font key="font" metaFont="cellTitle"/>
+                            <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </searchFieldCell>
@@ -152,6 +152,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="GeO-ig-YLw"/>
             </connections>
+            <point key="canvasLocation" x="140" y="151"/>
         </window>
         <arrayController id="77" userLabel="colorListController">
             <declaredKeys>

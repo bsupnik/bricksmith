@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) LDrawGLView* glView;
 
+- (void) setVerticalPlacard:(NSView *)placardView;
+
 @end
 
 NS_ASSUME_NONNULL_END
