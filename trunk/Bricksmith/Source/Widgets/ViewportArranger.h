@@ -33,23 +33,6 @@
 
 - (void) setDelegate:(id<ViewportArrangerDelegate>)delegate;
 
-// Actions
-- (IBAction) splitViewportClicked:(id)sender;
-- (IBAction) closeViewportClicked:(id)sender;
-
-// Utilities
-- (NSButton *) newCloseButton;
-- (NSButton *) newSplitButton;
-- (NSView *) newSplitPlacard;
-- (NSView *) newSplitClosePlacard;
-- (ExtendedScrollView *) newViewport;
-- (void) doFrameSanityCheck;
-- (void) doFrameSanityCheckForSplitView:(NSSplitView *)splitView;
-- (void) restoreViewportsWithAutosaveName:(NSString *)autosaveName;
-- (void) storeViewports;
-- (void) updateAutosaveNames;
-- (void) updatePlacardsForViewports;
-
 @end
 
 

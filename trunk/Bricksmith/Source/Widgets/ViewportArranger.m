@@ -16,6 +16,18 @@
 
 const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 
+// provides a way to look up the enclosing view pane
+@interface ViewportArrangerPlacard: NSView
+@property (nonatomic, unsafe_unretained)	ExtendedScrollView*	container;
+@end
+
+@implementation ViewportArrangerPlacard
+@end
+
+// MARK: -
+
+@interface ViewportArranger ()
+@end
 
 @implementation ViewportArranger
 
@@ -135,20 +147,20 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //				vertically. 
 //
 //==============================================================================
-- (IBAction) splitViewportClicked:(id)sender
+- (void) splitViewportClicked:(id)sender
 {
-	NSView              *placardView        = [sender superview];
-	ExtendedScrollView  *sourceViewport     = (ExtendedScrollView*)[placardView superview]; // enclosingScrollView won't work here.
-	NSSplitView         *sourceColumn       = (NSSplitView*)[sourceViewport superview];
-	NSSplitView         *arrangementView    = (NSSplitView*)[sourceColumn superview];
+	ViewportArrangerPlacard *placardView		= (ViewportArrangerPlacard*)[sender superview];
+	ExtendedScrollView		*sourceViewport 	= placardView.container;
+	NSSplitView 			*sourceColumn		= (NSSplitView*)[sourceViewport superview];
+	NSSplitView 			*arrangementView	= (NSSplitView*)[sourceColumn superview];
 	
-	ExtendedSplitView   *newColumn          = nil;
-	ExtendedScrollView  *newViewport        = [[self newViewport] autorelease];
+	ExtendedSplitView		*newColumn			= nil;
+	ExtendedScrollView		*newViewport		= [[self newViewport] autorelease];
 	
-	NSRect              sourceViewFrame     = NSZeroRect;
-	NSRect              newViewFrame        = NSZeroRect;
-	BOOL                makeNewColumn       = (([[NSApp currentEvent] modifierFlags] & NSAlternateKeyMask) != 0);
-	
+	NSRect					sourceViewFrame 	= NSZeroRect;
+	NSRect					newViewFrame		= NSZeroRect;
+	BOOL					makeNewColumn		= (([[NSApp currentEvent] modifierFlags] & NSAlternateKeyMask) != 0);
+
 	if(makeNewColumn == YES)
 	{
 		sourceViewFrame = [sourceColumn frame];
@@ -209,25 +221,25 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //				column, removes the entire column. 
 //
 //==============================================================================
-- (IBAction) closeViewportClicked:(id)sender
+- (void) closeViewportClicked:(id)sender
 {
-	NSView              *placardView        = [sender superview];
-	ExtendedScrollView  *sourceViewport     = (ExtendedScrollView*)[placardView superview]; // enclosingScrollView won't work here.
-	NSSplitView         *sourceColumn       = (NSSplitView*)[sourceViewport superview];
-	NSSplitView         *arrangementView    = (NSSplitView*)[sourceColumn superview];
+	ViewportArrangerPlacard *placardView		= (ViewportArrangerPlacard*)[sender superview];
+	ExtendedScrollView		*sourceViewport 	= placardView.container;
+	NSSplitView 			*sourceColumn		= (NSSplitView*)[sourceViewport superview];
+	NSSplitView 			*arrangementView	= (NSSplitView*)[sourceColumn superview];
 	
-	NSArray             *columns            = [arrangementView subviews];
-	NSArray             *rows               = [sourceColumn subviews];
-	NSUInteger          sourceViewIndex     = 0;
-	NSSplitView         *preceedingColumn   = nil;
-	ExtendedScrollView  *preceedingRow      = nil;
+	NSArray 				*columns			= [arrangementView subviews];
+	NSArray 				*rows				= [sourceColumn subviews];
+	NSUInteger				sourceViewIndex 	= 0;
+	NSSplitView 			*preceedingColumn	= nil;
+	ExtendedScrollView		*preceedingRow		= nil;
 	
-	NSRect              newViewFrame        = NSZeroRect;
-	BOOL                removingColumn      = [rows count] == 1; // last row in column?
-	BOOL                isFirstResponder    = NO;
-	NSResponder         *newFirstResponder  = nil;
-	NSSet				*viewportsToRemove	= nil;
-	
+	NSRect					newViewFrame		= NSZeroRect;
+	BOOL					removingColumn		= [rows count] == 1; // last row in column?
+	BOOL					isFirstResponder	= NO;
+	NSResponder 			*newFirstResponder	= nil;
+	NSSet					*viewportsToRemove	= nil;
+
 	// If the doomed viewport is the first responder, then the view which 
 	// inherits the source's real estate should also inherit responder status. 
 	// (In Bricksmith, the first responder gl view is observed via KVO, so it is 
@@ -413,11 +425,11 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //				archiving/unarchiving--the target and tooltip are getting lost. 
 //
 //==============================================================================
-- (NSView *) newSplitPlacard
+- (ViewportArrangerPlacard *) newSplitPlacard
 {
-	NSButton    *splitButton        = [[self newSplitButton] autorelease];
-	NSView      *placardContainer   = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 12, 12)];
-	
+	NSButton				*splitButton		= [[self newSplitButton] autorelease];
+	ViewportArrangerPlacard *placardContainer	= [[ViewportArrangerPlacard alloc] initWithFrame:NSMakeRect(0, 0, 12, 12)];
+
 	[placardContainer addSubview:splitButton];
 	
 	return placardContainer;
@@ -435,12 +447,12 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //				archiving/unarchiving--the target and tooltip are getting lost. 
 //
 //==============================================================================
-- (NSView *) newSplitClosePlacard
+- (ViewportArrangerPlacard *) newSplitClosePlacard
 {
-	NSButton    *splitButton        = [[self newSplitButton] autorelease];
-	NSButton    *closeButton        = [[self newCloseButton] autorelease];
-	NSView      *placardContainer   = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 12, 24)];
-	
+	NSButton*					splitButton 		= [[self newSplitButton] autorelease];
+	NSButton*					closeButton 		= [[self newCloseButton] autorelease];
+	ViewportArrangerPlacard*	placardContainer	= [[ViewportArrangerPlacard alloc] initWithFrame:NSMakeRect(0, 0, 12, 24)];
+
 	[placardContainer addSubview:splitButton];
 	[placardContainer addSubview:closeButton];
 	
@@ -692,27 +704,23 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //==============================================================================
 - (void) updatePlacardsForViewports
 {
-	NSArray             *columns                = [self subviews];
-	NSArray             *rows                   = nil;
-	NSSplitView         *currentColumn          = nil;
-	ExtendedScrollView  *currentRow             = nil;
-	NSView              *placard                = nil;
-	NSUInteger			columnCount				= [columns count];
-	NSUInteger          rowCount                = 0;
-	NSUInteger          columnCounter           = 0;
-	NSUInteger          rowCounter              = 0;
-	
+	NSArray 				*columns		= [self subviews];
+	NSUInteger				columnCount 	= [columns count];
+	NSUInteger				columnCounter	= 0;
+
 	for(columnCounter = 0; columnCounter < columnCount; columnCounter++)
 	{
-		currentColumn   = [columns objectAtIndex:columnCounter];
-		rows            = [currentColumn subviews];
-		rowCount        = [rows count];
-		
+		NSSplitView*	currentColumn	=  [columns objectAtIndex:columnCounter];
+		NSArray*		rows			= [currentColumn subviews];
+		NSUInteger		rowCount		= [rows count];
+		NSUInteger		rowCounter		= 0;
+
 		// Set the correct placard for each viewport
 		for(rowCounter = 0; rowCounter < rowCount; rowCounter++)
 		{
-			currentRow = [rows objectAtIndex:rowCounter];
-			
+			ExtendedScrollView* 		currentRow	= [rows objectAtIndex:rowCounter];
+			ViewportArrangerPlacard*	placard 	= nil;
+
 			// If there only one viewport in the column, disable the close box.
 			if(columnCount == 1 && rowCount == 1)
 			{
@@ -723,6 +731,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 				placard = [[self newSplitClosePlacard] autorelease];
 			}
 			
+			placard.container = currentRow;
 			[currentRow setVerticalPlacard:placard];
 		}
 	}
