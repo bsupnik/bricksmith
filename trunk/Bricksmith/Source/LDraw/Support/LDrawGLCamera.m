@@ -76,7 +76,7 @@
 // Purpose:		Specifies a scroller protocol that the camera uses to get
 //				information about the document.
 //
-// Notes:		While the simplest design might be for the camer to control all
+// Notes:		While the simplest design might be for the camera to control all
 //				apsects of viewing, it can't own scrolling; AppKit needs to own
 //				scrolling state and having the data exist in two places is a
 //				recipe for chaos.
@@ -265,11 +265,9 @@
 {
 	Box2	visibilityPlane	= ZeroBox2;
 
-	CGFloat y = V2BoxMinY(visibleRectIn);
-	if(1)//[self isFlipped] == YES)
-	{
-		y = [scroller getDocumentSize].height - y - V2BoxHeight(visibleRectIn);
-	}
+	// unflip coordinates (for a system with the origin in the lower-left,
+	// you would do y = V2BoxMinY(visibleRectIn)
+	CGFloat y = [scroller getDocumentSize].height - V2BoxMaxY(visibleRectIn);
 	
 	//The projection plane is stated in model coordinates.
 	visibilityPlane.origin.x	= V2BoxMinX(visibleRectIn) - [scroller getDocumentSize].width/2;

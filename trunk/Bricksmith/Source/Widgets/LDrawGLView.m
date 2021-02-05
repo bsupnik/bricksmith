@@ -15,19 +15,6 @@
 //				there is a symbiotic relationship with ToolPalette to track 
 //				which tool mode we're in; we get notifications when it changes.
 //
-// Threading:	At one point, I was trying to get LDrawGLView to spawn a 
-//				separate thread to draw. It never worked right. But there are 
-//				two critical pieces of shared data protected by mutual-exclusion 
-//				locks as a result: 
-//				
-//					* the NSOpenGLContext
-//
-//					* the contents of the directive being drawn
-//						--	I kinda cheated on this one. Only LDrawFiles 
-//							automatically maintain mutexes. It's a safe shortcut
-//							because only Files are edited! The editor must track 
-//							the lock manually.
-//
 //  Created by Allen Smith on 4/17/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -98,31 +85,6 @@ static NSSize Size2ToNSSize(Size2 size)
 
 @implementation LDrawGLView
 
-//========== awakeFromNib ======================================================
-//
-// Purpose:		Set up our Cocoa viewing.
-//
-// Notes:		This method will get called twice: once because we load our 
-//				accessory view from a Nib file, and once when this object is 
-//				unpacked from the Nib in which it's stored.
-//
-//==============================================================================
-- (void) awakeFromNib
-{
-	id		superview	= [self superview];
-	
-	// TODO: FIX SCROLL CODE
-	// If we are in a scroller, make sure we appear centered when smaller than
-	// the scroll view. 
-	[[self enclosingScrollView] centerDocumentView];
-
-	if([superview isKindOfClass:[NSClipView class]])
-	{
-		[superview setCopiesOnScroll:NO];
-	}
-	
-}//end awakeFromNib
-
 #pragma mark -
 #pragma mark INITIALIZATION
 #pragma mark -
@@ -141,23 +103,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	return self;
 	
 }//end initWithFrame:
-
-
-//========== initWithCoder: ====================================================
-//
-// Purpose:		For GL views loaded from Interface Builder.
-//
-//==============================================================================
-- (id) initWithCoder: (NSCoder *) coder
-{	
-	self = [super initWithCoder: coder];
-	
-	// Ignore any settings defined in Interface Builder's lame-o inspector panel.
-	[self internalInit];
-	
-	return self;
-	
-}//end initWithCoder:
 
 
 //========== internalInit ======================================================
@@ -2803,29 +2748,6 @@ static NSSize Size2ToNSSize(Size2 size)
 
 
 
-//========== scrollViewFrameDidChange: =========================================
-//
-// Purpose:		This view supposed to fill its entire scrollview even when 
-//				zoomed out, to maintain the illusion of being a viewport into 
-//				limitless space. However, we get no -reshape message when the 
-//				scrollview expands to a size larger than our frame. So we have 
-//				to snoop on the scroll view instead.
-//
-//==============================================================================
-- (void) scrollViewFrameDidChange:(NSNotification *)notification
-{
-	[[self openGLContext] makeCurrentContext];
-	
-	// TODO: FIX SCROLL CODE
-	// -- in theory, this should be irrelevant without a scroll view. Need to
-	// make sure -setMaximumVisibleSize got called someplace.
-	NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
-	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
-	
-	
-}//end scrollViewFrameDidChange:
-
-
 //========== renewGState =======================================================
 //
 // Purpose:		NSOpenGLViews' content is drawn directly by a hardware surface 
@@ -2867,23 +2789,13 @@ static NSSize Size2ToNSSize(Size2 size)
 	{
 		[[self openGLContext] makeCurrentContext];
 			
-		NSSize maxVisibleSize = NSZeroSize;
-		// TODO: FIX SCROLL CODE
-		if([self enclosingScrollView])
-		{
-			maxVisibleSize = [[self enclosingScrollView] contentSize];
-		}
-		else
-		{
-			maxVisibleSize = [self visibleRect].size;
-		}
+		NSSize maxVisibleSize = [self visibleRect].size;
+
 		if(maxVisibleSize.width > 0 && maxVisibleSize.height > 0)
 		{
 			glViewport(0,0, maxVisibleSize.width,maxVisibleSize.height);
 
-			// Bit of a hack - this gets called for SCROLLING too, and of course our max visible size has
-			// NOT changed - but it tickles the camera, which is what we are REALLY after.
-			[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];		
+			[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 		}
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
@@ -2909,37 +2821,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
 }//end update
-
-
-//========== viewDidMoveToSuperview ============================================
-//
-// Purpose:		Moving to a new superview. We can use this message to catch when 
-//				we are being enclosed in a scroll view, so we can watch when the 
-//				scrollview frame changes and we need to resize to artificially 
-//				fill it. 
-//
-//==============================================================================
-- (void) viewDidMoveToSuperview
-{
-	// TODO: FIX SCROLL CODE
-	NSScrollView            *scrollView         = [self enclosingScrollView];
-	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
-	
-	if(scrollView != nil)
-	{
-		[notificationCenter addObserver:self
-							   selector:@selector(scrollViewFrameDidChange:)
-								   name:NSViewFrameDidChangeNotification
-								 object:scrollView];
-	}
-	else
-	{
-		[notificationCenter removeObserver:self
-									  name:NSViewFrameDidChangeNotification
-									object:nil];
-	}
-
-}//end viewDidMoveToSuperview
 
 
 #pragma mark -
@@ -3117,9 +2998,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
-//	[[self enclosingScrollView] setDrawsBackground:YES];
-//	[[self enclosingScrollView] setBackgroundColor:rgbColor];
-
 	[self setNeedsDisplay:YES];
 	
 }//end takeBackgroundColorFromUserDefaults
