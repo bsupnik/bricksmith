@@ -100,7 +100,6 @@ typedef enum
 - (Box2) selectionMarquee;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
-- (Box2) viewport;
 - (CGFloat) zoomPercentage;
 - (CGFloat) zoomPercentageForGL;
 
@@ -110,7 +109,7 @@ typedef enum
 - (void) setDraggingOffset:(Vector3)offsetIn;
 - (void) setGridSpacing:(float)newValue;
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
-- (void) setMaximumVisibleSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
+- (void) setGraphicsSurfaceSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
 - (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setSelectionMarquee:(Box2)newBox;

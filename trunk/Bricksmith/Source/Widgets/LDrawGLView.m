@@ -2795,7 +2795,7 @@ static NSSize Size2ToNSSize(Size2 size)
 		{
 			glViewport(0,0, maxVisibleSize.width,maxVisibleSize.height);
 
-			[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
+			[self->renderer setGraphicsSurfaceSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 		}
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
@@ -3008,19 +3008,7 @@ static NSSize Size2ToNSSize(Size2 size)
 #pragma mark -
 
 
-//========== getDocumentSize ===================================================
-//
-// Purpose:		Returns the size of our document (e.g. the size of the entire
-//				model) in model coordinates.
-//
-//==============================================================================
-- (Size2)	getDocumentSize
-{
-	return NSSizeToSize2([self frame].size);
-}
-
-
-//========== setDocumentSize: ==================================================
+//========== reflectLogicalDocumentSize:viewportRect: ==========================
 //
 // Purpose:		Changes the size of the document.
 //
@@ -3028,18 +3016,12 @@ static NSSize Size2ToNSSize(Size2 size)
 //				the change in document size by NS will adjust scroll bars, etc.
 //
 //==============================================================================
-- (void)	setDocumentSize:(Size2)newDocumentSize
+- (void) reflectLogicalDocumentSize:(Size2)newDocumentSize viewportRect:(Box2)viewportRect
 {
 // TODO: FIX SCROLL CODE
-//	assert(!isnan(newDocumentSize.width));
-//	assert(!isnan(newDocumentSize.height));
-//	assert(newDocumentSize.width > 0);
-//	assert(newDocumentSize.height > 0);
-//	NSSize sizeNow = [self frame].size;
-//	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
-//		return;
-//
-//	[self setFrameSize:Size2ToNSSize(newDocumentSize)];
+	// Optional! We could set some NSScrollers (scroll bars) to reflect the
+	// current state of affairs. In any event, this should not result in ANY
+	// changes to the viewport.
 }
 
 
@@ -3061,6 +3043,8 @@ static NSSize Size2ToNSSize(Size2 size)
 // Purpose:		This returns the maximum size we can set our document before it
 //				scrolls - the results are in model coordinates.
 //
+//				Zoom-adjusted! Size shrinks when zoomed in, etc.
+//
 //==============================================================================
 - (Size2)	getMaxVisibleSizeDoc
 {
@@ -3070,28 +3054,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	{
 		NSClipView  *clipView       = [scrollView contentView];
 		return NSSizeToSize2([clipView bounds].size);
-	}
-	else
-	{
-		return NSSizeToSize2([self bounds].size);
-	}
-}
-
-
-//========== getMaxVisibleSizeGL ===============================================
-//
-// Purpose:		This returns the maximum size we can set our document before it
-//				scrolls - the results are in OpenGL pixels (e.g. the pixels you
-//				give to glViewport).
-//
-//==============================================================================
-- (Size2)	getMaxVisibleSizeGL
-{
-	// TODO: FIX SCROLL CODE
-	NSScrollView *scrollView = [self enclosingScrollView];
-	if(scrollView != nil)
-	{
-		return NSSizeToSize2([scrollView contentSize]);
 	}
 	else
 	{

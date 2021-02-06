@@ -23,6 +23,30 @@
 #define WALKTHROUGH_NEAR	20.0
 #define WALKTHROUGH_FAR		20000.0
 
+@interface LDrawGLCamera ()
+{
+	id<LDrawGLCameraScroller>	scroller;
+	
+	GLfloat					projection[16];
+	GLfloat					modelView[16];
+	GLfloat					orientation[16];
+
+	ProjectionModeT         projectionMode;
+	LocationModeT			locationMode;
+	Box3					modelSize;
+
+	float					zoomFactor;
+
+	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
+	Point3					rotationCenter;
+	Size2					snugFrameSize;
+	
+	int						mute;					// Counted 'mute' to stop re-entrant calls to tickle...
+}
+
+
+@end
+
 @implementation LDrawGLCamera
 
 #pragma mark -
@@ -42,8 +66,6 @@
 - (id) init
 {
 	self = [super init];
-	
-	viewportExpandsToAvailableSize	= YES;
 	
 	zoomFactor						= 100; // percent
 	cameraDistance					= -10000;
@@ -198,6 +220,22 @@
 }
 
 
+// MARK: -
+
+//========== setGraphicsSurfaceSize: ===========================================
+///
+/// @abstract	Sets the size of the view which will be rendered with the 3D
+/// 			engine. This should be in screen coordinates.
+///
+//==============================================================================
+- (void) setGraphicsSurfaceSize:(Size2)size
+{
+	_graphicsSurfaceSize = size;
+	
+	[self tickle];
+}
+
+
 #pragma mark -
 #pragma mark INTERNAL UTILITIES
 #pragma mark -
@@ -267,11 +305,11 @@
 
 	// unflip coordinates (for a system with the origin in the lower-left,
 	// you would do y = V2BoxMinY(visibleRectIn)
-	CGFloat y = [scroller getDocumentSize].height - V2BoxMaxY(visibleRectIn);
+	CGFloat y = _graphicsSurfaceSize.height - V2BoxMaxY(visibleRectIn);
 	
 	//The projection plane is stated in model coordinates.
-	visibilityPlane.origin.x	= V2BoxMinX(visibleRectIn) - [scroller getDocumentSize].width/2;
-	visibilityPlane.origin.y	= y - [scroller getDocumentSize].height/2;
+	visibilityPlane.origin.x	= V2BoxMinX(visibleRectIn) - _graphicsSurfaceSize.width/2;
+	visibilityPlane.origin.y	= y - _graphicsSurfaceSize.height/2;
 	visibilityPlane.size.width	= V2BoxWidth(visibleRectIn);
 	visibilityPlane.size.height	= V2BoxHeight(visibleRectIn);
 	
@@ -364,13 +402,13 @@
 	
 	// Convert from model coordinates back to Cocoa view coordinates.
 	
-	newVisibleRect.origin.x    = visibilityPlane.origin.x + [scroller getDocumentSize].width/2;
-	newVisibleRect.origin.y    = visibilityPlane.origin.y + [scroller getDocumentSize].height/2;
+	newVisibleRect.origin.x    = visibilityPlane.origin.x + _graphicsSurfaceSize.width/2;
+	newVisibleRect.origin.y    = visibilityPlane.origin.y + _graphicsSurfaceSize.height/2;
 	newVisibleRect.size        = visibilityPlane.size;
 	
 	if(1)//[self isFlipped] == YES)
 	{
-		newVisibleRect.origin.y = [scroller getDocumentSize].height - V2BoxHeight(visibilityPlane) - V2BoxMinY(newVisibleRect);
+		newVisibleRect.origin.y = _graphicsSurfaceSize.height - V2BoxHeight(visibilityPlane) - V2BoxMinY(newVisibleRect);
 	}
 	
 	return newVisibleRect;
@@ -559,23 +597,16 @@
 		// We will restore scrolling, which can get borked when the document size changes.
 		//
 		
-		Size2	oldFrameSize	= [scroller getDocumentSize];
+		Size2	oldFrameSize	= _graphicsSurfaceSize;
 		Size2	newFrameSize	= ZeroSize2;
 		
 		self->snugFrameSize	= V2MakeSize( newSize*2, newSize*2 );
 		
-		if(self->viewportExpandsToAvailableSize == YES)
-		{
-			// Make the frame either just a little bit bigger than the 
-			// size of the model, or the same as the scroll view, 
-			// whichever is larger. 
-			newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  [scroller getMaxVisibleSizeDoc].width  ),
-										  MAX(snugFrameSize.height, [scroller getMaxVisibleSizeDoc].height ) );
-		}
-		else
-		{
-			newFrameSize	= snugFrameSize;
-		}
+		// Make the frame either just a little bit bigger than the
+		// size of the model, or the same as the scroll view,
+		// whichever is larger.
+		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  [scroller getMaxVisibleSizeDoc].width  ),
+									  MAX(snugFrameSize.height, [scroller getMaxVisibleSizeDoc].height ) );
 		newFrameSize.width	= floor(newFrameSize.width);
 		newFrameSize.height = floor(newFrameSize.height);
 		
@@ -593,14 +624,13 @@
 			// To 'work around' this, we ignore the tickle that comes back from the reshape that is a result of the doc frame size
 			// changing; we don't need it since we're going to re-scroll and redo the MV projection in the next few lines.
 			++self->mute;
-			[scroller setDocumentSize:newFrameSize];
-			[self scrollCenterToPoint:centerPoint];		//Restore centering - changing the doc size causes AppKit to whack scrolling.
-			--self->mute;			
+			[scroller reflectLogicalDocumentSize:newFrameSize viewportRect:[scroller getVisibleRect]];
+			--self->mute;
 		}
 		else
 		{
-			++self->mute;			
-			[scroller setDocumentSize:[scroller getMaxVisibleSizeDoc]];
+			++self->mute;
+			[scroller reflectLogicalDocumentSize:[scroller getVisibleRect].size viewportRect:[scroller getVisibleRect]];
 			--self->mute;			
 		}
 
@@ -675,7 +705,7 @@
 		return;
 
 	Point2	centerPoint	   = V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
-	Point2	centerFraction = V2Make(centerPoint.x / [scroller getDocumentSize].width, centerPoint.y / [scroller getDocumentSize].height);
+	Point2	centerFraction = V2Make(centerPoint.x / _graphicsSurfaceSize.width, centerPoint.y / _graphicsSurfaceSize.height);
 		
 	self->zoomFactor = newPercentage;
 
@@ -688,8 +718,8 @@
 	else
 		[scroller setScaleFactor:self->zoomFactor/100.0];
 
-	centerPoint.x = centerFraction.x * [scroller getDocumentSize].width;
-	centerPoint.y = centerFraction.y * [scroller getDocumentSize].height;
+	centerPoint.x = centerFraction.x * _graphicsSurfaceSize.width;
+	centerPoint.y = centerFraction.y * _graphicsSurfaceSize.height;
 
 	if(locationMode != LocationModeWalkthrough)
 		[self scrollCenterToPoint:centerPoint]; // Request that NS change scrolling to restore centering.
@@ -908,8 +938,8 @@
 	// Get the percentage of the window we have swept over. Since half the 
 	// window represents 180 degrees of rotation, we will eventually 
 	// multiply this percentage by 180 to figure out how much to rotate. 
-	CGFloat	percentDragX	= deltaX / [scroller getDocumentSize].width;
-	CGFloat	percentDragY	= deltaY / [scroller getDocumentSize].height;
+	CGFloat	percentDragX	= deltaX / _graphicsSurfaceSize.width;
+	CGFloat	percentDragY	= deltaY / _graphicsSurfaceSize.height;
 	
 	// Remember, dragging on y means rotating about x.
 	CGFloat	rotationAboutY	= + ( percentDragX * 180 );

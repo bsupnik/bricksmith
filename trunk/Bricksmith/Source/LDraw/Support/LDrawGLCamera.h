@@ -46,31 +46,11 @@ typedef enum
 @protocol LDrawGLCameraScroller;
 
 
-@interface LDrawGLCamera : NSObject {
+@interface LDrawGLCamera : NSObject
 
-	id<LDrawGLCameraScroller>	scroller;
-	
-	GLfloat					projection[16];
-	GLfloat					modelView[16];
-	GLfloat					orientation[16];
+@property (nonatomic, assign) Size2	graphicsSurfaceSize;
+@property (nonatomic, readonly) Box2 visibleRect;
 
-	ProjectionModeT         projectionMode;
-	LocationModeT			locationMode;
-	Box3					modelSize;
-
-	BOOL					viewportExpandsToAvailableSize;
-	float					zoomFactor;
-
-	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
-	Point3					rotationCenter;
-	Size2					snugFrameSize;
-	
-	int						mute;					// Counted 'mute' to stop re-entrant calls to tickle...
-
-}
-
-- (id)		init;
-- (void)	dealloc;
 - (void)	setScroller:(id<LDrawGLCameraScroller>)newScroller;
 
 // Output - the official OpenGL transform.
@@ -85,7 +65,7 @@ typedef enum
 - (Tuple3) viewingAngle;
 - (Point3) rotationCenter;
 
-// Call this when the scroller's states change in any way, to force the 
+// Call this when the scroller's states change in any way, to force the
 // camera to 'suck in' the camera scroller parameters.  Clients only need
 // to call this when camera scroller properties change; if you call setModelSize,
 // the camera tickles itself.  So tickle should really only be called for scroll-bar
@@ -131,13 +111,11 @@ typedef enum
 
 // Document size, in model units.  The camera can request a document size
 // change; NS code won't change the document size behind the camera's back.
-- (Size2)	getDocumentSize;
-- (void)	setDocumentSize:(Size2)newDocumentSize;
+- (void) reflectLogicalDocumentSize:(Size2)newDocumentSize viewportRect:(Box2)viewportRect;
 
 // Scrolling
 - (Box2)	getVisibleRect;								// From this we get our scroll position and visible area, in doc units.
 - (Size2)	getMaxVisibleSizeDoc;						// Max size we can show in doc units before we scroll.
-- (Size2)	getMaxVisibleSizeGL;						// Max size we can show in GL viewport pixels units before we scroll.
 
 - (void)	setScaleFactor:(CGFloat)newScaleFactor;		// This sets the scale factor from UI points to doc units - 2.0 makes our model look twice as big on screen.
 - (void)	setScrollOrigin:(Point2)visibleOrigin;		// This scrolls the scroller so that the model point "visibleOrigin" is in the upper right corner of the 

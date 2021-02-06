@@ -66,6 +66,7 @@
 	[self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
 	camera = [[LDrawGLCamera alloc] init];
+	camera.graphicsSurfaceSize = boundsIn;
 	
 	isTrackingDrag					= NO;
 	selectionMarquee				= ZeroBox2;
@@ -578,7 +579,7 @@
 - (Box2) viewport
 {
 	Box2	viewport = ZeroBox2;
-	viewport.size = [scroller getMaxVisibleSizeGL];	
+	viewport.size = camera.graphicsSurfaceSize;
 	return viewport;
 }
 
@@ -600,7 +601,7 @@
 //========== zoomPercentage ====================================================
 //
 // Purpose:		Returns the percentage magnification being applied to drawing;
-//				this represents the scale from GL viewport coordiantes (which
+//				this represents the scale from GL viewport coordinates (which
 //				are always window manager pixels) to NS document coordinates 
 //				(which DO get scaled).
 //
@@ -807,15 +808,15 @@
 }//end setLDrawDirective:
 
 
-//========== setMaximumVisibleSize: ============================================
-//
-// Purpose:		Sets the largest size (in frame coordinates) to which the 
-//				visible rect should be permitted to grow. 
-//
+//========== setGraphicsSurfaceSize: ===========================================
+///
+/// @abstract	Sets the size of the view which will be rendered with the 3D
+/// 			engine. This should be in screen coordinates.
+///
 //==============================================================================
-- (void) setMaximumVisibleSize:(Size2)size
+- (void) setGraphicsSurfaceSize:(Size2)size
 {
-	[camera tickle];
+	[camera setGraphicsSurfaceSize:size];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
