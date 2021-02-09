@@ -3033,30 +3033,6 @@ static Size2 NSSizeToSize2(NSSize size)
 }
 
 
-//========== getMaxVisibleSizeDoc ==============================================
-//
-// Purpose:		This returns the maximum size we can set our document before it
-//				scrolls - the results are in model coordinates.
-//
-//				Zoom-adjusted! Size shrinks when zoomed in, etc.
-//
-//==============================================================================
-- (Size2)	getMaxVisibleSizeDoc
-{
-	// TODO: FIX SCROLL CODE
-	NSScrollView *scrollView = [self enclosingScrollView];
-	if(scrollView != nil)
-	{
-		NSClipView  *clipView       = [scrollView contentView];
-		return NSSizeToSize2([clipView bounds].size);
-	}
-	else
-	{
-		return NSSizeToSize2([self bounds].size);
-	}
-}
-
-
 //========== setScaleFactor: ===================================================
 //
 // Purpose:		This sets the scaling factor on our scrolling view.

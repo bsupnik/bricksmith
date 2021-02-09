@@ -421,7 +421,7 @@
 	// Start from scratch
 	if(self->locationMode == LocationModeWalkthrough)
 	{
-		Size2	viewportSize = [scroller getMaxVisibleSizeDoc];
+		Size2	viewportSize = [scroller getVisibleRect].size;
 		float aspect_ratio = viewportSize.width / viewportSize.height;
 		
 		buildFrustumMatrix(projection,
@@ -569,8 +569,8 @@
 		// Make the frame either just a little bit bigger than the
 		// size of the model, or the same as the scroll view,
 		// whichever is larger.
-		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  [scroller getMaxVisibleSizeDoc].width  ),
-									  MAX(snugFrameSize.height, [scroller getMaxVisibleSizeDoc].height ) );
+		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  [scroller getVisibleRect].size.width  ),
+									  MAX(snugFrameSize.height, [scroller getVisibleRect].size.height ) );
 		newFrameSize.width	= floor(newFrameSize.width);
 		newFrameSize.height = floor(newFrameSize.height);
 		

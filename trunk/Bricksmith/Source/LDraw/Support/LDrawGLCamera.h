@@ -115,7 +115,6 @@ typedef enum
 
 // Scrolling
 - (Box2)	getVisibleRect;								// From this we get our scroll position and visible area, in doc units.
-- (Size2)	getMaxVisibleSizeDoc;						// Max size we can show in doc units before we scroll.
 - (void)	setScaleFactor:(CGFloat)newScaleFactor;		// This sets the scale factor from UI points to doc units - 2.0 makes our model look twice as big on screen.
 
 @end
