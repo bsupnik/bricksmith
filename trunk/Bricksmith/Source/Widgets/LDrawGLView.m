@@ -70,19 +70,6 @@ static Size2 NSSizeToSize2(NSSize size)
 }
 
 
-//========== Size2ToNSSize =====================================================
-//
-// Purpose:		Convert our internal format to Cocoa sizes.
-//
-//==============================================================================
-static NSSize Size2ToNSSize(Size2 size)
-{
-	NSSize sizeOut = NSMakeSize(size.width, size.height);
-	
-	return sizeOut;
-}
-
-
 @implementation LDrawGLView
 
 #pragma mark -
@@ -3034,7 +3021,15 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (Box2)	getVisibleRect
 {
-	return NSRectToBox2([self visibleRect]);
+	Box2 visibleRect = NSRectToBox2([self visibleRect]);
+	float zoom = self.zoomPercentage;
+
+	Size2 zoomSize = visibleRect.size;
+	zoomSize.width /= (zoom / 100.0);
+	zoomSize.height /= (zoom / 100.0);
+	Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(visibleRect));
+
+	return zoomRect;
 }
 
 
@@ -3087,27 +3082,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	[self didChangeValueForKey:@"zoomPercentage"];
 }
 
-
-//========== setScrollOrigin: ==================================================
-//
-// Purpose:		This scrolls our view so that the model point passed in is in
-//				the upper left corner of our visible exposed area, scrolling
-//				us as needed.
-//
-//==============================================================================
-- (void)	setScrollOrigin:(Point2)visibleOrigin
-{
-	assert(!isnan(visibleOrigin.x));
-	assert(!isnan(visibleOrigin.y));
-	Point2	currentOrigin = [self getVisibleRect].origin;
-	
-	if(currentOrigin.x == visibleOrigin.x &&
-		currentOrigin.y == visibleOrigin.y)
-		return;
-
-	// TODO: FIX SCROLL CODE
-	[self scrollPoint:NSMakePoint(visibleOrigin.x,visibleOrigin.y)];
-}
 
 #pragma mark -
 #pragma mark DESTRUCTOR

@@ -407,20 +407,6 @@
 }
 
 
-//========== centerPoint =======================================================
-//
-// Purpose:		Returns the point (in frame coordinates) which is currently 
-//				at the center of the visible rectangle. This is useful for 
-//				determining the point being viewed in the scroll view.
-//
-//==============================================================================
-- (Point2) centerPoint
-{
-	return V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
-	
-}//end centerPoint
-
-
 //========== didPartSelection ==================================================
 //
 // Purpose:		Returns whether the most-recent mouseDown resulted in a 

@@ -90,7 +90,6 @@ typedef enum
 
 // Accessors
 - (LDrawDragHandle*) activeDragHandle;
-- (Point2) centerPoint;
 - (BOOL) didPartSelection;
 - (Matrix4) getMatrix;
 - (BOOL) isTrackingDrag;

@@ -240,37 +240,6 @@
 #pragma mark INTERNAL UTILITIES
 #pragma mark -
 
-
-//========== scrollCenterToPoint: ==============================================
-//
-// Purpose:		Scrolls a given model point to the center of the visible window.
-//
-// Notes:		This utility does not 'tickle' the camera - client code must do
-//				this.
-//
-//==============================================================================
-- (void) scrollCenterToPoint:(Point2)newCenter
-{
-	Box2	newVisibleRect	= [scroller getVisibleRect];
-	Point2	scrollOrigin	= V2Make(newCenter.x - V2BoxWidth([scroller getVisibleRect])/2,
-									 newCenter.y - V2BoxHeight([scroller getVisibleRect])/2);
-	// Sanity check
-	if(scrollOrigin.x < 0)
-	{
-		scrollOrigin.x = 0;
-	}
-	if(scrollOrigin.y < 0)
-	{
-		scrollOrigin.y = 0;
-	}
-	
-	newVisibleRect.origin = scrollOrigin;
-
-	[scroller setScrollOrigin:newVisibleRect.origin];
-	
-}//end scrollCenterToPoint:
-
-
 //========== fieldDepth ========================================================
 //
 // Purpose:		Returns the depth range of our view - that is, the distance
@@ -466,15 +435,10 @@
 	else
 	{
 		Box2 visibleRect = [scroller getVisibleRect];
-		
-		Size2 zoomSize = visibleRect.size;
-		zoomSize.width /= (self->zoomFactor / 100.0);
-		zoomSize.height /= (self->zoomFactor / 100.0);
-		Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(visibleRect));
 
 		if(self->projectionMode == ProjectionModePerspective)
 		{
-			visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:zoomRect];
+			visibilityPlane = [self nearFrustumClippingRectFromVisibleRect:visibleRect];
 			
 			assert(visibilityPlane.size.width > 0.0);
 			assert(visibilityPlane.size.height > 0.0);
@@ -490,7 +454,7 @@
 		}
 		else
 		{
-			visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:zoomRect];
+			visibilityPlane = [self nearOrthoClippingRectFromVisibleRect:visibleRect];
 			
 			assert(visibilityPlane.size.width > 0.0);
 			assert(visibilityPlane.size.height > 0.0);
@@ -563,7 +527,7 @@
 		///
 
 		Point3	origin			= {0,0,0};
-		Point2	centerPoint		= V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
+		Point2	centerPoint		= V2BoxMid([scroller getVisibleRect]);
 		Box3	newBounds		= modelSize;
 		
 		if(V3EqualBoxes(newBounds, InvalidBox) == YES ||	
@@ -717,12 +681,6 @@
 		[scroller setScaleFactor:1.0];
 	else
 		[scroller setScaleFactor:self->zoomFactor/100.0];
-
-	centerPoint.x = centerFraction.x * _graphicsSurfaceSize.width;
-	centerPoint.y = centerFraction.y * _graphicsSurfaceSize.height;
-
-	if(locationMode != LocationModeWalkthrough)
-		[self scrollCenterToPoint:centerPoint]; // Request that NS change scrolling to restore centering.
 		
 	self->mute--;	
 	[self tickle];								// Rebuild ourselves based on the new zoom, scroll, etc.
@@ -860,7 +818,6 @@
 
 	// Scroll to it. -makeProjection will now derive the exact frustum or ortho 
 	// projection which will make the clicked point appear in the center. 
-	[scroller setScrollOrigin:newVisibleRect.origin];
 	[self tickle];		// Tickle to rebuild all matrices based on external change.
 
 }//end scrollModelPoint:toViewportProportionalPoint:
