@@ -2161,27 +2161,15 @@
 //==============================================================================
 - (Point2) convertPointFromViewport:(Point2)viewportPoint
 {
-	Point2	point_visibleRect	= ZeroPoint2;
-	Point2	point_view			= ZeroPoint2;
-	
-	// Rescale to visible rect
-	point_visibleRect.x = viewportPoint.x / ([self zoomPercentageForGL]/100.);
-	point_visibleRect.y = viewportPoint.y / ([self zoomPercentageForGL]/100.);
-	
-	// The viewport origin is always at (0,0), so wo only need to translate if 
-	// the coordinate system is flipped. 
+	Point2	point_view = viewportPoint;
 	
 	// Flip the coordinates
 	if([self isFlipped])
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
+		point_view.y = V2BoxHeight([self viewport]) - point_view.y;
 	}
-	
-	// Translate to full bounds coordinates
-	point_view.x = point_visibleRect.x + [scroller getVisibleRect].origin.x;
-	point_view.y = point_visibleRect.y + [scroller getVisibleRect].origin.y;
 	
 	return point_view;
 	
@@ -2196,24 +2184,15 @@
 //==============================================================================
 - (Point2) convertPointToViewport:(Point2)point_view
 {
-	Point2	point_visibleRect	= ZeroPoint2;
-	Point2	point_viewport		= ZeroPoint2;
-	
-	// Translate from full bounds coordinates to the visible rect
-	point_visibleRect.x = point_view.x - [scroller getVisibleRect].origin.x;
-	point_visibleRect.y = point_view.y - [scroller getVisibleRect].origin.y;
-	
+	Point2	point_viewport		= point_view;
+
 	// Flip the coordinates
 	if([self isFlipped])
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
+		point_viewport.y = V2BoxHeight([self viewport]) - point_viewport.y;
 	}
-	
-	// Rescale to viewport pixels
-	point_viewport.x = point_visibleRect.x * ([self zoomPercentageForGL]/100.);
-	point_viewport.y = point_visibleRect.y * ([self zoomPercentageForGL]/100.);
 	
 	return point_viewport;
 	
