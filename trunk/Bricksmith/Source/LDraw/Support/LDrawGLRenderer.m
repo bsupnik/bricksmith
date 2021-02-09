@@ -982,15 +982,14 @@
 	Point3  center                  = ZeroPoint3;
 	Matrix4 modelView               = IdentityMatrix4;
 	Matrix4 projection              = IdentityMatrix4;
-	Box2    viewport                = ZeroBox2;
+	Box2    viewport                = [self viewport];
 	Box3    projectedBounds         = InvalidBox;
 	Box2    projectionRect          = ZeroBox2;
 	Size2   zoomScale2D             = ZeroSize2;
 	CGFloat zoomScaleFactor         = 0.0;
 	
 	// How many onscreen pixels do we have to work with?
-	maxContentSize.width    = V2BoxWidth([scroller getVisibleRect]);
-	maxContentSize.height   = V2BoxHeight([scroller getVisibleRect]);
+	maxContentSize = viewport.size;
 //	NSLog(@"windowVisibleRect = %@", NSStringFromRect(windowVisibleRect));
 //	NSLog(@"maxContentSize = %@", NSStringFromSize(maxContentSize));
 	
@@ -1003,7 +1002,6 @@
 			// Project the bounds onto the 2D "canvas"
 			modelView   = Matrix4CreateFromGLMatrix4([camera getModelView]);
 			projection  = Matrix4CreateFromGLMatrix4([camera getProjection]);
-			viewport    = [self viewport];
 
 			projectedBounds = [(id)self->fileBeingDrawn
 									   projectedBoundingBoxWithModelView:modelView
@@ -1028,10 +1026,10 @@
 			// not. It seems perspective distortion can cause the visual 
 			// center of the model to be someplace else. 
 			
-			Point2  graphicalCenter_viewport    = V2Make( V2BoxMidX(projectionRect), V2BoxMidY(projectionRect) );
-			Point2 graphicalCenter_view        = [self convertPointFromViewport:graphicalCenter_viewport];
-			Point3  graphicalCenter_model       = ZeroPoint3;
-			
+			Point2	graphicalCenter_viewport	= V2BoxMid(projectionRect);
+			Point2	graphicalCenter_view		= [self convertPointFromViewport:graphicalCenter_viewport];
+			Point3	graphicalCenter_model		= ZeroPoint3;
+
 			graphicalCenter_model       = [self modelPointForPoint:graphicalCenter_view
 											   depthReferencePoint:center];
 			
