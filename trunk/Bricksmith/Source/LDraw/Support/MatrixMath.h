@@ -253,6 +253,9 @@ extern bool		V2BoxContains(Box2 box, Point2 pin);
 extern bool		V2PolygonContains(const Point2 * poly, int num_pts, Point2 pin);
 extern bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts);
 
+extern Vector2 	V2Add(Vector2 a, Vector2 b);
+extern Vector2 	V2Sub(Vector2 a, Vector2 b);
+
 extern float	Matrix2x2Determinant( float, float, float, float);
 
 // 3-D

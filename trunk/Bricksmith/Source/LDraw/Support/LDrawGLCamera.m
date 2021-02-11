@@ -44,6 +44,7 @@
 	int						mute;					// Counted 'mute' to stop re-entrant calls to tickle...
 }
 
+@property (nonatomic, assign) Box2 visibleRect;
 
 @end
 
@@ -228,9 +229,23 @@
 /// 			engine. This should be in screen coordinates.
 ///
 //==============================================================================
-- (void) setGraphicsSurfaceSize:(Size2)size
+- (void) setGraphicsSurfaceSize:(Size2)newViewportSize
 {
-	_graphicsSurfaceSize = size;
+	Size2 oldViewportSize = _graphicsSurfaceSize;
+	
+	_graphicsSurfaceSize = newViewportSize;
+	
+	Box2 oldViewport = V2MakeBox(0, 0, oldViewportSize.width, oldViewportSize.height);
+	Box2 newViewport = V2MakeBox(0, 0, newViewportSize.width, newViewportSize.height);
+	
+	Point2 oldViewportCenter = V2BoxMid(oldViewport);
+	Point2 newViewportCenter = V2BoxMid(newViewport);
+	Vector2 offset = V2Sub(newViewportCenter, oldViewportCenter);
+	
+	Box2 newVisibleRect = V2SizeCenteredOnPoint(newViewportSize, V2BoxMid(self.visibleRect));
+	newVisibleRect.origin = V2Add(newVisibleRect.origin, offset);
+	
+	self.visibleRect = newVisibleRect;
 	
 	[self tickle];
 }
@@ -668,9 +683,16 @@
 	if(currentZoomPercentage == newPercentage)
 		return;
 
-	Point2	centerPoint	   = V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
-	Point2	centerFraction = V2Make(centerPoint.x / _graphicsSurfaceSize.width, centerPoint.y / _graphicsSurfaceSize.height);
-		
+	Size2 zoomSize = _graphicsSurfaceSize;
+	zoomSize.width /= (newPercentage / 100.0);
+	zoomSize.height /= (newPercentage / 100.0);
+	Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(self.visibleRect));
+	self.visibleRect = zoomRect;
+
+
+//	Point2	centerPoint	   = V2BoxMid([scroller getVisibleRect]);
+//	Point2	centerFraction = V2Make(centerPoint.x / _graphicsSurfaceSize.width, centerPoint.y / _graphicsSurfaceSize.height);
+	
 	self->zoomFactor = newPercentage;
 
 	// Tell NS that sizes have changed - once we do this, we can request a re-scroll.

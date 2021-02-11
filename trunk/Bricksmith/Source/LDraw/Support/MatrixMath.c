@@ -510,6 +510,42 @@ bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
 }
 
 
+// MARK: -
+
+//========== V2Add =============================================================
+//
+// Purpose:		return vector difference c = a+b
+//
+//==============================================================================
+Vector2 V2Add(Vector2 a, Vector2 b)
+{
+	Vector2 result;
+
+	result.x = a.x + b.x;
+	result.y = a.y + b.y;
+	
+	return result;
+	
+}//end V2Add
+
+
+//========== V2Sub =============================================================
+//
+// Purpose:		return vector difference c = a-b
+//
+//==============================================================================
+Vector2 V2Sub(Vector2 a, Vector2 b)
+{
+	Vector2 result;
+
+	result.x = a.x - b.x;
+	result.y = a.y - b.y;
+	
+	return result;
+	
+}//end V3Sub
+
+
 #pragma mark -
 
 //========== Matrix2x2Determinant ==============================================
