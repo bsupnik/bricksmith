@@ -59,7 +59,6 @@
 #import "PartReport.h"
 #import "PieceCountPanel.h"
 #import "RotationPanelController.h"
-#import "ScrollViewCategory.h"
 #import "SearchPanelController.h"
 #import "StringUtilities.h"
 #import "UserDefaultsCategory.h"

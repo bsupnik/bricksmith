@@ -36,7 +36,6 @@
 #import "LDrawUtilities.h"
 #import "MacLDraw.h"
 #import "OverlayViewCategory.h"
-#import "ScrollViewCategory.h"
 #import "UserDefaultsCategory.h"
 
 // Macros for pref-based UI tricks.
@@ -2101,8 +2100,6 @@ static Size2 NSSizeToSize2(NSSize size)
 // Purpose:		If we got here, it means the user has successfully executed a 
 //				click-and-hold, which means that the mouse button was clicked, 
 //				held down, and not moved for a certain period of time. 
-//
-//				We use this action to initiate a drag-and-drop.
 //
 //==============================================================================
 - (void) autoscrollTimerFired:(NSTimer*)theTimer
