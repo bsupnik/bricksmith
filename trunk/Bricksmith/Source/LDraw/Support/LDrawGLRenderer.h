@@ -45,41 +45,6 @@ typedef enum
 //
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawGLRenderer : NSObject <LDrawColorable>
-{
-	id<LDrawGLRendererDelegate> delegate;
-	id<LDrawGLCameraScroller>	scroller;
-	id							target;
-	BOOL						allowsEditing;
-	
-	LDrawDirective          *fileBeingDrawn;		// Should only be an LDrawFile or LDrawModel.
-													// if you want to do anything else, you must 
-													// tweak the selection code in LDrawDrawableElement
-													// and here in -mouseUp: to handle such cases.
-	
-	LDrawGLCamera *			camera;
-	
-	// Drawing Environment
-	LDrawColor				*color;					// default color to draw parts if none is specified
-	GLfloat                 glBackgroundColor[4];
-	Box2					selectionMarquee;		// in view coordinates. ZeroBox2 means no marquee.
-	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
-	ViewOrientationT        viewOrientation;		// our orientation
-	NSTimeInterval			fpsStartTime;
-	NSInteger				framesSinceStartTime;
-	
-	// Event Tracking
-	float					gridSpacing;
-	BOOL                    isGesturing;			// true if performing a multitouch trackpad gesture.
-	BOOL                    isTrackingDrag;			// true if the last mousedown was followed by a drag, and we're tracking it (drag-and-drop doesn't count)
-	BOOL					isStartingDrag;			// this is the first event in a drag
-	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
-	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
-	BOOL                    didPartSelection;		// tried part selection during this click
-	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
-	Vector3                 draggingOffset;			// displacement between part 0's position and the initial click point of the drag
-	Point3                  initialDragLocation;	// point in model where part was positioned at draggingEntered
-	LDrawDragHandle			*activeDragHandle;		// drag handle hit on last mouse-down (or nil)
-}
 
 // Initialization
 - (id) initWithBounds:(Size2)boundsIn;

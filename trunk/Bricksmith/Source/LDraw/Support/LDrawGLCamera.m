@@ -841,7 +841,8 @@
 	}
 
 	// Scroll to it. -makeProjection will now derive the exact frustum or ortho 
-	// projection which will make the clicked point appear in the center. 
+	// projection which will make the clicked point appear in the center.
+	self.visibleRect = newVisibleRect;
 	[self tickle];		// Tickle to rebuild all matrices based on external change.
 
 }//end scrollModelPoint:toViewportProportionalPoint:
