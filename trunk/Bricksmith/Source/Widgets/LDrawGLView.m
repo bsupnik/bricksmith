@@ -44,19 +44,6 @@
 #define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
 #define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
 
-//========== NSRectToBox2 ======================================================
-//
-// Purpose:		Convert Cocoa rects to our internal format.
-//
-//==============================================================================
-static Box2 NSRectToBox2(NSRect rect)
-{
-	Box2 box = V2MakeBox(NSMinX(rect), NSMinY(rect), NSWidth(rect), NSHeight(rect));
-	
-	return box;
-}
-
-
 //========== NSSizeToSize2 =====================================================
 //
 // Purpose:		Convert Cocoa sizes to our internal format.
@@ -3012,27 +2999,6 @@ static Size2 NSSizeToSize2(NSSize size)
 }
 
 
-//========== getVisibleRect ====================================================
-//
-// Purpose:		Returns the visible sub-section of our document (in model
-//				coordinates).  The origin is the document's scroll origin, and
-//				the size defines the visible area on screen (in doc windows).
-//
-//==============================================================================
-- (Box2)	getVisibleRect
-{
-	Box2 visibleRect = NSRectToBox2([self visibleRect]);
-	float zoom = self.zoomPercentage;
-
-	Size2 zoomSize = visibleRect.size;
-	zoomSize.width /= (zoom / 100.0);
-	zoomSize.height /= (zoom / 100.0);
-	Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(visibleRect));
-
-	return zoomRect;
-}
-
-
 //========== setScaleFactor: ===================================================
 //
 // Purpose:		This sets the scaling factor on our scrolling view.
@@ -3048,7 +3014,7 @@ static Size2 NSSizeToSize2(NSSize size)
 //				coordinates.)
 //
 //==============================================================================
-- (void)	setScaleFactor:(CGFloat)newScaleFactor
+- (void)	reflectScaleFactor:(CGFloat)newScaleFactor
 {
 	assert(newScaleFactor > 0.0);
 	assert(!isnan(newScaleFactor));

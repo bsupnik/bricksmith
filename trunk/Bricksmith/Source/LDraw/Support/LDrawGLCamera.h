@@ -15,13 +15,17 @@
 	Things appkit knows about:
 
 	Scroll position
-		owned by Appkit.
+		owned by the camera.
 	
 	Zoom
-		owned by camera.  Clip view scale factor owned by NS and slaved from zoom by camera _sometimes_.
+		owned by camera.
 		
-	Document Size
-		owned by GL view, controlled by camera
+	Document Size - a fiction that could be used to represent scroll bar positions
+		owned by camera
+ 
+	Viewport (View) Size
+		owned by AppKit
+		camera must be told
 	
 	Things OpenGL knows about:
 		viewport - always set to visible area of GL drawable by view code - the camera assumes this is true.
@@ -92,30 +96,24 @@ typedef enum
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//		LDrawGLCameraScroller
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-//	The camera scroller protocol abstracts a scrolling view that the camera
-//	works within.  The camera does not get to own scrolling information; rather
-//	it has to go to the protocol to get current state and make changes.  (We do
-//	this because getting in a fight with NSClipView over scrolling is futile; if
-//	there can be only one copy of scroll state AppKit has to own it.)
-//
-
+//---------- LDrawGLCameraScroller ---------------------------------------------
+///
+/// The camera scroller protocol abstracts a scrolling view that the camera
+///	works within.  The camera owns scrolling information. It has to be told
+///	about the view size, and works out the rest. The view container can be
+///	notified of scroll/zoom changes via this protocol.
+///
 @protocol LDrawGLCameraScroller <NSObject>
 
 @required
 
-// Document size, in model units.  The camera can request a document size
-// change; NS code won't change the document size behind the camera's back.
+/// Document size, in model units.  The camera can request a document size
+/// change; NS code won't change the document size behind the camera's back.
 - (void) reflectLogicalDocumentSize:(Size2)newDocumentSize viewportRect:(Box2)viewportRect;
 
-// Scrolling
-- (Box2)	getVisibleRect;								// From this we get our scroll position and visible area, in doc units.
-- (void)	setScaleFactor:(CGFloat)newScaleFactor;		// This sets the scale factor from UI points to doc units - 2.0 makes our model look twice as big on screen.
+/// Is called when the view scale factor changes. 1.0 is pixel-to-pixel. 2.0
+/// makes our model look twice as big on screen.
+- (void) reflectScaleFactor:(CGFloat)newScaleFactor;
 
 @end
 

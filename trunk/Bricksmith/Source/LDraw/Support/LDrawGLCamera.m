@@ -54,15 +54,14 @@
 #pragma mark SETUP
 #pragma mark -
 
-
 //========== init ==============================================================
-//
-// Purpose:		Sets up the new camera.
-//
-// Notes:		The camera isn't really useful until a scroller is attached and
-//				the camera is then tickled.  Without a scroller, the camera
-//				cannot complete its setup.
-//
+///
+/// @abstract	Sets up the new camera.
+///
+/// @discussion	The camera isn't really useful until a scroller is attached and
+///				the camera is then tickled.  Without a scroller, the camera
+///				cannot complete its setup.
+///
 //==============================================================================
 - (id) init
 {
@@ -83,10 +82,10 @@
 
 
 //========== dealloc ===========================================================
-//
-// Purpose:		It's time to kick the bucket and go to meet the great head of
-//				light entertainment in the sky.
-//
+///
+/// @abstract	It's time to kick the bucket and go to meet the great head of
+///				light entertainment in the sky.
+///
 //==============================================================================
 - (void) dealloc
 {
@@ -95,19 +94,19 @@
 
 
 //========== setScroller: ======================================================
-//
-// Purpose:		Specifies a scroller protocol that the camera uses to get
-//				information about the document.
-//
-// Notes:		While the simplest design might be for the camera to control all
-//				apsects of viewing, it can't own scrolling; AppKit needs to own
-//				scrolling state and having the data exist in two places is a
-//				recipe for chaos.
-//
-//				So the scroller gives the camera an abstract way to ask
-//				_someone_ what's going on in the NS world with scrolling without
-//				having to have our app's NS structure coded into the camera.
-//
+///
+/// @abstract	Specifies a scroller protocol that the camera uses to send
+///				information to the document.
+///
+///	@discussion	The camera computes all aspects of viewing, although of course
+/// 			it has to be told when the view size changes or user input must
+/// 			be responded to.
+///
+/// 			The scroller gives the camera an abstract way to tell the NS
+/// 			world to reflect the current state of the view (zoom, position,
+/// 			etc.), without having to have our app's NS structure coded into
+/// 			the camera.
+///
 //==============================================================================
 - (void) setScroller:(id<LDrawGLCameraScroller>)newScroller
 {
@@ -121,17 +120,17 @@
 
 
 //========== getProjection =====================================================
-//
-// Purpose:		Returns the current projection matrix as a float[16] ptr.
-//				The projection matrix handles the effects of scrolling and
-//				zoom.
-//
-// Notes:		The camera class does not talk to OpenGL directly, and thus
-//				does not need context access.  The current matrices are owned
-//				by the camera.  Rendering engine code is responsible for syncing
-//				OpenGL to the camera, or shoveling these matrices into its
-//				custom shaders.
-//
+///
+/// @abstract	Returns the current projection matrix as a float[16] ptr.
+///				The projection matrix handles the effects of scrolling and
+///				zoom.
+///
+/// @discussion	The camera class does not talk to OpenGL directly, and thus
+///				does not need context access.  The current matrices are owned
+///				by the camera.  Rendering engine code is responsible for syncing
+///				OpenGL to the camera, or shoveling these matrices into its
+///				custom shaders.
+///
 //==============================================================================
 - (GLfloat*)getProjection
 {
@@ -142,7 +141,7 @@
 
 //========== getModelView ======================================================
 //
-// Purpose:		Returns the current modelview matrix as a float[16] ptr.
+/// @abstract	Returns the current modelview matrix as a float[16] ptr.
 //				The modelview matrix accounts for camera view distance, model
 //				rotation and model center changes.
 //
@@ -155,9 +154,9 @@
 
 
 //========== zoomPercentage ====================================================
-//
-// Purpose:		Returns the current zoom percentage.
-//
+///
+/// @abstract	Returns the current zoom percentage.
+///
 //==============================================================================
 - (CGFloat) zoomPercentage
 {
@@ -167,9 +166,9 @@
 
 
 //========== projectionMode ====================================================
-//
-// Purpose:		Returns the current projection mode (perspective or ortho).
-//
+///
+/// @abstract	Returns the current projection mode (perspective or ortho).
+///
 //==============================================================================
 - (ProjectionModeT) projectionMode
 {
@@ -179,9 +178,9 @@
 
 
 //========== locationMode ====================================================
-//
-// Purpose:		Returns the current location mode.
-//
+///
+/// @abstract	Returns the current location mode.
+///
 //==============================================================================
 - (LocationModeT) locationMode
 {
@@ -191,9 +190,9 @@
 
 
 //========== viewingAngle ======================================================
-//
-// Purpose:		Returns the current viewing angle as a triplet of Euler angles.
-//
+///
+/// @abstract	Returns the current viewing angle as a triplet of Euler angles.
+///
 //==============================================================================
 - (Tuple3) viewingAngle
 {
@@ -215,6 +214,8 @@
 }//end viewingAngle
 
 
+//========== rotationCenter ====================================================
+//==============================================================================
 - (Point3) rotationCenter
 {
 	return self->rotationCenter;
@@ -242,7 +243,12 @@
 	Point2 newViewportCenter = V2BoxMid(newViewport);
 	Vector2 offset = V2Sub(newViewportCenter, oldViewportCenter);
 	
-	Box2 newVisibleRect = V2SizeCenteredOnPoint(newViewportSize, V2BoxMid(self.visibleRect));
+	// needs to be the new *scaled* visible size centered over the old rect
+	Size2 visibleSize = newViewportSize;
+	visibleSize.width /= (self.zoomPercentage / 100.0);
+	visibleSize.height /= (self.zoomPercentage / 100.0);
+	
+	Box2 newVisibleRect = V2SizeCenteredOnPoint(visibleSize, V2BoxMid(self.visibleRect));
 	newVisibleRect.origin = V2Add(newVisibleRect.origin, offset);
 	
 	self.visibleRect = newVisibleRect;
@@ -256,11 +262,11 @@
 #pragma mark -
 
 //========== fieldDepth ========================================================
-//
-// Purpose:		Returns the depth range of our view - that is, the distance
-//				between the near an far clip planes in model coordinates.  The 
-//				model origin is centered in this range.
-//
+///
+/// @abstract	Returns the depth range of our view - that is, the distance
+///				between the near an far clip planes in model coordinates.  The
+///				model origin is centered in this range.
+///
 //==============================================================================
 - (float) fieldDepth
 {
@@ -276,12 +282,12 @@
 
 
 //========== nearOrthoClippingRectFromVisibleRect: ============================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for an orthographic projection. The coordinates are in model 
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
+///
+/// @abstract	Returns the rect of the near clipping plane which should be used
+///				for an orthographic projection. The coordinates are in model
+///				coordinates, located on the plane at
+///					z = - [self fieldDepth] / 2.
+///
 //==============================================================================
 - (Box2) nearOrthoClippingRectFromVisibleRect:(Box2)visibleRectIn
 {
@@ -303,22 +309,22 @@
 
 
 //========== nearFrustumClippingRectFromVisibleRect: ==========================
-//
-// Purpose:		Returns the rect of the near clipping plane which should be used 
-//				for a perspective projection. The coordinates are in model
-//				coordinates, located on the plane at
-//					z = - [self fieldDepth] / 2.
-//
-// Notes:		We want perspective and ortho views to show objects at the 
-//				 origin as the same size. Since perspective viewing is defined 
-//				 by a frustum (truncated pyramid), we have to shrink the 
-//				 visibily plane--which is located on the near clipping plane--in 
-//				 such a way that the slice of the frustum at the origin will 
-//				 have the dimensions of the desired visibility plane. (Remember, 
-//				 slices grow *bigger* as they go deeper into the view. Since the 
-//				 origin is deeper, that means we need a near visibility plane 
-//				 that is *smaller* than the desired size at the origin.) 
-//
+///
+/// @abstract	Returns the rect of the near clipping plane which should be used
+///				for a perspective projection. The coordinates are in model
+///				coordinates, located on the plane at
+///					z = - [self fieldDepth] / 2.
+///
+/// @discussion	We want perspective and ortho views to show objects at the
+///				 origin as the same size. Since perspective viewing is defined
+///				 by a frustum (truncated pyramid), we have to shrink the
+///				 visibily plane--which is located on the near clipping plane--in
+///				 such a way that the slice of the frustum at the origin will
+///				 have the dimensions of the desired visibility plane. (Remember,
+///				 slices grow *bigger* as they go deeper into the view. Since the
+///				 origin is deeper, that means we need a near visibility plane
+///				 that is *smaller* than the desired size at the origin.)
+///
 //==============================================================================
 - (Box2) nearFrustumClippingRectFromVisibleRect:(Box2)visibleRectIn
 {
@@ -344,11 +350,11 @@
 
 
 //========== nearOrthoClippingRectFromNearFrustumClippingRect: =================
-//
-// Purpose:		Returns the near clipping rectangle which would be used if the 
-//				given perspective view were converted to an orthographic 
-//				projection. 
-//
+///
+/// @abstract	Returns the near clipping rectangle which would be used if the
+///				given perspective view were converted to an orthographic
+///				projection.
+///
 //==============================================================================
 - (Box2) nearOrthoClippingRectFromNearFrustumClippingRect:(Box2)visibilityPlane
 {
@@ -375,10 +381,10 @@
 
 
 //========== visibleRectFromNearOrthoClippingRect: =============================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given orthographic clipping rect. 
-//
+///
+/// @abstract	Returns the Cocoa view visible rectangle which would result in
+///				the given orthographic clipping rect.
+///
 //==============================================================================
 - (Box2) visibleRectFromNearOrthoClippingRect:(Box2)visibilityPlane
 {
@@ -401,10 +407,10 @@
 
 
 //========== visibleRectFromNearFrustumClippingRect: ===========================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given frustum clipping rect. 
-//
+///
+/// @abstract	Returns the Cocoa view visible rectangle which would result in
+///				the given frustum clipping rect.
+///
 //==============================================================================
 - (Box2) visibleRectFromNearFrustumClippingRect:(Box2)visibilityPlane
 {
@@ -420,10 +426,10 @@
 
 
 //========== makeProjection ====================================================
-//
-// Purpose:		Returns the Cocoa view visible rectangle which would result in 
-//				the given frustum clipping rect. 
-//
+///
+/// @abstract	Returns the Cocoa view visible rectangle which would result in
+///				the given frustum clipping rect.
+///
 //==============================================================================
 - (void) makeProjection
 {
@@ -436,7 +442,7 @@
 	// Start from scratch
 	if(self->locationMode == LocationModeWalkthrough)
 	{
-		Size2	viewportSize = [scroller getVisibleRect].size;
+		Size2	viewportSize = self.visibleRect.size;
 		float aspect_ratio = viewportSize.width / viewportSize.height;
 		
 		buildFrustumMatrix(projection,
@@ -449,7 +455,7 @@
 	}
 	else
 	{
-		Box2 visibleRect = [scroller getVisibleRect];
+		Box2 visibleRect = self.visibleRect;
 
 		if(self->projectionMode == ProjectionModePerspective)
 		{
@@ -488,10 +494,10 @@
 
 
 //========== makeModelView =====================================================
-//
-// Purpose:		Rebuilds the model-view matrix from the camera distance, 
-//				rotation and center - call this if any of these change.
-//
+///
+/// @abstract	Rebuilds the model-view matrix from the camera distance,
+///				rotation and center - call this if any of these change.
+///
 //==============================================================================
 - (void) makeModelView
 {
@@ -521,13 +527,13 @@
 
 
 //========== tickle ============================================================
-//
-// Purpose:		Cause the camera to recompute the document size, scrolling
-//				position, and all matrices.
-//
-// Notes:		This routine must be called any time the external scroller
-//				properties change, so that the camera can 'react' to the change.
-//
+///
+/// @abstract	Cause the camera to recompute the document size, scrolling
+///				position, and all matrices.
+///
+/// @discussion	This routine must be called any time the external scroller
+///				properties change, so that the camera can 'react' to the change.
+///
 //==============================================================================
 - (void) tickle
 {
@@ -542,7 +548,7 @@
 		///
 
 		Point3	origin			= {0,0,0};
-		Point2	centerPoint		= V2BoxMid([scroller getVisibleRect]);
+		Point2	centerPoint		= V2BoxMid(self.visibleRect);
 		Box3	newBounds		= modelSize;
 		
 		if(V3EqualBoxes(newBounds, InvalidBox) == YES ||	
@@ -584,8 +590,8 @@
 		// Make the frame either just a little bit bigger than the
 		// size of the model, or the same as the scroll view,
 		// whichever is larger.
-		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  [scroller getVisibleRect].size.width  ),
-									  MAX(snugFrameSize.height, [scroller getVisibleRect].size.height ) );
+		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  self.visibleRect.size.width  ),
+									  MAX(snugFrameSize.height, self.visibleRect.size.height ) );
 		newFrameSize.width	= floor(newFrameSize.width);
 		newFrameSize.height = floor(newFrameSize.height);
 		
@@ -603,13 +609,13 @@
 			// To 'work around' this, we ignore the tickle that comes back from the reshape that is a result of the doc frame size
 			// changing; we don't need it since we're going to re-scroll and redo the MV projection in the next few lines.
 			++self->mute;
-			[scroller reflectLogicalDocumentSize:newFrameSize viewportRect:[scroller getVisibleRect]];
+			[scroller reflectLogicalDocumentSize:newFrameSize viewportRect:self.visibleRect];
 			--self->mute;
 		}
 		else
 		{
 			++self->mute;
-			[scroller reflectLogicalDocumentSize:[scroller getVisibleRect].size viewportRect:[scroller getVisibleRect]];
+			[scroller reflectLogicalDocumentSize:self.visibleRect.size viewportRect:self.visibleRect];
 			--self->mute;			
 		}
 
@@ -627,12 +633,12 @@
 
 
 //========== setModelSize: =====================================================
-//
-// Purpose:		Tell the camera the new size of the model it is viewing.
-//
-// Notes:		The tickle command will recompute the document size and then
-//				request a scrolling update.
-//
+///
+/// @abstract	Tell the camera the new size of the model it is viewing.
+///
+/// @discussion	The tickle command will recompute the document size and then
+///				request a scrolling update.
+///
 //==============================================================================
 - (void) setModelSize:(Box3)inModelSize
 {
@@ -645,10 +651,10 @@
 
 
 //========== setRotationCenter: =============================================
-//
-// Purpose:		Change the rotation center to a new location, and center that
-//				location.
-//
+///
+/// @abstract	Change the rotation center to a new location, and center that
+///				location.
+///
 //==============================================================================
 - (void) setRotationCenter:(Point3)point
 {
@@ -662,11 +668,11 @@
 
 
 //========== setZoomPercentage: ================================================
-//
-// Purpose:		Change the zoom of the camera.  This is called by the zoom
-//				text field and zoom commands.  It resizes the document and
-//				tickles the camera to make everything take effect.
-//
+///
+/// @abstract	Change the zoom of the camera.  This is called by the zoom
+///				text field and zoom commands.  It resizes the document and
+///				tickles the camera to make everything take effect.
+///
 //==============================================================================
 - (void) setZoomPercentage:(CGFloat)newPercentage
 {
@@ -689,10 +695,6 @@
 	Box2 zoomRect = V2SizeCenteredOnPoint(zoomSize, V2BoxMid(self.visibleRect));
 	self.visibleRect = zoomRect;
 
-
-//	Point2	centerPoint	   = V2BoxMid([scroller getVisibleRect]);
-//	Point2	centerFraction = V2Make(centerPoint.x / _graphicsSurfaceSize.width, centerPoint.y / _graphicsSurfaceSize.height);
-	
 	self->zoomFactor = newPercentage;
 
 	// Tell NS that sizes have changed - once we do this, we can request a re-scroll.
@@ -700,9 +702,9 @@
 	self->mute++;
 	
 	if(locationMode == LocationModeWalkthrough)
-		[scroller setScaleFactor:1.0];
+		[scroller reflectScaleFactor:1.0];
 	else
-		[scroller setScaleFactor:self->zoomFactor/100.0];
+		[scroller reflectScaleFactor:self->zoomFactor/100.0];
 		
 	self->mute--;	
 	[self tickle];								// Rebuild ourselves based on the new zoom, scroll, etc.
@@ -710,14 +712,14 @@
 
 
 //========== setZoomPercentage:preservePoint: ==================================
-//
-// Purpose:		Set the zoom percentage, keeping a particular model point fixed
-//				on screen.
-//
-// Notes:		To do this, we figure out where on screen the model point is, 
-//				then we zoom, and then we re-scroll that 3-d point to its new
-//				location.
-//
+///
+/// @abstract	Set the zoom percentage, keeping a particular model point fixed
+///				on screen.
+///
+/// @discussion	To do this, we figure out where on screen the model point is,
+///				then we zoom, and then we re-scroll that 3-d point to its new
+///				location.
+///
 //==============================================================================
 - (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point3)modelPoint
 {
@@ -737,11 +739,11 @@
 
 
 //========== scrollModelPoint:toViewportProportionalPoint: =====================
-//
-// Purpose:		Scroll a given 3-d point on our model to a particular location
-//				on screen.  The view location is a ratio of the visible portion
-//				of the screen, e.g. 0.5, 0.5 is the center of the screen.
-//
+///
+/// @abstract	Scroll a given 3-d point on our model to a particular location
+///				on screen.  The view location is a ratio of the visible portion
+///				of the screen, e.g. 0.5, 0.5 is the center of the screen.
+///
 //==============================================================================
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint
 {
@@ -767,7 +769,7 @@
 	// projection centered on that point. 
 	if(self->projectionMode == ProjectionModePerspective)
 	{
-		currentClippingRect = [self nearFrustumClippingRectFromVisibleRect:[scroller getVisibleRect]];
+		currentClippingRect = [self nearFrustumClippingRectFromVisibleRect:self.visibleRect];
 		
 		// Consider how perspective projection works: you can think of the frustum as having two 
 		// effects on X and Y coordinates:
@@ -822,7 +824,7 @@
 	}
 	else
 	{
-		currentClippingRect = [self nearOrthoClippingRectFromVisibleRect:[scroller getVisibleRect]];
+		currentClippingRect = [self nearOrthoClippingRectFromVisibleRect:self.visibleRect];
 		
 		// Ortho centers are trivial.
 		newCenter.x = transformedPoint.x;
@@ -846,9 +848,9 @@
 
 
 //========== setViewingAngle: ==================================================
-//
-// Purpose:		Change the viewing angle to a specific angle.
-//
+///
+/// @abstract	Change the viewing angle to a specific angle.
+///
 //==============================================================================
 - (void) setViewingAngle:(Tuple3)newAngle
 {
@@ -865,13 +867,13 @@
 
 
 //========== setProjectionMode: ================================================
-//
-// Purpose:		Change projection modes.
-//
-// Notes:		This is a special-case - normally we'd tickle, but we only need
-//				to make the projection matrix over because right now all 
-//				projection modes keep the same document size.
-//
+///
+/// @abstract	Change projection modes.
+///
+/// @discussion	This is a special-case - normally we'd tickle, but we only need
+///				to make the projection matrix over because right now all
+///				projection modes keep the same document size.
+///
 //==============================================================================
 - (void) setProjectionMode:(ProjectionModeT)newProjectionMode
 {
@@ -882,9 +884,9 @@
 
 
 //========== setLocationMode: ================================================
-//
-// Purpose:		Change Location modes.
-//
+///
+/// @abstract	Change Location modes.
+///
 //==============================================================================
 - (void) setLocationMode:(LocationModeT)newLocationMode
 {
@@ -894,9 +896,9 @@
 		
 		// Tell NS that sizes have changed - once we do this, we can request a re-scroll.
 		if(locationMode == LocationModeWalkthrough)
-			[scroller setScaleFactor:1.0];
+			[scroller reflectScaleFactor:1.0];
 		else
-			[scroller setScaleFactor:self->zoomFactor/100.0];
+			[scroller reflectScaleFactor:self->zoomFactor/100.0];
 		
 		[self tickle];
 	}
@@ -905,9 +907,9 @@
 
 
 //========== rotationDragged ===================================================
-//
-// Purpose:		Rotate the camera based on a 2-d drag vector.
-//
+///
+/// @abstract	Rotate the camera based on a 2-d drag vector.
+///
 //==============================================================================
 - (void) rotationDragged:(Vector2)viewDirection
 {
@@ -974,10 +976,10 @@
 
 
 //========== rotateByDegrees: ==================================================
-//
-// Purpose:		Rotate the camera by a fixed angle - used by the trackpad twist
-//				gesture, this rotates aronud the screen Y axis.
-//
+///
+/// @abstract	Rotate the camera by a fixed angle - used by the trackpad twist
+///				gesture, this rotates aronud the screen Y axis.
+///
 //==============================================================================
 - (void) rotateByDegrees:(float)angle
 {
