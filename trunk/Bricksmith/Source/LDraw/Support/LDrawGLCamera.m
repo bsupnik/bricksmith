@@ -738,6 +738,30 @@
 }//end setZoomPercentage:preservePoint:
 
 
+//========== scrollBy: =========================================================
+///
+/// @abstract	Scroll the visible rect by a delta.
+///
+/// @param 		scrollDelta_viewport The scroll offset to apply to the origin,
+/// 								 in the coordinate system of the viewport.
+/// 								 (Origin lower-left, size =
+/// 								 self.viewportSize) The camera will adjust
+/// 								 the requested delta by the current zoom
+/// 								 factor.
+///
+//==============================================================================
+- (void) scrollBy:(Vector2)scrollDelta_viewport
+{
+	Vector2 scrollDelta_visibleRect = V2MulScalar(scrollDelta_viewport, 1./(self->zoomFactor/100.0));
+	
+	Box2 newVisibleRect = self.visibleRect;
+	newVisibleRect.origin = V2Add(newVisibleRect.origin, scrollDelta_visibleRect);
+	
+	self.visibleRect = newVisibleRect;
+	[self tickle];
+}
+
+
 //========== scrollModelPoint:toViewportProportionalPoint: =====================
 ///
 /// @abstract	Scroll a given 3-d point on our model to a particular location

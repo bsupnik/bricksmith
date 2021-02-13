@@ -546,6 +546,23 @@ Vector2 V2Sub(Vector2 a, Vector2 b)
 }//end V3Sub
 
 
+//========== V2MulScalar =======================================================
+//
+// Purpose:		Returns (a * scalar).
+//
+//==============================================================================
+Vector2 V2MulScalar(Vector2 a, float scalar)
+{
+	Vector2 result;
+	
+	result.x = a.x * scalar;
+	result.y = a.y * scalar;
+	
+	return(result);
+	
+}//end V2MulScalar
+
+
 #pragma mark -
 
 //========== Matrix2x2Determinant ==============================================

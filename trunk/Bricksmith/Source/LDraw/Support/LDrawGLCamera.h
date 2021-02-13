@@ -84,6 +84,7 @@ typedef enum
 - (void) setZoomPercentage:(CGFloat)newPercentage;
 - (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point3)modelPoint;
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
+- (void) scrollBy:(Vector2)scrollDelta;
 
 // These change the camera by sending 'rotation' commands of various kinds to the camera.
 - (void) setViewingAngle:(Tuple3)newAngle;

@@ -1810,9 +1810,22 @@ static Size2 NSSizeToSize2(NSSize size)
 	}
 	else
 	{
-		// TODO: FIX SCROLL CODE
 		// Regular scrolling
-		[super scrollWheel:theEvent];
+		
+		Vector2 scrollDelta = V2Make(theEvent.scrollingDeltaX, theEvent.scrollingDeltaY);
+		if(theEvent.hasPreciseScrollingDeltas == NO)
+		{
+			scrollDelta = V2MulScalar(scrollDelta, 10); // totally arbitrary value
+		}
+		else
+		{
+			// I find default scrolling intolerably touchy. The speed is not so
+			// bad in a webpage, but too much for fine-detail Lego CAD. Apply a
+			// completely arbitrary slowing factor. 
+			scrollDelta = V2MulScalar(scrollDelta, 0.5);
+		}
+		
+		[self->renderer scrollBy:scrollDelta];
 	}
 }
 
