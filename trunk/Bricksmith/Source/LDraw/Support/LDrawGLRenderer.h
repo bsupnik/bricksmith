@@ -118,6 +118,7 @@ typedef enum
 - (void) displayNeedsUpdating:(NSNotification *)notification;
 
 // Utilities
+- (BOOL) autoscrollPoint:(Point2)point_view relativeToRect:(Box2)viewRect;
 //- (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getDirectivesUnderRect:(Box2)rect_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 //- (NSArray *) getPartsFromHits:(NSDictionary *)hits;

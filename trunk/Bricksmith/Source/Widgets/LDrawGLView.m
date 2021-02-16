@@ -56,6 +56,17 @@ static Size2 NSSizeToSize2(NSSize size)
 }
 
 
+//========== NSRectToBox2 ======================================================
+///
+/// @abstract	Convert Cocoa rects to our internal format.
+///
+//==============================================================================
+static Box2 NSRectToBox2(NSRect rect)
+{
+	return V2MakeBox(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+}
+
+
 @implementation LDrawGLView
 
 #pragma mark -
@@ -2137,38 +2148,11 @@ static Size2 NSSizeToSize2(NSSize size)
 //==============================================================================
 - (BOOL)autoscroll:(NSEvent *)event
 {
-	NSPoint location_view = [self convertPoint:[[self window] mouseLocationOutsideOfEventStream] fromView:nil];
-	BOOL didScroll = NO;
-	
-	if( NSPointInRect(location_view, self.bounds) == NO )
-	{
-		// Amount to offset origin
-		Vector2 scrollVector = ZeroPoint2;
-		
-		// x
-		if(location_view.x < NSMinX(self.bounds))
-		{
-			scrollVector.x = location_view.x - NSMinX(self.bounds);
-		}
-		else if(location_view.x > NSMaxX(self.bounds))
-		{
-			scrollVector.x = location_view.x - NSMaxX(self.bounds);
-		}
-		
-		// y
-		if(location_view.y < NSMinY(self.bounds))
-		{
-			scrollVector.y = location_view.y - NSMinY(self.bounds);
-		}
-		else if(location_view.y > NSMaxY(self.bounds))
-		{
-			scrollVector.y = location_view.y - NSMaxY(self.bounds);
-		}
-		
-		[self->renderer scrollBy:scrollVector];
-		didScroll = YES;
-	}
-	
+	NSPoint location_view	= [self convertPoint:[[self window] mouseLocationOutsideOfEventStream] fromView:nil];
+	Box2	bounds			= NSRectToBox2(self.bounds);
+	Point2	location		= V2Make(location_view.x, location_view.y);
+	BOOL	didScroll		= [self->renderer autoscrollPoint:location relativeToRect:bounds];
+
 	return didScroll;
 }
 
@@ -2416,6 +2400,17 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSPoint 		viewPoint			= [self convertPoint:dragPointInWindow fromView:nil];
 	BOOL			constrainDragAxis	= NO;
 	NSDragOperation dragOperation		= NSDragOperationNone;
+	
+	// Autoscroll?
+	// Drag point is always inside view. But if it's close to the edges, we
+	// autoscroll. This matches the out-of-box behavior provided by AppKit for
+	// views within an NSScrollView.
+	NSRect noAutoscrollZone = NSInsetRect(self.bounds, 20, 20); // it's more like 50 in AppKit
+	BOOL needsAutoscroll = NSPointInRect(viewPoint, noAutoscrollZone) == NO; // implies we are in the margin
+	if(needsAutoscroll)
+	{
+		[self->renderer autoscrollPoint:V2Make(viewPoint.x, viewPoint.y) relativeToRect:NSRectToBox2(noAutoscrollZone)];
+	}
 	
 	// local drag?
 	if(sourceView == self)

@@ -1844,6 +1844,49 @@
 #pragma mark UTILITIES
 #pragma mark -
 
+//========== autoscrollPoint:relativeToRect: ===================================
+///
+/// @abstract	If the point is outside the given view rect, this will scroll
+/// 			the view by the amount the point is outside.
+///
+//==============================================================================
+- (BOOL) autoscrollPoint:(Point2)point_view
+		  relativeToRect:(Box2)viewRect
+{
+	BOOL didScroll = NO;
+	
+	if( V2BoxContains(viewRect, point_view) == NO )
+	{
+		// Amount to offset origin
+		Vector2 scrollVector = ZeroPoint2;
+		
+		// x
+		if(point_view.x < V2BoxMinX(viewRect))
+		{
+			scrollVector.x = point_view.x - V2BoxMinX(viewRect);
+		}
+		else if(point_view.x > V2BoxMaxX(viewRect))
+		{
+			scrollVector.x = point_view.x - V2BoxMaxX(viewRect);
+		}
+		
+		// y
+		if(point_view.y < V2BoxMinY(viewRect))
+		{
+			scrollVector.y = point_view.y - V2BoxMinY(viewRect);
+		}
+		else if(point_view.y > V2BoxMaxY(viewRect))
+		{
+			scrollVector.y = point_view.y - V2BoxMaxY(viewRect);
+		}
+		
+		[self scrollBy:scrollVector];
+		didScroll = YES;
+	}
+	
+	return didScroll;
+}
+
 //========== getDepthUnderPoint: ===============================================
 //
 // Purpose:		Returns the depth component of the nearest object under the view 
