@@ -249,6 +249,7 @@ void AppendChoicesToNewItem(
 	[self loadDataIntoDocumentUI];
 	
 	// Set opening zoom percentages
+	[[self foremostWindow] layoutIfNeeded]; // zoomToFit needs view sizes
 	LDrawGLView	*mainViewport = [self main3DViewport];
 	{
 		NSArray<LDrawGLView*>	*allViewports		= [self all3DViewports];
