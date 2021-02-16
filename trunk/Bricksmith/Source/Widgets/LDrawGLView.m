@@ -1550,9 +1550,7 @@ static Size2 NSSizeToSize2(NSSize size)
 			case MouseDraggingBeginImmediately:
 				if (selectionIsMarquee)
 				{
-					// TODO: FIX SCROLL CODE
-					[self autoscroll:theEvent];
-					[self mousePartSelection:theEvent];				
+					[self mousePartSelection:theEvent];
 				}
 				else
 					[self directInteractionDragged:theEvent];
@@ -1564,9 +1562,7 @@ static Size2 NSSizeToSize2(NSSize size)
 				else {
 					if (selectionIsMarquee)
 					{
-						// TODO: FIX SCROLL CODE
-						[self autoscroll:theEvent];
-						[self mousePartSelection:theEvent];				
+						[self mousePartSelection:theEvent];
 					}
 					else
 						[self directInteractionDragged:theEvent				];
@@ -1821,11 +1817,33 @@ static Size2 NSSizeToSize2(NSSize size)
 		{
 			// I find default scrolling intolerably touchy. The speed is not so
 			// bad in a webpage, but too much for fine-detail Lego CAD. Apply a
-			// completely arbitrary slowing factor. 
+			// completely arbitrary slowing factor.
 			scrollDelta = V2MulScalar(scrollDelta, 0.5);
 		}
 		
-		[self->renderer scrollBy:scrollDelta];
+		// Units are viewport points. But direction is very confusing.
+		//
+		// +x means scroll the image rightward
+		//     • expose content to left
+		//     • shift origin -x
+		//
+		// +y means scroll the image downward
+		//    	• expose content above
+		//    	• shift origin -y in flipped coordinate system
+		//    	• shift origin +y in non-flipped coordinate system
+		
+		Vector2 scrollDelta_viewport = scrollDelta;
+		
+		// For, um, reasons?, the x delta from NSEvent is always backward compared
+		// to how we want to move the origin. See notes above.
+		scrollDelta_viewport.x *= -1;
+		
+		if([self isFlipped])
+		{
+			scrollDelta_viewport.y *= -1;
+		}
+		
+		[self->renderer scrollBy:scrollDelta_viewport];
 	}
 }
 
@@ -2050,7 +2068,7 @@ static Size2 NSSizeToSize2(NSSize size)
 			// scroll zone this will continuously scroll.  I do _not_ know what the correct scrolling interval should be...
 			// auto-scroll seems jerky.
 			self->marqueeSelectionMode = selectionMode;
-			self->autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
+			self->autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.2
 																		target:self
 																	  selector:@selector(autoscrollTimerFired:)
 																	  userInfo:self
@@ -2108,6 +2126,53 @@ static Size2 NSSizeToSize2(NSSize size)
 }//end cancelClickAndHoldTimer
 
 
+//========== autoscroll: =======================================================
+///
+/// @abstract	If the event is outside the view, this will scroll the view by
+/// 			the amount the event is outside.
+///
+///				This is an override of an AppKit method. But since we have no
+/// 			enclosing clip view, we must re-implement the logic ourselves.
+///
+//==============================================================================
+- (BOOL)autoscroll:(NSEvent *)event
+{
+	NSPoint location_view = [self convertPoint:[[self window] mouseLocationOutsideOfEventStream] fromView:nil];
+	BOOL didScroll = NO;
+	
+	if( NSPointInRect(location_view, self.bounds) == NO )
+	{
+		// Amount to offset origin
+		Vector2 scrollVector = ZeroPoint2;
+		
+		// x
+		if(location_view.x < NSMinX(self.bounds))
+		{
+			scrollVector.x = location_view.x - NSMinX(self.bounds);
+		}
+		else if(location_view.x > NSMaxX(self.bounds))
+		{
+			scrollVector.x = location_view.x - NSMaxX(self.bounds);
+		}
+		
+		// y
+		if(location_view.y < NSMinY(self.bounds))
+		{
+			scrollVector.y = location_view.y - NSMinY(self.bounds);
+		}
+		else if(location_view.y > NSMaxY(self.bounds))
+		{
+			scrollVector.y = location_view.y - NSMaxY(self.bounds);
+		}
+		
+		[self->renderer scrollBy:scrollVector];
+		didScroll = YES;
+	}
+	
+	return didScroll;
+}
+
+
 //========== autoscrollTimerFired: ===========================================
 //
 // Purpose:		If we got here, it means the user has successfully executed a 
@@ -2121,7 +2186,6 @@ static Size2 NSSizeToSize2(NSSize size)
 	NSEvent * event = [NSApp currentEvent];
 	if ([event type] == NSLeftMouseDragged )
 	{
-		// TODO: FIX SCROLL CODE
 		[view autoscroll:event];
 	}
 }

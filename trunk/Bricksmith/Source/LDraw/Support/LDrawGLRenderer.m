@@ -2142,35 +2142,21 @@
 ///
 /// @abstract	Apply a scroll delta (as delivered from an NSEvent)
 ///
-/// @param 		scrollDelta_view	Units are viewport points. But direction is
-/// 								very confusing.
-///
-/// 								+x means scroll the image rightward
-/// 								    • expose content to left
-/// 								    • shift origin -x
-///
-/// 								+y means scroll the image downward
-/// 								   	• expose content above
-/// 								   	• shift origin -y in flipped coordinate system
-/// 								   	• shift origin +y in non-flipped coordinate system
+/// @param 		scrollDelta_viewport The scroll offset to apply to the origin,
+/// 								 in the coordinate system of the viewport.
+/// 								 (Origin lower-left, size =
+/// 								 self.viewportSize) The camera will adjust
+/// 								 the requested delta by the current zoom
+/// 								 factor.
 ///
 //==============================================================================
-- (void) scrollBy:(Vector2)scrollDelta_view
+- (void) scrollBy:(Vector2)scrollDelta_viewport
 {
-	Vector2 scrollDelta_viewport = scrollDelta_view;
-	
-	// For, um, reasons?, the x delta from NSEvent is always backward compared
-	// to how we want to move the origin. See notes above.
-	scrollDelta_viewport.x *= -1;
-	
-	if([self isFlipped])
-	{
-		scrollDelta_viewport.y *= -1;
-	}
-	
 	[camera scrollBy:scrollDelta_viewport];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
+
+
 
 
 //========== scrollCenterToModelPoint: =========================================
