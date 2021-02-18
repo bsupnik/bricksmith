@@ -29,11 +29,12 @@
 #import "LDrawDocument.h"
 #import "LDrawDragHandle.h"
 #import "LDrawFile.h"
+#import "LDrawGLRenderer.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
-#import "LDrawGLRenderer.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
 #import "OverlayViewCategory.h"
 #import "UserDefaultsCategory.h"
@@ -2995,6 +2996,20 @@ static Box2 NSRectToBox2(NSRect rect)
 }//end saveImageToPath:
 
 
+//========== scrollCameraVisibleRectToPoint: ===================================
+///
+/// @abstract	Scrolls so the given point is the origin of the camera's
+/// 			visibleRect. This is in the coordinate system of the boxes
+/// 			passed to -reflectLogicalDocumentRect:visibleRect:.
+///
+//==============================================================================
+- (void) scrollCameraVisibleRectToPoint:(Point2)visibleRectOrigin
+{
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer scrollCameraVisibleRectToPoint:visibleRectOrigin];
+}
+
+
 //========== scrollCenterToModelPoint: =========================================
 //
 // Purpose:		Scrolls the receiver (if it is inside a scroll view) so that 
@@ -3059,12 +3074,24 @@ static Box2 NSRectToBox2(NSRect rect)
 //				the change in document size by NS will adjust scroll bars, etc.
 //
 //==============================================================================
-- (void) reflectLogicalDocumentSize:(Size2)newDocumentSize viewportRect:(Box2)viewportRect
+- (void) reflectLogicalDocumentRect:(Box2)newDocumentRect visibleRect:(Box2)visibleRect
 {
-// TODO: FIX SCROLL CODE
-	// Optional! We could set some NSScrollers (scroll bars) to reflect the
-	// current state of affairs. In any event, this should not result in ANY
-	// changes to the viewport.
+	LDrawViewerContainer* enclosingContainer = nil;
+	
+	NSView* superview = self.superview;
+	while(superview != nil)
+	{
+		if([superview isKindOfClass:[LDrawViewerContainer class]])
+		{
+			enclosingContainer = (LDrawViewerContainer*)superview;
+			break;
+		}
+		superview = superview.superview;
+	}
+	
+	// The container has the opportunity to display scroll bars to reflect our
+	// document position. This should not result in ANY changes to the viewport.
+	[enclosingContainer reflectLogicalDocumentRect:newDocumentRect visibleRect:visibleRect];
 }
 
 

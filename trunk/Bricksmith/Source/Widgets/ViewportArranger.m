@@ -477,6 +477,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 	
 	// container scrollview
 	rowView = [[LDrawViewerContainer alloc] initWithFrame:NSMakeRect(0, 0, 256, 256)];
+	rowView.showsScrollbars = YES;
 
 	return rowView;
 	

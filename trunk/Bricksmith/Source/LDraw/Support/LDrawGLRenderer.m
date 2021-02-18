@@ -2200,6 +2200,18 @@
 }
 
 
+//========== scrollCameraVisibleRectToPoint: ===================================
+///
+/// @abstract	Scrolls so the given point is the origin of the camera's
+/// 			visibleRect. This is in the coordinate system of the boxes
+/// 			passed to -reflectLogicalDocumentRect:visibleRect:.
+///
+//==============================================================================
+- (void) scrollCameraVisibleRectToPoint:(Point2)visibleRectOrigin
+{
+	[self->camera scrollToPoint:visibleRectOrigin];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+}
 
 
 //========== scrollCenterToModelPoint: =========================================

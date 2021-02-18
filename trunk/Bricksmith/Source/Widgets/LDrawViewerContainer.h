@@ -7,6 +7,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MatrixMath.h"
+
 @class LDrawGLView;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -23,9 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 //------------------------------------------------------------------------------
 @interface LDrawViewerContainer : NSView
 
-@property (nonatomic, assign) LDrawGLView* glView;
+@property (nonatomic, readonly) LDrawGLView* glView;
+@property (nonatomic, assign) BOOL showsScrollbars;
 
 - (void) setVerticalPlacard:(NSView *)placardView;
+- (void) reflectLogicalDocumentRect:(Box2)newDocumentRect visibleRect:(Box2)visibleRect;
 
 @end
 

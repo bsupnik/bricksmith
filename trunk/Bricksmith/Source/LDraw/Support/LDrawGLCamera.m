@@ -3,7 +3,7 @@
 //  Bricksmith
 //
 //  Created by bsupnik on 9/23/13.
-//  Copyright 2013 __MyCompanyName__. All rights reserved.
+//  Copyright 2013. All rights reserved.
 //
 
 #import "LDrawGLCamera.h"
@@ -548,7 +548,6 @@
 		///
 
 		Point3	origin			= {0,0,0};
-		Point2	centerPoint		= V2BoxMid(self.visibleRect);
 		Box3	newBounds		= modelSize;
 		
 		if(V3EqualBoxes(newBounds, InvalidBox) == YES ||	
@@ -567,13 +566,13 @@
 		float	distance2		= V3DistanceBetween2Points(origin, newBounds.max );
 		float	newSize			= MAX(distance1, distance2) + 40; //40 is just to provide a margin.
 		
-		// The canvas resizing is set to a fairly large granularity so 
-		// it doesn't constantly change on people. 
-		#if !NO_ROUNDING_DOC_SIZE
-		newSize = ceil(newSize / 384) * 384;
-		#endif
-
+		
+		Box2	viewportRect			= V2MakeBox(0, 0, _graphicsSurfaceSize.width, _graphicsSurfaceSize.height);
+		Size2	snugDocumentSize		= V2MakeSize( newSize*2, newSize*2 );
+		Size2	expandedViewportSize	= V2MakeSize(MAX(fabs(V2BoxMinX(self.visibleRect) - V2BoxMidX(viewportRect)), fabs(V2BoxMaxX(self.visibleRect) - V2BoxMidX(viewportRect))) * 2,
+													 MAX(fabs(V2BoxMinY(self.visibleRect) - V2BoxMidY(viewportRect)), fabs(V2BoxMaxY(self.visibleRect) - V2BoxMidY(viewportRect))) * 2);
 		self->cameraDistance = - (newSize) * CAMERA_DISTANCE_FACTOR;
+		self->snugFrameSize	= snugDocumentSize;
 
 		[self makeModelView];		// New camera distance means rebuild Mv.
 		
@@ -582,25 +581,10 @@
 		// We will restore scrolling, which can get borked when the document size changes.
 		//
 		
-		Size2	oldFrameSize	= _graphicsSurfaceSize;
-		Size2	newFrameSize	= ZeroSize2;
-		
-		self->snugFrameSize	= V2MakeSize( newSize*2, newSize*2 );
-		
-		// Make the frame either just a little bit bigger than the
-		// size of the model, or the same as the scroll view,
-		// whichever is larger.
-		newFrameSize	= V2MakeSize( MAX(snugFrameSize.width,  self.visibleRect.size.width  ),
-									  MAX(snugFrameSize.height, self.visibleRect.size.height ) );
-		newFrameSize.width	= floor(newFrameSize.width);
-		newFrameSize.height = floor(newFrameSize.height);
-		
-		// The canvas size changes will effectively be distributed equally 
-		// on all sides, because the model is always drawn in the center of 
-		// the canvas. So, our effective viewing center will only change by 
-		// half the size difference. 
-		centerPoint.x += (newFrameSize.width  - oldFrameSize.width)/2;
-		centerPoint.y += (newFrameSize.height - oldFrameSize.height)/2;
+		Box2 newDocumentRect = ZeroBox2;
+		newDocumentRect.size.width = MAX(_graphicsSurfaceSize.width, MAX(snugDocumentSize.width, expandedViewportSize.width));
+		newDocumentRect.size.height = MAX(_graphicsSurfaceSize.height, MAX(snugDocumentSize.height, expandedViewportSize.height));
+		newDocumentRect = V2SizeCenteredOnPoint(newDocumentRect.size, V2BoxMid(viewportRect));
 		
 		if(locationMode == LocationModeModel)
 		{
@@ -609,13 +593,13 @@
 			// To 'work around' this, we ignore the tickle that comes back from the reshape that is a result of the doc frame size
 			// changing; we don't need it since we're going to re-scroll and redo the MV projection in the next few lines.
 			++self->mute;
-			[scroller reflectLogicalDocumentSize:newFrameSize viewportRect:self.visibleRect];
+			[scroller reflectLogicalDocumentRect:newDocumentRect visibleRect:self.visibleRect];
 			--self->mute;
 		}
 		else
 		{
 			++self->mute;
-			[scroller reflectLogicalDocumentSize:self.visibleRect.size viewportRect:self.visibleRect];
+			[scroller reflectLogicalDocumentRect:newDocumentRect visibleRect:self.visibleRect];
 			--self->mute;			
 		}
 
@@ -758,6 +742,24 @@
 	newVisibleRect.origin = V2Add(newVisibleRect.origin, scrollDelta_visibleRect);
 	
 	self.visibleRect = newVisibleRect;
+	[self tickle];
+}
+
+
+//========== scrollToPoint: ====================================================
+///
+/// @abstract	Scrolls so the given point is the origin of the visibleRect.
+/// 			This is in the coordinate system of the boxes passed to
+/// 			-reflectLogicalDocumentRect:visibleRect:.
+///
+//==============================================================================
+- (void) scrollToPoint:(Point2)visibleRectOrigin
+{
+	Box2 newVisibleRect = self.visibleRect;
+	
+	newVisibleRect.origin = visibleRectOrigin;
+	self.visibleRect = newVisibleRect;
+	
 	[self tickle];
 }
 
