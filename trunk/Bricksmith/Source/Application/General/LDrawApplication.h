@@ -48,6 +48,7 @@
 - (IBAction) hideMouseTools:(id)sender;
 
 //Accessors
++ (LDrawApplication *) shared;
 + (NSOpenGLPixelFormat *) openGLPixelFormat;
 + (Inspector *) sharedInspector;
 + (NSOpenGLContext *) sharedOpenGLContext;

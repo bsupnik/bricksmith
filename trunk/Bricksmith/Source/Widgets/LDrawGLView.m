@@ -120,22 +120,6 @@ static NSSize Size2ToNSSize(Size2 size)
 		[superview setCopiesOnScroll:NO];
 	}
 	
-	//Machinery needed to draw Quartz overtop OpenGL. Sadly, it caused our view 
-	// to become transparent when minimizing to the dock. In the end, I didn't 
-	// need it anyway.
-//	long backgroundOrder = -1;
-//	[[self openGLContext] setValues:&backgroundOrder forParameter: NSOpenGLCPSurfaceOrder];
-//
-//
-//	NSScrollView *scrollView = [self enclosingScrollView];
-//	if(scrollView != nil){
-//		NSLog(@"making stuff transparent");
-//		[[self window] setOpaque:NO];
-//		[[self window] setAlphaValue:.999f];
-////		[[self superview] setDrawsBackground:NO];
-////		[scrollView setDrawsBackground:NO];
-//	}
-	
 }//end awakeFromNib
 
 #pragma mark -
@@ -205,10 +189,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	
 	[self setAcceptsFirstResponder:YES];
 	
-	canDrawLock				= [[NSConditionLock alloc] initWithCondition:NO];
-	keepDrawThreadAlive		= YES;
-	
-	// Set up our OpenGL context. We need to base it on a shared context so that 
+	// Set up our OpenGL context. We need to base it on a shared context so that
 	// display-list names can be shared globally throughout the application.
 	context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat
 										 shareContext:[LDrawApplication sharedOpenGLContext]];
@@ -279,6 +260,8 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) prepareOpenGL
 {
+	[super prepareOpenGL];
+	
 	[self takeBackgroundColorFromUserDefaults]; //glClearColor()
 	
 }//end prepareOpenGL
@@ -296,197 +279,26 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) drawRect:(NSRect)rect
 {
-	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	
-	//We have the option of doing multithreaded drawing, so all the actual 
-	// drawing code is in a thread-accessible method.
-	
-	//threading isn't working out well at all. So I have a threading preference, 
-	// which will be OFF by default.
-	if([userDefaults boolForKey:@"UseThreads"] == YES)
-	{
-		// signal the render thread to wake up
-		[self->canDrawLock lockWhenCondition:NO];
-		[self->canDrawLock unlockWithCondition:YES];
-	}
-	else
-	{
-		// draw directly
-		[self draw];
-	}
+	[self draw];
 		
 }//end drawRect:
-
-
-//========== threadDrawLoop ====================================================
-//
-// Purpose:		This is the body function for highly-experimental multithreaded 
-//				drawing.
-//
-// Notes:		As of Bricksmith 2.1, this still doesn't work, even after years 
-//				of trying to get it to. It really seems like Mac OS X is at 
-//				fault.
-//
-//==============================================================================
-- (void) threadDrawLoop:(id)sender
-{
-	BOOL threadCanContinue = YES;
-	
-	while(threadCanContinue == YES)
-	{
-		[self->canDrawLock lockWhenCondition:YES];
-		{
-			NSAutoreleasePool	*pool	= [[NSAutoreleasePool alloc] init];
-			
-			[self draw];
-			
-			// the keepAlive flag is protected by our canDrawLock mutex.
-			threadCanContinue = self->keepDrawThreadAlive;
-			
-			[pool release];
-		}
-		[self->canDrawLock unlockWithCondition:NO];
-	}
-	
-}//end threadDrawLoop:
 
 
 //========== draw ==============================================================
 //
 // Purpose:		Draw the LDraw content of the view.
 //
-// Notes:		This method is, in theory at least, as thread-safe as Apple's 
-//				OpenGL implementation is. Which is to say, not very much.
-//
 //==============================================================================
 - (void) draw
 {
-	//mark another outstanding draw request, then get in line by requesting the 
-	// mutex.
-	@synchronized(self)
-	{
-		numberDrawRequests += 1;
-	}
-	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
-		
-		//any previous draw requests have now executed and let go of the mutex.
-		// if we are the LAST draw in the queue, we draw. Otherwise, we drop 
-		// ourselves, and defer to the last guy.
-		if(numberDrawRequests == 1)
-		{
-			[self->renderer draw];
-			
-		}
-		//else we just drop the draw.
+		[self->renderer draw];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
-	//cleanup
-	@synchronized(self)
-	{
-		self->numberDrawRequests -= 1;
-	}
-	
 }//end draw
-
-
-//========== drawFocusRing =====================================================
-//
-// Purpose:		Draws a focus ring around the view, which indicates that this 
-//				view is the first responder.
-//
-// Notes:		This is obsolete; the focus ring can (and is) now drawn in 
-//				Cocoa. 
-//
-//==============================================================================
-- (void) drawFocusRing
-{
-//	NSRect	visibleRect = [self visibleRect];
-//	CGFloat	lineWidth	= 1.0;
-//	
-//	lineWidth /= [self->renderer zoomPercentage] / 100;
-//	
-//	//we just want to DRAW plain colored pixels.
-//	glDisable(GL_LIGHTING);
-//	
-//	glMatrixMode(GL_PROJECTION);
-//	glPushMatrix();
-//	{
-//		glLoadIdentity();
-//		gluOrtho2D( NSMinX(visibleRect), NSMaxX(visibleRect),
-//				    NSMinY(visibleRect), NSMaxY(visibleRect) );
-//				   
-//		glMatrixMode(GL_MODELVIEW);
-//		glPushMatrix();
-//		{
-//			//we indicate focus by drawing a series of framing lines.
-//			
-//			glLoadIdentity();
-//			
-//			glColor4ub(125, 151, 174, 255);
-//			[self strokeInsideRect:visibleRect
-//						 thickness:lineWidth];
-//			
-//			glColor4ub(137, 173, 204, 213);
-//			[self strokeInsideRect:NSInsetRect( visibleRect, 1 * lineWidth, 1 * lineWidth )
-//						 thickness:lineWidth];
-//			
-//			glColor4ub(161, 184, 204, 172);
-//			[self strokeInsideRect:NSInsetRect( visibleRect, 2 * lineWidth, 2 * lineWidth )
-//						 thickness:lineWidth];
-//			
-//			glColor4ub(184, 195, 204, 128);
-//			[self strokeInsideRect:NSInsetRect( visibleRect, 3 * lineWidth, 3 * lineWidth )
-//						 thickness:lineWidth];
-//		}
-//		glPopMatrix();
-//	}
-//	glMatrixMode(GL_PROJECTION);
-//	glPopMatrix();
-//	
-//	glEnable(GL_LIGHTING);
-
-}//end drawFocusRing
-
-
-//========== strokeInsideRect:thickness: =======================================
-//
-// Purpose:		Draws a line of the specified thickness on the inside edge of 
-//				the rectangle.
-//
-//==============================================================================
-- (void) strokeInsideRect:(NSRect)rect
-				thickness:(CGFloat)borderWidth
-{
-	//draw like the wood of a picture frame: four trapezoids
-	glBegin(GL_QUAD_STRIP);
-	
-	//lower left
-	glVertex2f( NSMinX(rect),				NSMinY(rect)				);
-	glVertex2f( NSMinX(rect) + borderWidth,	NSMinY(rect) + borderWidth	);
-	
-	//lower right
-	glVertex2f( NSMaxX(rect),				NSMinY(rect)				);
-	glVertex2f( NSMaxX(rect) - borderWidth,	NSMinY(rect) + borderWidth	);
-	
-	//upper right
-	glVertex2f( NSMaxX(rect),				NSMaxY(rect)				);
-	glVertex2f( NSMaxX(rect) - borderWidth,	NSMaxY(rect) - borderWidth	);
-	
-	//upper left
-	glVertex2f( NSMinX(rect),				NSMaxY(rect)				);
-	glVertex2f( NSMinX(rect) + borderWidth,	NSMaxY(rect) - borderWidth	);
-	
-	//lower left (finish last trapezoid)
-	glVertex2f( NSMinX(rect),				NSMinY(rect)				);
-	glVertex2f( NSMinX(rect) + borderWidth,	NSMinY(rect) + borderWidth	);
-	
-	glEnd();
-	
-}//end strokeInsideRect:thickness:
 
 
 //========== isFlipped =========================================================
@@ -3039,6 +2851,8 @@ static NSSize Size2ToNSSize(Size2 size)
 //==============================================================================
 - (void) reshape
 {
+	[super reshape];
+	
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
@@ -3071,7 +2885,7 @@ static NSSize Size2ToNSSize(Size2 size)
 {
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
-		[[self openGLContext] update];
+		[super update];
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
@@ -3106,40 +2920,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	}
 
 }//end viewDidMoveToSuperview
-
-
-//========== viewDidMoveToWindow ===============================================
-//
-// Purpose:		The view is either being added to a window (on creation) or 
-//				removed from one (on destruction).
-//
-//==============================================================================
-- (void) viewDidMoveToWindow
-{
-	// Kill of any existing render thread. This is especially important for 
-	// deallocation, since the thread holds a retain on us.
-	if(hasThread == YES)
-	{
-		[self->canDrawLock lock];
-		self->keepDrawThreadAlive = NO;
-		[self->canDrawLock unlockWithCondition:YES]; // thread guard loop will die as soon as this is hit.
-		
-		self->hasThread = NO;
-	}
-	
-	// Create a new render thread if we are moving to an actual window
-	// (otherwise, we're probably being deallocated).
-	if([self window] != nil)
-	{
-		// Multithreading didn't work out too hot; it was incompatible with nested display lists.
-//		[self->canDrawLock lockWhenCondition:NO]; // wait for other thread to finish
-//		self->keepDrawThreadAlive = YES;
-//		[self->canDrawLock unlockWithCondition:NO];
-//		[NSThread detachNewThreadSelector:@selector(threadDrawLoop:) toTarget:self withObject:nil];
-//		hasThread = YES;
-	}
-	
-}//end viewDidMoveToWindow
 
 
 #pragma mark -
@@ -3502,7 +3282,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[renderer		release];
-	[canDrawLock	release];
 	[autosaveName	release];
 
 	[super dealloc];

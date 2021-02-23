@@ -51,12 +51,6 @@
 	BOOL                    acceptsFirstResponder;	// YES if we can become key
 	NSString                *autosaveName;
 	
-	// Threading
-	NSConditionLock			*canDrawLock;			// when condition is YES, render thread will wake up and draw.
-	BOOL					keepDrawThreadAlive;	// when it has no items in it, the thread will die
-	NSUInteger              numberDrawRequests;		// how many threaded draws are piling up in the queue.
-	BOOL					hasThread;
-	
 	// Event Tracking
 	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
 	NSTimer					*autoscrollTimer;		// timer to keep autoscroll going when mouse is stationary in scroll zone
@@ -72,8 +66,6 @@
 
 // Drawing
 - (void) draw;
-- (void) drawFocusRing;
-- (void) strokeInsideRect:(NSRect)rect thickness:(CGFloat)borderWidth;
 
 // Accessors
 - (LDrawDirective *) LDrawDirective;
