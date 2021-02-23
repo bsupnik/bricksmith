@@ -24,8 +24,84 @@
 #import "MLCadIni.h"
 
 @interface MinifigureDialogController ()
+{
+	MLCadIni		*iniFile;
+	NSString		*minifigureName;
+	LDrawMPDModel	*minifigure;
+	
+	BOOL		hasHat;
+	BOOL		hasNeckAccessory;
+	BOOL		hasHips;
+	BOOL		hasRightArm;
+	BOOL		hasRightHand;
+	BOOL		hasRightHandAccessory;
+	BOOL		hasRightLeg;
+	BOOL		hasRightLegAccessory;
+	BOOL		hasLeftArm;
+	BOOL		hasLeftHand;
+	BOOL		hasLeftHandAccessory;
+	BOOL		hasLeftLeg;
+	BOOL		hasLeftLegAccessory;
+	
+	float		headElevation;
+	
+	float		angleOfHat;
+	float		angleOfHead;
+	float		angleOfNeck;
+	float		angleOfRightArm;
+	float		angleOfRightHand;
+	float		angleOfRightHandAccessory;
+	float		angleOfRightLeg;
+	float		angleOfRightLegAccessory;
+	float		angleOfLeftArm;
+	float		angleOfLeftHand;
+	float		angleOfLeftHandAccessory;
+	float		angleOfLeftLeg;
+	float		angleOfLeftLegAccessory;
+	
+	//Nib widgets
+	
+	IBOutlet LDrawColorWell		*hatsColorWell;
+	IBOutlet LDrawColorWell		*headsColorWell;
+	IBOutlet LDrawColorWell		*necksColorWell;
+	IBOutlet LDrawColorWell		*torsosColorWell;
+	IBOutlet LDrawColorWell		*rightArmsColorWell;
+	IBOutlet LDrawColorWell		*rightHandsColorWell;
+	IBOutlet LDrawColorWell		*rightHandAccessoriesColorWell;
+	IBOutlet LDrawColorWell		*leftArmsColorWell;
+	IBOutlet LDrawColorWell		*leftHandsColorWell;
+	IBOutlet LDrawColorWell		*leftHandAccessoriesColorWell;
+	IBOutlet LDrawColorWell		*hipsColorWell;
+	IBOutlet LDrawColorWell		*rightLegsColorWell;
+	IBOutlet LDrawColorWell		*rightLegAccessoriesColorWell;
+	IBOutlet LDrawColorWell		*leftLegsColorWell;
+	IBOutlet LDrawColorWell		*leftLegAccessoriesColorWell;
+	
+}
 
-@property (nonatomic, strong) IBOutlet LDrawViewerContainer	*minifigurePreview;
+//top-level objects
+
+@property (nonatomic, strong) IBOutlet NSObjectController* 		objectController;
+@property (nonatomic, strong) IBOutlet NSNumberFormatter*		degreesFormatter;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		hatsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		headsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		necksController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		torsosController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		rightArmsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		rightHandsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		rightHandAccessoriesController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		leftArmsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		leftHandsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		leftHandAccessoriesController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		hipsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		rightLegsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		rightLegAccessoriesController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		leftLegsController;
+@property (nonatomic, strong) IBOutlet NSArrayController* 		leftLegAccessoriesController;
+
+@property (nonatomic, strong) IBOutlet NSPanel*					minifigureGeneratorPanel;
+
+@property (nonatomic, unsafe_unretained) IBOutlet LDrawViewerContainer*	minifigurePreview;
 
 @end
 
@@ -44,28 +120,34 @@
 	[_minifigurePreview.glView	setAutosaveName:@"MinifigureGeneratorView"];
 	[_minifigurePreview.glView	restoreConfiguration];
 	
+	// Top-level nib object are never released. We assign them to strong properties,
+	// so we have to let them go here.
+	[_objectController autorelease];
+	[_degreesFormatter autorelease];
+	[_hatsController autorelease];
+	[_headsController autorelease];
+	[_necksController autorelease];
+	[_torsosController autorelease];
+	[_rightArmsController autorelease];
+	[_rightHandsController autorelease];
+	[_rightHandAccessoriesController autorelease];
+	[_leftArmsController autorelease];
+	[_leftHandsController autorelease];
+	[_leftHandAccessoriesController autorelease];
+	[_hipsController autorelease];
+	[_rightLegsController autorelease];
+	[_rightLegAccessoriesController autorelease];
+	[_leftLegsController autorelease];
+	[_leftLegAccessoriesController autorelease];
+
+	[_minifigureGeneratorPanel autorelease];
+	
 }//end awakeFromNib
 
 
 #pragma mark -
 #pragma mark INITIALIZATION
 #pragma mark -
-
-//========== doMinifigureGenerator =============================================
-//
-// Purpose:		Brings the Minifigure Generator dialog onscreen.
-//
-//==============================================================================
-+ (void) doMinifigureGenerator
-{
-	MinifigureDialogController *dialog = [[MinifigureDialogController alloc] init];
-	
-	[dialog runModal];
-	
-	[dialog release];
-	
-}//end doMinifigureGenerator
-
 
 //========== init ==============================================================
 //
@@ -209,7 +291,11 @@
 	[self generateMinifigure:self];
 	
 	//Run the dialog.
-	returnCode = [NSApp runModalForWindow:minifigureGeneratorPanel];
+	returnCode = [NSApp runModalForWindow:self.minifigureGeneratorPanel];
+	
+	// break retain cycle--NSObjectController retains its content (us!)
+	[_objectController setContent:nil];
+	
 	return returnCode;
 	
 }//end runModal
@@ -223,7 +309,7 @@
 - (IBAction) okButtonClicked:(id)sender
 {
 	[NSApp stopModalWithCode:NSOKButton];
-	[minifigureGeneratorPanel close];
+	[self.minifigureGeneratorPanel close];
 }//end okButtonClicked
 
 
@@ -234,8 +320,8 @@
 //==============================================================================
 - (IBAction) cancelButtonClicked:(id)sender
 {
+	[self.minifigureGeneratorPanel close];
 	[NSApp stopModalWithCode:NSCancelButton];
-	[minifigureGeneratorPanel close];
 }//end cancelButtonClicked
 
 
@@ -270,21 +356,21 @@
 	[newMinifigure setModelDisplayName:self->minifigureName];
 	
 	//create the parts based on the current selections
-	LDrawPart	*hat				= [[[hatsController					selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*head				= [[[headsController				selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*neck				= [[[necksController				selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*torso				= [[[torsosController				selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*leftArm			= [[[leftArmsController				selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*leftHand			= [[[leftHandsController			selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*leftHandAccessory	= [[[leftHandAccessoriesController	selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*rightArm			= [[[rightArmsController			selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*rightHand			= [[[rightHandsController			selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*rightHandAccessory	= [[[rightHandAccessoriesController	selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*hips				= [[[hipsController					selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*leftLeg			= [[[leftLegsController				selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*leftLegAccessory	= [[[leftLegAccessoriesController	selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*rightLeg			= [[[rightLegsController			selectedObjects] objectAtIndex:0] copy];
-	LDrawPart	*rightLegAccessory	= [[[rightLegAccessoriesController	selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*hat				= [[[_hatsController					selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*head				= [[[_headsController					selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*neck				= [[[_necksController					selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*torso				= [[[_torsosController					selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*leftArm			= [[[_leftArmsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*leftHand			= [[[_leftHandsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*leftHandAccessory	= [[[_leftHandAccessoriesController		selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*rightArm			= [[[_rightArmsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*rightHand			= [[[_rightHandsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*rightHandAccessory	= [[[_rightHandAccessoriesController	selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*hips				= [[[_hipsController					selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*leftLeg			= [[[_leftLegsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*leftLegAccessory	= [[[_leftLegAccessoriesController		selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*rightLeg			= [[[_rightLegsController				selectedObjects] objectAtIndex:0] copy];
+	LDrawPart	*rightLegAccessory	= [[[_rightLegAccessoriesController		selectedObjects] objectAtIndex:0] copy];
 	
 	//Assign the colors
 	[hat				setLDrawColor:[self->hatsColorWell					LDrawColor]];
@@ -686,49 +772,49 @@
 	[leftLegAccessoriesColorWell	setLDrawColor:[colorLibrary colorForCode:[userDefaults integerForKey:MINIFIGURE_COLOR_LEG_LEFT_ACCESSORY]]];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HAT]
-				inController:hatsController];
+				inController:_hatsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HEAD]
-				inController:headsController];
+				inController:_headsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_NECK]
-				inController:necksController];
+				inController:_necksController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_TORSO]
-				inController:torsosController];
+				inController:_torsosController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_ARM_RIGHT]
-				inController:rightArmsController];
+				inController:_rightArmsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HAND_RIGHT]
-				inController:rightHandsController];
+				inController:_rightHandsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HAND_RIGHT_ACCESSORY]
-				inController:rightHandAccessoriesController];
+				inController:_rightHandAccessoriesController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_ARM_LEFT]
-				inController:leftArmsController];
+				inController:_leftArmsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HAND_LEFT]
-				inController:leftHandsController];
+				inController:_leftHandsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HAND_LEFT_ACCESSORY]
-				inController:leftHandAccessoriesController];
+				inController:_leftHandAccessoriesController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_HIPS]
-				inController:hipsController];
+				inController:_hipsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_LEG_RIGHT]
-				inController:rightLegsController];
+				inController:_rightLegsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_LEG_RIGHT_ACCESSORY]
-				inController:rightLegAccessoriesController];
+				inController:_rightLegAccessoriesController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_LEG_LEFT]
-				inController:leftLegsController];
+				inController:_leftLegsController];
 	
 	[self selectPartWithName:[userDefaults stringForKey:MINIFIGURE_PARTNAME_LEG_LEFT_ACCESSORY]
-				inController:leftLegAccessoriesController];
+				inController:_leftLegAccessoriesController];
 	
 }//end restoreFromPreferences
 
@@ -790,21 +876,21 @@
 	[userDefaults setInteger:[[leftLegsColorWell				LDrawColor] colorCode]	forKey:MINIFIGURE_COLOR_LEG_LEFT];
 	[userDefaults setInteger:[[leftLegAccessoriesColorWell		LDrawColor] colorCode]	forKey:MINIFIGURE_COLOR_LEG_LEFT_ACCESSORY];
 	
-	[self savePartControllerSelection:hatsController					underKey:MINIFIGURE_PARTNAME_HAT];
-	[self savePartControllerSelection:headsController					underKey:MINIFIGURE_PARTNAME_HEAD];
-	[self savePartControllerSelection:necksController					underKey:MINIFIGURE_PARTNAME_NECK];
-	[self savePartControllerSelection:torsosController					underKey:MINIFIGURE_PARTNAME_TORSO];
-	[self savePartControllerSelection:rightArmsController				underKey:MINIFIGURE_PARTNAME_ARM_RIGHT];
-	[self savePartControllerSelection:rightHandsController				underKey:MINIFIGURE_PARTNAME_HAND_RIGHT];
-	[self savePartControllerSelection:rightHandAccessoriesController	underKey:MINIFIGURE_PARTNAME_HAND_RIGHT_ACCESSORY];
-	[self savePartControllerSelection:leftArmsController				underKey:MINIFIGURE_PARTNAME_ARM_LEFT];
-	[self savePartControllerSelection:leftHandsController				underKey:MINIFIGURE_PARTNAME_HAND_LEFT];
-	[self savePartControllerSelection:leftHandAccessoriesController		underKey:MINIFIGURE_PARTNAME_HAND_LEFT_ACCESSORY];
-	[self savePartControllerSelection:hipsController					underKey:MINIFIGURE_PARTNAME_HIPS];
-	[self savePartControllerSelection:rightLegsController				underKey:MINIFIGURE_PARTNAME_LEG_RIGHT];
-	[self savePartControllerSelection:rightLegAccessoriesController		underKey:MINIFIGURE_PARTNAME_LEG_RIGHT_ACCESSORY];
-	[self savePartControllerSelection:leftLegsController				underKey:MINIFIGURE_PARTNAME_LEG_LEFT];
-	[self savePartControllerSelection:leftLegAccessoriesController		underKey:MINIFIGURE_PARTNAME_LEG_LEFT_ACCESSORY];
+	[self savePartControllerSelection:_hatsController					underKey:MINIFIGURE_PARTNAME_HAT];
+	[self savePartControllerSelection:_headsController					underKey:MINIFIGURE_PARTNAME_HEAD];
+	[self savePartControllerSelection:_necksController					underKey:MINIFIGURE_PARTNAME_NECK];
+	[self savePartControllerSelection:_torsosController					underKey:MINIFIGURE_PARTNAME_TORSO];
+	[self savePartControllerSelection:_rightArmsController				underKey:MINIFIGURE_PARTNAME_ARM_RIGHT];
+	[self savePartControllerSelection:_rightHandsController				underKey:MINIFIGURE_PARTNAME_HAND_RIGHT];
+	[self savePartControllerSelection:_rightHandAccessoriesController	underKey:MINIFIGURE_PARTNAME_HAND_RIGHT_ACCESSORY];
+	[self savePartControllerSelection:_leftArmsController				underKey:MINIFIGURE_PARTNAME_ARM_LEFT];
+	[self savePartControllerSelection:_leftHandsController				underKey:MINIFIGURE_PARTNAME_HAND_LEFT];
+	[self savePartControllerSelection:_leftHandAccessoriesController	underKey:MINIFIGURE_PARTNAME_HAND_LEFT_ACCESSORY];
+	[self savePartControllerSelection:_hipsController					underKey:MINIFIGURE_PARTNAME_HIPS];
+	[self savePartControllerSelection:_rightLegsController				underKey:MINIFIGURE_PARTNAME_LEG_RIGHT];
+	[self savePartControllerSelection:_rightLegAccessoriesController	underKey:MINIFIGURE_PARTNAME_LEG_RIGHT_ACCESSORY];
+	[self savePartControllerSelection:_leftLegsController				underKey:MINIFIGURE_PARTNAME_LEG_LEFT];
+	[self savePartControllerSelection:_leftLegAccessoriesController		underKey:MINIFIGURE_PARTNAME_LEG_LEFT_ACCESSORY];
 	
 	//and write it out at last!
 	[userDefaults synchronize];
@@ -871,9 +957,26 @@
 //==============================================================================
 - (void) dealloc
 {
-	[iniFile			release];
+	[_objectController release];
+	[_degreesFormatter release];
+	[_hatsController release];
+	[_headsController release];
+	[_necksController release];
+	[_torsosController release];
+	[_rightArmsController release];
+	[_rightHandsController release];
+	[_rightHandAccessoriesController release];
+	[_leftArmsController release];
+	[_leftHandsController release];
+	[_leftHandAccessoriesController release];
+	[_hipsController release];
+	[_rightLegsController release];
+	[_rightLegAccessoriesController release];
+	[_leftLegsController release];
+	[_leftLegAccessoriesController release];
+	[_minifigureGeneratorPanel release];
 
-	[headsController	release];
+	[iniFile			release];
 
 	[super dealloc];
 	
