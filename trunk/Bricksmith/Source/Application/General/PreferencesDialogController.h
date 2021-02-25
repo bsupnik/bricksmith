@@ -40,7 +40,6 @@ typedef enum {
     IBOutlet NSView         *lsynthContentView;
 	
 	// General Tab
-	IBOutlet NSForm			*gridSpacingForm;
 	IBOutlet NSMatrix		*mouseDraggingRadioButtons;
 	
 	IBOutlet NSMatrix		*rotateModeRadioButtons;

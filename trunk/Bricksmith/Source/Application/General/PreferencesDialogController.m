@@ -59,6 +59,17 @@
 #import "WindowCategory.h"
 #import "RegexKitLite.h"
 
+@interface PreferencesDialogController ()
+
+// General Tab
+@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingFineField;
+@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingMediumField;
+@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingCoarseField;
+
+
+@end
+
+
 @implementation PreferencesDialogController
 
 #define PREFERENCES_WINDOW_AUTOSAVE_NAME	@"PreferencesWindow"
@@ -180,9 +191,9 @@ PreferencesDialogController *preferencesDialog = nil;
 	float gridFine		= [userDefaults floatForKey:GRID_SPACING_FINE];
 	float gridMedium	= [userDefaults floatForKey:GRID_SPACING_MEDIUM];
 	float gridCoarse	= [userDefaults floatForKey:GRID_SPACING_COARSE];
-	[[gridSpacingForm cellAtIndex:0] setFloatValue:gridFine];
-	[[gridSpacingForm cellAtIndex:1] setFloatValue:gridMedium];
-	[[gridSpacingForm cellAtIndex:2] setFloatValue:gridCoarse];
+	[_gridSpacingFineField setFloatValue:gridFine];
+	[_gridSpacingMediumField setFloatValue:gridMedium];
+	[_gridSpacingCoarseField setFloatValue:gridCoarse];
 	
 	// Mouse Dragging
 	MouseDragBehaviorT	mouseBehavior	= [userDefaults integerForKey:MOUSE_DRAGGING_BEHAVIOR_KEY];
@@ -333,9 +344,9 @@ PreferencesDialogController *preferencesDialog = nil;
 	NSUserDefaults	*userDefaults		= [NSUserDefaults standardUserDefaults];
 
 	//Grid Spacing.
-	float gridFine	= [[gridSpacingForm cellAtIndex:0] floatValue];
-	float gridMedium	= [[gridSpacingForm cellAtIndex:1] floatValue];
-	float gridCoarse	= [[gridSpacingForm cellAtIndex:2] floatValue];
+	float gridFine		= [_gridSpacingFineField floatValue];
+	float gridMedium	= [_gridSpacingMediumField floatValue];
+	float gridCoarse	= [_gridSpacingCoarseField floatValue];
 	
 	[userDefaults setFloat:gridFine		forKey:GRID_SPACING_FINE];
 	[userDefaults setFloat:gridMedium	forKey:GRID_SPACING_MEDIUM];
