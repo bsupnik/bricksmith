@@ -12,11 +12,8 @@
 #import "ObjectInspectionController.h"
 #import "LDrawColorWell.h"
 
-////////////////////////////////////////////////////////////////////////////////
-//
 // Data Types
-//
-////////////////////////////////////////////////////////////////////////////////
+
 typedef enum
 {
 	rotationAbsolute = 0,
@@ -25,23 +22,22 @@ typedef enum
 } RotationT;
 
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// class InspectionPart
-//
-////////////////////////////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
+///
+/// @class		InspectionPart
+///
+/// @abstract	Inspector Controller for an LDrawPart.
+///
+//------------------------------------------------------------------------------
 @interface InspectionPart : ObjectInspectionController
 {
 	IBOutlet	NSTextField			*partDescriptionField;
 	IBOutlet	NSTextField			*partNameField;
 	IBOutlet	LDrawColorWell		*colorWell;
-	IBOutlet	NSForm				*locationForm;
 	IBOutlet	NSPopUpButton		*rotationTypePopUp;
 	IBOutlet	NSTextField			*rotationXField;
 	IBOutlet	NSTextField			*rotationYField;
 	IBOutlet	NSTextField			*rotationZField;
-	IBOutlet	NSForm				*scalingForm;
-	IBOutlet	NSForm				*shearForm;
 	
 	IBOutlet	NSNumberFormatter	*formatterBasic;
 	IBOutlet	NSNumberFormatter	*formatterAngle;
@@ -53,7 +49,6 @@ typedef enum
 
 //Actions
 - (IBAction) applyRotationClicked:(id)sender;
-- (IBAction) locationEndedEditing:(id)sender;
 - (IBAction) partNameEndedEditing:(id)sender;
 - (IBAction) rotationTypeChanged:(id)sender;
 - (IBAction) scalingEndedEditing:(id)sender;

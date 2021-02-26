@@ -9,13 +9,17 @@
 //==============================================================================
 #import <Cocoa/Cocoa.h>
 
+#import "MatrixMath.h"
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//		ObjectInspectionController
-//
-////////////////////////////////////////////////////////////////////////////////
-@interface ObjectInspectionController : NSObject {
+//------------------------------------------------------------------------------
+///
+/// @class		ObjectInspectionController
+///
+/// @abstract	Base class for all the LDraw object inspectors
+///
+//------------------------------------------------------------------------------
+@interface ObjectInspectionController : NSObject
+{
 	
 	IBOutlet	NSWindow	*window; //we will vacuum out the content view from this.
 	
@@ -34,6 +38,10 @@
 - (void) commitChanges:(id)sender;
 - (IBAction) finishedEditing:(id)sender;
 - (IBAction) revert:(id)sender;
+
+// Utilities
+- (Point3) coordinateValueFromFields:(NSArray<NSTextField*>*)fields;
+- (void) setCoordinateValue:(Point3)newPoint onFields:(NSArray<NSTextField*>*)fields;
 
 @end
 

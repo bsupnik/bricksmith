@@ -19,6 +19,21 @@
 #import "MacLDraw.h"
 #import "PartLibrary.h"
 
+@interface InspectionPart ()
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationXField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleXField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXZField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearYZField;
+
+@end
 
 @implementation InspectionPart
 
@@ -54,22 +69,18 @@
 	LDrawPart			*representedObject	= [self object];
 	TransformComponents	 oldComponents		= [representedObject transformComponents];
 	TransformComponents	 components			= IdentityComponents;
-	Point3				 position			= [self->locationForm coordinateValue];
-	Vector3				 scaling			= [self->scalingForm coordinateValue];
-	Tuple3				 shear				= [self->shearForm coordinateValue];
+	Point3				 position			= [self coordinateValueFromFields:@[_locationXField, _locationYField, _locationZField]];
+	Vector3				 scaling			= [self coordinateValueFromFields:@[_scaleXField, _scaleYField, _scaleZField]];
+	Tuple3				 shear				= [self coordinateValueFromFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	
 	[representedObject setDisplayName:[partNameField stringValue]];
 	
 	//Fill the components structure.
- 	components.scale.x		= scaling.x / 100.0; //convert from percentage
- 	components.scale.y		= scaling.y / 100.0;
- 	components.scale.z		= scaling.z / 100.0;
+ 	components.scale		= V3MulScalar(scaling, 0.01); //convert from percentage
  	components.shear_XY		= shear.x;
  	components.shear_XZ		= shear.y;
  	components.shear_YZ		= shear.z;
- 	components.rotate.x		= oldComponents.rotate.x; //rotation is handled elsewhere.
- 	components.rotate.y		= oldComponents.rotate.y;
- 	components.rotate.z		= oldComponents.rotate.z;
+ 	components.rotate		= oldComponents.rotate; //rotation is handled by the Apply button.
  	components.translate	= position;
 	
 	[representedObject setTransformComponents:components];
@@ -114,9 +125,9 @@
 	shear.y = components.shear_XZ;
 	shear.z = components.shear_YZ;
 	
-	[locationForm setCoordinateValue:position];
-	[scalingForm setCoordinateValue:scaling];
-	[shearForm setCoordinateValue:shear];
+	[self setCoordinateValue:position onFields:@[_locationXField, _locationYField, _locationZField]];
+	[self setCoordinateValue:scaling onFields:@[_scaleXField, _scaleYField, _scaleZField]];
+	[self setCoordinateValue:shear onFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	
 	//Rotation is a bit trickier since we have two different modes for the data 
 	// entered. An absolute rotation means that the actual rotation angles for 
@@ -236,7 +247,7 @@
 //==============================================================================
 - (IBAction) locationEndedEditing:(id)sender
 {
-	Point3				formContents	= [locationForm coordinateValue];
+	Point3				formContents	= [self coordinateValueFromFields:@[_locationXField, _locationYField, _locationZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 	
 	//If the values really did change, then update.
@@ -291,7 +302,7 @@
 //==============================================================================
 - (IBAction) scalingEndedEditing:(id)sender
 {
-	Vector3				formContents	= [scalingForm coordinateValue];
+	Vector3				formContents	= [self coordinateValueFromFields:@[_scaleXField, _scaleYField, _scaleZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 
 	//If the values really did change, then update.
@@ -316,7 +327,7 @@
 //==============================================================================
 - (IBAction) shearEndedEditing:(id)sender
 {
-	Vector3				formContents	= [shearForm coordinateValue];
+	Vector3				formContents	= [self coordinateValueFromFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 	
 	//If the values really did change, then update.
