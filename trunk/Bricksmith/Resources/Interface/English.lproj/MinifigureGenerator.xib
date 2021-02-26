@@ -8,6 +8,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="MinifigureDialogController">
             <connections>
+                <outlet property="degreesFormatter" destination="297" id="RsG-Er-Tee"/>
                 <outlet property="hatsColorWell" destination="157" id="681"/>
                 <outlet property="hatsController" destination="486" id="498"/>
                 <outlet property="headsColorWell" destination="158" id="682"/>
@@ -28,6 +29,7 @@
                 <outlet property="minifigurePreview" destination="2NJ-bS-eod" id="EGt-Al-Hf3"/>
                 <outlet property="necksColorWell" destination="162" id="683"/>
                 <outlet property="necksController" destination="501" id="540"/>
+                <outlet property="objectController" destination="326" id="jFv-eY-V4N"/>
                 <outlet property="rightArmsColorWell" destination="191" id="685"/>
                 <outlet property="rightArmsController" destination="503" id="548"/>
                 <outlet property="rightHandAccessoriesColorWell" destination="285" id="688"/>
