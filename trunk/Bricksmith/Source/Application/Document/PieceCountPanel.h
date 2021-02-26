@@ -12,7 +12,6 @@
 #import "DialogPanel.h"
 
 @class LDrawFile;
-@class LDrawGLView;
 @class LDrawMPDModel;
 @class PartReport;
 
@@ -22,9 +21,6 @@
 	LDrawMPDModel	*activeModel;
 	PartReport		*partReport;
 	NSMutableArray	*flattenedReport;
-	
-	IBOutlet NSTableView		*pieceCountTable;
-	IBOutlet LDrawGLView		*partPreview;
 }
 
 //Initialization

@@ -14,7 +14,7 @@
 
 #import "ExtendedSplitView.h"
 
-@class ExtendedScrollView;
+@class LDrawViewerContainer;
 @protocol ViewportArrangerDelegate;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,27 +28,10 @@
 }
 
 // Accessors
-- (NSArray *) allViewports;
+- (NSArray<LDrawViewerContainer*> *) allViewports;
 - (id<ViewportArrangerDelegate>) delegate;
 
 - (void) setDelegate:(id<ViewportArrangerDelegate>)delegate;
-
-// Actions
-- (IBAction) splitViewportClicked:(id)sender;
-- (IBAction) closeViewportClicked:(id)sender;
-
-// Utilities
-- (NSButton *) newCloseButton;
-- (NSButton *) newSplitButton;
-- (NSView *) newSplitPlacard;
-- (NSView *) newSplitClosePlacard;
-- (ExtendedScrollView *) newViewport;
-- (void) doFrameSanityCheck;
-- (void) doFrameSanityCheckForSplitView:(NSSplitView *)splitView;
-- (void) restoreViewportsWithAutosaveName:(NSString *)autosaveName;
-- (void) storeViewports;
-- (void) updateAutosaveNames;
-- (void) updatePlacardsForViewports;
 
 @end
 
@@ -61,8 +44,8 @@
 @protocol ViewportArrangerDelegate <NSObject>
 
 @optional
-- (void) viewportArranger:(ViewportArranger *)viewportArranger didAddViewport:(ExtendedScrollView *)newViewport sourceViewport:(ExtendedScrollView *)sourceViewport;
-- (void) viewportArranger:(ViewportArranger *)viewportArranger willRemoveViewports:(NSSet *)removingViewports;
+- (void) viewportArranger:(ViewportArranger *)viewportArranger didAddViewport:(LDrawViewerContainer *)newViewport sourceViewport:(LDrawViewerContainer *)sourceViewport;
+- (void) viewportArranger:(ViewportArranger *)viewportArranger willRemoveViewports:(NSSet<LDrawViewerContainer*> *)removingViewports;
 - (void) viewportArrangerDidRemoveViewports:(ViewportArranger *)viewportArranger;
 
 @end

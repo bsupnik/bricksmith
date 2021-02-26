@@ -9,26 +9,6 @@
 #import <Cocoa/Cocoa.h>
 #import "MatrixMath.h"
 
-/*
-	Who owns what data?
-	
-	Things appkit knows about:
-
-	Scroll position
-		owned by Appkit.
-	
-	Zoom
-		owned by camera.  Clip view scale factor owned by NS and slaved from zoom by camera _sometimes_.
-		
-	Document Size
-		owned by GL view, controlled by camera
-	
-	Things OpenGL knows about:
-		viewport - always set to visible area of GL drawable by view code - the camera assumes this is true.
-		transform matrices - always owned by camera.
-		
- */
-
 // Projection Mode
 typedef enum
 {
@@ -46,31 +26,52 @@ typedef enum
 @protocol LDrawGLCameraScroller;
 
 
-@interface LDrawGLCamera : NSObject {
+//------------------------------------------------------------------------------
+///
+/// @class		LDrawGLCamera
+///
+/// @abstract	Computes the modelview and projection matrices based off current
+/// 			viewport dimensions and user viewing options.
+///
+///			   	Who owns what data?
+///
+///			   	Things appkit knows about:
+///
+///			   	Scroll position
+///				   owned by the camera.
+///
+///			   	Zoom
+///				   owned by camera.
+///
+///			   	Document Size - a fiction that could be used to represent scroll bar positions
+///				   owned by camera
+///
+///			   	Viewport (View) Size
+///				   owned by AppKit
+///				   camera must be told
+///
+///			   	Things OpenGL knows about:
+///				   viewport - always set to visible area of GL drawable by view code - the camera assumes this is true.
+///				   transform matrices - always owned by camera.
+///
+///				The coordinate system is rather weird.
+///
+///				At zoom=100% (1.0), one point on the screen is equal to one
+/// 			LDrawUnit (model unit) in an orthographic projection. In a
+/// 			perspective projection, the equivalence is maintained at the
+/// 			model origin.
+///
+///				Scrolling occurs by sliding the visible rect around an infinite
+/// 			plane. The coordinate system origin is that of a rectangle with
+/// 			size of the viewport, whose *center* is on the model origin. At
+/// 			100% zoom, the size of the visible rect is the same as the
+/// 			viewport. It is scaled according to the zoom factor.
+///
+//------------------------------------------------------------------------------
+@interface LDrawGLCamera : NSObject
 
-	id<LDrawGLCameraScroller>	scroller;
-	
-	GLfloat					projection[16];
-	GLfloat					modelView[16];
-	GLfloat					orientation[16];
+@property (nonatomic, assign) Size2	graphicsSurfaceSize;
 
-	ProjectionModeT         projectionMode;
-	LocationModeT			locationMode;
-	Box3					modelSize;
-
-	BOOL					viewportExpandsToAvailableSize;
-	float					zoomFactor;
-
-	GLfloat                 cameraDistance;			// location of camera on the z-axis; distance from (0,0,0);
-	Point3					rotationCenter;
-	Size2					snugFrameSize;
-	
-	int						mute;					// Counted 'mute' to stop re-entrant calls to tickle...
-
-}
-
-- (id)		init;
-- (void)	dealloc;
 - (void)	setScroller:(id<LDrawGLCameraScroller>)newScroller;
 
 // Output - the official OpenGL transform.
@@ -85,13 +86,6 @@ typedef enum
 - (Tuple3) viewingAngle;
 - (Point3) rotationCenter;
 
-// Call this when the scroller's states change in any way, to force the 
-// camera to 'suck in' the camera scroller parameters.  Clients only need
-// to call this when camera scroller properties change; if you call setModelSize,
-// the camera tickles itself.  So tickle should really only be called for scroll-bar
-// induced scrolling and frame dimension changes via a window resize or splitter move.
-- (void) tickle;
-
 // These change the cached representation of the 3-d "thing" the camera is looking at.
 - (void) setModelSize:(Box3)modelSize;
 - (void) setRotationCenter:(Point3)point;
@@ -100,6 +94,8 @@ typedef enum
 - (void) setZoomPercentage:(CGFloat)newPercentage;
 - (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point3)modelPoint;
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
+- (void) scrollBy:(Vector2)scrollDelta;
+- (void) scrollToPoint:(Point2)visibleRectOrigin;
 
 // These change the camera by sending 'rotation' commands of various kinds to the camera.
 - (void) setViewingAngle:(Tuple3)newAngle;
@@ -112,35 +108,38 @@ typedef enum
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//		LDrawGLCameraScroller
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-//	The camera scroller protocol abstracts a scrolling view that the camera
-//	works within.  The camera does not get to own scrolling information; rather
-//	it has to go to the protocol to get current state and make changes.  (We do
-//	this because getting in a fight with NSClipView over scrolling is futile; if
-//	there can be only one copy of scroll state AppKit has to own it.)
-//
-
+//---------- LDrawGLCameraScroller ---------------------------------------------
+///
+/// The camera scroller protocol abstracts a scrolling view that the camera
+///	works within.  The camera owns scrolling information. It has to be told
+///	about the view size, and works out the rest. The view container can be
+///	notified of scroll/zoom changes via this protocol.
+///
 @protocol LDrawGLCameraScroller <NSObject>
 
 @required
 
-// Document size, in model units.  The camera can request a document size
-// change; NS code won't change the document size behind the camera's back.
-- (Size2)	getDocumentSize;
-- (void)	setDocumentSize:(Size2)newDocumentSize;
+/// Document size, in model units, and the current visible rect within that
+/// coordinate system. The camera can request a document size change; NS code
+/// can't change the document size behind the camera's back. Note that the
+/// documentRect origin will generally not be at (0,0).
+///
+/// @param newDocumentRect	A purely imaginary rectangle that represents the
+/// 						maximum visible extent of the current view. This is
+/// 						given in the camera coordinate system described in
+/// 						the class documentation. tl;dr: the (0,0) point is
+/// 						not intrinsically meaningful, and is needed only to
+/// 						reference the position of the visible rect within
+/// 						the logical document size.
+///
+/// @param visibleRect 		The portion of the documentRect currently visible,
+/// 						in the same coordinate system.
+- (void) reflectLogicalDocumentRect:(Box2)newDocumentRect visibleRect:(Box2)visibleRect;
 
-// Scrolling
-- (Box2)	getVisibleRect;								// From this we get our scroll position and visible area, in doc units.
-- (Size2)	getMaxVisibleSizeDoc;						// Max size we can show in doc units before we scroll.
-- (Size2)	getMaxVisibleSizeGL;						// Max size we can show in GL viewport pixels units before we scroll.
+/// Called when the view scale factor changes. 1.0 is pixel-to-pixel. 2.0 makes
+/// our model look twice as big on screen. The exact same information is
+/// conveyed mathematically in -reflectLogicalDocumentRect:visibleRect:.
+- (void) reflectScaleFactor:(CGFloat)newScaleFactor;
 
-- (void)	setScaleFactor:(CGFloat)newScaleFactor;		// This sets the scale factor from UI points to doc units - 2.0 makes our model look twice as big on screen.
-- (void)	setScrollOrigin:(Point2)visibleOrigin;		// This scrolls the scroller so that the model point "visibleOrigin" is in the upper right corner of the 
-														//visible screen.
 @end
 

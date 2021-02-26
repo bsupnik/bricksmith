@@ -12,6 +12,7 @@
 #import "LDrawGLView.h"
 #import "MacLDraw.h"
 
+@class LDrawViewerContainer;
 @class PartLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +29,7 @@
 	IBOutlet NSOutlineView	*categoryTable;
 	IBOutlet NSTableView	*partsTable;
 	IBOutlet LDrawGLView	*partPreview;
+	IBOutlet LDrawViewerContainer	*partPreviewViewport;
 	IBOutlet NSButton		*zoomInButton;
 	IBOutlet NSButton		*zoomOutButton;
 	IBOutlet NSButton		*addRemoveFavoriteButton;

@@ -46,6 +46,44 @@
 
 #define HANDLE_SIZE 3
 
+@interface LDrawGLRenderer ()
+{
+	id<LDrawGLRendererDelegate> delegate;
+	id<LDrawGLCameraScroller>	scroller;
+	id							target;
+	BOOL						allowsEditing;
+	
+	LDrawDirective          *fileBeingDrawn;		// Should only be an LDrawFile or LDrawModel.
+													// if you want to do anything else, you must
+													// tweak the selection code in LDrawDrawableElement
+													// and here in -mouseUp: to handle such cases.
+	
+	LDrawGLCamera *			camera;
+	
+	// Drawing Environment
+	LDrawColor				*color;					// default color to draw parts if none is specified
+	GLfloat                 glBackgroundColor[4];
+	Box2					selectionMarquee;		// in view coordinates. ZeroBox2 means no marquee.
+	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
+	ViewOrientationT        viewOrientation;		// our orientation
+	NSTimeInterval			fpsStartTime;
+	NSInteger				framesSinceStartTime;
+	
+	// Event Tracking
+	float					gridSpacing;
+	BOOL                    isGesturing;			// true if performing a multitouch trackpad gesture.
+	BOOL                    isTrackingDrag;			// true if the last mousedown was followed by a drag, and we're tracking it (drag-and-drop doesn't count)
+	BOOL					isStartingDrag;			// this is the first event in a drag
+	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
+	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
+	BOOL                    didPartSelection;		// tried part selection during this click
+	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
+	Vector3                 draggingOffset;			// displacement between part 0's position and the initial click point of the drag
+	Point3                  initialDragLocation;	// point in model where part was positioned at draggingEntered
+	LDrawDragHandle			*activeDragHandle;		// drag handle hit on last mouse-down (or nil)
+}
+@end
+
 @implementation LDrawGLRenderer
 
 #pragma mark -
@@ -66,6 +104,7 @@
 	[self setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	
 	camera = [[LDrawGLCamera alloc] init];
+	camera.graphicsSurfaceSize = boundsIn;
 	
 	isTrackingDrag					= NO;
 	selectionMarquee				= ZeroBox2;
@@ -406,20 +445,6 @@
 }
 
 
-//========== centerPoint =======================================================
-//
-// Purpose:		Returns the point (in frame coordinates) which is currently 
-//				at the center of the visible rectangle. This is useful for 
-//				determining the point being viewed in the scroll view.
-//
-//==============================================================================
-- (Point2) centerPoint
-{
-	return V2Make( V2BoxMidX([scroller getVisibleRect]), V2BoxMidY([scroller getVisibleRect]) );
-	
-}//end centerPoint
-
-
 //========== didPartSelection ==================================================
 //
 // Purpose:		Returns whether the most-recent mouseDown resulted in a 
@@ -578,7 +603,7 @@
 - (Box2) viewport
 {
 	Box2	viewport = ZeroBox2;
-	viewport.size = [scroller getMaxVisibleSizeGL];	
+	viewport.size = camera.graphicsSurfaceSize;
 	return viewport;
 }
 
@@ -600,7 +625,7 @@
 //========== zoomPercentage ====================================================
 //
 // Purpose:		Returns the percentage magnification being applied to drawing;
-//				this represents the scale from GL viewport coordiantes (which
+//				this represents the scale from GL viewport coordinates (which
 //				are always window manager pixels) to NS document coordinates 
 //				(which DO get scaled).
 //
@@ -807,15 +832,15 @@
 }//end setLDrawDirective:
 
 
-//========== setMaximumVisibleSize: ============================================
-//
-// Purpose:		Sets the largest size (in frame coordinates) to which the 
-//				visible rect should be permitted to grow. 
-//
+//========== setGraphicsSurfaceSize: ===========================================
+///
+/// @abstract	Sets the size of the view which will be rendered with the 3D
+/// 			engine. This should be in screen coordinates.
+///
 //==============================================================================
-- (void) setMaximumVisibleSize:(Size2)size
+- (void) setGraphicsSurfaceSize:(Size2)size
 {
-	[camera tickle];
+	[camera setGraphicsSurfaceSize:size];
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
@@ -930,6 +955,7 @@
 - (void) setZoomPercentage:(CGFloat)newPercentage
 {
 	[camera setZoomPercentage:newPercentage];
+	[delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
 
@@ -994,15 +1020,14 @@
 	Point3  center                  = ZeroPoint3;
 	Matrix4 modelView               = IdentityMatrix4;
 	Matrix4 projection              = IdentityMatrix4;
-	Box2    viewport                = ZeroBox2;
+	Box2    viewport                = [self viewport];
 	Box3    projectedBounds         = InvalidBox;
 	Box2    projectionRect          = ZeroBox2;
 	Size2   zoomScale2D             = ZeroSize2;
 	CGFloat zoomScaleFactor         = 0.0;
 	
 	// How many onscreen pixels do we have to work with?
-	maxContentSize.width    = V2BoxWidth([scroller getVisibleRect])  * [self zoomPercentage]/100.;
-	maxContentSize.height   = V2BoxHeight([scroller getVisibleRect]) * [self zoomPercentage]/100.;
+	maxContentSize = viewport.size;
 //	NSLog(@"windowVisibleRect = %@", NSStringFromRect(windowVisibleRect));
 //	NSLog(@"maxContentSize = %@", NSStringFromSize(maxContentSize));
 	
@@ -1015,7 +1040,6 @@
 			// Project the bounds onto the 2D "canvas"
 			modelView   = Matrix4CreateFromGLMatrix4([camera getModelView]);
 			projection  = Matrix4CreateFromGLMatrix4([camera getProjection]);
-			viewport    = [self viewport];
 
 			projectedBounds = [(id)self->fileBeingDrawn
 									   projectedBoundingBoxWithModelView:modelView
@@ -1040,10 +1064,10 @@
 			// not. It seems perspective distortion can cause the visual 
 			// center of the model to be someplace else. 
 			
-			Point2  graphicalCenter_viewport    = V2Make( V2BoxMidX(projectionRect), V2BoxMidY(projectionRect) );
-			Point2 graphicalCenter_view        = [self convertPointFromViewport:graphicalCenter_viewport];
-			Point3  graphicalCenter_model       = ZeroPoint3;
-			
+			Point2	graphicalCenter_viewport	= V2BoxMid(projectionRect);
+			Point2	graphicalCenter_view		= [self convertPointFromViewport:graphicalCenter_viewport];
+			Point3	graphicalCenter_model		= ZeroPoint3;
+
 			graphicalCenter_model       = [self modelPointForPoint:graphicalCenter_view
 											   depthReferencePoint:center];
 			
@@ -1551,6 +1575,7 @@
 	}
 
 	[camera rotateByDegrees:angle];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 
 }//end rotateWithEvent:
 
@@ -1818,6 +1843,49 @@
 #pragma mark -
 #pragma mark UTILITIES
 #pragma mark -
+
+//========== autoscrollPoint:relativeToRect: ===================================
+///
+/// @abstract	If the point is outside the given view rect, this will scroll
+/// 			the view by the amount the point is outside.
+///
+//==============================================================================
+- (BOOL) autoscrollPoint:(Point2)point_view
+		  relativeToRect:(Box2)viewRect
+{
+	BOOL didScroll = NO;
+	
+	if( V2BoxContains(viewRect, point_view) == NO )
+	{
+		// Amount to offset origin
+		Vector2 scrollVector = ZeroPoint2;
+		
+		// x
+		if(point_view.x < V2BoxMinX(viewRect))
+		{
+			scrollVector.x = point_view.x - V2BoxMinX(viewRect);
+		}
+		else if(point_view.x > V2BoxMaxX(viewRect))
+		{
+			scrollVector.x = point_view.x - V2BoxMaxX(viewRect);
+		}
+		
+		// y
+		if(point_view.y < V2BoxMinY(viewRect))
+		{
+			scrollVector.y = point_view.y - V2BoxMinY(viewRect);
+		}
+		else if(point_view.y > V2BoxMaxY(viewRect))
+		{
+			scrollVector.y = point_view.y - V2BoxMaxY(viewRect);
+		}
+		
+		[self scrollBy:scrollVector];
+		didScroll = YES;
+	}
+	
+	return didScroll;
+}
 
 //========== getDepthUnderPoint: ===============================================
 //
@@ -2108,8 +2176,42 @@
 	Point3 modelPoint = [self modelPointForPoint:viewPoint];
 
 	[camera setZoomPercentage:newPercentage preservePoint:modelPoint];
-	
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+
 }//end setZoomPercentage:preservePoint:
+
+
+//========== scrollBy: =========================================================
+///
+/// @abstract	Apply a scroll delta (as delivered from an NSEvent)
+///
+/// @param 		scrollDelta_viewport The scroll offset to apply to the origin,
+/// 								 in the coordinate system of the viewport.
+/// 								 (Origin lower-left, size =
+/// 								 self.viewportSize) The camera will adjust
+/// 								 the requested delta by the current zoom
+/// 								 factor.
+///
+//==============================================================================
+- (void) scrollBy:(Vector2)scrollDelta_viewport
+{
+	[camera scrollBy:scrollDelta_viewport];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+}
+
+
+//========== scrollCameraVisibleRectToPoint: ===================================
+///
+/// @abstract	Scrolls so the given point is the origin of the camera's
+/// 			visibleRect. This is in the coordinate system of the boxes
+/// 			passed to -reflectLogicalDocumentRect:visibleRect:.
+///
+//==============================================================================
+- (void) scrollCameraVisibleRectToPoint:(Point2)visibleRectOrigin
+{
+	[self->camera scrollToPoint:visibleRectOrigin];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+}
 
 
 //========== scrollCenterToModelPoint: =========================================
@@ -2137,6 +2239,8 @@
   toViewportProportionalPoint:(Point2)viewportPoint
 {
 	[camera scrollModelPoint:modelPoint  toViewportProportionalPoint:viewportPoint];
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
+
 }//end scrollCenterToModelPoint:
 
 
@@ -2160,6 +2264,7 @@
 	}
 	
 	[camera setRotationCenter:point];	
+	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 }
 
 #pragma mark -
@@ -2173,27 +2278,15 @@
 //==============================================================================
 - (Point2) convertPointFromViewport:(Point2)viewportPoint
 {
-	Point2	point_visibleRect	= ZeroPoint2;
-	Point2	point_view			= ZeroPoint2;
-	
-	// Rescale to visible rect
-	point_visibleRect.x = viewportPoint.x / ([self zoomPercentageForGL]/100.);
-	point_visibleRect.y = viewportPoint.y / ([self zoomPercentageForGL]/100.);
-	
-	// The viewport origin is always at (0,0), so wo only need to translate if 
-	// the coordinate system is flipped. 
+	Point2	point_view = viewportPoint;
 	
 	// Flip the coordinates
 	if([self isFlipped])
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
+		point_view.y = V2BoxHeight([self viewport]) - point_view.y;
 	}
-	
-	// Translate to full bounds coordinates
-	point_view.x = point_visibleRect.x + [scroller getVisibleRect].origin.x;
-	point_view.y = point_visibleRect.y + [scroller getVisibleRect].origin.y;
 	
 	return point_view;
 	
@@ -2208,24 +2301,15 @@
 //==============================================================================
 - (Point2) convertPointToViewport:(Point2)point_view
 {
-	Point2	point_visibleRect	= ZeroPoint2;
-	Point2	point_viewport		= ZeroPoint2;
-	
-	// Translate from full bounds coordinates to the visible rect
-	point_visibleRect.x = point_view.x - [scroller getVisibleRect].origin.x;
-	point_visibleRect.y = point_view.y - [scroller getVisibleRect].origin.y;
-	
+	Point2	point_viewport		= point_view;
+
 	// Flip the coordinates
 	if([self isFlipped])
 	{
 		// The origin of the viewport is in the lower-left corner.
 		// The origin of the view is in the upper right (it is flipped)
-		point_visibleRect.y = V2BoxHeight([scroller getVisibleRect]) - point_visibleRect.y;
+		point_viewport.y = V2BoxHeight([self viewport]) - point_viewport.y;
 	}
-	
-	// Rescale to viewport pixels
-	point_viewport.x = point_visibleRect.x * ([self zoomPercentageForGL]/100.);
-	point_viewport.y = point_visibleRect.y * ([self zoomPercentageForGL]/100.);
 	
 	return point_viewport;
 	

@@ -86,8 +86,6 @@
 		0B6122EE153516600085F944 /* LDrawTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6122EC153516600085F944 /* LDrawTexture.m */; };
 		0B639758106F3CF800C93F6E /* PlacardButtonClose12.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B639756106F3CF700C93F6E /* PlacardButtonClose12.pdf */; };
 		0B639759106F3CF800C93F6E /* PlacardButtonSplit12.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B639757106F3CF800C93F6E /* PlacardButtonSplit12.pdf */; };
-		0B639768106F408500C93F6E /* ExtendedScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B639766106F408500C93F6E /* ExtendedScrollView.m */; };
-		0B63976F106F40CA00C93F6E /* ExtendedScrollView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B63976E106F40CA00C93F6E /* ExtendedScrollView.h */; };
 		0B65543A081367E800EA7F4F /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B655439081367E800EA7F4F /* GLUT.framework */; };
 		0B6770EE0817588D0044A0E0 /* Mac LDraw_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCF750370BD2300C91783 /* Mac LDraw_Prefix.pch */; };
 		0B6771AA081764E60044A0E0 /* LDrawDrawableElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B6771A8081764E60044A0E0 /* LDrawDrawableElement.h */; };
@@ -103,10 +101,6 @@
 		0B6F3FC207CB0253007B1075 /* LDrawQuadrilateral.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3FB407CB0253007B1075 /* LDrawQuadrilateral.m */; };
 		0B6F3FC407CB0253007B1075 /* LDrawTriangle.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B6F3FB607CB0253007B1075 /* LDrawTriangle.m */; };
 		0B70D0A7135A616800BC8B0A /* InsertModelTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B70D0A6135A616800BC8B0A /* InsertModelTemplate.pdf */; };
-		0B74F28D0D0BB5AD00ED8419 /* ScrollViewCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B74F28B0D0BB5AD00ED8419 /* ScrollViewCategory.h */; };
-		0B74F28E0D0BB5AD00ED8419 /* ScrollViewCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B74F28C0D0BB5AD00ED8419 /* ScrollViewCategory.m */; };
-		0B74F2910D0BB5BB00ED8419 /* CenteringClipView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B74F28F0D0BB5BB00ED8419 /* CenteringClipView.h */; };
-		0B74F2920D0BB5BB00ED8419 /* CenteringClipView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B74F2900D0BB5BB00ED8419 /* CenteringClipView.m */; };
 		0B7588D80D8DC4DD00357703 /* ColorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B7588D60D8DC4DD00357703 /* ColorLibrary.h */; };
 		0B7588D90D8DC4DD00357703 /* ColorLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B7588D70D8DC4DD00357703 /* ColorLibrary.m */; };
 		0B76F2F90E74CC1700349D03 /* InspectionStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B76F2F70E74CC1700349D03 /* InspectionStep.h */; };
@@ -240,6 +234,8 @@
 		0BDE0EEA1371063600FDB8DB /* LDrawPathNames.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BDE0EE91371063600FDB8DB /* LDrawPathNames.h */; };
 		0BDE0EF11371070600FDB8DB /* LDrawPaths.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BDE0EEF1371070600FDB8DB /* LDrawPaths.h */; };
 		0BDE0EF21371070600FDB8DB /* LDrawPaths.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BDE0EF01371070600FDB8DB /* LDrawPaths.m */; };
+		0BE49CD025AAB7FF00E96C96 /* LDrawViewerContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BE49CCE25AAB7FF00E96C96 /* LDrawViewerContainer.h */; };
+		0BE49CD125AAB7FF00E96C96 /* LDrawViewerContainer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BE49CCF25AAB7FF00E96C96 /* LDrawViewerContainer.m */; };
 		0BE524011373C26200E21FBC /* PartReport.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BE523FF1373C26200E21FBC /* PartReport.h */; };
 		0BE524021373C26200E21FBC /* PartReport.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BE524001373C26200E21FBC /* PartReport.m */; };
 		0BE84A1F1300F91F004E7626 /* BricksmithUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BE84A1D1300F91F004E7626 /* BricksmithUtilities.h */; };
@@ -473,8 +469,6 @@
 		0B6122EC153516600085F944 /* LDrawTexture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawTexture.m; sourceTree = "<group>"; };
 		0B639756106F3CF700C93F6E /* PlacardButtonClose12.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = PlacardButtonClose12.pdf; sourceTree = "<group>"; };
 		0B639757106F3CF800C93F6E /* PlacardButtonSplit12.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = PlacardButtonSplit12.pdf; sourceTree = "<group>"; };
-		0B639766106F408500C93F6E /* ExtendedScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExtendedScrollView.m; sourceTree = "<group>"; };
-		0B63976E106F40CA00C93F6E /* ExtendedScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExtendedScrollView.h; sourceTree = "<group>"; };
 		0B655439081367E800EA7F4F /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = /System/Library/Frameworks/GLUT.framework; sourceTree = "<absolute>"; };
 		0B6771A8081764E60044A0E0 /* LDrawDrawableElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDrawableElement.h; sourceTree = "<group>"; };
 		0B6771A9081764E60044A0E0 /* LDrawDrawableElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDrawableElement.m; sourceTree = "<group>"; };
@@ -499,10 +493,6 @@
 		0B6F3FB507CB0253007B1075 /* LDrawTriangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawTriangle.h; sourceTree = "<group>"; };
 		0B6F3FB607CB0253007B1075 /* LDrawTriangle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawTriangle.m; sourceTree = "<group>"; };
 		0B70D0A6135A616800BC8B0A /* InsertModelTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = InsertModelTemplate.pdf; sourceTree = "<group>"; };
-		0B74F28B0D0BB5AD00ED8419 /* ScrollViewCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewCategory.h; sourceTree = "<group>"; };
-		0B74F28C0D0BB5AD00ED8419 /* ScrollViewCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScrollViewCategory.m; sourceTree = "<group>"; };
-		0B74F28F0D0BB5BB00ED8419 /* CenteringClipView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CenteringClipView.h; sourceTree = "<group>"; };
-		0B74F2900D0BB5BB00ED8419 /* CenteringClipView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CenteringClipView.m; sourceTree = "<group>"; };
 		0B7588D60D8DC4DD00357703 /* ColorLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorLibrary.h; sourceTree = "<group>"; };
 		0B7588D70D8DC4DD00357703 /* ColorLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorLibrary.m; sourceTree = "<group>"; };
 		0B7588DA0D8DC4EF00357703 /* LDrawColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawColor.h; sourceTree = "<group>"; };
@@ -622,6 +612,8 @@
 		0BDE0EE91371063600FDB8DB /* LDrawPathNames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawPathNames.h; sourceTree = "<group>"; };
 		0BDE0EEF1371070600FDB8DB /* LDrawPaths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawPaths.h; sourceTree = "<group>"; };
 		0BDE0EF01371070600FDB8DB /* LDrawPaths.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawPaths.m; sourceTree = "<group>"; };
+		0BE49CCE25AAB7FF00E96C96 /* LDrawViewerContainer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LDrawViewerContainer.h; sourceTree = "<group>"; };
+		0BE49CCF25AAB7FF00E96C96 /* LDrawViewerContainer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LDrawViewerContainer.m; sourceTree = "<group>"; };
 		0BE523FF1373C26200E21FBC /* PartReport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PartReport.h; sourceTree = "<group>"; };
 		0BE524001373C26200E21FBC /* PartReport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PartReport.m; sourceTree = "<group>"; };
 		0BE84A1D1300F91F004E7626 /* BricksmithUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BricksmithUtilities.h; sourceTree = "<group>"; };
@@ -890,8 +882,6 @@
 				0B8EBE97093C102E00D87E0C /* FormCategory.m */,
 				0B8C0A2510BA623700BEB111 /* OverlayViewCategory.h */,
 				0B3E7B9F10AF9E5A00AFBCF4 /* OverlayViewCategory.m */,
-				0B74F28B0D0BB5AD00ED8419 /* ScrollViewCategory.h */,
-				0B74F28C0D0BB5AD00ED8419 /* ScrollViewCategory.m */,
 				0B8EBE98093C102E00D87E0C /* StringCategory.h */,
 				0B8EBE99093C102E00D87E0C /* StringCategory.m */,
 				0BBCFE7E1529492D00728A54 /* TableViewCategory.h */,
@@ -956,14 +946,10 @@
 		0B6F498C07D19440007B1075 /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
-				0B74F28F0D0BB5BB00ED8419 /* CenteringClipView.h */,
-				0B74F2900D0BB5BB00ED8419 /* CenteringClipView.m */,
 				0B2FAE2D10196F8C007BA948 /* BackgroundColorView.h */,
 				0B2FAE2E10196F8C007BA948 /* BackgroundColorView.m */,
 				0B8EBE6B093C100100D87E0C /* DialogPanel.h */,
 				0B8EBE6C093C100100D87E0C /* DialogPanel.m */,
-				0B63976E106F40CA00C93F6E /* ExtendedScrollView.h */,
-				0B639766106F408500C93F6E /* ExtendedScrollView.m */,
 				0B8EBE6D093C100100D87E0C /* ExtendedSplitView.h */,
 				0B8EBE6E093C100100D87E0C /* ExtendedSplitView.m */,
 				0B06F7150F633FD2004E7DD7 /* ExtendedTableView.h */,
@@ -984,6 +970,8 @@
 				0B8EBE7A093C100100D87E0C /* LDrawFileOutlineView.m */,
 				0B8EBE7B093C100100D87E0C /* LDrawGLView.h */,
 				0B8EBE7C093C100100D87E0C /* LDrawGLView.m */,
+				0BE49CCE25AAB7FF00E96C96 /* LDrawViewerContainer.h */,
+				0BE49CCF25AAB7FF00E96C96 /* LDrawViewerContainer.m */,
 				0B8C096610BA532F00BEB111 /* OverlayHelperView.h */,
 				0B8C096710BA532F00BEB111 /* OverlayHelperView.m */,
 				0B8C097110BA550500BEB111 /* OverlayHelperWindow.h */,
@@ -1372,6 +1360,7 @@
 				0BF729C608AD849300E3DA53 /* PreferencesDialogController.h in Headers */,
 				0BC6992B08B5719000DAF996 /* LDrawMPDModel.h in Headers */,
 				0BC6992C08B5719100DAF996 /* LDrawConditionalLine.h in Headers */,
+				0BE49CD025AAB7FF00E96C96 /* LDrawViewerContainer.h in Headers */,
 				0BC6992D08B5719100DAF996 /* LDrawLine.h in Headers */,
 				0BC6992E08B5719200DAF996 /* LDrawModel.h in Headers */,
 				0BC6992F08B5719300DAF996 /* LDrawPart.h in Headers */,
@@ -1416,8 +1405,6 @@
 				0BDC146F0B9D0502001D1FF1 /* PartBrowserPanelController.h in Headers */,
 				0B2DD14A0CD810DC0093E8E5 /* PartBrowserTableView.h in Headers */,
 				0B2DD14E0CD810F20093E8E5 /* BezierPathCategory.h in Headers */,
-				0B74F28D0D0BB5AD00ED8419 /* ScrollViewCategory.h in Headers */,
-				0B74F2910D0BB5BB00ED8419 /* CenteringClipView.h in Headers */,
 				0B7588D80D8DC4DD00357703 /* ColorLibrary.h in Headers */,
 				0B9907D80DDD540D003F6B13 /* LDrawColor.h in Headers */,
 				0BC71D650E6CB26A0007F10D /* ScopeBar.h in Headers */,
@@ -1427,7 +1414,6 @@
 				0B06F7170F633FD2004E7DD7 /* ExtendedTableView.h in Headers */,
 				0B2FADD310196C2E007BA948 /* DonationDialogController.h in Headers */,
 				0B2FAE2F10196F8C007BA948 /* BackgroundColorView.h in Headers */,
-				0B63976F106F40CA00C93F6E /* ExtendedScrollView.h in Headers */,
 				0BFC4CFD1076F61900293B60 /* ViewportArranger.h in Headers */,
 				0B04EF3710A6A38E00E201EE /* FocusRingView.h in Headers */,
 				0B8C096810BA532F00BEB111 /* OverlayHelperView.h in Headers */,
@@ -1725,8 +1711,6 @@
 				0BDC14700B9D0502001D1FF1 /* PartBrowserPanelController.m in Sources */,
 				0B2DD14B0CD810DC0093E8E5 /* PartBrowserTableView.m in Sources */,
 				0B2DD14F0CD810F20093E8E5 /* BezierPathCategory.m in Sources */,
-				0B74F28E0D0BB5AD00ED8419 /* ScrollViewCategory.m in Sources */,
-				0B74F2920D0BB5BB00ED8419 /* CenteringClipView.m in Sources */,
 				0B7588D90D8DC4DD00357703 /* ColorLibrary.m in Sources */,
 				0B9907D70DDD540C003F6B13 /* LDrawColor.m in Sources */,
 				0BC71D660E6CB26A0007F10D /* ScopeBar.m in Sources */,
@@ -1736,7 +1720,6 @@
 				0B06F7180F633FD2004E7DD7 /* ExtendedTableView.m in Sources */,
 				0B2FADD410196C2E007BA948 /* DonationDialogController.m in Sources */,
 				0B2FAE3010196F8C007BA948 /* BackgroundColorView.m in Sources */,
-				0B639768106F408500C93F6E /* ExtendedScrollView.m in Sources */,
 				0BFC4CFE1076F61900293B60 /* ViewportArranger.m in Sources */,
 				0B04EF3810A6A38E00E201EE /* FocusRingView.m in Sources */,
 				0B3E7BA010AF9E5A00AFBCF4 /* OverlayViewCategory.m in Sources */,
@@ -1757,6 +1740,7 @@
 				95D893B916555F3E00AA055B /* LSynthConfiguration.m in Sources */,
 				95D893CB16569CFD00AA055B /* LDrawLSynth.m in Sources */,
 				D6EDB985164DEB0000B4062B /* LDrawShaderRenderer.m in Sources */,
+				0BE49CD125AAB7FF00E96C96 /* LDrawViewerContainer.m in Sources */,
 				D6EDB9C9164DF28100B4062B /* LDrawShaderLoader.m in Sources */,
 				D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */,
 				D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */,

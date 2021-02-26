@@ -234,6 +234,21 @@ bool V2EqualSizes(Size2 size1, Size2 size2)
 }
 
 
+//========== V2SizeCenteredOnPoint =============================================
+///
+/// @abstract	Returns a box of the given size, centered on the point.
+///
+//==============================================================================
+Box2 V2SizeCenteredOnPoint(Size2 size, Point2 center)
+{
+	Box2 result = V2MakeBox(0, 0, size.width, size.height);
+	
+	result.origin.x = center.x - size.width / 2;
+	result.origin.y = center.y - size.height / 2;
+	
+	return result;
+}
+
 //========== V2BoxHeight =======================================================
 //==============================================================================
 float V2BoxHeight(Box2 box)
@@ -279,6 +294,17 @@ float V2BoxMidX(Box2 box)
 float V2BoxMidY(Box2 box)
 {
 	return (box.origin.y + V2BoxHeight(box) * 0.5f);
+}
+
+
+//========== V2BoxMid ==========================================================
+///
+/// @abstract	Returns the middle of the box.
+///
+//==============================================================================
+Point2 V2BoxMid(Box2 box)
+{
+	return V2Make(V2BoxMidX(box), V2BoxMidY(box));
 }
 
 
@@ -482,6 +508,59 @@ bool		V2BoxIntersectsPolygon(Box2 bounds, const Point2 * poly, int num_pts)
 		// Final case: for non-degenerate case, marquee could be FULLY inside - test one point to be sure.
 		return V2PolygonContains(poly,num_pts,V2Make(V2BoxMidX(bounds),V2BoxMidY(bounds)));
 }
+
+
+// MARK: -
+
+//========== V2Add =============================================================
+//
+// Purpose:		return vector difference c = a+b
+//
+//==============================================================================
+Vector2 V2Add(Vector2 a, Vector2 b)
+{
+	Vector2 result;
+
+	result.x = a.x + b.x;
+	result.y = a.y + b.y;
+	
+	return result;
+	
+}//end V2Add
+
+
+//========== V2Sub =============================================================
+//
+// Purpose:		return vector difference c = a-b
+//
+//==============================================================================
+Vector2 V2Sub(Vector2 a, Vector2 b)
+{
+	Vector2 result;
+
+	result.x = a.x - b.x;
+	result.y = a.y - b.y;
+	
+	return result;
+	
+}//end V3Sub
+
+
+//========== V2MulScalar =======================================================
+//
+// Purpose:		Returns (a * scalar).
+//
+//==============================================================================
+Vector2 V2MulScalar(Vector2 a, float scalar)
+{
+	Vector2 result;
+	
+	result.x = a.x * scalar;
+	result.y = a.y * scalar;
+	
+	return(result);
+	
+}//end V2MulScalar
 
 
 #pragma mark -

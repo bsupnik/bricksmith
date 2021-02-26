@@ -18,20 +18,18 @@
 #import "LDrawMPDModel.h"
 #import "LDrawPart.h"
 #import "LDrawStep.h"
-#import "MLCadIni.h"
-
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
 #import "MatrixMath.h"
+#import "MLCadIni.h"
+
+@interface MinifigureDialogController ()
+
+@property (nonatomic, strong) IBOutlet LDrawViewerContainer	*minifigurePreview;
+
+@end
 
 @implementation MinifigureDialogController
-
-//+ (void) initialize
-//{
-//	[self setKeys:[NSArray arrayWithObjects:@"", nil]
-//	triggerChangeNotificationsForDependentKey:@"generateMinifigure"];
-//	
-//
-//}
 
 //========== awakeFromNib ======================================================
 //
@@ -40,11 +38,11 @@
 //==============================================================================
 - (void) awakeFromNib
 {
-	[self->minifigurePreview setAcceptsFirstResponder:NO];
-	[self->minifigurePreview setZoomPercentage:180];
+	[_minifigurePreview.glView setAcceptsFirstResponder:NO];
+	[_minifigurePreview.glView setZoomPercentage:180];
 	
-	[minifigurePreview	setAutosaveName:@"MinifigureGeneratorView"];
-	[minifigurePreview	restoreConfiguration];
+	[_minifigurePreview.glView	setAutosaveName:@"MinifigureGeneratorView"];
+	[_minifigurePreview.glView	restoreConfiguration];
 	
 }//end awakeFromNib
 
@@ -120,7 +118,7 @@
 	
 	self->minifigure = newMinifigure;
 	
-	[self->minifigurePreview setLDrawDirective:newMinifigure];
+	[_minifigurePreview.glView setLDrawDirective:newMinifigure];
 	
 }//end setMinifigure:
 

@@ -15,19 +15,6 @@
 //				there is a symbiotic relationship with ToolPalette to track 
 //				which tool mode we're in; we get notifications when it changes.
 //
-// Threading:	At one point, I was trying to get LDrawGLView to spawn a 
-//				separate thread to draw. It never worked right. But there are 
-//				two critical pieces of shared data protected by mutual-exclusion 
-//				locks as a result: 
-//				
-//					* the NSOpenGLContext
-//
-//					* the contents of the directive being drawn
-//						--	I kinda cheated on this one. Only LDrawFiles 
-//							automatically maintain mutexes. It's a safe shortcut
-//							because only Files are edited! The editor must track 
-//							the lock manually.
-//
 //  Created by Allen Smith on 4/17/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -42,33 +29,20 @@
 #import "LDrawDocument.h"
 #import "LDrawDragHandle.h"
 #import "LDrawFile.h"
+#import "LDrawGLRenderer.h"
 #import "LDrawModel.h"
 #import "LDrawPart.h"
-#import "LDrawGLRenderer.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
+#import "LDrawViewerContainer.h"
 #import "MacLDraw.h"
 #import "OverlayViewCategory.h"
-#import "ScrollViewCategory.h"
 #import "UserDefaultsCategory.h"
 
 // Macros for pref-based UI tricks.
 #define USE_TURNTABLE				([[NSUserDefaults standardUserDefaults] integerForKey:ROTATE_MODE_KEY] == RotateModeTurntable)
 #define USE_RIGHT_SPIN				([[NSUserDefaults standardUserDefaults] integerForKey:RIGHT_BUTTON_BEHAVIOR_KEY] == RightButtonRotates)
 #define USE_ZOOM_WHEEL				([[NSUserDefaults standardUserDefaults] integerForKey:MOUSE_WHEEL_BEHAVIOR_KEY] == MouseWheelZooms)
-
-//========== NSRectToBox2 ======================================================
-//
-// Purpose:		Convert Cocoa rects to our internal format.
-//
-//==============================================================================
-static Box2 NSRectToBox2(NSRect rect)
-{
-	Box2 box = V2MakeBox(NSMinX(rect), NSMinY(rect), NSWidth(rect), NSHeight(rect));
-	
-	return box;
-}
-
 
 //========== NSSizeToSize2 =====================================================
 //
@@ -83,44 +57,18 @@ static Size2 NSSizeToSize2(NSSize size)
 }
 
 
-//========== Size2ToNSSize =====================================================
-//
-// Purpose:		Convert our internal format to Cocoa sizes.
-//
+//========== NSRectToBox2 ======================================================
+///
+/// @abstract	Convert Cocoa rects to our internal format.
+///
 //==============================================================================
-static NSSize Size2ToNSSize(Size2 size)
+static Box2 NSRectToBox2(NSRect rect)
 {
-	NSSize sizeOut = NSMakeSize(size.width, size.height);
-	
-	return sizeOut;
+	return V2MakeBox(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 }
 
 
 @implementation LDrawGLView
-
-//========== awakeFromNib ======================================================
-//
-// Purpose:		Set up our Cocoa viewing.
-//
-// Notes:		This method will get called twice: once because we load our 
-//				accessory view from a Nib file, and once when this object is 
-//				unpacked from the Nib in which it's stored.
-//
-//==============================================================================
-- (void) awakeFromNib
-{
-	id		superview	= [self superview];
-	
-	// If we are in a scroller, make sure we appear centered when smaller than 
-	// the scroll view. 
-	[[self enclosingScrollView] centerDocumentView];
-
-	if([superview isKindOfClass:[NSClipView class]])
-	{
-		[superview setCopiesOnScroll:NO];
-	}
-	
-}//end awakeFromNib
 
 #pragma mark -
 #pragma mark INITIALIZATION
@@ -140,23 +88,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	return self;
 	
 }//end initWithFrame:
-
-
-//========== initWithCoder: ====================================================
-//
-// Purpose:		For GL views loaded from Interface Builder.
-//
-//==============================================================================
-- (id) initWithCoder: (NSCoder *) coder
-{	
-	self = [super initWithCoder: coder];
-	
-	// Ignore any settings defined in Interface Builder's lame-o inspector panel.
-	[self internalInit];
-	
-	return self;
-	
-}//end initWithCoder:
 
 
 //========== internalInit ======================================================
@@ -1631,8 +1562,7 @@ static NSSize Size2ToNSSize(Size2 size)
 			case MouseDraggingBeginImmediately:
 				if (selectionIsMarquee)
 				{
-					[self autoscroll:theEvent];
-					[self mousePartSelection:theEvent];				
+					[self mousePartSelection:theEvent];
 				}
 				else
 					[self directInteractionDragged:theEvent];
@@ -1644,8 +1574,7 @@ static NSSize Size2ToNSSize(Size2 size)
 				else {
 					if (selectionIsMarquee)
 					{
-						[self autoscroll:theEvent];
-						[self mousePartSelection:theEvent];				
+						[self mousePartSelection:theEvent];
 					}
 					else
 						[self directInteractionDragged:theEvent				];
@@ -1890,7 +1819,43 @@ static NSSize Size2ToNSSize(Size2 size)
 	else
 	{
 		// Regular scrolling
-		[super scrollWheel:theEvent];
+		
+		Vector2 scrollDelta = V2Make(theEvent.scrollingDeltaX, theEvent.scrollingDeltaY);
+		if(theEvent.hasPreciseScrollingDeltas == NO)
+		{
+			scrollDelta = V2MulScalar(scrollDelta, 10); // totally arbitrary value
+		}
+		else
+		{
+			// I find default scrolling intolerably touchy. The speed is not so
+			// bad in a webpage, but too much for fine-detail Lego CAD. Apply a
+			// completely arbitrary slowing factor.
+			scrollDelta = V2MulScalar(scrollDelta, 0.5);
+		}
+		
+		// Units are viewport points. But direction is very confusing.
+		//
+		// +x means scroll the image rightward
+		//     • expose content to left
+		//     • shift origin -x
+		//
+		// +y means scroll the image downward
+		//    	• expose content above
+		//    	• shift origin -y in flipped coordinate system
+		//    	• shift origin +y in non-flipped coordinate system
+		
+		Vector2 scrollDelta_viewport = scrollDelta;
+		
+		// For, um, reasons?, the x delta from NSEvent is always backward compared
+		// to how we want to move the origin. See notes above.
+		scrollDelta_viewport.x *= -1;
+		
+		if([self isFlipped])
+		{
+			scrollDelta_viewport.y *= -1;
+		}
+		
+		[self->renderer scrollBy:scrollDelta_viewport];
 	}
 }
 
@@ -2115,7 +2080,7 @@ static NSSize Size2ToNSSize(Size2 size)
 			// scroll zone this will continuously scroll.  I do _not_ know what the correct scrolling interval should be...
 			// auto-scroll seems jerky.
 			self->marqueeSelectionMode = selectionMode;
-			self->autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1
+			self->autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:0.2
 																		target:self
 																	  selector:@selector(autoscrollTimerFired:)
 																	  userInfo:self
@@ -2173,13 +2138,31 @@ static NSSize Size2ToNSSize(Size2 size)
 }//end cancelClickAndHoldTimer
 
 
+//========== autoscroll: =======================================================
+///
+/// @abstract	If the event is outside the view, this will scroll the view by
+/// 			the amount the event is outside.
+///
+///				This is an override of an AppKit method. But since we have no
+/// 			enclosing clip view, we must re-implement the logic ourselves.
+///
+//==============================================================================
+- (BOOL)autoscroll:(NSEvent *)event
+{
+	NSPoint location_view	= [self convertPoint:[[self window] mouseLocationOutsideOfEventStream] fromView:nil];
+	Box2	bounds			= NSRectToBox2(self.bounds);
+	Point2	location		= V2Make(location_view.x, location_view.y);
+	BOOL	didScroll		= [self->renderer autoscrollPoint:location relativeToRect:bounds];
+
+	return didScroll;
+}
+
+
 //========== autoscrollTimerFired: ===========================================
 //
 // Purpose:		If we got here, it means the user has successfully executed a 
 //				click-and-hold, which means that the mouse button was clicked, 
 //				held down, and not moved for a certain period of time. 
-//
-//				We use this action to initiate a drag-and-drop.
 //
 //==============================================================================
 - (void) autoscrollTimerFired:(NSTimer*)theTimer
@@ -2187,7 +2170,9 @@ static NSSize Size2ToNSSize(Size2 size)
 	NSView * view = self;
 	NSEvent * event = [NSApp currentEvent];
 	if ([event type] == NSLeftMouseDragged )
+	{
 		[view autoscroll:event];
+	}
 }
 
 
@@ -2416,6 +2401,17 @@ static NSSize Size2ToNSSize(Size2 size)
 	NSPoint 		viewPoint			= [self convertPoint:dragPointInWindow fromView:nil];
 	BOOL			constrainDragAxis	= NO;
 	NSDragOperation dragOperation		= NSDragOperationNone;
+	
+	// Autoscroll?
+	// Drag point is always inside view. But if it's close to the edges, we
+	// autoscroll. This matches the out-of-box behavior provided by AppKit for
+	// views within an NSScrollView.
+	NSRect noAutoscrollZone = NSInsetRect(self.bounds, 20, 20); // it's more like 50 in AppKit
+	BOOL needsAutoscroll = NSPointInRect(viewPoint, noAutoscrollZone) == NO; // implies we are in the margin
+	if(needsAutoscroll)
+	{
+		[self->renderer autoscrollPoint:V2Make(viewPoint.x, viewPoint.y) relativeToRect:NSRectToBox2(noAutoscrollZone)];
+	}
 	
 	// local drag?
 	if(sourceView == self)
@@ -2796,26 +2792,6 @@ static NSSize Size2ToNSSize(Size2 size)
 
 
 
-//========== scrollViewFrameDidChange: =========================================
-//
-// Purpose:		This view supposed to fill its entire scrollview even when 
-//				zoomed out, to maintain the illusion of being a viewport into 
-//				limitless space. However, we get no -reshape message when the 
-//				scrollview expands to a size larger than our frame. So we have 
-//				to snoop on the scroll view instead.
-//
-//==============================================================================
-- (void) scrollViewFrameDidChange:(NSNotification *)notification
-{
-	[[self openGLContext] makeCurrentContext];
-	
-	NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
-	[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
-	
-	
-}//end scrollViewFrameDidChange:
-
-
 //========== renewGState =======================================================
 //
 // Purpose:		NSOpenGLViews' content is drawn directly by a hardware surface 
@@ -2856,15 +2832,14 @@ static NSSize Size2ToNSSize(Size2 size)
 	CGLLockContext([[self openGLContext] CGLContextObj]);
 	{
 		[[self openGLContext] makeCurrentContext];
-				
-		NSSize maxVisibleSize = [[self enclosingScrollView] contentSize];
+			
+		NSSize maxVisibleSize = [self visibleRect].size;
+
 		if(maxVisibleSize.width > 0 && maxVisibleSize.height > 0)
 		{
 			glViewport(0,0, maxVisibleSize.width,maxVisibleSize.height);
 
-			// Bit of a hack - this gets called for SCROLLING too, and of course our max visible size has
-			// NOT changed - but it tickles the camera, which is what we are REALLY after.
-			[self->renderer setMaximumVisibleSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];		
+			[self->renderer setGraphicsSurfaceSize:V2MakeSize(maxVisibleSize.width, maxVisibleSize.height)];
 		}
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
@@ -2890,36 +2865,6 @@ static NSSize Size2ToNSSize(Size2 size)
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
 }//end update
-
-
-//========== viewDidMoveToSuperview ============================================
-//
-// Purpose:		Moving to a new superview. We can use this message to catch when 
-//				we are being enclosed in a scroll view, so we can watch when the 
-//				scrollview frame changes and we need to resize to artificially 
-//				fill it. 
-//
-//==============================================================================
-- (void) viewDidMoveToSuperview
-{
-	NSScrollView            *scrollView         = [self enclosingScrollView];
-	NSNotificationCenter    *notificationCenter = [NSNotificationCenter defaultCenter];
-	
-	if(scrollView != nil)
-	{
-		[notificationCenter addObserver:self
-							   selector:@selector(scrollViewFrameDidChange:)
-								   name:NSViewFrameDidChangeNotification
-								 object:scrollView];
-	}
-	else
-	{
-		[notificationCenter removeObserver:self
-									  name:NSViewFrameDidChangeNotification
-									object:nil];
-	}
-
-}//end viewDidMoveToSuperview
 
 
 #pragma mark -
@@ -3051,6 +2996,20 @@ static NSSize Size2ToNSSize(Size2 size)
 }//end saveImageToPath:
 
 
+//========== scrollCameraVisibleRectToPoint: ===================================
+///
+/// @abstract	Scrolls so the given point is the origin of the camera's
+/// 			visibleRect. This is in the coordinate system of the boxes
+/// 			passed to -reflectLogicalDocumentRect:visibleRect:.
+///
+//==============================================================================
+- (void) scrollCameraVisibleRectToPoint:(Point2)visibleRectOrigin
+{
+	[[self openGLContext] makeCurrentContext];
+	[self->renderer scrollCameraVisibleRectToPoint:visibleRectOrigin];
+}
+
+
 //========== scrollCenterToModelPoint: =========================================
 //
 // Purpose:		Scrolls the receiver (if it is inside a scroll view) so that 
@@ -3097,32 +3056,17 @@ static NSSize Size2ToNSSize(Size2 size)
 	}
 	CGLUnlockContext([[self openGLContext] CGLContextObj]);
 	
-//	[[self enclosingScrollView] setDrawsBackground:YES];
-//	[[self enclosingScrollView] setBackgroundColor:rgbColor];
-
 	[self setNeedsDisplay:YES];
 	
 }//end takeBackgroundColorFromUserDefaults
 
 
 #pragma mark -
-#pragma mark SCROLLER PROTOCOL
+#pragma mark LDrawGLCameraScroller
 #pragma mark -
 
 
-//========== getDocumentSize ===================================================
-//
-// Purpose:		Returns the size of our document (e.g. the size of the entire
-//				model) in model coorinates.
-//
-//==============================================================================
-- (Size2)	getDocumentSize
-{
-	return NSSizeToSize2([self frame].size);
-}
-
-
-//========== setDocumentSize: ==================================================
+//========== reflectLogicalDocumentSize:viewportRect: ==========================
 //
 // Purpose:		Changes the size of the document.
 //
@@ -3130,72 +3074,24 @@ static NSSize Size2ToNSSize(Size2 size)
 //				the change in document size by NS will adjust scroll bars, etc.
 //
 //==============================================================================
-- (void)	setDocumentSize:(Size2)newDocumentSize
+- (void) reflectLogicalDocumentRect:(Box2)newDocumentRect visibleRect:(Box2)visibleRect
 {
-	assert(!isnan(newDocumentSize.width));
-	assert(!isnan(newDocumentSize.height));
-	assert(newDocumentSize.width > 0);
-	assert(newDocumentSize.height > 0);
-	NSSize sizeNow = [self frame].size;
-	if(newDocumentSize.width == sizeNow.width && newDocumentSize.height == sizeNow.height)
-		return;
-
-	[self setFrameSize:Size2ToNSSize(newDocumentSize)];
-}
-
-
-//========== getVisibleRect ====================================================
-//
-// Purpose:		Returns the visible sub-section of our document (in model
-//				coordinates).  The origin is the document's scroll origin, and
-//				the size defines the visible area on screen (in doc windows).
-//
-//==============================================================================
-- (Box2)	getVisibleRect
-{
-	return NSRectToBox2([self visibleRect]);
-}
-
-
-//========== getMaxVisibleSizeDoc ==============================================
-//
-// Purpose:		This returns the maximum size we can set our document before it
-//				scrolls - the results are in model coordinates.
-//
-//==============================================================================
-- (Size2)	getMaxVisibleSizeDoc
-{
-	NSScrollView *scrollView = [self enclosingScrollView];
-	if(scrollView != nil)
+	LDrawViewerContainer* enclosingContainer = nil;
+	
+	NSView* superview = self.superview;
+	while(superview != nil)
 	{
-		NSClipView  *clipView       = [scrollView contentView];
-		return NSSizeToSize2([clipView bounds].size);
+		if([superview isKindOfClass:[LDrawViewerContainer class]])
+		{
+			enclosingContainer = (LDrawViewerContainer*)superview;
+			break;
+		}
+		superview = superview.superview;
 	}
-	else
-	{
-		return NSSizeToSize2([self bounds].size);
-	}
-}
-
-
-//========== getMaxVisibleSizeGL ===============================================
-//
-// Purpose:		This returns the maximum size we can set our document before it
-//				scrolls - the results are in OpenGL pixels (e.g. the pixels you
-//				give to glViewport).
-//
-//==============================================================================
-- (Size2)	getMaxVisibleSizeGL
-{
-	NSScrollView *scrollView = [self enclosingScrollView];
-	if(scrollView != nil)
-	{
-		return NSSizeToSize2([scrollView contentSize]);
-	}
-	else
-	{
-		return NSSizeToSize2([self bounds].size);
-	}
+	
+	// The container has the opportunity to display scroll bars to reflect our
+	// document position. This should not result in ANY changes to the viewport.
+	[enclosingContainer reflectLogicalDocumentRect:newDocumentRect visibleRect:visibleRect];
 }
 
 
@@ -3203,7 +3099,7 @@ static NSSize Size2ToNSSize(Size2 size)
 //
 // Purpose:		This sets the scaling factor on our scrolling view.
 //
-// NoteS:		The camera calls this to request that a scaling factor be 
+// NoteS:		The camera calls this to request that a scaling factor be
 //				induced in NS's view system.  This makes the scale of the
 //				parent view and the document different; the scroll bars adjust
 //				appropriately.
@@ -3214,57 +3110,16 @@ static NSSize Size2ToNSSize(Size2 size)
 //				coordinates.)
 //
 //==============================================================================
-- (void)	setScaleFactor:(CGFloat)newScaleFactor
+- (void)	reflectScaleFactor:(CGFloat)newScaleFactor
 {
 	assert(newScaleFactor > 0.0);
 	assert(!isnan(newScaleFactor));
 	
-	NSScrollView    *scrollView             = [self enclosingScrollView];
-	
-	// Don't zoom if we aren't cabale of zooming or if the zoom level isn't 
-	// actually changing (to avoid unnecessary re-draw) 
-	if(scrollView != nil)
-	{
-		NSClipView  *clipView       = [scrollView contentView];
-		NSRect      clipFrame       = [clipView frame];
-		NSRect      clipBounds      = [clipView bounds];
-		
-		// Change the magnification level of the clip view, which has the 
-		// effect of zooming us in and out. 
-		clipBounds.size.width	= NSWidth(clipFrame)  / newScaleFactor;
-		clipBounds.size.height	= NSHeight(clipFrame) / newScaleFactor;
-		// Note: must use -setBoundsSize:, not -setBounds:. The latter 
-		//		 causes bad things to happen when called on a collapsed 
-		//		 split view. 
-		[clipView setBoundsSize:clipBounds.size];
-		
-		// update KVO
-		[self willChangeValueForKey:@"zoomPercentage"];
-		[self didChangeValueForKey:@"zoomPercentage"];
-	}
-
+	// update KVO
+	[self willChangeValueForKey:@"zoomPercentage"];
+	[self didChangeValueForKey:@"zoomPercentage"];
 }
 
-
-//========== setScrollOrigin: ==================================================
-//
-// Purpose:		This scrolls our view so that the model point passed in is in
-//				the upper left corner of our visible exposed area, scrolling
-//				us as needed.
-//
-//==============================================================================
-- (void)	setScrollOrigin:(Point2)visibleOrigin
-{
-	assert(!isnan(visibleOrigin.x));
-	assert(!isnan(visibleOrigin.y));
-	Point2	currentOrigin = [self getVisibleRect].origin;
-	
-	if(currentOrigin.x == visibleOrigin.x &&
-		currentOrigin.y == visibleOrigin.y)
-		return;
-
-	[self scrollPoint:NSMakePoint(visibleOrigin.x,visibleOrigin.y)];
-}
 
 #pragma mark -
 #pragma mark DESTRUCTOR
@@ -3283,6 +3138,7 @@ static NSSize Size2ToNSSize(Size2 size)
 	
 	[renderer		release];
 	[autosaveName	release];
+	[focusRingView	setFocusSource:nil];
 
 	[super dealloc];
 	

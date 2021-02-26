@@ -12,7 +12,6 @@
 #import "MatrixMath.h"
 
 @class LDrawColorWell;
-@class LDrawGLView;
 @class LDrawMPDModel;
 @class LDrawPart;
 @class MLCadIni;
@@ -74,7 +73,6 @@
 	//Nib widgets
 	
 	IBOutlet NSPanel			*minifigureGeneratorPanel;
-	IBOutlet LDrawGLView		*minifigurePreview;
 	
 	IBOutlet LDrawColorWell		*hatsColorWell;
 	IBOutlet LDrawColorWell		*headsColorWell;

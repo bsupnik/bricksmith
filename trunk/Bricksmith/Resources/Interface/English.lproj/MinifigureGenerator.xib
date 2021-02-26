@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="15G20015" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment version="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -25,7 +25,7 @@
                 <outlet property="leftLegsColorWell" destination="256" id="696"/>
                 <outlet property="leftLegsController" destination="512" id="546"/>
                 <outlet property="minifigureGeneratorPanel" destination="10" id="48"/>
-                <outlet property="minifigurePreview" destination="47" id="49"/>
+                <outlet property="minifigurePreview" destination="2NJ-bS-eod" id="EGt-Al-Hf3"/>
                 <outlet property="necksColorWell" destination="162" id="683"/>
                 <outlet property="necksController" destination="501" id="540"/>
                 <outlet property="rightArmsColorWell" destination="191" id="685"/>
@@ -43,23 +43,23 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Minifigure Generator" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="10" userLabel="Minifigure" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="12" y="139" width="800" height="671"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="832"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <value key="minSize" type="size" width="212.78" height="7"/>
             <view key="contentView" id="7">
                 <rect key="frame" x="0.0" y="0.0" width="800" height="671"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="50">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="50">
                         <rect key="frame" x="67" y="629" width="464" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" drawsBackground="YES" id="824">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
@@ -70,7 +70,7 @@
                             </binding>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="51">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="41" id="51">
                         <rect key="frame" x="17" y="631" width="45" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="right" title="Name:" id="825">
@@ -267,8 +267,8 @@ Gw
                         <rect key="frame" x="91" y="545" width="440" height="5"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </box>
-                    <textField verticalHuggingPriority="750" id="149">
-                        <rect key="frame" x="59" y="544" width="33" height="14"/>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="29" id="149">
+                        <rect key="frame" x="59" y="544" width="37" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Head" id="835">
                             <font key="font" metaFont="smallSystemBold"/>
@@ -288,27 +288,27 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="721"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="384"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfHat" id="328"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="384"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="155">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="155">
                         <rect key="frame" x="409" y="568" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" drawsBackground="YES" id="837">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="722"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="385"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfHat" id="329"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="385"/>
                             <outlet property="formatter" destination="297" id="312"/>
                         </connections>
                     </textField>
                     <button id="157" customClass="LDrawColorWell">
-                        <rect key="frame" x="467" y="568" width="59" height="18"/>
+                        <rect key="frame" x="467" y="565" width="59" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="838">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -320,7 +320,7 @@ Gw
                         </connections>
                     </button>
                     <button id="158" customClass="LDrawColorWell">
-                        <rect key="frame" x="467" y="521" width="59" height="18"/>
+                        <rect key="frame" x="467" y="518" width="59" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="839">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -341,12 +341,12 @@ Gw
                             <binding destination="326" name="value" keyPath="selection.angleOfHead" id="331"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="160">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="160">
                         <rect key="frame" x="409" y="521" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" drawsBackground="YES" id="841">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
@@ -356,7 +356,7 @@ Gw
                         </connections>
                     </textField>
                     <button id="162" customClass="LDrawColorWell">
-                        <rect key="frame" x="467" y="473" width="59" height="18"/>
+                        <rect key="frame" x="467" y="471" width="59" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="842">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -367,18 +367,18 @@ Gw
                             <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="392"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="163">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="163">
                         <rect key="frame" x="409" y="473" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="843">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="731"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="390"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfNeck" id="335"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="390"/>
                             <outlet property="formatter" destination="297" id="298"/>
                         </connections>
                     </textField>
@@ -388,8 +388,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="844"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="732"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="391"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfNeck" id="336"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="391"/>
                         </connections>
                     </stepper>
                     <popUpButton verticalHuggingPriority="750" id="167">
@@ -422,12 +422,12 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="730"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="389"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfNeck" id="334"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="389"/>
                         </connections>
                     </slider>
                     <button id="171" customClass="LDrawColorWell">
-                        <rect key="frame" x="467" y="391" width="59" height="18"/>
+                        <rect key="frame" x="467" y="389" width="59" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="847">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -437,7 +437,7 @@ Gw
                             <action selector="colorWellChanged:" target="-2" id="670"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="174">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="33" id="174">
                         <rect key="frame" x="59" y="414" width="37" height="14"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Torso" id="848">
@@ -481,12 +481,12 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="850"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="737"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="478"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightArm" id="342"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="478"/>
                         </connections>
                     </stepper>
                     <button id="191" customClass="LDrawColorWell">
-                        <rect key="frame" x="343" y="324" width="36" height="18"/>
+                        <rect key="frame" x="343" y="323" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="851">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -497,18 +497,18 @@ Gw
                             <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="479"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="192">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="192">
                         <rect key="frame" x="285" y="325" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="852">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="736"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="477"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightArm" id="341"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="477"/>
                             <outlet property="formatter" destination="297" id="314"/>
                         </connections>
                     </textField>
@@ -520,8 +520,8 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="735"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="476"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightArm" id="340"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightArm" id="476"/>
                         </connections>
                     </slider>
                     <slider horizontalHuggingPriority="750" verticalHuggingPriority="750" id="197">
@@ -532,8 +532,8 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="750"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="482"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftArm" id="337"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="482"/>
                         </connections>
                     </slider>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="198">
@@ -542,27 +542,27 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="855"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="752"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="484"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftArm" id="339"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="484"/>
                         </connections>
                     </stepper>
-                    <textField verticalHuggingPriority="750" id="200">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="200">
                         <rect key="frame" x="673" y="325" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="856">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="751"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="483"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftArm" id="338"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftArm" id="483"/>
                             <outlet property="formatter" destination="297" id="317"/>
                         </connections>
                     </textField>
                     <button id="201" customClass="LDrawColorWell">
-                        <rect key="frame" x="731" y="325" width="36" height="18"/>
+                        <rect key="frame" x="731" y="323" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="857">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -591,8 +591,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="858"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="742"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="397"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHand" id="351"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="397"/>
                         </connections>
                     </stepper>
                     <slider horizontalHuggingPriority="750" verticalHuggingPriority="750" id="212">
@@ -603,37 +603,25 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="740"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="395"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHand" id="349"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="395"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="213">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="213">
                         <rect key="frame" x="285" y="275" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="860">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="741"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="396"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHand" id="350"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="396"/>
                             <outlet property="formatter" destination="297" id="315"/>
                         </connections>
                     </textField>
-                    <button id="214" customClass="LDrawColorWell">
-                        <rect key="frame" x="343" y="274" width="36" height="18"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="861">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="colorWellChanged:" target="-2" id="672"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="398"/>
-                        </connections>
-                    </button>
                     <slider horizontalHuggingPriority="750" verticalHuggingPriority="750" id="215">
                         <rect key="frame" x="647" y="274" width="18" height="20"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -642,12 +630,12 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="755"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="405"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHand" id="343"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="405"/>
                         </connections>
                     </slider>
                     <button id="216" customClass="LDrawColorWell">
-                        <rect key="frame" x="731" y="275" width="36" height="18"/>
+                        <rect key="frame" x="731" y="273" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="863">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -664,22 +652,22 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="864"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="757"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="407"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHand" id="345"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="407"/>
                         </connections>
                     </stepper>
-                    <textField verticalHuggingPriority="750" id="218">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="218">
                         <rect key="frame" x="673" y="275" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="865">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="756"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="406"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHand" id="344"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHand" id="406"/>
                             <outlet property="formatter" destination="297" id="318"/>
                         </connections>
                     </textField>
@@ -688,7 +676,7 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                     </box>
                     <button id="223" customClass="LDrawColorWell">
-                        <rect key="frame" x="467" y="176" width="59" height="18"/>
+                        <rect key="frame" x="467" y="174" width="59" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="866">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -730,22 +718,22 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="868"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="780"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="427"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLeg" id="360"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="427"/>
                         </connections>
                     </stepper>
-                    <textField verticalHuggingPriority="750" id="232">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="232">
                         <rect key="frame" x="673" y="67" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="869">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="786"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="431"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLegAccessory" id="362"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="431"/>
                             <outlet property="formatter" destination="297" id="323"/>
                         </connections>
                     </textField>
@@ -759,8 +747,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="870"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="787"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="432"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLegAccessory" id="363"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="432"/>
                         </connections>
                     </stepper>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="235">
@@ -769,8 +757,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="871"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="770"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="417"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLeg" id="366"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="417"/>
                         </connections>
                     </stepper>
                     <slider horizontalHuggingPriority="750" verticalHuggingPriority="750" id="237">
@@ -781,8 +769,8 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="778"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="425"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLeg" id="358"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="425"/>
                         </connections>
                     </slider>
                     <box verticalHuggingPriority="750" boxType="separator" id="239">
@@ -841,12 +829,12 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="785"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="430"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLegAccessory" id="361"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLegAccessory" id="430"/>
                         </connections>
                     </slider>
                     <button id="249" customClass="LDrawColorWell">
-                        <rect key="frame" x="343" y="67" width="36" height="18"/>
+                        <rect key="frame" x="343" y="65" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="876">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -885,12 +873,12 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="878"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="775"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="422"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLegAccessory" id="369"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="422"/>
                         </connections>
                     </stepper>
                     <button id="256" customClass="LDrawColorWell">
-                        <rect key="frame" x="731" y="114" width="36" height="18"/>
+                        <rect key="frame" x="731" y="112" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="879">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -901,18 +889,18 @@ Gw
                             <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="428"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="257">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="257">
                         <rect key="frame" x="673" y="114" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="880">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="779"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="426"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftLeg" id="359"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftLeg" id="426"/>
                             <outlet property="formatter" destination="297" id="322"/>
                         </connections>
                     </textField>
@@ -924,12 +912,12 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="773"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="420"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLegAccessory" id="367"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="420"/>
                         </connections>
                     </slider>
                     <button id="261" customClass="LDrawColorWell">
-                        <rect key="frame" x="731" y="67" width="36" height="18"/>
+                        <rect key="frame" x="731" y="65" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="882">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -945,7 +933,7 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                     </box>
                     <button id="264" customClass="LDrawColorWell">
-                        <rect key="frame" x="343" y="114" width="36" height="18"/>
+                        <rect key="frame" x="343" y="112" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="883">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -964,37 +952,37 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="768"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="415"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLeg" id="364"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="415"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="268">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="268">
                         <rect key="frame" x="285" y="114" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="885">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="769"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="416"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLeg" id="365"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLeg" id="416"/>
                             <outlet property="formatter" destination="297" id="320"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="269">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="269">
                         <rect key="frame" x="285" y="67" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="886">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="774"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="421"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightLegAccessory" id="368"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightLegAccessory" id="421"/>
                             <outlet property="formatter" destination="297" id="321"/>
                         </connections>
                     </textField>
@@ -1008,8 +996,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="887"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="747"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="402"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHandAccessory" id="354"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="402"/>
                         </connections>
                     </stepper>
                     <popUpButton verticalHuggingPriority="750" id="279">
@@ -1034,23 +1022,23 @@ Gw
                             <binding destination="508" name="selectedIndex" keyPath="selectionIndex" previousBinding="591" id="592"/>
                         </connections>
                     </popUpButton>
-                    <textField verticalHuggingPriority="750" id="284">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="284">
                         <rect key="frame" x="673" y="228" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="889">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="761"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="411"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHandAccessory" id="381"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="411"/>
                             <outlet property="formatter" destination="297" id="319"/>
                         </connections>
                     </textField>
                     <button id="285" customClass="LDrawColorWell">
-                        <rect key="frame" x="343" y="227" width="36" height="18"/>
+                        <rect key="frame" x="343" y="226" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="890">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1067,8 +1055,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="891"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="762"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="412"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHandAccessory" id="382"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="412"/>
                         </connections>
                     </stepper>
                     <slider horizontalHuggingPriority="750" verticalHuggingPriority="750" id="287">
@@ -1079,8 +1067,8 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="745"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="400"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHandAccessory" id="352"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="400"/>
                         </connections>
                     </slider>
                     <popUpButton verticalHuggingPriority="750" id="289">
@@ -1113,22 +1101,22 @@ Gw
                         </sliderCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="760"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="410"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfLeftHandAccessory" id="380"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="410"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="293">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="293">
                         <rect key="frame" x="285" y="228" width="31" height="19"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="360" drawsBackground="YES" id="895">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="746"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="401"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfRightHandAccessory" id="353"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="401"/>
                             <outlet property="formatter" destination="297" id="316"/>
                         </connections>
                     </textField>
@@ -1137,7 +1125,7 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                     </box>
                     <button id="295" customClass="LDrawColorWell">
-                        <rect key="frame" x="731" y="228" width="36" height="18"/>
+                        <rect key="frame" x="731" y="227" width="36" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="896">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1148,31 +1136,8 @@ Gw
                             <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="413"/>
                         </connections>
                     </button>
-                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="299">
-                        <rect key="frame" x="539" y="361" width="243" height="289"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <clipView key="contentView" id="i9S-2Z-C7O">
-                            <rect key="frame" x="1" y="1" width="241" height="287"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <openGLView useAuxiliaryDepthBufferStencil="NO" id="47" customClass="LDrawGLView">
-                                    <rect key="frame" x="0.0" y="0.0" width="241" height="289"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </openGLView>
-                            </subviews>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </clipView>
-                        <scroller key="horizontalScroller" verticalHuggingPriority="750" controlSize="small" horizontal="YES" id="924">
-                            <rect key="frame" x="1" y="274" width="241" height="14"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </scroller>
-                        <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" controlSize="small" horizontal="NO" id="923">
-                            <rect key="frame" x="228" y="1" width="14" height="287"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </scroller>
-                    </scrollView>
                     <button id="300">
-                        <rect key="frame" x="59" y="590" width="72" height="16"/>
+                        <rect key="frame" x="59" y="589" width="70" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Hat/Hair" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="897">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1184,7 +1149,7 @@ Gw
                         </connections>
                     </button>
                     <button id="301">
-                        <rect key="frame" x="59" y="496" width="111" height="16"/>
+                        <rect key="frame" x="59" y="495" width="112" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Neck Accessory" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="898">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1196,7 +1161,7 @@ Gw
                         </connections>
                     </button>
                     <button id="302">
-                        <rect key="frame" x="17" y="251" width="147" height="16"/>
+                        <rect key="frame" x="17" y="250" width="146" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Right Hand Accessory" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="899">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1208,7 +1173,7 @@ Gw
                         </connections>
                     </button>
                     <button id="303">
-                        <rect key="frame" x="17" y="141" width="147" height="16"/>
+                        <rect key="frame" x="17" y="140" width="75" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Right Leg" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="900">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1220,7 +1185,7 @@ Gw
                         </connections>
                     </button>
                     <button id="304">
-                        <rect key="frame" x="17" y="91" width="147" height="16"/>
+                        <rect key="frame" x="17" y="90" width="137" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Right Leg Accessory" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="901">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1232,7 +1197,7 @@ Gw
                         </connections>
                     </button>
                     <button id="305">
-                        <rect key="frame" x="406" y="91" width="147" height="16"/>
+                        <rect key="frame" x="406" y="90" width="129" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Left Leg Accessory" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="902">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1244,7 +1209,7 @@ Gw
                         </connections>
                     </button>
                     <button id="306">
-                        <rect key="frame" x="406" y="141" width="147" height="16"/>
+                        <rect key="frame" x="406" y="140" width="68" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Left Leg" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="903">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1256,7 +1221,7 @@ Gw
                         </connections>
                     </button>
                     <button id="307">
-                        <rect key="frame" x="408" y="251" width="147" height="16"/>
+                        <rect key="frame" x="408" y="250" width="138" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Left Hand Accessory" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="904">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1268,7 +1233,7 @@ Gw
                         </connections>
                     </button>
                     <button id="308">
-                        <rect key="frame" x="17" y="298" width="147" height="16"/>
+                        <rect key="frame" x="17" y="297" width="85" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Right Hand" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="905">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1280,7 +1245,7 @@ Gw
                         </connections>
                     </button>
                     <button id="309">
-                        <rect key="frame" x="408" y="298" width="147" height="16"/>
+                        <rect key="frame" x="408" y="297" width="77" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Left Hand" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="906">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1306,8 +1271,8 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="359" valueWraps="YES" id="908"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="723"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="386"/>
                             <binding destination="326" name="value" keyPath="selection.angleOfHat" id="330"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="386"/>
                         </connections>
                     </stepper>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="461">
@@ -1325,7 +1290,7 @@ Gw
                         </connections>
                     </stepper>
                     <button id="471">
-                        <rect key="frame" x="17" y="348" width="80" height="16"/>
+                        <rect key="frame" x="17" y="347" width="78" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Right Arm" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="910">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1337,7 +1302,7 @@ Gw
                         </connections>
                     </button>
                     <button id="472">
-                        <rect key="frame" x="408" y="348" width="72" height="16"/>
+                        <rect key="frame" x="408" y="346" width="71" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Left Arm" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="911">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1354,12 +1319,12 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" increment="-1" id="912"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="720"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="708"/>
                             <binding destination="486" name="maxValue" keyPath="arrangedObjects.@count" id="644">
                                 <dictionary key="options">
                                     <string key="NSValueTransformerName">TransformerIntMinus1</string>
                                 </dictionary>
                             </binding>
+                            <binding destination="326" name="enabled" keyPath="selection.hasHat" id="708"/>
                             <binding destination="486" name="value" keyPath="selectionIndex" previousBinding="644" id="646"/>
                         </connections>
                     </stepper>
@@ -1369,12 +1334,12 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" increment="-1" id="913"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="729"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="706"/>
                             <binding destination="501" name="maxValue" keyPath="arrangedObjects.@count" id="652">
                                 <dictionary key="options">
                                     <string key="NSValueTransformerName">TransformerIntMinus1</string>
                                 </dictionary>
                             </binding>
+                            <binding destination="326" name="enabled" keyPath="selection.hasNeckAccessory" id="706"/>
                             <binding destination="501" name="value" keyPath="selectionIndex" previousBinding="652" id="653"/>
                         </connections>
                     </stepper>
@@ -1406,8 +1371,8 @@ Gw
                             <binding destination="509" name="value" keyPath="selectionIndex" previousBinding="665" id="666"/>
                         </connections>
                     </stepper>
-                    <textField verticalHuggingPriority="750" id="699">
-                        <rect key="frame" x="106" y="454" width="133" height="11"/>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="129" id="699">
+                        <rect key="frame" x="106" y="454" width="138" height="11"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" alignment="left" title="Neck accessory elevates head" id="916">
                             <font key="font" metaFont="miniSystem"/>
@@ -1415,12 +1380,12 @@ Gw
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="700">
-                        <rect key="frame" x="244" y="452" width="26" height="15"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="700">
+                        <rect key="frame" x="245" y="452" width="26" height="16"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" drawsBackground="YES" id="917">
                             <font key="font" metaFont="miniSystem"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
@@ -1429,8 +1394,8 @@ Gw
                             <binding destination="326" name="value" keyPath="selection.headElevation" id="702"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="701">
-                        <rect key="frame" x="291" y="454" width="26" height="11"/>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="22" id="701">
+                        <rect key="frame" x="292" y="454" width="26" height="11"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" alignment="left" title="units" id="918">
                             <font key="font" metaFont="miniSystem"/>
@@ -1444,12 +1409,12 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" increment="-1" id="919"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="810"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="789"/>
                             <binding destination="505" name="maxValue" keyPath="arrangedObjects.@count" id="795">
                                 <dictionary key="options">
                                     <string key="NSValueTransformerName">TransformerIntMinus1</string>
                                 </dictionary>
                             </binding>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHandAccessory" id="789"/>
                             <binding destination="505" name="value" keyPath="selectionIndex" previousBinding="795" id="796"/>
                         </connections>
                     </stepper>
@@ -1459,17 +1424,17 @@ Gw
                         <stepperCell key="cell" controlSize="small" continuous="YES" alignment="left" increment="-1" id="920"/>
                         <connections>
                             <action selector="generateMinifigure:" target="-2" id="809"/>
-                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="808"/>
                             <binding destination="508" name="maxValue" keyPath="arrangedObjects.@count" id="805">
                                 <dictionary key="options">
                                     <string key="NSValueTransformerName">TransformerIntMinus1</string>
                                 </dictionary>
                             </binding>
+                            <binding destination="326" name="enabled" keyPath="selection.hasLeftHandAccessory" id="808"/>
                             <binding destination="508" name="value" keyPath="selectionIndex" previousBinding="805" id="806"/>
                         </connections>
                     </stepper>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" id="811">
-                        <rect key="frame" x="274" y="452" width="13" height="15"/>
+                        <rect key="frame" x="275" y="452" width="13" height="15"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <stepperCell key="cell" controlSize="mini" continuous="YES" alignment="left" maxValue="20" valueWraps="YES" id="921"/>
                         <connections>
@@ -1479,7 +1444,7 @@ Gw
                         </connections>
                     </stepper>
                     <button id="817">
-                        <rect key="frame" x="59" y="198" width="147" height="16"/>
+                        <rect key="frame" x="59" y="197" width="48" height="18"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <buttonCell key="cell" type="check" title="Hips" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" inset="2" id="922">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1490,11 +1455,28 @@ Gw
                             <binding destination="326" name="value" keyPath="selection.hasHips" id="818"/>
                         </connections>
                     </button>
+                    <customView id="2NJ-bS-eod" customClass="LDrawViewerContainer">
+                        <rect key="frame" x="537" y="362" width="243" height="289"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    </customView>
+                    <button id="214" customClass="LDrawColorWell">
+                        <rect key="frame" x="343" y="273" width="36" height="22"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" alignment="center" borderStyle="border" inset="2" id="861">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="colorWellChanged:" target="-2" id="672"/>
+                            <binding destination="326" name="enabled" keyPath="selection.hasRightHand" id="398"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>
                 <outlet property="delegate" destination="-2" id="23"/>
             </connections>
+            <point key="canvasLocation" x="140" y="147.5"/>
         </window>
         <numberFormatter formatterBehavior="10_0" positiveFormat="0°" negativeFormat="-0°" localizesFormat="NO" hasThousandSeparators="NO" thousandSeparator="," id="297" userLabel="Degrees">
             <attributedString key="attributedStringForNil"/>
@@ -1685,65 +1667,5 @@ Gw
                 <binding destination="326" name="contentArray" keyPath="selection.iniFile.minifigureLegsLeftAcessories" id="539"/>
             </connections>
         </arrayController>
-        <view id="147">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="150">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="153">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="172">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="184">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="202">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="205">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="209">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="222">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="266">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="225">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="240">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="260">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="283">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
-        <view id="282">
-            <rect key="frame" x="0.0" y="0.0" width="125" height="1"/>
-            <autoresizingMask key="autoresizingMask"/>
-        </view>
     </objects>
 </document>

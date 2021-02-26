@@ -45,41 +45,6 @@ typedef enum
 //
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawGLRenderer : NSObject <LDrawColorable>
-{
-	id<LDrawGLRendererDelegate> delegate;
-	id<LDrawGLCameraScroller>	scroller;
-	id							target;
-	BOOL						allowsEditing;
-	
-	LDrawDirective          *fileBeingDrawn;		// Should only be an LDrawFile or LDrawModel.
-													// if you want to do anything else, you must 
-													// tweak the selection code in LDrawDrawableElement
-													// and here in -mouseUp: to handle such cases.
-	
-	LDrawGLCamera *			camera;
-	
-	// Drawing Environment
-	LDrawColor				*color;					// default color to draw parts if none is specified
-	GLfloat                 glBackgroundColor[4];
-	Box2					selectionMarquee;		// in view coordinates. ZeroBox2 means no marquee.
-	RotationDrawModeT       rotationDrawMode;		// drawing detail while rotating.
-	ViewOrientationT        viewOrientation;		// our orientation
-	NSTimeInterval			fpsStartTime;
-	NSInteger				framesSinceStartTime;
-	
-	// Event Tracking
-	float					gridSpacing;
-	BOOL                    isGesturing;			// true if performing a multitouch trackpad gesture.
-	BOOL                    isTrackingDrag;			// true if the last mousedown was followed by a drag, and we're tracking it (drag-and-drop doesn't count)
-	BOOL					isStartingDrag;			// this is the first event in a drag
-	NSTimer                 *mouseDownTimer;		// countdown to beginning drag-and-drop
-	BOOL                    canBeginDragAndDrop;	// the next mouse-dragged will initiate a drag-and-drop.
-	BOOL                    didPartSelection;		// tried part selection during this click
-	BOOL                    dragEndedInOurDocument;	// YES if the drag we initiated ended in the document we display
-	Vector3                 draggingOffset;			// displacement between part 0's position and the initial click point of the drag
-	Point3                  initialDragLocation;	// point in model where part was positioned at draggingEntered
-	LDrawDragHandle			*activeDragHandle;		// drag handle hit on last mouse-down (or nil)
-}
 
 // Initialization
 - (id) initWithBounds:(Size2)boundsIn;
@@ -90,7 +55,6 @@ typedef enum
 
 // Accessors
 - (LDrawDragHandle*) activeDragHandle;
-- (Point2) centerPoint;
 - (BOOL) didPartSelection;
 - (Matrix4) getMatrix;
 - (BOOL) isTrackingDrag;
@@ -100,7 +64,6 @@ typedef enum
 - (Box2) selectionMarquee;
 - (Tuple3) viewingAngle;
 - (ViewOrientationT) viewOrientation;
-- (Box2) viewport;
 - (CGFloat) zoomPercentage;
 - (CGFloat) zoomPercentageForGL;
 
@@ -110,7 +73,7 @@ typedef enum
 - (void) setDraggingOffset:(Vector3)offsetIn;
 - (void) setGridSpacing:(float)newValue;
 - (void) setLDrawDirective:(LDrawDirective *) newFile;
-- (void) setMaximumVisibleSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
+- (void) setGraphicsSurfaceSize:(Size2)size;						// This is how we find out that the visible frame of our window is bigger or smaller
 - (void) setProjectionMode:(ProjectionModeT) newProjectionMode;
 - (void) setLocationMode:(LocationModeT) newLocationMode;
 - (void) setSelectionMarquee:(Box2)newBox;
@@ -155,11 +118,14 @@ typedef enum
 - (void) displayNeedsUpdating:(NSNotification *)notification;
 
 // Utilities
+- (BOOL) autoscrollPoint:(Point2)point_view relativeToRect:(Box2)viewRect;
 //- (NSArray *) getDirectivesUnderPoint:(Point2)point_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 - (NSArray *) getDirectivesUnderRect:(Box2)rect_view amongDirectives:(NSArray *)directives fastDraw:(BOOL)fastDraw;
 //- (NSArray *) getPartsFromHits:(NSDictionary *)hits;
 - (void) publishMouseOverPoint:(Point2)viewPoint;
 - (void) setZoomPercentage:(CGFloat)newPercentage preservePoint:(Point2)viewPoint;		// This and setZoomPercentage are how we zoom.
+- (void) scrollBy:(Vector2)scrollDelta;
+- (void) scrollCameraVisibleRectToPoint:(Point2)visibleRectOrigin;
 - (void) scrollCenterToModelPoint:(Point3)modelPoint;									// These two are how we do gesture-based scrolls
 - (void) scrollModelPoint:(Point3)modelPoint toViewportProportionalPoint:(Point2)viewportPoint;
 - (void) updateRotationCenter;															// A camera "property change"
