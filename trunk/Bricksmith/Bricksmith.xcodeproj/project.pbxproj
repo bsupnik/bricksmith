@@ -154,8 +154,6 @@
 		0B8EBE8C093C100100D87E0C /* LDrawFileOutlineView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8EBE7A093C100100D87E0C /* LDrawFileOutlineView.m */; };
 		0B8EBE8D093C100100D87E0C /* LDrawGLView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B8EBE7B093C100100D87E0C /* LDrawGLView.h */; };
 		0B8EBE8E093C100100D87E0C /* LDrawGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8EBE7C093C100100D87E0C /* LDrawGLView.m */; };
-		0B8EBE9E093C102E00D87E0C /* FormCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B8EBE96093C102E00D87E0C /* FormCategory.h */; };
-		0B8EBE9F093C102E00D87E0C /* FormCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8EBE97093C102E00D87E0C /* FormCategory.m */; };
 		0B8EBEA0093C102E00D87E0C /* StringCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B8EBE98093C102E00D87E0C /* StringCategory.h */; };
 		0B8EBEA1093C102E00D87E0C /* StringCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8EBE99093C102E00D87E0C /* StringCategory.m */; };
 		0B8EBEA2093C102E00D87E0C /* UserDefaultsCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B8EBE9A093C102E00D87E0C /* UserDefaultsCategory.h */; };
@@ -547,8 +545,6 @@
 		0B8EBE7A093C100100D87E0C /* LDrawFileOutlineView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawFileOutlineView.m; sourceTree = "<group>"; };
 		0B8EBE7B093C100100D87E0C /* LDrawGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawGLView.h; sourceTree = "<group>"; };
 		0B8EBE7C093C100100D87E0C /* LDrawGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawGLView.m; sourceTree = "<group>"; };
-		0B8EBE96093C102E00D87E0C /* FormCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FormCategory.h; sourceTree = "<group>"; };
-		0B8EBE97093C102E00D87E0C /* FormCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FormCategory.m; sourceTree = "<group>"; };
 		0B8EBE98093C102E00D87E0C /* StringCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringCategory.h; sourceTree = "<group>"; };
 		0B8EBE99093C102E00D87E0C /* StringCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StringCategory.m; sourceTree = "<group>"; };
 		0B8EBE9A093C102E00D87E0C /* UserDefaultsCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserDefaultsCategory.h; sourceTree = "<group>"; };
@@ -878,8 +874,6 @@
 			children = (
 				0B2DD14C0CD810F20093E8E5 /* BezierPathCategory.h */,
 				0B2DD14D0CD810F20093E8E5 /* BezierPathCategory.m */,
-				0B8EBE96093C102E00D87E0C /* FormCategory.h */,
-				0B8EBE97093C102E00D87E0C /* FormCategory.m */,
 				0B8C0A2510BA623700BEB111 /* OverlayViewCategory.h */,
 				0B3E7B9F10AF9E5A00AFBCF4 /* OverlayViewCategory.m */,
 				0B8EBE98093C102E00D87E0C /* StringCategory.h */,
@@ -1391,7 +1385,6 @@
 				0B8EBE89093C100100D87E0C /* LDrawDocumentWindow.h in Headers */,
 				0B8EBE8B093C100100D87E0C /* LDrawFileOutlineView.h in Headers */,
 				0B8EBE8D093C100100D87E0C /* LDrawGLView.h in Headers */,
-				0B8EBE9E093C102E00D87E0C /* FormCategory.h in Headers */,
 				0B8EBEA0093C102E00D87E0C /* StringCategory.h in Headers */,
 				0B8EBEA2093C102E00D87E0C /* UserDefaultsCategory.h in Headers */,
 				0B8EBEA4093C102E00D87E0C /* WindowCategory.h in Headers */,
@@ -1697,7 +1690,6 @@
 				0B8EBE8A093C100100D87E0C /* LDrawDocumentWindow.m in Sources */,
 				0B8EBE8C093C100100D87E0C /* LDrawFileOutlineView.m in Sources */,
 				0B8EBE8E093C100100D87E0C /* LDrawGLView.m in Sources */,
-				0B8EBE9F093C102E00D87E0C /* FormCategory.m in Sources */,
 				0B8EBEA1093C102E00D87E0C /* StringCategory.m in Sources */,
 				0B8EBEA3093C102E00D87E0C /* UserDefaultsCategory.m in Sources */,
 				0B8EBEA5093C102E00D87E0C /* WindowCategory.m in Sources */,
