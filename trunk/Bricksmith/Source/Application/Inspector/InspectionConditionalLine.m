@@ -11,8 +11,31 @@
 //==============================================================================
 #import "InspectionConditionalLine.h"
 
+#import "LDrawColorWell.h"
 #import "LDrawConditionalLine.h"
-#import "FormCategory.h"
+
+@interface InspectionConditionalLine ()
+
+@property (nonatomic, unsafe_unretained) IBOutlet	LDrawColorWell*	colorWell;
+	
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1XField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1YField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1ZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2XField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2YField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2ZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex1XField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex1YField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex1ZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex2XField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex2YField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	conditionalVertex2ZField;
+
+@end
+
 
 @implementation InspectionConditionalLine
 
@@ -34,6 +57,36 @@
 }//end init
 
 
+// MARK: - ACCESSORS -
+
+//========== vertex1Fields =====================================================
+//==============================================================================
+- (NSArray<NSTextField*>*) vertex1Fields
+{
+	return @[_vertex1XField, _vertex1YField, _vertex1ZField];
+}
+
+//========== vertex2Fields =====================================================
+//==============================================================================
+- (NSArray<NSTextField*>*) vertex2Fields
+{
+	return @[_vertex2XField, _vertex2YField, _vertex2ZField];
+}
+
+//========== conditionalVertex1Fields ==========================================
+//==============================================================================
+- (NSArray<NSTextField*>*) conditionalVertex1Fields
+{
+	return @[_conditionalVertex1XField, _conditionalVertex1YField, _conditionalVertex1ZField];
+}
+
+//========== conditionalVertex2Fields ==========================================
+//==============================================================================
+- (NSArray<NSTextField*>*) conditionalVertex2Fields
+{
+	return @[_conditionalVertex2XField, _conditionalVertex2YField, _conditionalVertex2ZField];
+}
+
 #pragma mark -
 #pragma mark ACTIONS
 #pragma mark -
@@ -47,10 +100,10 @@
 {
 	LDrawConditionalLine *representedObject = [self object];
 	
-	Point3 vertex1				= [vertex1Form coordinateValue];
-	Point3 vertex2				= [vertex2Form coordinateValue];
-	Point3 conditionalVertex1	= [conditionalVertex1Form coordinateValue];
-	Point3 conditionalVertex2	= [conditionalVertex2Form coordinateValue];
+	Point3 vertex1				= [self coordinateValueFromFields:[self vertex1Fields]];
+	Point3 vertex2				= [self coordinateValueFromFields:[self vertex2Fields]];
+	Point3 conditionalVertex1	= [self coordinateValueFromFields:[self conditionalVertex1Fields]];
+	Point3 conditionalVertex2	= [self coordinateValueFromFields:[self conditionalVertex2Fields]];
 	
 	[representedObject setVertex1:vertex1];
 	[representedObject setVertex2:vertex2];
@@ -74,17 +127,17 @@
 {
 	LDrawConditionalLine *representedObject = [self object];
 
-	[colorWell setLDrawColor:[representedObject LDrawColor]];
+	[_colorWell setLDrawColor:[representedObject LDrawColor]];
 
 	Point3 vertex1				= [representedObject vertex1];
 	Point3 vertex2				= [representedObject vertex2];
 	Point3 conditionalVertex1	= [representedObject conditionalVertex1];
 	Point3 conditionalVertex2	= [representedObject conditionalVertex2];
 	
-	[vertex1Form			setCoordinateValue:vertex1];
-	[vertex2Form			setCoordinateValue:vertex2];
-	[conditionalVertex1Form	setCoordinateValue:conditionalVertex1];
-	[conditionalVertex2Form	setCoordinateValue:conditionalVertex2];
+	[self setCoordinateValue:vertex1 onFields:[self vertex1Fields]];
+	[self setCoordinateValue:vertex2 onFields:[self vertex2Fields]];
+	[self setCoordinateValue:conditionalVertex1 onFields:[self conditionalVertex1Fields]];
+	[self setCoordinateValue:conditionalVertex2 onFields:[self conditionalVertex2Fields]];
 	
 	[super revert:sender];
 	
@@ -102,12 +155,14 @@
 //==============================================================================
 - (IBAction) vertex1EndedEditing:(id)sender
 {
-	Point3 formContents	= [vertex1Form coordinateValue];
+	Point3 formContents	= [self coordinateValueFromFields:[self vertex1Fields]];
 	Point3 vertex1		= [[self object] vertex1];
 	
 	//If the values really did change, then update.
 	if(V3EqualPoints(formContents, vertex1) == NO)
+	{
 		[self finishedEditing:sender];
+	}
 		
 }//end vertex1EndedEditing:
 
@@ -121,12 +176,14 @@
 //==============================================================================
 - (IBAction) vertex2EndedEditing:(id)sender
 {
-	Point3 formContents	= [vertex2Form coordinateValue];
+	Point3 formContents	= [self coordinateValueFromFields:[self vertex2Fields]];
 	Point3 vertex2		= [[self object] vertex2];
 	
 	//If the values really did change, then update.
 	if(V3EqualPoints(formContents, vertex2) == NO)
+	{
 		[self finishedEditing:sender];
+	}
 		
 }//end vertex2EndedEditing:
 
@@ -140,12 +197,14 @@
 //==============================================================================
 - (IBAction) conditionalVertex1EndedEditing:(id)sender
 {
-	Point3 formContents			= [conditionalVertex1Form coordinateValue];
+	Point3 formContents			= [self coordinateValueFromFields:[self conditionalVertex1Fields]];
 	Point3 conditionalVertex1	= [[self object] conditionalVertex1];
 	
 	//If the values really did change, then update.
 	if(V3EqualPoints(formContents, conditionalVertex1) == NO)
+	{
 		[self finishedEditing:sender];
+	}
 		
 }//end conditionalVertex1EndedEditing:
 
@@ -159,12 +218,14 @@
 //==============================================================================
 - (IBAction) conditionalVertex2EndedEditing:(id)sender
 {
-	Point3 formContents			= [conditionalVertex2Form coordinateValue];
+	Point3 formContents			= [self coordinateValueFromFields:[self conditionalVertex2Fields]];
 	Point3 conditionalVertex2	= [[self object] conditionalVertex2];
 	
 	//If the values really did change, then update.
 	if(V3EqualPoints(formContents, conditionalVertex2) == NO)
+	{
 		[self finishedEditing:sender];
+	}
 		
 }//end conditionalVertex2EndedEditing:
 
