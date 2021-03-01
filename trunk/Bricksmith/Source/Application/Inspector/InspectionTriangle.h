@@ -10,27 +10,20 @@
 #import <Cocoa/Cocoa.h>
 
 #import "ObjectInspectionController.h"
-#import "LDrawColorWell.h"
 
-@interface InspectionTriangle : ObjectInspectionController {
-
-	IBOutlet	LDrawColorWell	*colorWell;
-	IBOutlet	NSForm			*vertex1Form;
-	IBOutlet	NSForm			*vertex2Form;
-	IBOutlet	NSForm			*vertex3Form;
-	
-}
-
-//Actions
-- (IBAction) vertex1EndedEditing:(id)sender;
-- (IBAction) vertex2EndedEditing:(id)sender;
-- (IBAction) vertex3EndedEditing:(id)sender;
+//------------------------------------------------------------------------------
+///
+/// @class		InspectionTriangle
+///
+/// @abstract	Inspector Controller for an LDrawTriangle.
+///
+//------------------------------------------------------------------------------
+@interface InspectionTriangle : ObjectInspectionController
 
 @end
 
 
-//Simple class that draws a triangle shape.
-// Used as a graphic in the inspector.
-@interface TriangleView : NSView {
-}
+/// Simple class that draws a triangle shape.
+/// Used as a graphic in the inspector.
+@interface TriangleView : NSView
 @end

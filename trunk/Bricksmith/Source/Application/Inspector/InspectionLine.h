@@ -10,18 +10,14 @@
 #import <Cocoa/Cocoa.h>
 
 #import "ObjectInspectionController.h"
-#import "LDrawColorWell.h"
 
-@interface InspectionLine : ObjectInspectionController {
-
-	IBOutlet	LDrawColorWell	*colorWell;
-	IBOutlet	NSForm			*startPoint;
-	IBOutlet	NSForm			*endPoint;
-	
-}
-
-//Actions
-- (IBAction) startPointEndedEditing:(id)sender;
-- (IBAction) endPointEndedEditing:(id)sender;
+//------------------------------------------------------------------------------
+///
+/// @class		InspectionLine
+///
+/// @abstract	Inspector Controller for an LDrawLine.
+///
+//------------------------------------------------------------------------------
+@interface InspectionLine : ObjectInspectionController
 
 @end

@@ -10,29 +10,20 @@
 #import <Cocoa/Cocoa.h>
 
 #import "ObjectInspectionController.h"
-#import "LDrawColorWell.h"
 
-@interface InspectionQuadrilateral : ObjectInspectionController {
-
-	IBOutlet	LDrawColorWell	*colorWell;
-	IBOutlet	NSForm			*vertex1Form;
-	IBOutlet	NSForm			*vertex2Form;
-	IBOutlet	NSForm			*vertex3Form;
-	IBOutlet	NSForm			*vertex4Form;
-	
-}
-
-//Actions
-- (IBAction) vertex1EndedEditing:(id)sender;
-- (IBAction) vertex2EndedEditing:(id)sender;
-- (IBAction) vertex3EndedEditing:(id)sender;
-- (IBAction) vertex4EndedEditing:(id)sender;
+//------------------------------------------------------------------------------
+///
+/// @class		InspectionQuadrilateral
+///
+/// @abstract	Inspector Controller for an LDrawQuadrilateral.
+///
+//------------------------------------------------------------------------------
+@interface InspectionQuadrilateral : ObjectInspectionController
 
 @end
 
 
-//Simple class that draws a quadrilateral shape.
-// Used as a graphic in the inspector.
-@interface QuadrilateralView : NSView {
-}
+/// Simple class that draws a quadrilateral shape.
+/// Used as a graphic in the inspector.
+@interface QuadrilateralView : NSView
 @end

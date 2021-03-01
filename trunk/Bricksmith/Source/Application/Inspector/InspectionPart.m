@@ -11,14 +11,55 @@
 //==============================================================================
 #import "InspectionPart.h"
 
-#import "FormCategory.h"
 #import "LDrawApplication.h"
+#import "LDrawColorWell.h"
 #import "LDrawDocument.h"
 #import "LDrawFile.h"
 #import "LDrawPart.h"
 #import "MacLDraw.h"
 #import "PartLibrary.h"
 
+// Data Types
+
+typedef enum
+{
+	rotationAbsolute = 0,
+	rotationRelative = 1
+	
+} RotationT;
+
+
+@interface InspectionPart ()
+
+// Top-level objects
+@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterBasic;
+@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterAngle;
+@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterScale;
+
+// Window widgets
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		partDescriptionField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		partNameField;
+@property (nonatomic, unsafe_unretained) IBOutlet	LDrawColorWell*		colorWell;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSPopUpButton*		rotationTypePopUp;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationXField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationXField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleXField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleZField;
+
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXYField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXZField;
+@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearYZField;
+
+@end
 
 @implementation InspectionPart
 
@@ -40,6 +81,18 @@
 }//end init
 
 
+//========== awakeFromNib ======================================================
+//==============================================================================
+- (void) awakeFromNib
+{
+	[super awakeFromNib];
+	
+	[_formatterBasic autorelease];
+	[_formatterAngle autorelease];
+	[_formatterScale autorelease];
+}
+
+
 #pragma mark -
 #pragma mark ACTIONS
 #pragma mark -
@@ -54,22 +107,18 @@
 	LDrawPart			*representedObject	= [self object];
 	TransformComponents	 oldComponents		= [representedObject transformComponents];
 	TransformComponents	 components			= IdentityComponents;
-	Point3				 position			= [self->locationForm coordinateValue];
-	Vector3				 scaling			= [self->scalingForm coordinateValue];
-	Tuple3				 shear				= [self->shearForm coordinateValue];
+	Point3				 position			= [self coordinateValueFromFields:@[_locationXField, _locationYField, _locationZField]];
+	Vector3				 scaling			= [self coordinateValueFromFields:@[_scaleXField, _scaleYField, _scaleZField]];
+	Tuple3				 shear				= [self coordinateValueFromFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	
-	[representedObject setDisplayName:[partNameField stringValue]];
+	[representedObject setDisplayName:[_partNameField stringValue]];
 	
 	//Fill the components structure.
- 	components.scale.x		= scaling.x / 100.0; //convert from percentage
- 	components.scale.y		= scaling.y / 100.0;
- 	components.scale.z		= scaling.z / 100.0;
+ 	components.scale		= V3MulScalar(scaling, 0.01); //convert from percentage
  	components.shear_XY		= shear.x;
  	components.shear_XZ		= shear.y;
  	components.shear_YZ		= shear.z;
- 	components.rotate.x		= oldComponents.rotate.x; //rotation is handled elsewhere.
- 	components.rotate.y		= oldComponents.rotate.y;
- 	components.rotate.z		= oldComponents.rotate.z;
+ 	components.rotate		= oldComponents.rotate; //rotation is handled by the Apply button.
  	components.translate	= position;
 	
 	[representedObject setTransformComponents:components];
@@ -97,11 +146,11 @@
 	Tuple3				 shear				= ZeroPoint3;
 	
 	
-	[partDescriptionField setStringValue:description];
-	[partDescriptionField setToolTip:description]; //in case it overflows the field.
-	[partNameField setStringValue:[representedObject displayName]];
+	[_partDescriptionField setStringValue:description];
+	[_partDescriptionField setToolTip:description]; //in case it overflows the field.
+	[_partNameField setStringValue:[representedObject displayName]];
 	
-	[colorWell setLDrawColor:[representedObject LDrawColor]];
+	[_colorWell setLDrawColor:[representedObject LDrawColor]];
 
 	position	= components.translate;
 	
@@ -114,9 +163,9 @@
 	shear.y = components.shear_XZ;
 	shear.z = components.shear_YZ;
 	
-	[locationForm setCoordinateValue:position];
-	[scalingForm setCoordinateValue:scaling];
-	[shearForm setCoordinateValue:shear];
+	[self setCoordinateValue:position onFields:@[_locationXField, _locationYField, _locationZField]];
+	[self setCoordinateValue:scaling onFields:@[_scaleXField, _scaleYField, _scaleZField]];
+	[self setCoordinateValue:shear onFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	
 	//Rotation is a bit trickier since we have two different modes for the data 
 	// entered. An absolute rotation means that the actual rotation angles for 
@@ -147,21 +196,21 @@
 {
 	LDrawPart			*representedObject	= [self object];
 	TransformComponents	 components			= [representedObject transformComponents];
-	RotationT			 rotationType		= [[rotationTypePopUp selectedItem] tag];
+	RotationT			 rotationType		= [[_rotationTypePopUp selectedItem] tag];
 	
 	if(rotationType == rotationRelative)
 	{
 		//Rotations entered will be additive.
-		[rotationXField setDoubleValue:0.0];
-		[rotationYField setDoubleValue:0.0];
-		[rotationZField setDoubleValue:0.0];
+		[_rotationXField setDoubleValue:0.0];
+		[_rotationYField setDoubleValue:0.0];
+		[_rotationZField setDoubleValue:0.0];
 	}
 	else
 	{
 		//Absolute rotation; fill in the real rotation angles.
-		[rotationXField setDoubleValue:degrees(components.rotate.x)];
-		[rotationYField setDoubleValue:degrees(components.rotate.y)];
-		[rotationZField setDoubleValue:degrees(components.rotate.z)];
+		[_rotationXField setDoubleValue:degrees(components.rotate.x)];
+		[_rotationYField setDoubleValue:degrees(components.rotate.y)];
+		[_rotationZField setDoubleValue:degrees(components.rotate.z)];
 		
 	}
 }//end setRotationAngles
@@ -183,7 +232,7 @@
 {
 	LDrawPart       *representedObject  = [self object];
 	LDrawDocument   *currentDocument    = [[NSDocumentController sharedDocumentController] currentDocument];
-	RotationT       rotationType        = [[rotationTypePopUp selectedItem] tag];
+	RotationT       rotationType        = [[_rotationTypePopUp selectedItem] tag];
 	
 	//Save out the current state.
 	[currentDocument preserveDirectiveState:representedObject];
@@ -192,9 +241,9 @@
 	{
 		Tuple3 additiveRotation;
 		
-		additiveRotation.x = [rotationXField doubleValue];
-		additiveRotation.y = [rotationYField doubleValue];
-		additiveRotation.z = [rotationZField doubleValue];
+		additiveRotation.x = [_rotationXField doubleValue];
+		additiveRotation.y = [_rotationYField doubleValue];
+		additiveRotation.z = [_rotationZField doubleValue];
 		
 		[representedObject rotateByDegrees:additiveRotation];
 	}
@@ -202,9 +251,9 @@
 	else{
 		TransformComponents components = [[self object] transformComponents];
 		
-		components.rotate.x = radians([rotationXField doubleValue]); //convert from degrees
-		components.rotate.y = radians([rotationYField doubleValue]);
-		components.rotate.z = radians([rotationZField doubleValue]);
+		components.rotate.x = radians([_rotationXField doubleValue]); //convert from degrees
+		components.rotate.y = radians([_rotationYField doubleValue]);
+		components.rotate.z = radians([_rotationZField doubleValue]);
 		
 		[representedObject setTransformComponents:components];
 	}
@@ -216,9 +265,9 @@
 	// resetting the rotations values to zero
 	if(rotationType == rotationRelative)
 	{
-		[rotationXField setDoubleValue:0.0];
-		[rotationYField setDoubleValue:0.0];
-		[rotationZField setDoubleValue:0.0];
+		[_rotationXField setDoubleValue:0.0];
+		[_rotationYField setDoubleValue:0.0];
+		[_rotationZField setDoubleValue:0.0];
 	}
 
     // Someone else might care that the part's orientation has changed
@@ -236,7 +285,7 @@
 //==============================================================================
 - (IBAction) locationEndedEditing:(id)sender
 {
-	Point3				formContents	= [locationForm coordinateValue];
+	Point3				formContents	= [self coordinateValueFromFields:@[_locationXField, _locationYField, _locationZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 	
 	//If the values really did change, then update.
@@ -257,7 +306,7 @@
 //==============================================================================
 - (IBAction) partNameEndedEditing:(id)sender
 {
-	NSString *newName = [partNameField stringValue];
+	NSString *newName = [_partNameField stringValue];
 	NSString *oldName = [[self object] displayName];
 	
 	if([oldName isEqualToString:newName] == NO){
@@ -291,7 +340,7 @@
 //==============================================================================
 - (IBAction) scalingEndedEditing:(id)sender
 {
-	Vector3				formContents	= [scalingForm coordinateValue];
+	Vector3				formContents	= [self coordinateValueFromFields:@[_scaleXField, _scaleYField, _scaleZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 
 	//If the values really did change, then update.
@@ -316,7 +365,7 @@
 //==============================================================================
 - (IBAction) shearEndedEditing:(id)sender
 {
-	Vector3				formContents	= [shearForm coordinateValue];
+	Vector3				formContents	= [self coordinateValueFromFields:@[_shearXYField, _shearXZField, _shearYZField]];
 	TransformComponents	components		= [[self object] transformComponents];
 	
 	//If the values really did change, then update.
@@ -344,9 +393,9 @@
 - (void) dealloc
 {
 	//Top level nib objects:
-	[formatterBasic release];
-	[formatterAngle release];
-	[formatterScale release];
+	[_formatterBasic release];
+	[_formatterAngle release];
+	[_formatterScale release];
 	
 	[super dealloc];
 	
