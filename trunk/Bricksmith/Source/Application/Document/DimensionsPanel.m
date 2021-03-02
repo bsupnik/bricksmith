@@ -198,7 +198,8 @@
 	objectValueForTableColumn:(NSTableColumn *)tableColumn
 						  row:(NSInteger)rowIndex
 {
-	NSNumberFormatter   *floatFormatter = [[NSNumberFormatter new] autorelease];
+	NSNumberFormatter*  floatFormatter = [[NSNumberFormatter new] autorelease];
+	NSNumberFormatter*  studFormatter 	= [[NSNumberFormatter new] autorelease];
 	id                  object          = nil;
 	Box3                bounds          = [self->activeModel boundingBox3];
 	double              width           = 0;
@@ -206,16 +207,17 @@
 	double              length          = 0;
 	double              value           = 0;
 	
-	 // 1 stud = 3/8" = 20 LDraw units.
-	double	studsPerLDU				= 1 / 20.0; //HORIZONTAL studs!
-	double	inchesPerStud			= 5 / 16.0; //HORIZONTAL studs!
-	double	inchesPerVerticalStud	= 3 / 8.0  +  1 / 16.0; //brick height + stud height.
-	double	cmPerInch				= 2.54;
-	double	legoInchPerInch			= 128 / 3.0; // Legonian Imperial Feet are a 3:128 scale.
+	 // 1 stud = 20 LDraw units = 8 mm ≈ 3/8".
+	double	studsPerLDU			= 1 / 20.0; //HORIZONTAL studs!
+	double	mmPerStud			= 8.0; //HORIZONTAL studs!
+	double	inchesPerMM			= 1 / 25.4;
+	double	brickHeightPerLDU	= 1 / 24.; // brick aspect ratio of width to height is 5:6
+	double	legoInchPerInch		= 128 / 3.0; // Legonian Imperial Feet are a 3:128 scale.
 	
 	
 	[floatFormatter setPositiveFormat:@"0.0"];
-	
+	[studFormatter setPositiveFormat:@"0.##"];
+
 	//If we got valid bounds, analyze them.
 	if(V3EqualBoxes(bounds, InvalidBox) == NO)
 	{
@@ -253,22 +255,23 @@
 			//oh dear. Studs are difficult.
 			case STUDS_ROW_INDEX:
 				if([[tableColumn identifier] isEqualToString:HEIGHT_COLUMN])
-					value *= (studsPerLDU * inchesPerStud) / inchesPerVerticalStud; //get vertical studs.
+					value *= brickHeightPerLDU; //get vertical studs.
 				else
 					value *= studsPerLDU; //get horizontal studs
 				break;
 				
-			case INCHES_ROW_INDEX:			value *= studsPerLDU * inchesPerStud;					break;
-			case CENTIMETERS_ROW_INDEX:		value *= studsPerLDU * inchesPerStud * cmPerInch;		break;
-			case LEGONIAN_FEET_ROW_INDEX:	value *= studsPerLDU * inchesPerStud * legoInchPerInch;	break;
-			case LDU_ROW_INDEX:				value *= 1;												break; // nothing to convert for LDU
+			case INCHES_ROW_INDEX:			value *= studsPerLDU * mmPerStud * inchesPerMM;						break;
+			case CENTIMETERS_ROW_INDEX:		value *= studsPerLDU * mmPerStud / 10.;								break;
+			case LEGONIAN_FEET_ROW_INDEX:	value *= studsPerLDU * mmPerStud * inchesPerMM * legoInchPerInch;	break;
+			case LDU_ROW_INDEX:				value *= 1;															break; // nothing to convert for LDU
 		}
 		
 		// Format output.
 		switch(rowIndex)
 		{
 			case STUDS_ROW_INDEX:
-				object = [NSNumber numberWithInteger:ceil(value)];
+				object = [NSNumber numberWithDouble:value];
+				object = [studFormatter stringForObjectValue:object];
 				break;
 			
 			case INCHES_ROW_INDEX:
