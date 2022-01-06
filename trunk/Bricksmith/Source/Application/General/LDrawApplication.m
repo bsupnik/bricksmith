@@ -594,15 +594,14 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 }//end validateMenuItem:
 
 
-#pragma mark -
-#pragma mark Sparkle
+// MARK: - SPUUpdaterDelegate (Sparkle)
 
 //========== updaterWillRelaunchApplication: ===================================
 //
 // Purpose:		Sparkle is about to install an update and relaunch.
 //
 //==============================================================================
-- (void) updaterWillRelaunchApplication:(SUUpdater *)updater
+- (void) updaterWillRelaunchApplication:(SPUUpdater *)updater
 {
 	// Asking for money in the middle of an update process is a bit distracting.
 	suppressDonationPrompt = YES;
