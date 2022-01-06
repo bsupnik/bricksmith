@@ -1395,10 +1395,11 @@ static PartLibrary *SharedPartLibrary = nil;
 	
 	// Deal with any weird notational marks
 	
-	// Alias parts begin with an underscore. These things are so annoying I'm 
-	// going to dump them in a pseudo category. This is kind of a hack, but at 
-	// least it's a prettifying one. 
-	if([category hasPrefix:@"_"])
+	// Physical Color parts begin with an underscore. Then they got obsoleted,
+	// and obsolete parts begin with ~, so now *most* of them begin with ~|. But
+	// not all. These things are so annoying I'm going to dump them in a pseudo
+	// category. This is kind of a hack, but at least it's a prettifying one.
+	if([category hasPrefix:@"_"] || [category hasPrefix:@"~_"])
 	{
 		category = Category_Alias;
 	}
@@ -1514,6 +1515,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		NSString	*line				= nil;
 		NSString	*lineCode			= nil;
 		NSString	*lineRemainder		= nil;
+		NSString	*implicitCategory	= nil;
 		
 		catalogInfo = [NSMutableDictionary dictionary];
 		
@@ -1542,6 +1544,7 @@ static PartLibrary *SharedPartLibrary = nil;
 					break;
 					
 				partDescription = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+				implicitCategory = [self categoryForDescription:partDescription];
 				[catalogInfo setObject:partDescription forKey:PART_NAME_KEY];
 			}
 			else if([lineCode isEqualToString:@"0"] == YES)
@@ -1551,20 +1554,26 @@ static PartLibrary *SharedPartLibrary = nil;
 				
 				if([meta isEqualToString:LDRAW_CATEGORY])
 				{
-					category = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
-					
-					// Turns out !CATEGORY is not as reliable as it ought to be. 
-					// In typical LDraw fashion, the feature was not have a 
-					// simultaneous, universal deployment. Unfortunately, the 
-					// only categories I deem to be consistent and advantageous 
-					// under the current system are the two-word categories that 
-					// couldn't be represented under the old system. 
+					// Turns out !CATEGORY is not as reliable as it ought to be.
+					// In typical LDraw fashion, the feature was not have a
+					// simultaneous, universal deployment. Circa 2014, the only
+					// categories I deemed to be consistent and advantageous
+					// under the current system are the two-word categories that
+					// couldn't be represented under the old system.
+					//
+					// 2020 update: I am not going to fight !CATEGORY anymore.
+					// With one exception: Duplo parts should not be mixed in,
+					// and LDraw is making no attempt to separate them. So if
+					// the description begins with Duplo, I'm ignoring the
+					// !CATEGORY, which will cause implicitCategory (Duplo) to
+					// win.
 					//
 					// Also, allow the !LDRAW_ORG Part Alias to take precedence 
 					// if it has already been found. 
-					if(		[category rangeOfString:@" "].location != NSNotFound
+					if(		[implicitCategory hasPrefix:@"Duplo"] == NO
 					   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil )
 					{
+						category = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
 						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 					}
 				}
@@ -1586,8 +1595,8 @@ static PartLibrary *SharedPartLibrary = nil;
 				{
 					// Force alias parts into a ghetto category which will keep 
 					// them far away from normal building. 
-					NSString *officialStatus = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
-					if([officialStatus ams_containsString:@"Part Alias" options:kNilOptions])
+					// !LDRAW_ORG: optional qualifier Alias can appear with Part/Shortcut/etc https://www.ldraw.org/article/398.html
+					if([lineRemainder ams_containsString:@"Alias" options:kNilOptions])
 					{
 						category = Category_Alias;
 						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
@@ -1611,7 +1620,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil)
 		{
 			partDescription = [catalogInfo objectForKey:PART_NAME_KEY];
-			category		= [self categoryForDescription:partDescription];
+			category		= implicitCategory;
 			[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 		}
 	}
