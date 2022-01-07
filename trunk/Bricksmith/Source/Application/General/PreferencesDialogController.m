@@ -438,7 +438,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	[folderChooser setPrompt:NSLocalizedString(@"Choose", nil)];
 	
 	//Run the dialog.
-	if([folderChooser runModal] == NSOKButton)
+	if([folderChooser runModal] == NSModalResponseOK)
 	{
 		// Get the folder selected.
 		NSURL	*folderURL	= [[folderChooser URLs] objectAtIndex:0];
@@ -661,7 +661,7 @@ PreferencesDialogController *preferencesDialog = nil;
     [lsynthExecutableChooser setPrompt:NSLocalizedString(@"Choose", nil)];
 
     //Run the dialog.
-    if([lsynthExecutableChooser runModal] == NSOKButton)
+    if([lsynthExecutableChooser runModal] == NSModalResponseOK)
     {
         // Get the file selected.
         NSURL	*lsynthExecutableURL = [[lsynthExecutableChooser URLs] objectAtIndex:0];
@@ -699,7 +699,7 @@ PreferencesDialogController *preferencesDialog = nil;
     [lsynthConfigurationChooser setPrompt:NSLocalizedString(@"Choose", nil)];
     
     //Run the dialog.
-    if([lsynthConfigurationChooser runModal] == NSOKButton)
+    if([lsynthConfigurationChooser runModal] == NSModalResponseOK)
     {
         // Get the file selected.
         NSURL	*lsynthConfigurationURL = [[lsynthConfigurationChooser URLs] objectAtIndex:0];

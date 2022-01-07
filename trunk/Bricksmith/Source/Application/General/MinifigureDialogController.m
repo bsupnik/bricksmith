@@ -276,13 +276,13 @@
 
 //========== runModal ==========================================================
 //
-// Purpose:		Displays the dialog, returing NSOKButton or NSCancelButton as 
+// Purpose:		Displays the dialog, returing NSModalResponseOK or NSModalResponseCancel as 
 //				appropriate.
 //
 //==============================================================================
 - (NSInteger) runModal
 {
-	NSInteger		returnCode	= NSCancelButton;
+	NSInteger		returnCode	= NSModalResponseCancel;
 	
 	//set the values
 	[self restoreFromPreferences];
@@ -306,7 +306,7 @@
 //==============================================================================
 - (IBAction) okButtonClicked:(id)sender
 {
-	[NSApp stopModalWithCode:NSOKButton];
+	[NSApp stopModalWithCode:NSModalResponseOK];
 	[self.minifigureGeneratorPanel close];
 }//end okButtonClicked
 
@@ -319,7 +319,7 @@
 - (IBAction) cancelButtonClicked:(id)sender
 {
 	[self.minifigureGeneratorPanel close];
-	[NSApp stopModalWithCode:NSCancelButton];
+	[NSApp stopModalWithCode:NSModalResponseCancel];
 }//end cancelButtonClicked
 
 

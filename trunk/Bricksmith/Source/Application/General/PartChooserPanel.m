@@ -77,18 +77,18 @@
 
 //========== runModal ==========================================================
 //
-// Purpose:		Displays the dialog, returing NSOKButton or NSCancelButton as 
+// Purpose:		Displays the dialog, returing NSModalResponseOK or NSModalResponseCancel as 
 //				appropriate.
 //
 //==============================================================================
 - (NSInteger) runModal
 {
-	NSInteger   returnCode  = NSCancelButton;
+	NSInteger   returnCode  = NSModalResponseCancel;
 		
 	//Run the dialog.
 	returnCode = [NSApp runModalForWindow:self];
 	
-	if(returnCode == NSOKButton)
+	if(returnCode == NSModalResponseOK)
 		[self->partsBrowser addPartClicked:nil];
 	
 	return returnCode;
@@ -104,7 +104,7 @@
 //==============================================================================
 - (IBAction) insertPartClicked:(id)sender
 {
-	[NSApp stopModalWithCode:NSOKButton];
+	[NSApp stopModalWithCode:NSModalResponseOK];
 	
 }//end insertPartClicked:
 
@@ -116,7 +116,7 @@
 //==============================================================================
 - (IBAction) cancelClicked:(id)sender
 {
-	[NSApp stopModalWithCode:NSCancelButton];
+	[NSApp stopModalWithCode:NSModalResponseCancel];
 	
 }//end cancelClicked:
 

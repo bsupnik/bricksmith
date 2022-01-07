@@ -1612,7 +1612,7 @@ void AppendChoicesToNewItem(
 		 NSInteger		 modelCounter		 = 0;
 		 NSInteger		 counter			 = 0;
 		 
-		 if(returnCode == NSOKButton)
+		 if(returnCode == NSModalResponseOK)
 		 {
 			 saveURL	= [exportPanel URL];
 			 saveName	= ([saveURL isFileURL] ? [saveURL path] : nil);
@@ -3070,11 +3070,11 @@ void AppendChoicesToNewItem(
 - (void) addMinifigure:(id)sender
 {
 	MinifigureDialogController  *minifigDialog  = [MinifigureDialogController new];
-	NSInteger                   result          = NSCancelButton;
+	NSInteger                   result          = NSModalResponseCancel;
 	LDrawMPDModel               *minifigure     = nil;
 	
 	result = [minifigDialog runModal];
-	if(result == NSOKButton)
+	if(result == NSModalResponseOK)
 	{
 		minifigure = [minifigDialog minifigure];
 		[self addModel:minifigure atIndex:NSNotFound preventNameCollisions:YES];

@@ -163,7 +163,7 @@
 //==============================================================================
 - (IBAction) laterButtonClicked:(id)sender
 {
-	[NSApp stopModalWithCode:NSOKButton];
+	[NSApp stopModalWithCode:NSModalResponseOK];
 	[self close];
 	
 }//end laterButtonClicked
