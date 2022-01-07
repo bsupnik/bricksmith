@@ -18,8 +18,6 @@
     IBOutlet NSTextField			*timeRemaining;
 	
 	double			 progressAmount; //the value of the progress bar.
-	NSDate			*startTime; //when the progress bar was started; used to estimate time remaining
-	NSDate			*previousUpdateTime; //time at which the progress bar was last changed.
 	BOOL			 endsIndeterminate;
 	BOOL			 runningAsSheet; //if yes, the progress panel is currently onscreen as a sheet.
 	NSTimeInterval	 timeBetweenUpdates; //number of seconds between progress updates.

@@ -442,15 +442,17 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	[self findLDrawPath];
 
 	//Load the parts into the library; see if they loaded properly.
-	if([partLibraryController loadPartCatalog] == NO)
-	{
-		//No path has been chosen yet.
-		// We must choose one now.
-		[self doPreferences:self];
-		//When the preferences dialog opens, it will automatically search for 
-		// the prefs path. Failing to find it, it will force the user to choose 
-		// a new one.
-	}
+	[partLibraryController loadPartCatalog:^(BOOL success) {
+		if(success == NO)
+		{
+			//No path has been chosen yet.
+			// We must choose one now.
+			[self doPreferences:self];
+			//When the preferences dialog opens, it will automatically search for
+			// the prefs path. Failing to find it, it will force the user to choose
+			// a new one.
+		}
+	}];
 	
     // Parse the LSynth config file, using the bundled lsynth.mpd or a custom config file
     NSString *lsynthConfigPath;
@@ -711,11 +713,9 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 {
 	NSUserDefaults  *userDefaults   = [NSUserDefaults standardUserDefaults];
 	LDrawPaths      *paths          = [LDrawPaths sharedPaths];
-	NSString        *preferencePath = [userDefaults stringForKey:LDRAW_PATH_KEY];
-	NSString        *ldrawPath      = preferencePath;
+	NSString        *ldrawPath      = nil;
 	
 	// Search
-	[paths setPreferredLDrawPath:preferencePath];
 	ldrawPath = [paths findLDrawPath];
 	
 	//We found one.
@@ -726,7 +726,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	}
 	else
 	{
-		[self->partLibraryController validateLDrawFolderWithMessage:preferencePath];
+		[self->partLibraryController validateLDrawFolderWithMessage:nil];
 		ldrawPath = nil;
 	}
 	

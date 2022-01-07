@@ -10,6 +10,7 @@
 #import "LDrawPaths.h"
 
 #import "LDrawPathNames.h"
+#import "MacLDraw.h"
 
 
 @implementation LDrawPaths
@@ -41,7 +42,9 @@
 {
 	self = [super init];
 	
-	self->preferredLDrawPath = nil;
+	NSUserDefaults  *userDefaults   = [NSUserDefaults standardUserDefaults];
+	
+	self->preferredLDrawPath = [userDefaults stringForKey:LDRAW_PATH_KEY];
 	
 	return self;
 }

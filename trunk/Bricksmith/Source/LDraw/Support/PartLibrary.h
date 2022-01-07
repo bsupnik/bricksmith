@@ -23,10 +23,14 @@
 extern NSString *LDrawPartLibraryDidChangeNotification;
 
 // Catalog info keys
+extern NSString	*PARTS_CATALOG_KEY;
 extern NSString *PART_NUMBER_KEY;
 extern NSString *PART_NAME_KEY;
 extern NSString *PART_CATEGORY_KEY;
 extern NSString *PART_KEYWORDS_KEY;
+extern NSString	*PARTS_LIST_KEY;
+extern NSString	*VERSION_KEY;
+extern NSString	*COMPATIBILITY_VERSION_KEY;
 
 extern NSString	*CategoryNameKey;
 extern NSString	*CategoryDisplayNameKey;
@@ -77,7 +81,9 @@ extern NSString	*Category_Subparts;
 
 // Actions
 - (BOOL) load;
-- (BOOL) reloadParts;
+- (void) reloadPartsWithMaxLoadCountHandler:(void (^)(NSUInteger maxPartCount))maxLoadCountHandler
+				   progressIncrementHandler:(void (^)())progressIncrementHandler
+						  completionHandler:(void (^)(BOOL success))completionHandler;
 
 // Favorites
 - (void) addPartNameToFavorites:(NSString *)partName;
@@ -97,14 +103,8 @@ extern NSString	*Category_Subparts;
 - (GLuint) textureTagForTexture:(LDrawTexture*)texture;
 
 // Utilites
-- (void) addPartsInFolder:(NSString *)folderPath
-				toCatalog:(NSMutableDictionary *)catalog
-			underCategory:(NSString *)category
-			   namePrefix:(NSString *)namePrefix;
-- (NSString *)categoryForDescription:(NSString *)modelDescription;
 - (NSString *)descriptionForPart:(LDrawPart *)part;
 - (NSString *)descriptionForPartName:(NSString *)name;
-- (NSMutableDictionary *) catalogInfoForFileAtPath:(NSString *)filepath;
 - (CGImageRef) readImageAtPath:(NSString *)imagePath
 				asynchronously:(BOOL)asynchronous
 			 completionHandler:(void (^)(CGImageRef))completionBlock;
@@ -124,8 +124,6 @@ extern NSString	*Category_Subparts;
 @protocol PartLibraryDelegate
 
 - (void) partLibrary:(PartLibrary *)partLibrary didChangeFavorites:(NSArray *)newFavorites;
-- (void) partLibrary:(PartLibrary *)partLibrary maximumPartCountToLoad:(NSUInteger)maxPartCount;
-- (void) partLibraryIncrementLoadProgressCount:(PartLibrary *)partLibrary;
 
 @end
 

@@ -10,6 +10,16 @@
 //==============================================================================
 #import "AMSProgressPanel.h"
 
+@interface AMSProgressPanel ()
+
+/// when the progress bar was started; used to estimate time remaining
+@property (nonatomic, strong) NSDate *startTime;
+
+/// time at which the progress bar was last changed.
+@property (nonatomic, strong) NSDate *previousUpdateTime;
+
+@end
+
 @implementation AMSProgressPanel
 
 #pragma mark -
@@ -70,7 +80,7 @@
 	[timeRemaining setHidden:YES];
 	[self setBecomesIndeterminateWhenCompleted:NO];
 	timeBetweenUpdates = 1.0/4.0; //4 updates per second.
-	previousUpdateTime = [NSDate distantPast];
+	self.previousUpdateTime = [NSDate distantPast];
 	
 	return self;
 }
@@ -142,10 +152,10 @@
 	{
 		//Check and see if it is too early to update.
 		// This speeds up progress display considerably.
-		if(-[previousUpdateTime timeIntervalSinceNow] > timeBetweenUpdates)
+		if(-[self.previousUpdateTime timeIntervalSinceNow] > timeBetweenUpdates)
 		{
 			//Estimate time remaining.
-			NSTimeInterval  secondsSinceStart           = -[startTime timeIntervalSinceNow]; //negative because startTime was before now
+			NSTimeInterval  secondsSinceStart           = -[_startTime timeIntervalSinceNow]; //negative because startTime was before now
 			float           secondsPerValue             = secondsSinceStart/newValue;
 			float           estimatedSecondsRemaining   = secondsPerValue * (maximumToAttain-newValue);
 			
@@ -175,7 +185,7 @@
 			[timeRemaining setStringValue:[NSString stringWithFormat:@"%@ %d %@", timeRemainingLabel, numberUnitsRemaining, unitsForTimeRemaining]];
 			
 			//We just updated.
-			previousUpdateTime = [NSDate date];
+			self.previousUpdateTime = [NSDate date];
 			
 			[dialogWindow displayIfNeeded];
 			
@@ -295,7 +305,7 @@
 - (void) showProgressPanel
 {
 	//record the start time used for estimating time remaining
-	startTime = [NSDate date]; //right now
+	self.startTime = [NSDate date]; //right now
 	
 	runningAsSheet = NO;
 	[dialogWindow setLevel:NSModalPanelWindowLevel]; //floats above normal windows.
@@ -315,7 +325,7 @@
 - (void) showAsSheetForWindow:(NSWindow *)parentWindow
 {
 	//record the start time used for estimating time remaining
-	startTime = [NSDate date]; //right now
+	self.startTime = [NSDate date]; //right now
 	runningAsSheet = YES;
 	
 	[NSApp beginSheet:dialogWindow
@@ -355,6 +365,9 @@
 {
 	//Release top-level nib objects
 	[dialogWindow release];
+	
+	[_startTime release];
+	[_previousUpdateTime release];
 	
 	//Finish deallocation
 	[super dealloc];

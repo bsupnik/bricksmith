@@ -42,6 +42,8 @@
 		0B06F6240F5D0588004E7DD7 /* FavoriteRemove.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B06F6230F5D0588004E7DD7 /* FavoriteRemove.pdf */; };
 		0B06F7170F633FD2004E7DD7 /* ExtendedTableView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B06F7150F633FD2004E7DD7 /* ExtendedTableView.h */; };
 		0B06F7180F633FD2004E7DD7 /* ExtendedTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B06F7160F633FD2004E7DD7 /* ExtendedTableView.m */; };
+		0B0B6CCD2787D87800F6E225 /* PartCatalogBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B0B6CCB2787D87800F6E225 /* PartCatalogBuilder.h */; };
+		0B0B6CCE2787D87800F6E225 /* PartCatalogBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0B6CCC2787D87800F6E225 /* PartCatalogBuilder.m */; };
 		0B17D2490ECE89C000F8B5FA /* RotationStep.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B17D2480ECE89C000F8B5FA /* RotationStep.pdf */; };
 		0B17D2FF0ED0D4C400F8B5FA /* RotationStepEnd.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 0B17D2FE0ED0D4C400F8B5FA /* RotationStepEnd.pdf */; };
 		0B1DA5A813172DA700E14960 /* LDrawDirective.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B1DA5A213172DA700E14960 /* LDrawDirective.h */; };
@@ -421,6 +423,8 @@
 		0B06F6230F5D0588004E7DD7 /* FavoriteRemove.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = FavoriteRemove.pdf; sourceTree = "<group>"; };
 		0B06F7150F633FD2004E7DD7 /* ExtendedTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExtendedTableView.h; sourceTree = "<group>"; };
 		0B06F7160F633FD2004E7DD7 /* ExtendedTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExtendedTableView.m; sourceTree = "<group>"; };
+		0B0B6CCB2787D87800F6E225 /* PartCatalogBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PartCatalogBuilder.h; sourceTree = "<group>"; };
+		0B0B6CCC2787D87800F6E225 /* PartCatalogBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PartCatalogBuilder.m; sourceTree = "<group>"; };
 		0B17D2480ECE89C000F8B5FA /* RotationStep.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = RotationStep.pdf; sourceTree = "<group>"; };
 		0B17D2FE0ED0D4C400F8B5FA /* RotationStepEnd.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = RotationStepEnd.pdf; sourceTree = "<group>"; };
 		0B1DA5A213172DA700E14960 /* LDrawDirective.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDirective.h; sourceTree = "<group>"; };
@@ -764,13 +768,21 @@
 			children = (
 				0B7588D60D8DC4DD00357703 /* ColorLibrary.h */,
 				0B7588D70D8DC4DD00357703 /* ColorLibrary.m */,
+				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
+				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
+				D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */,
+				D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */,
 				0B1DA5A213172DA700E14960 /* LDrawDirective.h */,
 				0B1DA5A313172DA700E14960 /* LDrawDirective.m */,
 				0B27CFA81318AA0F005C7E1A /* LDrawDragHandle.h */,
 				0B27CFA91318AA0F005C7E1A /* LDrawDragHandle.m */,
+				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
+				D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */,
+				D619130017F004A300B5DF44 /* LDrawGLCamera.m */,
 				0B3B76AA13DB86AE007CCC5D /* LDrawGLRenderer.h */,
 				0B3B76AB13DB86AE007CCC5D /* LDrawGLRenderer.m */,
 				0BED4742136D30C10098D353 /* LDrawKeywords.h */,
+				73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */,
 				0BDE0EE91371063600FDB8DB /* LDrawPathNames.h */,
 				0BDE0EEF1371070600FDB8DB /* LDrawPaths.h */,
 				0BDE0EF01371070600FDB8DB /* LDrawPaths.m */,
@@ -778,22 +790,16 @@
 				0B1DA5A513172DA700E14960 /* LDrawUtilities.m */,
 				0B491DA307F5555B00AC0C10 /* MatrixMath.c */,
 				0B491DA207F5555B00AC0C10 /* MatrixMath.h */,
+				D6CB41DE15E2AA6C00730E2A /* ModelManager.h */,
+				D6CB41DF15E2AA6C00730E2A /* ModelManager.m */,
+				D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */,
+				D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */,
+				0B0B6CCB2787D87800F6E225 /* PartCatalogBuilder.h */,
+				0B0B6CCC2787D87800F6E225 /* PartCatalogBuilder.m */,
 				0BC75337136FC878002568B8 /* PartLibrary.h */,
 				0BC75338136FC878002568B8 /* PartLibrary.m */,
 				0BE523FF1373C26200E21FBC /* PartReport.h */,
 				0BE524001373C26200E21FBC /* PartReport.m */,
-				D6EC01BC15A54B3B0004CEB8 /* OpenGLUtilities.h */,
-				D6EC01BD15A54B3B0004CEB8 /* OpenGLUtilities.c */,
-				D6CB41DE15E2AA6C00730E2A /* ModelManager.h */,
-				D6CB41DF15E2AA6C00730E2A /* ModelManager.m */,
-				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
-				73772480B291C29D1B0D13B4 /* LDrawMovableDirective.h */,
-				73772C8BCC3A6435E0AE9103 /* ComputationalGeometry.m */,
-				73772E30A6856B15E73A951A /* ComputationalGeometry.h */,
-				D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */,
-				D619130017F004A300B5DF44 /* LDrawGLCamera.m */,
-				D6191B9B17F277B600B5DF44 /* GLMatrixMath.h */,
-				D6191B9C17F277B600B5DF44 /* GLMatrixMath.c */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -1397,6 +1403,7 @@
 				2BF2E3170AB0FCAB0026D5DB /* TransformerIntMinus1.h in Headers */,
 				0BDC146F0B9D0502001D1FF1 /* PartBrowserPanelController.h in Headers */,
 				0B2DD14A0CD810DC0093E8E5 /* PartBrowserTableView.h in Headers */,
+				0B0B6CCD2787D87800F6E225 /* PartCatalogBuilder.h in Headers */,
 				0B2DD14E0CD810F20093E8E5 /* BezierPathCategory.h in Headers */,
 				0B7588D80D8DC4DD00357703 /* ColorLibrary.h in Headers */,
 				0B9907D80DDD540D003F6B13 /* LDrawColor.h in Headers */,
@@ -1744,6 +1751,7 @@
 				73772E2FDEFC3AB2B54D58D3 /* RegexKitLite.m in Sources */,
 				D619130217F004A300B5DF44 /* LDrawGLCamera.m in Sources */,
 				D6191B9E17F277B600B5DF44 /* GLMatrixMath.c in Sources */,
+				0B0B6CCE2787D87800F6E225 /* PartCatalogBuilder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

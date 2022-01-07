@@ -479,7 +479,7 @@ PreferencesDialogController *preferencesDialog = nil;
 {
 	PartLibraryController   *libraryController	= [LDrawApplication sharedPartLibraryController];
 	
-	[libraryController reloadPartCatalog];
+	[libraryController reloadPartCatalog:^(BOOL success) {}];
 	
 }//end reloadParts:
 

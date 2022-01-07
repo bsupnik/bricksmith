@@ -49,7 +49,7 @@
 //				success.
 //
 //==============================================================================
-- (BOOL) loadPartCatalog
+- (void) loadPartCatalog:(void (^)(BOOL success))completionHandler
 {
 	PartLibrary *library    = [PartLibrary sharedPartLibrary];
 	NSArray     *favorites  = [[NSUserDefaults standardUserDefaults] objectForKey:FAVORITE_PARTS_KEY];
@@ -62,10 +62,12 @@
 	if(success == NO)
 	{
 		// loading failed; try reloading (generates a new part list)
-		success = [self reloadPartCatalog];
+		[self reloadPartCatalog:completionHandler];
 	}
-		
-	return success;
+	else if(completionHandler != nil)
+	{
+		completionHandler(success);
+	}
 	
 }//end loadPartCatalog
 
@@ -76,16 +78,37 @@
 //				Mac-friendly index of parts, displaying a progress bar.
 //
 //==============================================================================
-- (BOOL) reloadPartCatalog
+- (void) reloadPartCatalog:(void (^)(BOOL success))completionHandler
 {
-	BOOL success = NO;
-
-	self->progressPanel	= [AMSProgressPanel progressPanel];
+	AMSProgressPanel* progressPanel	= [[AMSProgressPanel progressPanel] retain];
 	
-	[self->progressPanel setMessage:@"Loading Parts"];
-	[self->progressPanel showProgressPanel];
+	[progressPanel setMessage:@"Loading Parts"];
+	[progressPanel showProgressPanel];
 	
-	success = [[PartLibrary sharedPartLibrary] reloadParts];
+	[[PartLibrary sharedPartLibrary] reloadPartsWithMaxLoadCountHandler:
+	 ^(NSUInteger maxPartCount)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[progressPanel setMaxValue:maxPartCount];
+		});
+	}
+											   progressIncrementHandler:
+	 ^{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[progressPanel increment];
+		});
+	}
+													  completionHandler:
+	 ^(BOOL success)
+	 {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[progressPanel close];
+			if(completionHandler)
+			{
+				completionHandler(success);
+			}
+		});
+	}];
 	
 	// To print out a list of all categories. For debugging !CATEGORY coverage.
 //	NSArray *categories = [[[PartLibrary sharedPartLibrary] categories] sortedArrayUsingSelector:@selector(compare:)];
@@ -96,10 +119,6 @@
 //		[list appendString:@"\n"];
 //	}
 //	NSLog(@"%@", list);
-	
-	[self->progressPanel close];
-	
-	return success;
 	
 }//end reloadPartCatalog
 
@@ -149,32 +168,6 @@
 	
 	[userDefaults setObject:newFavorites forKey:FAVORITE_PARTS_KEY];
 }
-
-
-//========== partLibrary:maximumPartCountToLoad: ===============================
-//
-// Purpose:		The reloader is telling us the maximum number of files to 
-//				expect. 
-//
-//==============================================================================
-- (void)		partLibrary:(PartLibrary *)partLibrary
-	 maximumPartCountToLoad:(NSUInteger)maxPartCount
-{
-	[self->progressPanel setMaxValue:maxPartCount];
-	
-}//end partLibrary:maximumPartCountToLoad:
-
-
-//========== partLibraryIncrementLoadProgressCount: ============================
-//
-// Purpose:		Tells us that the reloader has loaded one additional item.
-//
-//==============================================================================
-- (void) partLibraryIncrementLoadProgressCount:(PartLibrary *)partLibrary
-{
-	[self->progressPanel increment];
-	
-}//end partLibraryIncrementLoadProgressCount:
 
 
 #pragma mark -

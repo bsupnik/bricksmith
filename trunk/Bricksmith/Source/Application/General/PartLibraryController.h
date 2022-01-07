@@ -11,9 +11,6 @@
 
 #import "PartLibrary.h"
 
-// Forward declarations
-@class AMSProgressPanel;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -21,14 +18,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 @interface PartLibraryController : NSObject <PartLibraryDelegate>
-{
-	AMSProgressPanel    *progressPanel;
-
-}
 
 // Actions
-- (BOOL) loadPartCatalog;
-- (BOOL) reloadPartCatalog;
+- (void) loadPartCatalog:(void (^)(BOOL success))completionHandler;
+- (void) reloadPartCatalog:(void (^)(BOOL success))completionHandler;
 - (BOOL) validateLDrawFolderWithMessage:(NSString *) folderPath;
 
 @end
