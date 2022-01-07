@@ -980,10 +980,11 @@ void connexionMessageHandler(io_connect_t connection, natural_t messageType, voi
 	ConnexionDeviceState		*state;
 	NSDocumentController		*documentController	= [NSDocumentController sharedDocumentController];
 	LDrawDocument				*currentDocument = [documentController currentDocument];
-	SInt32 lagThreshold = 1000; // TODO Make constant
-	
+	UInt64 lagThreshold = 1000000000; // 1 second
+    static mach_timebase_info_data_t    sTimebaseInfo;
+
 	UInt64 eventTime, now, deltaT;
-	SInt32 sinceLastEvent, sinceNow;
+	UInt64 sinceNow;
 	
 	// We initialize some static objects, once, only if they are ever needed.
 	if (!initialized)
@@ -1017,11 +1018,27 @@ void connexionMessageHandler(io_connect_t connection, natural_t messageType, voi
 					// are queued. This accumulation makes the controller feel non-responsive. So, to 
 					// avoid this, ignore messages that occurred too far in the past.
 					eventTime = state->time;
-					deltaT = eventTime - lastState.time;
-					sinceLastEvent = abs(AbsoluteToDuration( *(AbsoluteTime *) &deltaT ));
+//					deltaT = eventTime - lastState.time;
+//					sinceLastEvent = abs(AbsoluteToDuration( *(AbsoluteTime *) &deltaT ));
+					
 					now = mach_absolute_time();
 					deltaT = now - eventTime;
-					sinceNow = abs(AbsoluteToDuration( *(AbsoluteTime *) &deltaT ));
+					
+					// Convert to nanoseconds.
+
+					// If this is the first time we've run, get the timebase.
+					// We can use denom == 0 to indicate that sTimebaseInfo is
+					// uninitialised because it makes no sense to have a zero
+					// denominator is a fraction.
+					if ( sTimebaseInfo.denom == 0 )
+					{
+						(void) mach_timebase_info(&sTimebaseInfo);
+					}
+
+					// Do the maths. We hope that the multiplication doesn't
+					// overflow; the price you pay for working in fixed point.
+					sinceNow = deltaT * sTimebaseInfo.numer / sTimebaseInfo.denom; // result in is nanoseconds
+					
 					if (sinceNow < lagThreshold)
 					{
 						// OK, we will pay attention to this event. First, figure out if the user
