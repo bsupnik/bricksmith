@@ -2306,17 +2306,14 @@ void AppendChoicesToNewItem(
 // Purpose:		Shows the dimensions window for this model.
 //
 //==============================================================================
-- (IBAction) showDimensions:(id)sender {
-
+- (IBAction) showDimensions:(id)sender
+{
 	DimensionsPanel *dimensions = nil;
 	
 	dimensions = [DimensionsPanel dimensionPanelForFile:[self documentContents]];
 	
-	[NSApp beginSheet:dimensions
-	   modalForWindow:[self windowForSheet]
-		modalDelegate:self
-	   didEndSelector:NULL
-		  contextInfo:NULL ];
+	[[self windowForSheet] beginSheet:dimensions
+					completionHandler:nil];
 		  
 }//end showDimensions
 
@@ -2326,17 +2323,14 @@ void AppendChoicesToNewItem(
 // Purpose:		Shows the dimensions window for this model.
 //
 //==============================================================================
-- (IBAction) showPieceCount:(id)sender {
-	
+- (IBAction) showPieceCount:(id)sender
+{
 	PieceCountPanel *pieceCount = nil;
 	
 	pieceCount = [PieceCountPanel pieceCountPanelForFile:[self documentContents]];
 	
-	[NSApp beginSheet:pieceCount
-	   modalForWindow:[self windowForSheet]
-		modalDelegate:self
-	   didEndSelector:NULL
-		  contextInfo:NULL ];
+	[[self windowForSheet] beginSheet:pieceCount
+					completionHandler:nil];
 		  
 }//end showPieceCount:
 
@@ -2583,7 +2577,9 @@ void AppendChoicesToNewItem(
 			if(m != nil)
 			{
 				NSString * fp = [[m enclosingFile] path];
-				[[NSDocumentController sharedDocumentController] openDocumentWithContentsOfURL:[NSURL fileURLWithPath:fp  isDirectory:FALSE] display:TRUE error:nil];
+				[[NSDocumentController sharedDocumentController] openDocumentWithContentsOfURL:[NSURL fileURLWithPath:fp  isDirectory:FALSE]
+																					   display:YES
+																			 completionHandler:^(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error) {}];
 			}
 		}		
 	}
@@ -2844,10 +2840,7 @@ void AppendChoicesToNewItem(
 		[alert setInformativeText:NSLocalizedString(@"CircularReferenceInformative", nil)];
 		
 		NSBeep();
-		[alert beginSheetModalForWindow:[self windowForSheet]
-						  modalDelegate:nil
-						 didEndSelector:NULL
-							contextInfo:NULL ];
+		[alert beginSheetModalForWindow:[self windowForSheet] completionHandler:nil];
 		[alert release];
 	}
 }//end addSubmodelReferenceClicked:
@@ -5867,9 +5860,7 @@ void AppendChoicesToNewItem(
 		[alert addButtonWithTitle:NSLocalizedString(@"OKButtonName", nil)];
 		
 		[alert beginSheetModalForWindow:[self windowForSheet]
-						  modalDelegate:nil
-						 didEndSelector:NULL
-							contextInfo:NULL ];
+					  completionHandler:nil];
 
 		[alert release];
 		
