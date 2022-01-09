@@ -49,27 +49,32 @@
 //				here. Furthermore, the appearance will be degenerate on Tiger 
 //				because I do not feel like pounding out the manual CoreGraphics 
 //				calls which NSGradient is using. Sooner or later we will be 
-//				dumping Tiger and then none of it will matter! 
+//				dumping Tiger and then none of it will matter!
+//
+//				[1-9-2022 @undecoded-coder]: Commenting this out for now as it
+//				works poorly with macOS Dark Mode. Furthermore, I don't think
+//				this styling is relevant to modern macOS (Big Sur and later)
+//				anymore.
 //
 //==============================================================================
-- (void) drawRect:(NSRect)rect
-{
-	NSColor         *topColor       = [NSColor colorWithCalibratedWhite:0.91 alpha:1.0];
-	NSColor         *bottomColor    = [NSColor colorWithCalibratedWhite:0.82 alpha:1.0];
-	NSColor         *borderColor    = [NSColor colorWithCalibratedWhite:0.58 alpha:1.0];
-	NSRect          bounds          = [self bounds];
-	NSBezierPath    *bottomLine     = [NSBezierPath bezierPath];
-	NSGradient      *gradient       = [[[NSGradient alloc] initWithStartingColor:bottomColor endingColor:topColor] autorelease];
-	
-	[gradient drawInRect:bounds angle:90];
-	
-	// bottom line border
-	[bottomLine moveToPoint:NSMakePoint( NSMinX(bounds) - 0.5, NSMinY(bounds) )];
-	[bottomLine lineToPoint:NSMakePoint( NSMaxX(bounds) - 0.5, NSMinY(bounds) )];
-	
-	[borderColor set];
-	[bottomLine stroke];
-	
-}//end drawRect:
+//- (void) drawRect:(NSRect)rect
+//{
+//	NSColor         *topColor       = [NSColor colorWithCalibratedWhite:0.91 alpha:1.0];
+//	NSColor         *bottomColor    = [NSColor colorWithCalibratedWhite:0.82 alpha:1.0];
+//	NSColor         *borderColor    = [NSColor colorWithCalibratedWhite:0.58 alpha:1.0];
+//	NSRect          bounds          = [self bounds];
+//	NSBezierPath    *bottomLine     = [NSBezierPath bezierPath];
+//	NSGradient      *gradient       = [[[NSGradient alloc] initWithStartingColor:bottomColor endingColor:topColor] autorelease];
+//
+//	[gradient drawInRect:bounds angle:90];
+//
+//	// bottom line border
+//	[bottomLine moveToPoint:NSMakePoint( NSMinX(bounds) - 0.5, NSMinY(bounds) )];
+//	[bottomLine lineToPoint:NSMakePoint( NSMaxX(bounds) - 0.5, NSMinY(bounds) )];
+//
+//	[borderColor set];
+//	[bottomLine stroke];
+//
+//}//end drawRect:
 
 @end

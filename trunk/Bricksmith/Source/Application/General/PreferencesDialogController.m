@@ -232,7 +232,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	NSColor			*unknownColor		= [userDefaults colorForKey:SYNTAX_COLOR_UNKNOWN_KEY];
 	
 	[backgroundColorWell	setColor:backgroundColor];
-	
+
 	[modelsColorWell		setColor:modelsColor];
 	[stepsColorWell			setColor:stepsColor];
 	[partsColorWell			setColor:partsColor];
@@ -957,20 +957,18 @@ PreferencesDialogController *preferencesDialog = nil;
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	NSMutableDictionary	*initialDefaults	= [NSMutableDictionary dictionary];
 	
-	NSColor				*backgroundColor	= [NSColor whiteColor];
-	NSColor				*modelsColor		= [NSColor blackColor];
-	NSColor				*stepsColor			= [NSColor blackColor];
-	NSColor				*partsColor			= [NSColor blackColor];
-	NSColor				*primitivesColor	= [NSColor blueColor];
+	NSColor				*backgroundColor	= [NSColor windowBackgroundColor];
+	NSColor				*modelsColor		= [NSColor textColor];
+	NSColor				*stepsColor			= [NSColor textColor];
+	NSColor				*partsColor			= [NSColor textColor];
+	NSColor				*primitivesColor	= [NSColor systemBlueColor];
+	// On macOS 10.13 or later this could be systemTealColor, but there is no easy system equivalent currently.
 	NSColor				*colorsColor		= [NSColor colorWithDeviceRed:  0./ 255
 																    green:128./ 255
 																	 blue:128./ 255
 																    alpha:1.0 ];
-	NSColor				*commentsColor		= [NSColor colorWithDeviceRed: 35./ 255
-																    green:110./ 255
-																	 blue: 37./ 255
-																    alpha:1.0 ];
-	NSColor				*unknownColor		= [NSColor lightGrayColor];
+	NSColor				*commentsColor		= [NSColor systemGreenColor];
+	NSColor				*unknownColor		= [NSColor systemGrayColor];
 	
 	//
 	// General
@@ -1042,7 +1040,7 @@ PreferencesDialogController *preferencesDialog = nil;
     //
     // LSynth Palette
     //
-    NSColor *lsynthSelectionColor = [NSColor redColor];
+    NSColor *lsynthSelectionColor = [NSColor systemRedColor];
     [initialDefaults setObject:@"" forKey:LSYNTH_EXECUTABLE_PATH_KEY];
     [initialDefaults setObject:@"" forKey:LSYNTH_CONFIGURATION_PATH_KEY];
     [initialDefaults setObject:[NSNumber numberWithInt:20] forKey:LSYNTH_SELECTION_TRANSPARENCY_KEY];
