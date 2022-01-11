@@ -67,18 +67,12 @@
 		
 		// - Category Table
 		
-		NSTableColumn	*listColumn = [[self->categoryTable tableColumns] objectAtIndex:0];
-		IconTextCell	*dataCell	= [[IconTextCell alloc] init];
-		[dataCell setVerticallyCentersTitle:YES];
-		[dataCell setLineBreakMode:NSLineBreakByTruncatingTail]; // required to make text baseline consistent during resize of source lists.
-		[dataCell setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
-		[listColumn setDataCell:dataCell];
-		
 		[self->categoryTable setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleSourceList];
 		[self->categoryTable setAllowsTypeSelect:YES];
 		[self->categoryTable setFocusRingType:NSFocusRingTypeNone];
 		[self->categoryTable setDelegate:self];
 		[self->categoryTable setDataSource:self];
+		self->categoryTable.floatsGroupRows = NO;
 		[[self->categoryTable window] makeFirstResponder:self->categoryTable];
 		
 		// - Parts Table
@@ -522,31 +516,6 @@
 }
 
 
-//========== outlineView:objectValueForTableColumn:byItem: =====================
-//==============================================================================
-- (id) outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
-{
-	BOOL     isGroupHeading = [self outlineView:outlineView isGroupItem:item];
-	NSString *name          = nil;
-	id       displayName    = nil;
-	
-	name = [item objectForKey:CategoryDisplayNameKey];
-
-	if(isGroupHeading)
-	{
-		// Must manually capitalize the header title for source lists; Apple 
-		// doesn't do this magically for us. 
-		displayName = [name uppercaseString];
-	}
-	else
-	{
-		displayName = name;
-	}
-	
-	return displayName;
-}
-
-
 //========== outlineView:isItemExpandable: =====================================
 //==============================================================================
 - (BOOL) outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
@@ -724,6 +693,39 @@
 	
 	if(success == YES)
 		[userDefaults setObject:newCategory forKey:PART_BROWSER_PREVIOUS_CATEGORY];
+}
+
+
+//========== outlineView:viewForTableColumn:item: ==============================
+///
+/// @abstract	Returns the correct cell for the row.
+///
+/// 			Cell prototypes are defined in the nib file.
+///
+//==============================================================================
+- (NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(NSTableColumn *)tableColumn item:(id)item
+{
+	BOOL				isGroupHeading	= [self outlineView:outlineView isGroupItem:item];
+	NSTableCellView*	view			= nil;
+	NSString*			name			= [item objectForKey:CategoryDisplayNameKey];
+	NSString*			displayName 	= nil;
+
+	if(isGroupHeading)
+	{
+		view = [outlineView makeViewWithIdentifier:@"HeaderCell" owner:nil];
+
+		// Must manually capitalize the header title for source lists; Apple
+		// doesn't do this magically for us.
+		displayName = [name uppercaseString];
+	}
+	else
+	{
+		view = [outlineView makeViewWithIdentifier:@"CategoryCell" owner:nil];
+		displayName = name;
+	}
+	view.textField.stringValue = displayName;
+
+	return view;
 }
 
 
