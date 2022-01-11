@@ -48,7 +48,6 @@
 	[_bumViewer.glView		setLDrawDirective:bumModel];
 	[_bumViewer.glView		setAcceptsFirstResponder:NO];
 	
-	[_bumViewer.glView		reshape]; // must get projection set up to call zoomToFit:
 	[_bumViewer.glView		zoomToFit:nil];
 	
 }//end awakeFromNib
