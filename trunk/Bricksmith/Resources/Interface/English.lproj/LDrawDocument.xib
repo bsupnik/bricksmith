@@ -65,7 +65,7 @@
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
-                                                        <tableColumn editable="NO" width="178.08999633789062" minWidth="16" maxWidth="1000" id="55">
+                                                        <tableColumn editable="NO" width="149.08999633789062" minWidth="16" maxWidth="1000" id="55">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="File Contents">
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -155,7 +155,7 @@
                                             </menu>
                                         </popUpButtonCell>
                                     </popUpButton>
-                                    <customView id="1044" customClass="ScopeBar">
+                                    <customView id="1044">
                                         <rect key="frame" x="0.0" y="726" width="192" height="25"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                         <subviews>
@@ -202,7 +202,7 @@
                                 <rect key="frame" x="193" y="0.0" width="831" height="751"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <subviews>
-                                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="484" customClass="ScopeBar">
+                                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="484">
                                         <rect key="frame" x="0.0" y="726" width="831" height="25"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                         <subviews>
@@ -467,7 +467,7 @@
                                         <sortDescriptor key="sortDescriptorPrototype" selector="numericCompare:" sortKey="Part Number"/>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                     </tableColumn>
-                                    <tableColumn identifier="Part Name" editable="NO" width="8" minWidth="8" maxWidth="1000" id="28">
+                                    <tableColumn identifier="Part Name" editable="NO" width="10" minWidth="8" maxWidth="1000" id="28">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Description">
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
