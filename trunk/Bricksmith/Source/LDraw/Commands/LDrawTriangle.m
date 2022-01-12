@@ -554,7 +554,7 @@
 //==============================================================================
 - (NSString *) iconName
 {
-	return @"Triangle";
+	return @"TrianglePrimitive";
 	
 }//end iconName
 

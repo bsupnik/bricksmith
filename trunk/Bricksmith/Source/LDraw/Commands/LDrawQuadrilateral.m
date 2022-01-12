@@ -645,7 +645,7 @@
 //==============================================================================
 - (NSString *) iconName
 {
-	return @"Quadrilateral";
+	return @"QuadPrimitive";
 	
 }//end iconName
 

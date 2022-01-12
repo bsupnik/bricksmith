@@ -308,7 +308,7 @@
 //==============================================================================
 - (NSString *) iconName
 {
-	return @"ConditionalLine";
+	return @"ConditionalLinePrimitive";
 	
 }//end iconName
 

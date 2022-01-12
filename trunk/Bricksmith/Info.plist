@@ -14,7 +14,9 @@
 				<string>mpd</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
-			<string>LDraw Document</string>
+			<string>LDrawDocument</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
 			<key>CFBundleTypeMIMETypes</key>
 			<array>
 				<string>text/plain</string>
@@ -23,6 +25,8 @@
 			<string>LDraw Document</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
 			<key>LSTypeIsPackage</key>
 			<false/>
 			<key>NSDocumentClass</key>
@@ -35,8 +39,6 @@
 	<string>Help</string>
 	<key>CFBundleHelpBookName</key>
 	<string>Bricksmith Tutorial</string>
-	<key>CFBundleIconFile</key>
-	<string>Bricksmith.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
