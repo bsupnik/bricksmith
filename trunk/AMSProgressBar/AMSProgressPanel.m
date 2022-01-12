@@ -328,7 +328,7 @@
 	self.startTime = [NSDate date]; //right now
 	runningAsSheet = YES;
 	
-	[[NSApp mainWindow] beginSheet:dialogWindow completionHandler:nil];
+	[parentWindow beginSheet:dialogWindow completionHandler:nil];
 }
 
 
