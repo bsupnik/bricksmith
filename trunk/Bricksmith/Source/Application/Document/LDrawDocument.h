@@ -44,7 +44,7 @@
 // class LDrawDocument
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawDocument : NSDocument <ViewportArrangerDelegate>
+@interface LDrawDocument : NSDocument <ViewportArrangerDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate>
 {
 	IBOutlet DocumentToolbarController	*toolbarController;
 	IBOutlet NSObjectController			*bindingsController;

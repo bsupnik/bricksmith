@@ -1811,7 +1811,7 @@
 
 	[self->delegate LDrawGLRendererNeedsRedisplay:self];
 	
-}//end displayNeedsUpdating
+}//end activeModelDidChange
 
 
 
