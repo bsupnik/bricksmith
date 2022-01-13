@@ -332,6 +332,13 @@ static RelatedParts * SharedRelatedParts = nil;
 			else
 			{
 #if DEBUG
+			// Where related.ldr includes comments throughout, it ends up
+			// filling the console with output we probably don't care about.
+			// Filtering for the "!" prefix may be overly generic if we want to
+			// actually catch something unexpected here, but as the majority of
+			// meta commands we could possibly care about include the prefix, it
+			// seems like a good balance.
+			if ([parsedField containsString:@"!"])
 				printf("Unparsable META command: %s\n", [orig_line UTF8String]);
 #endif
 			}
