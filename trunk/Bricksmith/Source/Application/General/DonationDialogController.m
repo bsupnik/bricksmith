@@ -38,8 +38,8 @@
 	NSString    *modelPath  = nil;
 	LDrawFile   *bumModel   = nil;
 
-	[self->mainBackground	setBackgroundColor:[NSColor whiteColor]];
-	[self->bottomBar		setBackgroundColor:[NSColor colorWithCalibratedWhite:0.75 alpha:1.0]];
+	[self->mainBackground	setBackgroundColor:[NSColor underPageBackgroundColor]];
+	[self->bottomBar		setBackgroundColor:[NSColor windowBackgroundColor]];
 	
 	// Display an LDraw model of a beggar, just to set the tone.
 	modelPath  = [[NSBundle mainBundle] pathForResource:@"Bum" ofType:@"ldr"];
@@ -123,7 +123,7 @@
 	{
 		showDonationRequest = NO;
 	}
-	
+
 	if(lastNagVersion != bundleVersion)
 	{
 		showDonationRequest = YES;

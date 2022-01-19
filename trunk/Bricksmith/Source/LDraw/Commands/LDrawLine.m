@@ -460,7 +460,7 @@
 //==============================================================================
 - (NSString *) iconName
 {
-	return @"Line";
+	return @"LinePrimitive";
 	
 }//end iconName
 

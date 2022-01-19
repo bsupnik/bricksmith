@@ -3037,7 +3037,7 @@ static Box2 NSRectToBox2(NSRect rect)
 	NSColor			*rgbColor		= nil;
 	
 	if(newColor == nil)
-		newColor = [NSColor whiteColor];
+		newColor = [NSColor windowBackgroundColor];
 	
 	// the new color may not be in the RGB colorspace, so we need to convert.
 	rgbColor = [newColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
