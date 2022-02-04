@@ -79,6 +79,7 @@
 - (void) setAcceptsFirstResponder:(BOOL)flag;
 - (void) setAutosaveName:(NSString *)newName;
 - (void) setBackAction:(SEL)newAction;
+- (void) setBackgroundColor:(NSColor *)newColor;
 - (void) setDelegate:(id)object;
 - (void) setForwardAction:(SEL)newAction;
 - (void) setGridSpacingMode:(gridSpacingModeT)newMode;

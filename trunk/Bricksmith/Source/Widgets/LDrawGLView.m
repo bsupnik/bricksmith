@@ -153,6 +153,7 @@ static Box2 NSRectToBox2(NSRect rect)
 	[renderer setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
 	[renderer prepareOpenGL];	
 
+	[self takeBackgroundColorFromUserDefaults];
 	[self setViewOrientation:ViewOrientation3D];
 	
 	
@@ -602,6 +603,40 @@ static Box2 NSRectToBox2(NSRect rect)
 	self->backAction = newAction;
 	
 }//end setBackAction:
+
+
+//========== setBackgroundColor: ===============================================
+///
+/// @abstract	Updates the color used behind the model
+///
+//==============================================================================
+- (void) setBackgroundColor:(NSColor *)newColor
+{
+	NSColor			*rgbColor		= nil;
+	
+	if(newColor == nil)
+		newColor = [NSColor windowBackgroundColor];
+	
+	// the new color may not be in the RGB colorspace, so we need to convert.
+	rgbColor = [newColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+	
+	CGLLockContext([[self openGLContext] CGLContextObj]);
+	{
+		//This method can get called from -prepareOpenGL, which is itself called
+		// from -makeCurrentContext. That's a recipe for infinite recursion. So,
+		// we only makeCurrentContext if we *need* to.
+		if([NSOpenGLContext currentContext] != [self openGLContext])
+			[[self openGLContext] makeCurrentContext];
+			
+		[self->renderer setBackgroundColorRed:[rgbColor redComponent]
+										green:[rgbColor greenComponent]
+										 blue:[rgbColor blueComponent] ];
+	}
+	CGLUnlockContext([[self openGLContext] CGLContextObj]);
+	
+	[self setNeedsDisplay:YES];
+	
+}//end setBackgroundColor:
 
 
 //========== setDragEndedInOurDocument: ========================================
@@ -3034,29 +3069,11 @@ static Box2 NSRectToBox2(NSRect rect)
 {
 	NSUserDefaults	*userDefaults	= [NSUserDefaults standardUserDefaults];
 	NSColor			*newColor		= [userDefaults colorForKey:LDRAW_VIEWER_BACKGROUND_COLOR_KEY];
-	NSColor			*rgbColor		= nil;
 	
 	if(newColor == nil)
-		newColor = [NSColor windowBackgroundColor];
+		newColor = [NSColor controlBackgroundColor];
 	
-	// the new color may not be in the RGB colorspace, so we need to convert.
-	rgbColor = [newColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-	
-	CGLLockContext([[self openGLContext] CGLContextObj]);
-	{
-		//This method can get called from -prepareOpenGL, which is itself called 
-		// from -makeCurrentContext. That's a recipe for infinite recursion. So, 
-		// we only makeCurrentContext if we *need* to.
-		if([NSOpenGLContext currentContext] != [self openGLContext])
-			[[self openGLContext] makeCurrentContext];
-			
-		[self->renderer setBackgroundColorRed:[rgbColor redComponent]
-										green:[rgbColor greenComponent]
-										 blue:[rgbColor blueComponent] ];
-	}
-	CGLUnlockContext([[self openGLContext] CGLContextObj]);
-	
-	[self setNeedsDisplay:YES];
+	[self setBackgroundColor:newColor];
 	
 }//end takeBackgroundColorFromUserDefaults
 
