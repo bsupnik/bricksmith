@@ -957,7 +957,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	NSUserDefaults		*userDefaults		= [NSUserDefaults standardUserDefaults];
 	NSMutableDictionary	*initialDefaults	= [NSMutableDictionary dictionary];
 	
-	NSColor				*backgroundColor	= [NSColor windowBackgroundColor];
+	NSColor				*backgroundColor	= [NSColor controlBackgroundColor];
 	NSColor				*modelsColor		= [NSColor textColor];
 	NSColor				*stepsColor			= [NSColor textColor];
 	NSColor				*partsColor			= [NSColor textColor];
