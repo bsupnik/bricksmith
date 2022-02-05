@@ -30,7 +30,6 @@
 		0B04E98C1093BB4200E201EE /* MovePanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9691093BB4200E201EE /* MovePanel.xib */; };
 		0B04E98D1093BB4200E201EE /* PartBrowser.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E96B1093BB4200E201EE /* PartBrowser.xib */; };
 		0B04E98E1093BB4200E201EE /* PartBrowserAccessories.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E96D1093BB4200E201EE /* PartBrowserAccessories.xib */; };
-		0B04E98F1093BB4200E201EE /* PartChooser.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E96F1093BB4200E201EE /* PartChooser.xib */; };
 		0B04E9901093BB4200E201EE /* PieceCountPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9711093BB4200E201EE /* PieceCountPanel.xib */; };
 		0B04E9911093BB4200E201EE /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9731093BB4200E201EE /* Preferences.xib */; };
 		0B04E9921093BB4200E201EE /* RotationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0B04E9751093BB4200E201EE /* RotationPanel.xib */; };
@@ -197,8 +196,6 @@
 		0BF729BF08AD849300E3DA53 /* LDrawColorPanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729AF08AD849300E3DA53 /* LDrawColorPanelController.m */; };
 		0BF729C008AD849300E3DA53 /* PartBrowserDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729B008AD849300E3DA53 /* PartBrowserDataSource.h */; };
 		0BF729C108AD849300E3DA53 /* PartBrowserDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729B108AD849300E3DA53 /* PartBrowserDataSource.m */; };
-		0BF729C208AD849300E3DA53 /* PartChooserPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729B208AD849300E3DA53 /* PartChooserPanel.h */; };
-		0BF729C308AD849300E3DA53 /* PartChooserPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729B308AD849300E3DA53 /* PartChooserPanel.m */; };
 		0BF729C608AD849300E3DA53 /* PreferencesDialogController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BF729B608AD849300E3DA53 /* PreferencesDialogController.h */; };
 		0BF729C708AD849300E3DA53 /* PreferencesDialogController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BF729B708AD849300E3DA53 /* PreferencesDialogController.m */; };
 		0BFC4CFD1076F61900293B60 /* ViewportArranger.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BFC4CFB1076F61900293B60 /* ViewportArranger.h */; };
@@ -341,7 +338,6 @@
 		0B04E96A1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MovePanel.xib; sourceTree = "<group>"; };
 		0B04E96C1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PartBrowser.xib; sourceTree = "<group>"; };
 		0B04E96E1093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PartBrowserAccessories.xib; sourceTree = "<group>"; };
-		0B04E9701093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PartChooser.xib; sourceTree = "<group>"; };
 		0B04E9721093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PieceCountPanel.xib; sourceTree = "<group>"; };
 		0B04E9741093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Preferences.xib; sourceTree = "<group>"; };
 		0B04E9761093BB4200E201EE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/RotationPanel.xib; sourceTree = "<group>"; };
@@ -505,8 +501,6 @@
 		0BF729AF08AD849300E3DA53 /* LDrawColorPanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawColorPanelController.m; sourceTree = "<group>"; };
 		0BF729B008AD849300E3DA53 /* PartBrowserDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PartBrowserDataSource.h; sourceTree = "<group>"; };
 		0BF729B108AD849300E3DA53 /* PartBrowserDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PartBrowserDataSource.m; sourceTree = "<group>"; };
-		0BF729B208AD849300E3DA53 /* PartChooserPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PartChooserPanel.h; sourceTree = "<group>"; };
-		0BF729B308AD849300E3DA53 /* PartChooserPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PartChooserPanel.m; sourceTree = "<group>"; };
 		0BF729B608AD849300E3DA53 /* PreferencesDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PreferencesDialogController.h; sourceTree = "<group>"; };
 		0BF729B708AD849300E3DA53 /* PreferencesDialogController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PreferencesDialogController.m; sourceTree = "<group>"; };
 		0BFC4CFB1076F61900293B60 /* ViewportArranger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewportArranger.h; sourceTree = "<group>"; };
@@ -613,7 +607,6 @@
 				0B04E9691093BB4200E201EE /* MovePanel.xib */,
 				0B04E96B1093BB4200E201EE /* PartBrowser.xib */,
 				0B04E96D1093BB4200E201EE /* PartBrowserAccessories.xib */,
-				0B04E96F1093BB4200E201EE /* PartChooser.xib */,
 				0B04E9711093BB4200E201EE /* PieceCountPanel.xib */,
 				0B04E9731093BB4200E201EE /* Preferences.xib */,
 				0B04E9751093BB4200E201EE /* RotationPanel.xib */,
@@ -868,8 +861,6 @@
 				0BF729B108AD849300E3DA53 /* PartBrowserDataSource.m */,
 				0BDC146D0B9D0502001D1FF1 /* PartBrowserPanelController.h */,
 				0BDC146E0B9D0502001D1FF1 /* PartBrowserPanelController.m */,
-				0BF729B208AD849300E3DA53 /* PartChooserPanel.h */,
-				0BF729B308AD849300E3DA53 /* PartChooserPanel.m */,
 				0B4F5E0F0F31632C00355631 /* PartLibraryController.h */,
 				0B4F5E100F31632C00355631 /* PartLibraryController.m */,
 				0BF729B608AD849300E3DA53 /* PreferencesDialogController.h */,
@@ -1074,7 +1065,6 @@
 				0BF729BC08AD849300E3DA53 /* LDrawApplication.h in Headers */,
 				0BF729BE08AD849300E3DA53 /* LDrawColorPanelController.h in Headers */,
 				0BF729C008AD849300E3DA53 /* PartBrowserDataSource.h in Headers */,
-				0BF729C208AD849300E3DA53 /* PartChooserPanel.h in Headers */,
 				0BF729C608AD849300E3DA53 /* PreferencesDialogController.h in Headers */,
 				0BC6992B08B5719000DAF996 /* LDrawMPDModel.h in Headers */,
 				0BC6992C08B5719100DAF996 /* LDrawConditionalLine.h in Headers */,
@@ -1284,7 +1274,6 @@
 				0B04E98C1093BB4200E201EE /* MovePanel.xib in Resources */,
 				0B04E98D1093BB4200E201EE /* PartBrowser.xib in Resources */,
 				0B04E98E1093BB4200E201EE /* PartBrowserAccessories.xib in Resources */,
-				0B04E98F1093BB4200E201EE /* PartChooser.xib in Resources */,
 				0B04E9901093BB4200E201EE /* PieceCountPanel.xib in Resources */,
 				0B04E9911093BB4200E201EE /* Preferences.xib in Resources */,
 				0B04E9921093BB4200E201EE /* RotationPanel.xib in Resources */,
@@ -1322,7 +1311,6 @@
 				0BF729BD08AD849300E3DA53 /* LDrawApplication.m in Sources */,
 				0BF729BF08AD849300E3DA53 /* LDrawColorPanelController.m in Sources */,
 				0BF729C108AD849300E3DA53 /* PartBrowserDataSource.m in Sources */,
-				0BF729C308AD849300E3DA53 /* PartChooserPanel.m in Sources */,
 				0BF729C708AD849300E3DA53 /* PreferencesDialogController.m in Sources */,
 				0BC699CE08B93A0500DAF996 /* DimensionsPanel.m in Sources */,
 				0B356AF008D385B900695EEB /* PieceCountPanel.m in Sources */,
@@ -1577,14 +1565,6 @@
 				0B04E96E1093BB4200E201EE /* English */,
 			);
 			name = PartBrowserAccessories.xib;
-			sourceTree = "<group>";
-		};
-		0B04E96F1093BB4200E201EE /* PartChooser.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0B04E9701093BB4200E201EE /* English */,
-			);
-			name = PartChooser.xib;
 			sourceTree = "<group>";
 		};
 		0B04E9711093BB4200E201EE /* PieceCountPanel.xib */ = {
