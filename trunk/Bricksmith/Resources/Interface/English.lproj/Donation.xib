@@ -61,7 +61,7 @@
                             <imageView id="22">
                                 <rect key="frame" x="20" y="302" width="64" height="64"/>
                                 <autoresizingMask key="autoresizingMask"/>
-                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="Bricksmith" id="23"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="NSApplicationIcon" id="23"/>
                             </imageView>
                             <button verticalHuggingPriority="750" id="3">
                                 <rect key="frame" x="119" y="112" width="96" height="32"/>
@@ -99,7 +99,7 @@ DQ
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" id="5">
-                                <rect key="frame" x="578" y="17" width="84" height="25"/>
+                                <rect key="frame" x="575" y="18" width="82" height="23"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Later" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -124,6 +124,6 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="Bricksmith" width="512" height="512"/>
+        <image name="NSApplicationIcon" width="32" height="32"/>
     </resources>
 </document>
