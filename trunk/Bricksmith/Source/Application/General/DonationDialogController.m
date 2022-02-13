@@ -38,7 +38,7 @@
 	NSString    *modelPath  = nil;
 	LDrawFile   *bumModel   = nil;
 
-	[self->mainBackground	setBackgroundColor:[NSColor underPageBackgroundColor]];
+	[self->mainBackground	setBackgroundColor:[NSColor controlBackgroundColor]];
 	[self->bottomBar		setBackgroundColor:[NSColor windowBackgroundColor]];
 	
 	// Display an LDraw model of a beggar, just to set the tone.
@@ -47,6 +47,7 @@
 	
 	[_bumViewer.glView		setLDrawDirective:bumModel];
 	[_bumViewer.glView		setAcceptsFirstResponder:NO];
+	[_bumViewer.glView		setBackgroundColor:[NSColor controlBackgroundColor]];
 	
 	[_bumViewer.glView		zoomToFit:nil];
 	

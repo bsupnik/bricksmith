@@ -140,8 +140,9 @@
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	// FIXME: This currently seems to override any previously saved custom background color chosen by the user.
-	NSColor *bgColor = [NSColor.windowBackgroundColor
+	// Default color. Our wrapper is responsible from applying the user's
+	// preferred color. 
+	NSColor *bgColor = [NSColor.controlBackgroundColor
 						colorUsingColorSpace: [NSColorSpace deviceRGBColorSpace]];
 	[self setBackgroundColorRed:bgColor.redComponent
 						  green:bgColor.greenComponent
