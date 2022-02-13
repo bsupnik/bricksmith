@@ -3923,6 +3923,8 @@ void AppendChoicesToNewItem(
 /// Returns the representation of the given item for the given table column.
 - (NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(NSTableColumn *)tableColumn item:(id)item {
 	NSTableCellView *cellView = [outlineView makeViewWithIdentifier:@"FileOutlineCellView" owner:nil];
+	// Either an NSString, or an NSAttributedString.
+	id theText = [self outlineView:outlineView objectValueForTableColumn:tableColumn byItem:item];
 	
 	NSString	*imageName = nil;
 	NSImage		*theImage;
@@ -3936,6 +3938,7 @@ void AppendChoicesToNewItem(
 		theImage = [NSImage imageNamed:imageName];
 	
 	cellView.imageView.image = theImage;
+	cellView.textField.objectValue = theText;
 	
 	return cellView;
 }
@@ -4000,22 +4003,7 @@ void AppendChoicesToNewItem(
 			}
 		}
 	}
-	
-	// Issue: in *view-based* outlines and tables, calling -reloadData (as in
-	// -[self docChanged] which receives this notification) will  destroy and
-	// recreate the cell views on every reload, which gets rid of selection
-	// highlighting. Since we know we don't need to reload every time we make a
-	// selection anyways, adding a userInfo flag for this (and checking it)
-	// works for the most part, but it leaves a bug where now and then selecting
-	// a part in the user interface and dragging it (even if its position isn't
-	// changed) will still cause us to reload and our selection disappears. Not
-	// only that, but we are unable to deselect the part by clicking on the
-	// viewport background for some reason (somehow tied to the outline view?).
-	// So this workaround isn't *quite* enough yet.
-	[NSNotificationCenter.defaultCenter
-	 postNotificationName:LDrawDirectiveDidChangeNotification
-	 object:[self documentContents]
-	 userInfo: @{ @"isSelectionChange" : @YES }];
+	[[self documentContents] noteNeedsDisplay];
 	
 	//See if we just selected a new part; if so, we must remember it.
 	if ([lastSelectedItem isKindOfClass:[LDrawPart class]] ||
@@ -4088,8 +4076,8 @@ void AppendChoicesToNewItem(
 //**** LDrawGLView ****
 //========== LDrawGLView:acceptDrop: ===========================================
 //
-// Purpose:		The user has deposited some drag-anddrop parts into an 
-//			    LDrawGLView. Now they need to be imported into the model. 
+// Purpose:		The user has deposited some drag-and-drop parts into an
+//			    LDrawGLView. Now they need to be imported into the model.
 //
 // Notes:		Just like in -duplicate: and 
 //				-outlineView:acceptDrop:item:childIndex:, we appropriate the 
@@ -4684,7 +4672,7 @@ void AppendChoicesToNewItem(
 //==============================================================================
 - (void) partChanged:(NSNotification *)notification
 {
-	LDrawDirective *changedDirective = [notification object];
+	LDrawDirective *changedDirective = notification.object;
 	LDrawFile *docContents = [self documentContents];
 
 	// Since the document sends out part changes too, make sure it isn't the doc
@@ -4701,11 +4689,10 @@ void AppendChoicesToNewItem(
 			// to refresh drawing, and we ned it to redo our menus.
 			NSNotification * doc_notification = 
 				[NSNotification notificationWithName:LDrawDirectiveDidChangeNotification 
-											  object:docContents
-											userInfo:@{ @"isSelectionChange" : @YES }];
+											  object:docContents];
 		
 			// Notification is queued and coalesced; 
-			[[NSNotificationQueue defaultQueue] 
+			[NSNotificationQueue.defaultQueue
 				   enqueueNotification:doc_notification 
 						  postingStyle:NSPostASAP 
 						 coalesceMask:NSNotificationCoalescingOnName|NSNotificationCoalescingOnSender
@@ -4732,28 +4719,36 @@ void AppendChoicesToNewItem(
 - (void)docChanged:(NSNotification *)notification
 {
 	// This functionality was in partChanged through Bricksmith 3.0.
+	// -------------------------------------------------------------
+	// Due to using a view-based outline (post-Bricksmith 3.1), this had to
+	// change in order to work properly with the behavioral change of outline
+	// views regarding selection across calls to -reloadData.
 	
-	// NOTE: This method is currently being called **twice** per call (at least
-	// for outline selections) — once before -partChanged: and once afterward.
-	
-	[fileContentsOutline selectObjects:selectedDirectives];
-	if (!notification.userInfo[@"isSelectionChange"])
-	[fileContentsOutline reloadData];
-	
-
-	[self updateInspector];
-
-	// Technically we don't need to redo the model menu on every UI edit.  In the
-	// future we should add specific notifications or directive observations to
-	// detect this case. But 3.0 and earlier ran this once for every edit (when
-	// part changes were escalated to doc changes) and then twice on real model
-	// changes (because we'd hit the case on the model and again on the doc).
-	//
-	// In practice it doesn't matter - for now, for the test cases we have,
-	// rebuilding the menus is relatively cheap.  A user can only add so many
-	// MPD parts to a file without going completely insane.
-	[self addModelsToMenus];
-
+	// We don't want -selectObjects: below to bring us to an infinite loop
+	// because the outline view is sending out *another* selection changed
+	// notification!
+	if (!self.isMidSelection) {
+		self.isMidSelection = YES;
+		[fileContentsOutline reloadData];
+		
+		[self updateInspector];
+		
+		[fileContentsOutline selectObjects:selectedDirectives];
+		
+		// Technically we don't need to redo the model menu on every UI edit.  In the
+		// future we should add specific notifications or directive observations to
+		// detect this case. But 3.0 and earlier ran this once for every edit (when
+		// part changes were escalated to doc changes) and then twice on real model
+		// changes (because we'd hit the case on the model and again on the doc).
+		//
+		// In practice it doesn't matter - for now, for the test cases we have,
+		// rebuilding the menus is relatively cheap.  A user can only add so many
+		// MPD parts to a file without going completely insane.
+		[self addModelsToMenus];
+		
+		// Let's not forget to allow future changes!
+		self.isMidSelection = NO;
+	}
 }//end docChanged:
 
 
