@@ -3636,8 +3636,8 @@ void AppendChoicesToNewItem(
 //**** NSOutlineViewDataSource ****
 //========== outlineView:objectValueForTableColumn:byItem: =====================
 //
-// Purpose:		Returns the representation of item given for the given table 
-//				column.
+// Purpose:		Returns the representation of the given item for the given table
+//				column, as either a string or attributed string object.
 //
 //==============================================================================
 - (id)			outlineView:(NSOutlineView *)outlineView
@@ -3919,48 +3919,40 @@ void AppendChoicesToNewItem(
 #pragma mark -
 #pragma mark Delegate
 
-//**** NSOutlineView ****
-//========== outlineView:willDisplayCell:forTableColumn:item: ==================
-//
-// Purpose:		Returns the representation of item given for the given table 
-//				column.
-//
-//==============================================================================
-- (void) outlineView:(NSOutlineView *)outlineView
-	 willDisplayCell:(id)cell
-	  forTableColumn:(NSTableColumn *)tableColumn
-				item:(id)item
-{
+//========== outlineView:viewForTableColumn:item: ==============================
+/// Returns the representation of the given item for the given table column.
+- (NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(NSTableColumn *)tableColumn item:(id)item {
+	NSTableCellView *cellView = [outlineView makeViewWithIdentifier:@"FileOutlineCellView" owner:nil];
+	// Either an NSString, or an NSAttributedString.
+	id theText = [self outlineView:outlineView objectValueForTableColumn:tableColumn byItem:item];
+	
 	NSString	*imageName = nil;
 	NSImage		*theImage;
 	
 	if([item isKindOfClass:[LDrawDirective class]])
 		imageName = [item iconName];
-		
+	
 	if(imageName == nil || [imageName isEqualToString:@""])
 		theImage = nil;
 	else
 		theImage = [NSImage imageNamed:imageName];
-		
-	[(IconTextCell *)cell setImage:theImage];
 	
-}//end outlineView:willDisplayCell:forTableColumn:item:
-
+	cellView.imageView.image = theImage;
+	cellView.textField.objectValue = theText;
+	
+	return cellView;
+}
 
 //**** NSOutlineView ****
 //========== outlineViewSelectionDidChange: ====================================
-//
-// Purpose:		We have selected a different something in the file contents.
-//				We need to show it as selected in the OpenGL viewing area.
-//				This means we may have to change the active model or step in 
-//				order to display the selection.
-//
-//==============================================================================
+/// We have selected a different something in the file contents. We need to show
+/// it as selected in the OpenGL viewing area. This means we may have to change
+/// the active model or step in order to display the selection.
 - (void)outlineViewSelectionDidChange:(NSNotification *)notification
 {
-	NSOutlineView   *outlineView        = [notification object];
+	NSOutlineView   *outlineView        = notification.object;
 	NSArray         *selectedObjects    = [self selectedObjects];
-	id              lastSelectedItem    = [outlineView itemAtRow:[outlineView selectedRow]];
+	id              lastSelectedItem    = [outlineView itemAtRow:outlineView.selectedRow];
 	LDrawMPDModel   *selectedModel      = [self selectedModel];
 	LDrawStep       *selectedStep       = [self selectedStep];
 	NSInteger		selectedStepIndex	= 0;
@@ -3971,19 +3963,19 @@ void AppendChoicesToNewItem(
 	// selecting parts can trigger OpenGL commands, we should make sure we have 
 	// a context active, but we should also restore the current context when 
 	// we're done. 
-	NSOpenGLContext *originalContext = [NSOpenGLContext currentContext];
+	NSOpenGLContext *originalContext = NSOpenGLContext.currentContext;
 	[[LDrawApplication sharedOpenGLContext] makeCurrentContext];
 	
 	//Deselect all the previously-selected directives
 	// (clears the internal directive flag used for drawing)
-	for(counter = 0; counter < [self->selectedDirectives count]; counter++)
-		[[selectedDirectives objectAtIndex:counter] setSelected:NO];
+	for(counter = 0; counter < self->selectedDirectives.count; counter++)
+		[selectedDirectives[counter] setSelected:NO];
 	
 	//Tell the newly-selected directives that they just got selected.
 	[selectedDirectives release];
 	selectedDirectives = [selectedObjects retain];
-	for(counter = 0; counter < [self->selectedDirectives count]; counter++)
-		[[selectedDirectives objectAtIndex:counter] setSelected:YES];
+	for(counter = 0; counter < self->selectedDirectives.count; counter++)
+		[selectedDirectives[counter] setSelected:YES];
 	
 	// Update things which need to take into account the entire selection.
     // The order matters: the search panel unregisters itself as the active colorwell
@@ -4084,8 +4076,8 @@ void AppendChoicesToNewItem(
 //**** LDrawGLView ****
 //========== LDrawGLView:acceptDrop: ===========================================
 //
-// Purpose:		The user has deposited some drag-anddrop parts into an 
-//			    LDrawGLView. Now they need to be imported into the model. 
+// Purpose:		The user has deposited some drag-and-drop parts into an
+//			    LDrawGLView. Now they need to be imported into the model.
 //
 // Notes:		Just like in -duplicate: and 
 //				-outlineView:acceptDrop:item:childIndex:, we appropriate the 
@@ -4675,10 +4667,12 @@ void AppendChoicesToNewItem(
 //				notification on our document after many change notifications
 //				on parts.  See docChanged for more.
 //
+// Notification: LDrawDirectiveDidChangeNotification
+//
 //==============================================================================
 - (void) partChanged:(NSNotification *)notification
 {
-	LDrawDirective *changedDirective = [notification object];
+	LDrawDirective *changedDirective = notification.object;
 	LDrawFile *docContents = [self documentContents];
 
 	// Since the document sends out part changes too, make sure it isn't the doc
@@ -4695,10 +4689,10 @@ void AppendChoicesToNewItem(
 			// to refresh drawing, and we ned it to redo our menus.
 			NSNotification * doc_notification = 
 				[NSNotification notificationWithName:LDrawDirectiveDidChangeNotification 
-											 object:docContents];
+											  object:docContents];
 		
 			// Notification is queued and coalesced; 
-			[[NSNotificationQueue defaultQueue] 
+			[NSNotificationQueue.defaultQueue
 				   enqueueNotification:doc_notification 
 						  postingStyle:NSPostASAP 
 						 coalesceMask:NSNotificationCoalescingOnName|NSNotificationCoalescingOnSender
@@ -4719,26 +4713,42 @@ void AppendChoicesToNewItem(
 //				operation.  This is where we do the expensive stuff like
 //				resync the hierarchy and update the menus.
 //
+// Notification: LDrawDirectiveDidChangeNotification
+//
 //==============================================================================
 - (void)docChanged:(NSNotification *)notification
 {
 	// This functionality was in partChanged through Bricksmith 3.0.
-	[fileContentsOutline selectObjects:selectedDirectives];
-	[fileContentsOutline reloadData];
-
-	[self updateInspector];
-
-	// Technically we don't need to redo the model menu on every UI edit.  In the
-	// future we should add specific notifications or directive observations to
-	// detect this case. But 3.0 and earlier ran this once for every edit (when
-	// part changes were escalated to doc changes) and then twice on real model
-	// changes (because we'd hit the case on the model and again on the doc).
-	//
-	// In practice it doesn't matter - for now, for the test cases we have,
-	// rebuilding the menus is relatively cheap.  A user can only add so many
-	// MPD parts to a file without going completely insane.
-	[self addModelsToMenus];
-
+	// -------------------------------------------------------------
+	// Due to using a view-based outline (post-Bricksmith 3.1), this had to
+	// change in order to work properly with the behavioral change of outline
+	// views regarding selection across calls to -reloadData.
+	
+	// We don't want -selectObjects: below to bring us to an infinite loop
+	// because the outline view is sending out *another* selection changed
+	// notification!
+	if (!self.isMidSelection) {
+		self.isMidSelection = YES;
+		[fileContentsOutline reloadData];
+		
+		[self updateInspector];
+		
+		[fileContentsOutline selectObjects:selectedDirectives];
+		
+		// Technically we don't need to redo the model menu on every UI edit.  In the
+		// future we should add specific notifications or directive observations to
+		// detect this case. But 3.0 and earlier ran this once for every edit (when
+		// part changes were escalated to doc changes) and then twice on real model
+		// changes (because we'd hit the case on the model and again on the doc).
+		//
+		// In practice it doesn't matter - for now, for the test cases we have,
+		// rebuilding the menus is relatively cheap.  A user can only add so many
+		// MPD parts to a file without going completely insane.
+		[self addModelsToMenus];
+		
+		// Let's not forget to allow future changes!
+		self.isMidSelection = NO;
+	}
 }//end docChanged:
 
 

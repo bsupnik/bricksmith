@@ -43,9 +43,9 @@
 	NSInteger           counter             = 0;
 	
 	//Gather up the indices of the pasted objects.
-	for(counter = 0; counter < [objects count]; counter++)
+	for(counter = 0; counter < objects.count; counter++)
 	{
-		currentObject = [objects objectAtIndex:counter];
+		currentObject = objects[counter];
 		indexOfObject = [self rowForItem:currentObject];
 		[indexesToSelect addIndex:indexOfObject];
 	}

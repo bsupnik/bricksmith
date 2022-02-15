@@ -44,7 +44,7 @@
 // class LDrawDocument
 //
 ////////////////////////////////////////////////////////////////////////////////
-@interface LDrawDocument : NSDocument <ViewportArrangerDelegate>
+@interface LDrawDocument : NSDocument <ViewportArrangerDelegate, NSOutlineViewDataSource, NSOutlineViewDelegate>
 {
 	IBOutlet DocumentToolbarController	*toolbarController;
 	IBOutlet NSObjectController			*bindingsController;
@@ -85,6 +85,11 @@
 		LDrawGLView		*mostRecentLDrawView; //file graphic view which most recently had focus. Weak link.
 		NSArray		*	markedSelection;		// if we are mid-marquee selection, this is an array of the previously selected directives before drag started
 }
+
+/// Whether the document is in the process of updating the current selection in
+/// the outline view. This is used to prevent an infinite loop of selection
+/// change callbacks, specifically in -[LDrawDocument docChanged:].
+@property (nonatomic) BOOL isMidSelection;
 
 // Accessors
 - (LDrawFile *) documentContents;

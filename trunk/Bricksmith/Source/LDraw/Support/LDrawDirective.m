@@ -785,10 +785,10 @@
 //==============================================================================
 - (void) noteNeedsDisplay
 {
-	[[NSNotificationCenter defaultCenter]
+	[NSNotificationCenter.defaultCenter
 					postNotificationName:LDrawDirectiveDidChangeNotification
 								  object:self];
-}//end setNeedsDisplay
+}//end noteNeedsDisplay
 
 
 //========== registerUndoActions: ==============================================
