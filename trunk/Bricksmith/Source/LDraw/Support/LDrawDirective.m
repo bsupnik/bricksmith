@@ -45,7 +45,7 @@
     iconName = @"";
 
 	#if NEW_SET
-		LDrawFastSetInit(observers);
+		observers = [[FastSet alloc] init];
 	#else
 		observers = [[NSMutableSet alloc] init];
 	#endif
@@ -128,7 +128,7 @@
 	self = [super init];
 
 	#if NEW_SET
-		LDrawFastSetInit(observers);
+		observers = [[FastSet alloc] init];
 	#else
 		observers = [[NSMutableArray alloc] init];
 	#endif
@@ -814,7 +814,7 @@
 - (void) addObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetInsert(observers, observer);	
+		[observers addObject:observer];
 	#else
 	if(observers == nil)
 		printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -833,8 +833,8 @@
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetRemove(observers,observer);
-	#else	
+		[observers removeObject:observer];
+	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");
 		//printf("directive %p told to lose observer %p.\n", self,observer);
@@ -905,8 +905,12 @@
 - (void) dealloc
 {
 	#if NEW_SET
-		MESSAGE_FOR_SET(observers,LDrawObserver,observableSaysGoodbyeCruelWorld:self);
-		LDrawFastSetDealloc(observers);
+		for (id<LDrawObserver> o in observers.objectEnumerator)
+		{
+			[o observableSaysGoodbyeCruelWorld:self];
+		}
+		[observers release];
+		observers = nil;
 	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -942,7 +946,11 @@
 - (void) sendMessageToObservers:(MessageT) msg
 {
 	#if NEW_SET
-		MESSAGE_FOR_SET(observers,LDrawObserver,receiveMessage:msg who:self);
+		for (NSValue * o in observers.objectEnumerator)
+		{
+			id<LDrawObserver> oo = [o pointerValue];
+			[oo receiveMessage:msg who:self];
+		}
 	#else
 		NSSet * orig = [NSSet setWithSet:observers];
 		for (NSValue * o in orig)
@@ -977,8 +985,12 @@
 		invalFlags |= newFlags;
 		
 		#if NEW_SET
-			MESSAGE_FOR_SET(observers,LDrawObserver,statusInvalidated:newFlags who:self);
-		#else		
+			for (NSValue * o in observers.objectEnumerator)
+			{
+				id<LDrawObserver> oo = [o pointerValue];
+                [oo statusInvalidated:newFlags who:self];
+			}
+		#else
 			NSSet * orig = [NSSet setWithSet:observers];
 			for (NSValue * o in orig)
 			{

@@ -12,6 +12,7 @@
 
 #import "MatrixMath.h"
 #import "LDrawFastSet.h"
+#import "FastSet.h"
 #import "LDrawRenderer.h"
 
 // This uses the hacky C wrapper around NSSet to improve performance.
@@ -177,7 +178,7 @@ typedef void(^LDrawPartVisitor)(LDrawPart *);
 	@private
 	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
 	#if NEW_SET
-		LDrawFastSet	observers;
+		FastSet		   *observers;
 	#else
 		NSMutableSet   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
 	#endif
