@@ -1778,8 +1778,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	[displayName	release];
 	[referenceName	release];
 	
-	cacheDrawable = (id) 0xDEADBEEF;
-	cacheModel = (id) 0xDEADBEEF;
+	cacheDrawable = nil;
+	cacheModel = nil;
 	
 	[super dealloc];
 	

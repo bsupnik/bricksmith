@@ -117,17 +117,19 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSUInteger		contentStartIndex	= 0;
-	NSRange			stepRange			= range;
-	NSUInteger		maxLineIndex		= 0;
-	NSUInteger      insertIndex			= 0;
-	id *			substeps			= NULL;
+	NSUInteger			contentStartIndex	= 0;
+	NSRange				stepRange			= range;
+	NSUInteger			maxLineIndex		= 0;
+	NSUInteger			insertIndex			= 0;
+	__strong LDrawStep	**substeps			= NULL;
 	
 	//Start with a nice blank model.
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	self->cachedBounds = InvalidBox;
 
-	substeps = calloc(range.length, sizeof(LDrawDirective*));
+	// Creation a C array of retained pointers under ARC
+	// (see Transitioning to ARC Release Notes for details)
+	substeps = (__strong LDrawStep **)calloc(range.length, sizeof(LDrawStep *));
 	
 	//Try and get the header out of the file. If it's there, the lines returned 
 	// will not contain it.
@@ -173,6 +175,9 @@
 			
 			[self addStep:step];
 			[step release];
+			
+			// Tell ARC to release the object
+			substeps[counter] = nil;
 		}
 
 		free(substeps);

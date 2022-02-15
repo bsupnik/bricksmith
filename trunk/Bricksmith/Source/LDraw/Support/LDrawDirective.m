@@ -47,7 +47,7 @@
 	#if NEW_SET
 		LDrawFastSetInit(observers);
 	#else
-		observers = [[NSMutableArray alloc] init];
+		observers = [[NSMutableSet alloc] init];
 	#endif
 	return self;
 	
@@ -922,7 +922,7 @@
 			}
 		}
 		[observers release];
-		observers = (id) 0xDEADBEEF;
+		observers = nil;
 	#endif
 
 

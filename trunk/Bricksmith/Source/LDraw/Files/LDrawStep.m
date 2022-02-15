@@ -106,15 +106,19 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSString        *currentLine        = nil;
-	Class           CommandClass        = Nil;
-	NSRange         commandRange        = range;
-	id              *directives         = calloc(range.length, sizeof(LDrawDirective*));
-	NSUInteger      lineIndex           = 0;
-	NSUInteger      insertIndex         = 0;
+	NSString				*currentLine        = nil;
+	Class					CommandClass        = Nil;
+	NSRange					commandRange        = range;
+	__strong LDrawDirective	**directives        = NULL;
+	NSUInteger				lineIndex           = 0;
+	NSUInteger				insertIndex         = 0;
 		
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	
+	// Creation a C array of retained pointers under ARC
+	// (see Transitioning to ARC Release Notes for details)
+	directives = (__strong LDrawDirective **)calloc(range.length, sizeof(LDrawDirective *));
+
 	cachedBounds = InvalidBox;
 	
 	dispatch_group_t    stepDispatchGroup   = NULL;
@@ -210,6 +214,9 @@
 			
 			[self addDirective:currentDirective];
 			[currentDirective release];
+			
+			// Tell ARC to release the object
+			directives[counter] = nil;
 		}
 		free(directives);
 		

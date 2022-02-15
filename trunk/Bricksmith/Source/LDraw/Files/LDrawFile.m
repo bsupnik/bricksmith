@@ -145,15 +145,17 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSRange         modelRange      = range;
-	NSUInteger      modelStartIndex = range.location;
-	id              *submodels      = NULL;
-	NSUInteger      insertIndex     = 0;
+	NSRange					modelRange      = range;
+	NSUInteger				modelStartIndex = range.location;
+	__strong LDrawMPDModel  **submodels     = NULL;
+	NSUInteger				insertIndex     = 0;
 	
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	if(self)
 	{
-		submodels = calloc(range.length, sizeof(LDrawDirective*));
+		// Creation a C array of retained pointers under ARC
+		// (see Transitioning to ARC Release Notes for details)
+		submodels = (__strong LDrawMPDModel **)calloc(range.length, sizeof(LDrawMPDModel *));
 		dispatch_group_t    dispatchGroup = NULL;
 #if USE_BLOCKS		
 		dispatch_queue_t    queue           = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);	
@@ -204,6 +206,9 @@
 				
 				[self addSubmodel:currentModel];
 				[currentModel release];
+				
+				// Tell ARC to release the object
+				submodels[counter] = nil;
 			}
 			
 			if([[self submodels] count] > 0)

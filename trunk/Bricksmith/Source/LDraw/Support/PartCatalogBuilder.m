@@ -359,6 +359,8 @@
 //==============================================================================
 - (NSMutableDictionary *) catalogInfoForFileAtPath:(NSString *)filepath
 {
+    NSMutableDictionary *catalogInfo        = nil;
+    
 	NSAutoreleasePool	*pool				= [[NSAutoreleasePool alloc] init];
 
 	NSString			*fileContents		= [LDrawUtilities stringFromFile:filepath];
@@ -368,8 +370,6 @@
 	NSString			*partDescription	= nil;
 	NSString			*category			= nil;
 	NSMutableArray		*keywords			= nil;
-	
-	NSMutableDictionary *catalogInfo		= nil;
 	
 	
 	// Read the first line of the file. Make sure the file is parsable.
