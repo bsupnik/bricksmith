@@ -620,7 +620,7 @@ static PartLibrary *SharedPartLibrary = nil;
 			// until the parse is complete on whatever thread is actually 
 			// doing it. 
 			dispatch_group_enter(parentGroup);
-			[requestingGroups addObject:[NSValue valueWithPointer:parentGroup]];
+			[requestingGroups addObject:[NSValue valueWithPointer:CFBridgingRetain(parentGroup)]];
 #endif
 			
 			// Nobody has started parsing it yet, so we win! Parse from disk.
@@ -720,7 +720,7 @@ static PartLibrary *SharedPartLibrary = nil;
 			// until the parse is complete on whatever thread is actually 
 			// doing it. 
 			dispatch_group_enter(parentGroup);
-			[requestingGroups addObject:[NSValue valueWithPointer:parentGroup]];
+			[requestingGroups addObject:[NSValue valueWithPointer:CFBridgingRetain(parentGroup)]];
 #endif
 			
 			// Nobody has started parsing it yet, so we win! Parse from disk.
