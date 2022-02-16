@@ -24,7 +24,7 @@
 //------------------------------------------------------------------------------
 static NSInteger sort_by_part_description(id a, id b, void * ref)
 {
-	PartLibrary * pl = (PartLibrary *) ref;
+	PartLibrary * pl = (__bridge PartLibrary *) ref;
 	NSString * aa = a;
 	NSString * bb = b;
 	

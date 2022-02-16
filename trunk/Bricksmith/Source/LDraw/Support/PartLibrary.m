@@ -642,7 +642,7 @@ static PartLibrary *SharedPartLibrary = nil;
 						^{
 							if(image != nil)
 							{
-								[self->loadedImages setObject:(id)image forKey:imageName];
+								[self->loadedImages setObject:(__bridge id)image forKey:imageName];
 							}
 							
 							// Notify waiting threads we are finished parsing this part.
@@ -661,7 +661,7 @@ static PartLibrary *SharedPartLibrary = nil;
 					image = (CGImageRef)[self readImageAtPath:imagePath asynchronously:NO completionHandler:NULL];
 					if(image != nil)
 					{
-						[self->loadedImages setObject:(id)image forKey:imageName];
+						[self->loadedImages setObject:(__bridge id)image forKey:imageName];
 					}
 #endif //-----------------------------------------------------------------------
 #if USE_BLOCKS
@@ -792,7 +792,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		image		= [self readImageAtPath:imagePath asynchronously:NO completionHandler:NULL];
 		
 		if(image != nil)
-			[self->loadedImages setObject:(id)image forKey:imageName];
+			[self->loadedImages setObject:(__bridge id)image forKey:imageName];
 	}
 	
 	return image;
@@ -879,7 +879,7 @@ static PartLibrary *SharedPartLibrary = nil;
 		{
 			image = [self readImageAtPath:testPath asynchronously:NO completionHandler:NULL];
 			if(image != nil)
-				[self->loadedImages setObject:(id)image forKey:imageName];
+				[self->loadedImages setObject:(__bridge id)image forKey:imageName];
 		}
 	}
 	

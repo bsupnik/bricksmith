@@ -293,7 +293,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignIn:(NSString *) docPath withFile:(LDrawFile *) file
 {
-	if([serviceTables objectForKey:[NSValue valueWithPointer:file]] != nil)
+	if([serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(file)]] != nil)
 		return;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
@@ -329,7 +329,7 @@ static ModelManager *SharedModelManager = nil;
 	} while(did_drop);
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
-	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
+	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:(__bridge const void *)(file)]];
 	[newTable release];
 }//end documentSignIn:withFile:
 
@@ -344,7 +344,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignInInternal:(NSString *) docPath withFile:(LDrawFile *) file
 {
-	if([serviceTables objectForKey:[NSValue valueWithPointer:file]] != nil)
+	if([serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(file)]] != nil)
 		return;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
@@ -353,7 +353,7 @@ static ModelManager *SharedModelManager = nil;
 	NSString *	docFileName 	= [docPath lastPathComponent];
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
-	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
+	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:(__bridge const void *)(file)]];
 	[newTable release];
 }
 
@@ -367,7 +367,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignOut:(LDrawFile *) doc
 {
-	ModelServiceTable * t = [serviceTables objectForKey:[NSValue valueWithPointer:doc]];
+	ModelServiceTable * t = [serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(doc)]];
 	if(t)
 	{
 		//NSLog(@"Accepting sign-out for doc %p\n", doc);
@@ -397,7 +397,7 @@ static ModelManager *SharedModelManager = nil;
 		// it from the dictionary, now WE own the last reference, and our release
 		// triggers the recursive-dealloc.  This happens outside a CF container call.
 		[t retain];
-		[serviceTables removeObjectForKey:[NSValue valueWithPointer:doc]];
+		[serviceTables removeObjectForKey:[NSValue valueWithPointer:(__bridge const void *)(doc)]];
 		[t release];
 	}
 }
@@ -415,7 +415,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (LDrawModel *) requestModel:(NSString *) partName withDocument:(LDrawFile *) whoIsAsking
 {
-	ModelServiceTable * table = [serviceTables objectForKey:[NSValue valueWithPointer:whoIsAsking]];
+	ModelServiceTable * table = [serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(whoIsAsking)]];
 	if(table == nil) 
 	{
 		//NSLog(@"    ignoring part lookup on part %@ because file %p is unknown.\n", partName, whoIsAsking);
