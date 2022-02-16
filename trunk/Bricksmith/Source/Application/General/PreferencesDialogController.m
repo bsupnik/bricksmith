@@ -1291,7 +1291,8 @@ PreferencesDialogController *preferencesDialog = nil;
 	[generalTabContentView	release];
 	[preferencesWindow		release];
 	[blankContent			release];
-	[preferencesDialog		release];
+    
+	CFRelease((__bridge CFTypeRef)(preferencesDialog));
 	
 	//clear out our global preferences controller. 
 	// It will be reinitialized when needed.
