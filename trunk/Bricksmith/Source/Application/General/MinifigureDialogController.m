@@ -118,28 +118,6 @@
 	[_minifigurePreview.glView	setAutosaveName:@"MinifigureGeneratorView"];
 	[_minifigurePreview.glView	restoreConfiguration];
 	
-	// Top-level nib object are never released. We assign them to strong properties,
-	// so we have to let them go here.
-	[_objectController autorelease];
-	[_degreesFormatter autorelease];
-	[_hatsController autorelease];
-	[_headsController autorelease];
-	[_necksController autorelease];
-	[_torsosController autorelease];
-	[_rightArmsController autorelease];
-	[_rightHandsController autorelease];
-	[_rightHandAccessoriesController autorelease];
-	[_leftArmsController autorelease];
-	[_leftHandsController autorelease];
-	[_leftHandAccessoriesController autorelease];
-	[_hipsController autorelease];
-	[_rightLegsController autorelease];
-	[_rightLegAccessoriesController autorelease];
-	[_leftLegsController autorelease];
-	[_leftLegAccessoriesController autorelease];
-
-	[_minifigureGeneratorPanel autorelease];
-	
 }//end awakeFromNib
 
 

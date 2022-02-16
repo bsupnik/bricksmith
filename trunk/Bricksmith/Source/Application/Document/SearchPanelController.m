@@ -345,7 +345,6 @@ SearchPanelController *sharedSearchPanel = nil;
 //==============================================================================
 - (void) windowWillClose:(NSNotification *)notification
 {
-	[self autorelease];
 	sharedSearchPanel = nil;
 }
 

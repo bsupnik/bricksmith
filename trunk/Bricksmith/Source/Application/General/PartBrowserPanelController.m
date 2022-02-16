@@ -110,7 +110,6 @@ static PartBrowserPanelController *sharedPartBrowserPanel = nil;
 {
 	//Make sure our memory is all released.
 	sharedPartBrowserPanel = nil;
-	[self autorelease];
 	
 }//end windowWillClose:
 

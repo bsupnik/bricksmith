@@ -86,10 +86,6 @@ typedef enum
 - (void) awakeFromNib
 {
 	[super awakeFromNib];
-	
-	[_formatterBasic autorelease];
-	[_formatterAngle autorelease];
-	[_formatterScale autorelease];
 }
 
 
