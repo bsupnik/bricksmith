@@ -23,6 +23,7 @@
 #import "LDrawColor.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
+#import "LDrawMPDModel.h"
 #import "LDrawPaths.h"
 
 @implementation ColorLibrary

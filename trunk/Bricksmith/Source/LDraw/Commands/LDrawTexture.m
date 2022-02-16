@@ -11,6 +11,7 @@
 
 #import "LDrawDragHandle.h"
 #import "LDrawKeywords.h"
+#import "LDrawStep.h"
 #import "LDrawUtilities.h"
 #import "PartLibrary.h"
 #import "StringCategory.h"

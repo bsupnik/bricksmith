@@ -26,6 +26,7 @@
 #import "LDrawDragHandle.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
+#import "LDrawMPDModel.h"
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"
