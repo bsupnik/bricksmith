@@ -1709,16 +1709,21 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		NSString *  fileContents    = [LDrawUtilities stringFromFile:partPath];
 		NSArray * 	lines           = [fileContents separateByLine];
 		
-		dispatch_group_t parseGroup = dispatch_group_create();
+		dispatch_group_t parseGroup = NULL;
+#if USE_BLOCKS
+		parseGroup 					= dispatch_group_create();
+#endif
 		LDrawFile * parsedFile      = [[LDrawFile alloc] initWithLines:lines
 															   inRange:NSMakeRange(0, [lines count])
 														   parentGroup:parseGroup];
 
+#if USE_BLOCKS
 		// The part parser is insanely dangerous: it parses on a dispatch group and fills in your
 		// NS containers in the background later, with no locks. We use a dispatch group to
 		// wait until the entire mess of loading is done, synchronously, so the part is safe to look at.
 		dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
 		dispatch_release(parseGroup);
+#endif
 
 		// We're going to go get all of the directives and try to find EXACTLY one LDrawPart.
 		NSArray * 	directives = [parsedFile allEnclosedElements];
