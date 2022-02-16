@@ -929,9 +929,6 @@ PreferencesDialogController *preferencesDialog = nil;
 	// we have to track in manually.  
 	[self->preferencesWindow saveFrameUsingName:PREFERENCES_WINDOW_AUTOSAVE_NAME];
 	
-	//Make sure our memory is all released.
-	[preferencesDialog autorelease];
-	
 	return YES;
 	
 }//end windowShouldClose:
@@ -1294,6 +1291,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	[generalTabContentView	release];
 	[preferencesWindow		release];
 	[blankContent			release];
+	[preferencesDialog		release];
 	
 	//clear out our global preferences controller. 
 	// It will be reinitialized when needed.

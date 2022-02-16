@@ -106,7 +106,7 @@
 	
 	if([lines count] == 0)
 	{
-		[self autorelease];
+		[self release];
 		self = nil;
 	}
 	

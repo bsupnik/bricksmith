@@ -45,7 +45,7 @@
 	//this takes the place of calling [super init]
 	// Note that connections in the Nib file must be made 
 	// to the PieceCountPanel, not to the File's Owner!
-	[self autorelease];
+	[self release];
 	
 	return dialogPanel;
 	

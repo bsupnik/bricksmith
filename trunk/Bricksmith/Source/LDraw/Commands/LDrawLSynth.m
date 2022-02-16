@@ -1008,11 +1008,12 @@
 
     [task release];
     [data release];
-    [lsynthOutput autorelease];
 
     // Split the output into lines
     NSMutableArray *stringsArray = [NSMutableArray arrayWithArray:[lsynthOutput
             componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]]];
+
+    [lsynthOutput release];
 
     // Process the synthesized parts
     BOOL extract = NO;
