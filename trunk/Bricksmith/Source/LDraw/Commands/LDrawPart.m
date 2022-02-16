@@ -1720,8 +1720,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
 		dispatch_release(parseGroup);
 
-		[parsedFile autorelease];	// Don't keep this around , we only want it for its part.
-
 		// We're going to go get all of the directives and try to find EXACTLY one LDrawPart.
 		NSArray * 	directives = [parsedFile allEnclosedElements];
 		NSUInteger 	count = [directives count];
@@ -1754,6 +1752,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			Matrix4 new_loc = Matrix4Multiply([redirect transformationMatrix], [self transformationMatrix]);
 			Matrix4GetGLMatrix4(new_loc, glTransformation);
 		}
+		
+		[parsedFile release];
 	}
 }// end followRedirectionAndUpdate
 
