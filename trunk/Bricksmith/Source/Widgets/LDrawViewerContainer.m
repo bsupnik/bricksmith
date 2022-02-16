@@ -57,24 +57,25 @@
 		
 		if(showsScrollbars)
 		{
-			_horizontalScroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, 50, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy])];
+			NSScroller *scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, 50, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy])];
+			_horizontalScroller = scroller;
 			_horizontalScroller.scrollerStyle = NSScrollerStyleLegacy;
 			_horizontalScroller.controlSize = NSControlSizeSmall;
 			_horizontalScroller.enabled = YES;
 			_horizontalScroller.target = self;
 			_horizontalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_horizontalScroller];
+			[scroller release];
 			
-			_verticalScroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy], 50)];
+			scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy], 50)];
+			_verticalScroller = scroller;
 			_verticalScroller.scrollerStyle = NSScrollerStyleLegacy;
 			_verticalScroller.controlSize = NSControlSizeSmall;
 			_verticalScroller.enabled = YES;
 			_verticalScroller.target = self;
 			_verticalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_verticalScroller];
-																				
-			[_horizontalScroller release];
-			[_verticalScroller release];
+			[scroller release];
 		}
 		else
 		{
