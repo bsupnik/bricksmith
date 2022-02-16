@@ -11,7 +11,6 @@
 #import <Foundation/Foundation.h>
 
 #import "MatrixMath.h"
-#import "LDrawFastSet.h"
 #import "FastSet.h"
 #import "LDrawRenderer.h"
 

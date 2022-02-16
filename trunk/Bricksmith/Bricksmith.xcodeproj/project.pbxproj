@@ -256,7 +256,6 @@
 		D6EDBB4816508D7200B4062B /* LDrawBDPAllocator.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */; };
 		D6EDBC251650B9E200B4062B /* LDrawDisplayList.h in Headers */ = {isa = PBXBuildFile; fileRef = D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */; };
 		D6EDBC261650B9E200B4062B /* LDrawDisplayList.m in Sources */ = {isa = PBXBuildFile; fileRef = D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */; };
-		D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D6FC72121604EBB8005A404E /* LDrawFastSet.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -575,7 +574,6 @@
 		D6EDBB4616508D7200B4062B /* LDrawBDPAllocator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawBDPAllocator.m; sourceTree = "<group>"; };
 		D6EDBC231650B9E200B4062B /* LDrawDisplayList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawDisplayList.h; sourceTree = "<group>"; };
 		D6EDBC241650B9E200B4062B /* LDrawDisplayList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LDrawDisplayList.m; sourceTree = "<group>"; };
-		D6FC72121604EBB8005A404E /* LDrawFastSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LDrawFastSet.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -635,7 +633,6 @@
 				0B1DA5A313172DA700E14960 /* LDrawDirective.m */,
 				0B27CFA81318AA0F005C7E1A /* LDrawDragHandle.h */,
 				0B27CFA91318AA0F005C7E1A /* LDrawDragHandle.m */,
-				D6FC72121604EBB8005A404E /* LDrawFastSet.h */,
 				D61912FF17F004A300B5DF44 /* LDrawGLCamera.h */,
 				D619130017F004A300B5DF44 /* LDrawGLCamera.m */,
 				0B3B76AA13DB86AE007CCC5D /* LDrawGLRenderer.h */,
@@ -1147,7 +1144,6 @@
 				0B6122ED153516600085F944 /* LDrawTexture.h in Headers */,
 				D6EC01BE15A54B3B0004CEB8 /* OpenGLUtilities.h in Headers */,
 				D6CB41E015E2AA6C00730E2A /* ModelManager.h in Headers */,
-				D6FC72131604EBB8005A404E /* LDrawFastSet.h in Headers */,
 				95D893B816555F3E00AA055B /* LSynthConfiguration.h in Headers */,
 				95D893CA16569CFD00AA055B /* LDrawLSynth.h in Headers */,
 				D6EDB983164DEB0000B4062B /* LDrawRenderer.h in Headers */,
