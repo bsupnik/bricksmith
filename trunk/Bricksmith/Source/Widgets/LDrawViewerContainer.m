@@ -34,10 +34,11 @@
 {
 	self = [super initWithFrame:frameRect];
 	
-	_glView = [[LDrawGLView alloc] initWithFrame:self.bounds];
+    LDrawGLView *glView = [[LDrawGLView alloc] initWithFrame:self.bounds];
+    _glView = glView;
 	[self addSubview:_glView];
 	
-	[_glView release];
+	[glView release];
 
 	return self;
 }
