@@ -213,7 +213,6 @@ int floatNearGrid(float v, float grid, float epsi)
 	{
 		NSLog(@"the part %@ was fatally invalid", [lines objectAtIndex:range.location]);
 		NSLog(@" raised exception %@", [exception name]);
-		[self release];
 		self = nil;
 	}
 	
@@ -953,13 +952,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 	NSString            *newReferenceName   = [newPartName lowercaseString];
 	dispatch_group_t    parseGroup          = NULL;
 
-	[newPartName retain];
-	[displayName release];
-	
 	displayName = newPartName;
 	
-	[newReferenceName retain];
-	[referenceName release];
 	referenceName = newReferenceName;
 
 	assert(parentGroup == NULL || cacheType == PartTypeUnresolved);
@@ -989,7 +983,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		if(parentGroup == NULL)
 		{
 			dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
-			dispatch_release(parseGroup);
 		}
 #endif	
 	}
@@ -1487,7 +1480,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 				   normalTransform:normalTransform
 						 recursive:recursive ];
 		
-		[flatCopy release];
 	}
 
 }//end flattenIntoLines:triangles:quadrilaterals:other:currentColor:
@@ -1722,7 +1714,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		// NS containers in the background later, with no locks. We use a dispatch group to
 		// wait until the entire mess of loading is done, synchronously, so the part is safe to look at.
 		dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
-		dispatch_release(parseGroup);
 #endif
 
 		// We're going to go get all of the directives and try to find EXACTLY one LDrawPart.
@@ -1758,7 +1749,6 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 			Matrix4GetGLMatrix4(new_loc, glTransformation);
 		}
 		
-		[parsedFile release];
 	}
 }// end followRedirectionAndUpdate
 
@@ -1779,14 +1769,8 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 {
 	[self unresolvePart];
 	
-	//release instance variables.
-	[displayName	release];
-	[referenceName	release];
-	
 	cacheDrawable = nil;
 	cacheModel = nil;
-	
-	[super dealloc];
 	
 }//end dealloc
 

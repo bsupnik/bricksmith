@@ -55,7 +55,7 @@
 {
 	LDrawStep *newStep = [[LDrawStep alloc] init];
 	
-	return [newStep autorelease];
+	return newStep;
 	
 }//end emptyStep
 
@@ -85,7 +85,7 @@
 //==============================================================================
 - (id) init
 {
-	[super init];
+	if (!(self = [super init])) return nil;
 	
 	stepRotationType	= LDrawStepRotationNone;
 	rotationAngle		= ZeroPoint3;
@@ -213,7 +213,6 @@
 			currentDirective = directives[counter];
 			
 			[self addDirective:currentDirective];
-			[currentDirective release];
 			
 			// Tell ARC to release the object
 			directives[counter] = nil;
@@ -228,7 +227,6 @@
 			dispatch_group_leave(parentGroup);
 		}
 	});
-	dispatch_release(stepDispatchGroup);
 #endif
 	
 	return self;
@@ -970,11 +968,9 @@
 - (void) removeDirectiveAtIndex:(NSInteger)index
 {
 	[self invalCache:CacheFlagBounds|DisplayList];
-	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
+	LDrawDirective *directive = [[self subdirectives] objectAtIndex:index];
 
 	[super removeDirectiveAtIndex:index];
-	
-	[directive release];
 	
 }//end removeDirectiveAtIndex:
 
@@ -1156,20 +1152,5 @@
 	
 }//end registerUndoActions:
 
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		The Fat Lady has sung.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-	
-}//end dealloc
 
 @end

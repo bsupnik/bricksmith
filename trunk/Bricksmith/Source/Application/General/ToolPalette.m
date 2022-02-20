@@ -127,8 +127,6 @@ ToolPalette *sharedToolPalette = nil;
 		[self->palettePanel orderFront:self];
 	}
 	
-	[self->paletteContents release];
-	
 	return self;
 	
 }//end init
@@ -290,12 +288,10 @@ ToolPalette *sharedToolPalette = nil;
 	switch([theEvent type])
 	{
 		case NSKeyDown:
-			[self->currentKeyCharacters release];
-			self->currentKeyCharacters = [[theEvent charactersIgnoringModifiers] retain];
+			self->currentKeyCharacters = [theEvent charactersIgnoringModifiers];
 			break;
 		
 		case NSKeyUp:
-			[self->currentKeyCharacters release];
 			self->currentKeyCharacters = @"";
 			break;
 			
@@ -387,8 +383,6 @@ ToolPalette *sharedToolPalette = nil;
 	//clear the keys. We don't know what they are now, since Bricksmith wasn't 
 	// active to keep track of them.
 
-	[self->currentKeyCharacters release];
-	
 	self->currentKeyCharacters	= @"";
 	self->currentKeyModifiers	= 0;
 	
@@ -609,10 +603,6 @@ ToolPalette *sharedToolPalette = nil;
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	sharedToolPalette = nil;
-	
-	[palettePanel release];
-
-	[super dealloc];
 	
 }//end dealloc
 

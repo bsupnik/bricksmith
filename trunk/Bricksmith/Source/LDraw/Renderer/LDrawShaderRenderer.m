@@ -170,8 +170,6 @@ static void set_color4fv(GLfloat * c, GLfloat storage[4])
 
 	LDrawBDPDestroy(pool);
 
-	[super dealloc];
-	
 }//end dealloc:
 
 

@@ -440,7 +440,7 @@ static MLCadIni *sharedIniFile = nil;
 	//---------- Parse LSynth Section ------------------------------------------
 	
 	sectionLines = [sections objectForKey:MLCAD_SECTION_LSYNTH];
-	self->lsynthVisibleTypes = [[self lsynthTypesFromLines:sectionLines] retain];
+	self->lsynthVisibleTypes = [self lsynthTypesFromLines:sectionLines];
 
 }//end parseFromPath:
 
@@ -631,7 +631,7 @@ static MLCadIni *sharedIniFile = nil;
 		// In any event, we want to discard these non-entries.
 		if(gotName == YES)
 		{
-			currentPart = [[[LDrawPart alloc] init] autorelease];
+			currentPart = [[LDrawPart alloc] init];
 			
 			[currentPart setTransformationMatrix:&transformation];
 			[currentPart setDisplayName:partName parse:NO inGroup:NULL];
@@ -655,7 +655,7 @@ static MLCadIni *sharedIniFile = nil;
 	
 	//---------- Sort list by part name ----------------------------------------
 	
-	NSSortDescriptor *sortDescriptor = [[[NSSortDescriptor alloc] initWithKey:@"browsingDescription" ascending:YES] autorelease];
+	NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"browsingDescription" ascending:YES];
 	[parts sortUsingDescriptors:[NSArray arrayWithObject:sortDescriptor]];
 	
 	return parts;

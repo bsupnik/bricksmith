@@ -67,8 +67,6 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	[newWell				setState:NSOnState];
 
 	//trade out variable
-	[newWell				retain];
-	[sharedActiveColorWell	release];
 	
 	sharedActiveColorWell = newWell;
 	
@@ -110,18 +108,15 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	GLfloat		 components[4];
 	
 	// assign ivar
-	[newColor retain];
-	[self->color release];
 	self->color = newColor;
 	
 	// Set cached NSColor too
 	[newColor getColorRGBA:components];
 	
-	[self->nsColor release];
-	self->nsColor = [[NSColor colorWithCalibratedRed:components[0]
-											   green:components[1]
-												blue:components[2]
-											   alpha:1.0 ] retain];
+	self->nsColor = [NSColor colorWithCalibratedRed:components[0]
+											  green:components[1]
+											   blue:components[2]
+											  alpha:1.0 ];
 	
 	[self setNeedsDisplay:YES];
 	
@@ -255,10 +250,6 @@ static LDrawColorWell *sharedActiveColorWell = nil;
 	//if we are the active color well, it's time we ceased to be such!
 	if([LDrawColorWell activeColorWell] == self)
 		[LDrawColorWell setActiveColorWell:nil];
-	
-	[self->nsColor	release];
-	
-	[super dealloc];
 	
 }//end dealloc
 

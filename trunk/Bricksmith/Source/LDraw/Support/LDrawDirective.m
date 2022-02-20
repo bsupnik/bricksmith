@@ -73,7 +73,6 @@
 	
 #if USE_BLOCKS
 	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-	dispatch_release(group);
 #endif
 	
 	return directive;
@@ -106,7 +105,6 @@
 	
 	if([lines count] == 0)
 	{
-		[self release];
 		self = nil;
 	}
 	
@@ -682,8 +680,6 @@
 //==============================================================================
 - (void) setIconName:(NSString *)icon
 {
-    [icon retain];
-    [self->iconName release];
     self->iconName = icon;
 }//end setIconName:
 
@@ -909,7 +905,6 @@
 		{
 			[o observableSaysGoodbyeCruelWorld:self];
 		}
-		[observers release];
 		observers = nil;
 	#else
 		if(observers == nil)
@@ -929,9 +924,6 @@
 		observers = nil;
 	#endif
 
-
-
-	[super dealloc];
 	//printf(" %p is clear.\n",self);
 }
 

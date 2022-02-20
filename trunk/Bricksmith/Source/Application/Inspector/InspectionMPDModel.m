@@ -147,8 +147,6 @@
 		// changes, but that's what the Finder does! (And it's easy.)
 		newValue = oldValue;
 		[self->modelNameField setStringValue:newValue];
-		
-		[alert release];
 	}
 	
 	

@@ -121,8 +121,8 @@ SearchPanelController *sharedSearchPanel = nil;
 
     NSArray *colorFilter = nil;
     NSArray *partFilter = nil;
-    NSMutableArray *selectedParts = [[[NSMutableArray alloc] init] autorelease];
-    NSMutableArray *searchableObjects = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *selectedParts = [[NSMutableArray alloc] init];
+    NSMutableArray *searchableObjects = [[NSMutableArray alloc] init];
     
     // First up, adjust the options if there's no selection
     if ([selectedObjects count] == 0) {
@@ -189,7 +189,7 @@ SearchPanelController *sharedSearchPanel = nil;
     
     // Search within the selection, so just take it wholesale
     else {
-        searchableObjects = [[selectedObjects mutableCopy] autorelease];
+        searchableObjects = [selectedObjects mutableCopy];
     }
     
     // Color
@@ -244,7 +244,7 @@ SearchPanelController *sharedSearchPanel = nil;
     // Collect up all potential matches
     //
     
-    NSMutableArray *matchables = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *matchables = [[NSMutableArray alloc] init];
     for (id searchableObject in searchableObjects) {
         // Parts
         if ([searchableObject isKindOfClass:[LDrawPart class]]) {
@@ -266,7 +266,7 @@ SearchPanelController *sharedSearchPanel = nil;
     // Filter potential matches against our criteria
     //
     
-    NSMutableArray *nonMatchingParts = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *nonMatchingParts = [[NSMutableArray alloc] init];
     
     for (id part in matchables) {
         
@@ -374,7 +374,7 @@ SearchPanelController *sharedSearchPanel = nil;
 //==============================================================================
 -(NSArray *)partsInContainer:(LDrawContainer *)container
 {
-    NSMutableArray *parts = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *parts = [[NSMutableArray alloc] init];
     for (id directive in [container subdirectives]) {
         if ([directive isKindOfClass:[LDrawPart class]]) {
             [parts addObject:directive];
@@ -510,7 +510,7 @@ SearchPanelController *sharedSearchPanel = nil;
 - (BOOL)prepareForDragOperation:(id<NSDraggingInfo>)sender
 {
     NSArray        *archivedDirectives = nil;
-    NSMutableArray *directiveNames     = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *directiveNames     = [[NSMutableArray alloc] init];
     NSUInteger      directiveCount     = 0;
 	NSUInteger      counter            = 0;
 	id              currentObject      = nil;
@@ -558,20 +558,5 @@ SearchPanelController *sharedSearchPanel = nil;
     [partName setEditable:YES];
     return YES;
 } // end prepareForDragOperation:
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We're off to the big Brick in the sky
-//
-//==============================================================================
-- (void) dealloc
-{
-    [super dealloc];
-    
-}//end dealloc
 
 @end

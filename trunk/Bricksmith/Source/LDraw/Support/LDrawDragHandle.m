@@ -390,19 +390,4 @@ static const float HandleDiameter	= 7.0;
 }
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Party like it's May 21, 2011!
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-}
-
-
 @end

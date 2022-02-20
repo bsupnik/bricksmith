@@ -106,7 +106,6 @@
 	{	
 		NSLog(@"the line primitive %@ was fatally invalid", [lines objectAtIndex:range.location]);
 		NSLog(@" raised exception %@", [exception name]);
-		[self release];
 		self = nil;
 	}
 	
@@ -550,8 +549,8 @@
 	
 	if(flag == YES)
 	{
-		LDrawDragHandle *handle1 = [[[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1] autorelease];
-		LDrawDragHandle *handle2 = [[[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2] autorelease];
+		LDrawDragHandle *handle1 = [[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1];
+		LDrawDragHandle *handle2 = [[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2];
 		
 		[handle1 setTarget:self];
 		[handle2 setTarget:self];
@@ -563,7 +562,6 @@
 	}
 	else
 	{
-		[self->dragHandles release];
 		self->dragHandles = nil;
 	}
 	
@@ -697,23 +695,6 @@
 	[undoManager setActionName:NSLocalizedString(@"UndoAttributesLine", nil)];
 	
 }//end registerUndoActions:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Sleeping with the fishes.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[dragHandles release];
-	
-	[super dealloc];
-}
 
 
 @end

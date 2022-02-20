@@ -142,22 +142,4 @@ static PartBrowserPanelController *sharedPartBrowserPanel = nil;
 }//end splitView:constrainMinCoordinate:ofSubviewAt:
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We're checking out of this fleabag hotel.
-//
-//==============================================================================
-- (void) dealloc
-{
-	// no need to release top-level nib objects, as this is an NSWindowController
-
-	[super dealloc];
-	
-}//end dealloc
-
-
 @end

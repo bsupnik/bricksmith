@@ -117,7 +117,7 @@
 		if(fallbackRange.location != NSNotFound)
 		{
 			// not even going to bother parsing this. 
-			fallback = [[lines subarrayWithRange:fallbackRange] retain];
+			fallback = [lines subarrayWithRange:fallbackRange];
 		}
 	}
 	
@@ -153,7 +153,7 @@
 	temporary = [decoder decodeBytesForKey:@"planePoint3" returnedLength:NULL];
 	memcpy(&planePoint3, temporary, sizeof(Point3));
 	
-	self->fallback = [[decoder decodeObjectForKey:@"fallback"] retain];
+	self->fallback = [decoder decodeObjectForKey:@"fallback"];
 
 	return self;
 	
@@ -680,8 +680,6 @@
 //==============================================================================
 - (void) setGlossmapName:(NSString *)newName
 {
-	[newName retain];
-	[self->glossmapName release];
 	self->glossmapName = newName;
 }
 
@@ -715,12 +713,7 @@
 	NSString	*newReferenceName   = [newName lowercaseString];
 	dispatch_group_t    parseGroup          = NULL;
 	
-	[newName retain];
-	[self->imageDisplayName release];
 	self->imageDisplayName = newName;
-	
-	[newReferenceName retain];
-	[self->imageReferenceName release];
 	self->imageReferenceName = newReferenceName;
 	
 	// Force the part library to parse the model this part will display. This 
@@ -741,7 +734,6 @@
 		if(parentGroup == NULL)
 		{
 			dispatch_group_wait(parseGroup, DISPATCH_TIME_FOREVER);
-			dispatch_release(parseGroup);
 		}
 #endif	
 	}
@@ -811,9 +803,9 @@
 	
 	if(flag == YES)
 	{
-		LDrawDragHandle *handle1 = [[[LDrawDragHandle alloc] initWithTag:1 position:self->planePoint1] autorelease];
-		LDrawDragHandle *handle2 = [[[LDrawDragHandle alloc] initWithTag:2 position:self->planePoint2] autorelease];
-		LDrawDragHandle *handle3 = [[[LDrawDragHandle alloc] initWithTag:3 position:self->planePoint3] autorelease];
+		LDrawDragHandle *handle1 = [[LDrawDragHandle alloc] initWithTag:1 position:self->planePoint1];
+		LDrawDragHandle *handle2 = [[LDrawDragHandle alloc] initWithTag:2 position:self->planePoint2];
+		LDrawDragHandle *handle3 = [[LDrawDragHandle alloc] initWithTag:3 position:self->planePoint3];
 		
 		[handle1 setTarget:self];
 		[handle2 setTarget:self];
@@ -827,7 +819,6 @@
 	}
 	else
 	{
-		[self->dragHandles release];
 		self->dragHandles = nil;
 	}
 	
@@ -857,13 +848,11 @@
 //==============================================================================
 - (void) removeDirectiveAtIndex:(NSInteger)index
 {
-	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
+	LDrawDirective *directive = [[self subdirectives] objectAtIndex:index];
 	
 	[super removeDirectiveAtIndex:index];
 	
 	[self invalCache:CacheFlagBounds|DisplayList];
-	
-	[directive release];
 	
 }//end removeDirectiveAtIndex:
 
@@ -1130,7 +1119,6 @@
 			[self removeDirectiveAtIndex:counter];
 		}
 		
-		[fallback release];
 		fallback = nil;
 	
 		// Add back all the flattened geometry
@@ -1154,26 +1142,5 @@
 	
 }//end flattenIntoLines:triangles:quadrilaterals:other:currentColor:
 
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Think black fabric. Loosely cut. In a hood.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[fallback release];
-	[imageDisplayName release];
-	[imageReferenceName release];
-	[glossmapName release];
-	
-	[dragHandles release];
-	
-	[super dealloc];
-}
 
 @end

@@ -81,8 +81,6 @@ static NSString				*defaultAuthor		= @"anonymous";
     // LLW: If the incoming nameIn is nil, leave this alone.
     if (nameIn != nil)
     {
-        [nameIn retain];
-        [defaultAuthor release];
         defaultAuthor = nameIn;
     }
 }
@@ -216,7 +214,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 				break;
 		}
 		
-		color = [[[LDrawColor alloc] init] autorelease];
+		color = [[LDrawColor alloc] init];
 		[color setColorCode:LDrawColorCustomRGB];
 		[color setEdgeColorCode:LDrawBlack];
 		[color setColorRGBA:components];
@@ -230,7 +228,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 		if(color == nil)
 		{
 			// This is probably a file-local color. Or a file from the future.
-			color = [[[LDrawColor alloc] init] autorelease];
+			color = [[LDrawColor alloc] init];
 			[color setColorCode:colorCode];
 			[color setEdgeColorCode:LDrawBlack];
 		}
@@ -389,7 +387,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 											   encoding:NSMacOSRomanStringEncoding ];
 	}
 
-	return [fileString autorelease];
+	return fileString;
 	
 }//end stringFromFileData:
 
@@ -594,7 +592,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 //------------------------------------------------------------------------------
 + (CGImageRef) imageAtPath:(NSString *)imagePath
 {
-	NSImage *image = [[[NSImage alloc] initWithContentsOfFile:imagePath] autorelease];
+	NSImage *image = [[NSImage alloc] initWithContentsOfFile:imagePath];
 	
 	return [image CGImageForProposedRect:NULL context:nil hints:nil];
 }

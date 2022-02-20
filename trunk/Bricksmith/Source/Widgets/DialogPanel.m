@@ -45,7 +45,6 @@
 	//this takes the place of calling [super init]
 	// Note that connections in the Nib file must be made 
 	// to the PieceCountPanel, not to the File's Owner!
-	[self release];
 	
 	return dialogPanel;
 	
@@ -94,24 +93,6 @@
 	[objectController setContent:nil];
 	
 }//end okButtonClicked:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Our goose is cooked.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[objectController	release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

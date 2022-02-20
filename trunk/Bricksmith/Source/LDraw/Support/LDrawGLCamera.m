@@ -81,18 +81,6 @@
 }//end init
 
 
-//========== dealloc ===========================================================
-///
-/// @abstract	It's time to kick the bucket and go to meet the great head of
-///				light entertainment in the sky.
-///
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-}//end dealloc
-
-
 //========== setScroller: ======================================================
 ///
 /// @abstract	Specifies a scroller protocol that the camera uses to send

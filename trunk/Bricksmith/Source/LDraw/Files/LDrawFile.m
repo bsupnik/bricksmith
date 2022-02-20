@@ -48,7 +48,7 @@
 	[newFile addSubmodel:firstModel];
 	[newFile setActiveModel:firstModel];
 	
-	return [newFile autorelease];
+	return newFile;
 	
 }//end file
 
@@ -87,7 +87,7 @@
 	newFile = [[LDrawFile alloc] initWithLines:lines
 									   inRange:NSMakeRange(0, [lines count]) ];
 	
-	return [newFile autorelease];
+	return newFile;
 	
 }//end parseFromFileContents:allowThreads:
 
@@ -129,7 +129,6 @@
 		[names addObject:[[model modelName] lowercaseString]];
 	}
 	
-	[self->nameModelDict release];
 	self->nameModelDict = [[NSDictionary alloc] initWithObjects:submodels forKeys:names];
 }
 
@@ -205,7 +204,6 @@
 				currentModel = submodels[counter];
 				
 				[self addSubmodel:currentModel];
-				[currentModel release];
 				
 				// Tell ARC to release the object
 				submodels[counter] = nil;
@@ -221,7 +219,6 @@
 				dispatch_group_leave(parentGroup);
 			
 		});
-		dispatch_release(dispatchGroup);
 #endif		
 	}
 	
@@ -566,9 +563,6 @@
 		//Don't bother doing anything if we aren't really changing models.
 		if(newModel != activeModel)
 		{
-			[newModel retain];
-			[activeModel release];
-			
 			//Update the active model and note that something happened.
 			activeModel = newModel;
 			if(postsNotifications)
@@ -578,7 +572,6 @@
 	}
 	else if (newModel == nil)
 	{
-		[activeModel release];//why are we retaining?!
 		activeModel = nil;
 	}
 	else
@@ -629,9 +622,6 @@
 //==============================================================================
 - (void) setPath:(NSString *)newPath
 {
-	[newPath		retain];
-	[self->filePath	release];
-	
 	self->filePath = newPath;
 	
 }//end setPath:
@@ -858,27 +848,6 @@
 		
 	[super receiveMessage:msg who:observable];
 }
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Takin' care o' business.
-//
-//==============================================================================
-- (void) dealloc
-{
-	//NSLog(@"File %s going away.\n", [filePath UTF8String]);
-	[nameModelDict	release];
-	[activeModel	release];
-	[filePath		release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

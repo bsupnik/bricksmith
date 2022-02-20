@@ -38,8 +38,6 @@
     _glView = glView;
 	[self addSubview:_glView];
 	
-	[glView release];
-
 	return self;
 }
 
@@ -66,7 +64,6 @@
 			_horizontalScroller.target = self;
 			_horizontalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_horizontalScroller];
-			[scroller release];
 			
 			scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy], 50)];
 			_verticalScroller = scroller;
@@ -76,7 +73,6 @@
 			_verticalScroller.target = self;
 			_verticalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_verticalScroller];
-			[scroller release];
 		}
 		else
 		{
@@ -98,10 +94,7 @@
 //==============================================================================
 - (void) setVerticalPlacard:(NSView *)newPlacard
 {
-	[newPlacard retain];
-	
 	[_verticalPlacard removeFromSuperview];
-	[_verticalPlacard release];
 	
 	_verticalPlacard = newPlacard;
 	

@@ -377,25 +377,4 @@ typedef enum
 }//end shearEndedEditing:
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Abandon all hope ye who enter here.
-//
-//==============================================================================
-- (void) dealloc
-{
-	//Top level nib objects:
-	[_formatterBasic release];
-	[_formatterAngle release];
-	[_formatterScale release];
-	
-	[super dealloc];
-	
-}//end dealloc
-
-
 @end

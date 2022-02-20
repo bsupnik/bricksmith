@@ -66,8 +66,8 @@
 					   progressIncrementHandler:(void (^)())progressIncrementHandler
 							  completionHandler:(void (^)(NSDictionary<NSString*, id> *newCatalog))completionHandler
 {
-	NSFileManager	*fileManager			= [[[NSFileManager alloc] init] autorelease];
-	LDrawPaths		*paths					= [[[LDrawPaths alloc] init] autorelease];
+	NSFileManager	*fileManager			= [[NSFileManager alloc] init];
+	LDrawPaths		*paths					= [[LDrawPaths alloc] init];
 	NSString		*ldrawPath				= [paths preferredLDrawPath];
 	NSMutableArray	*searchPaths			= [NSMutableArray array];
 	
@@ -237,7 +237,7 @@
 			   namePrefix:(NSString *)namePrefix
  progressIncrementHandler:(void (^)())progressIncrementHandler
 {
-	NSFileManager		*fileManager			= [[[NSFileManager alloc] init] autorelease];
+	NSFileManager		*fileManager			= [[NSFileManager alloc] init];
 // Not working for some reason. Why?
 //	NSArray 			*readableFileTypes = [NSDocument readableTypes];
 //	NSLog(@"readable types: %@", readableFileTypes);
@@ -361,147 +361,146 @@
 {
     NSMutableDictionary *catalogInfo        = nil;
     
-	NSAutoreleasePool	*pool				= [[NSAutoreleasePool alloc] init];
+	@autoreleasepool {
 
-	NSString			*fileContents		= [LDrawUtilities stringFromFile:filepath];
-	NSCharacterSet		*whitespace 		= [NSCharacterSet whitespaceAndNewlineCharacterSet];
-	
-	NSString            *partNumber         = nil;
-	NSString			*partDescription	= nil;
-	NSString			*category			= nil;
-	NSMutableArray		*keywords			= nil;
-	
-	
-	// Read the first line of the file. Make sure the file is parsable.
-	if(		fileContents != nil
-	   &&	[fileContents length] > 0 )
-	{
-		NSUInteger	stringLength		= [fileContents length];
-		NSUInteger	lineStartIndex		= 0;
-		NSUInteger	nextlineStartIndex	= 0;
-		NSUInteger	newlineIndex		= 0; //index of the first newline character in the line.
-		NSInteger	lineLength			= 0;
-		NSString	*line				= nil;
-		NSString	*lineCode			= nil;
-		NSString	*lineRemainder		= nil;
-		NSString	*implicitCategory	= nil;
+		NSString			*fileContents		= [LDrawUtilities stringFromFile:filepath];
+		NSCharacterSet		*whitespace 		= [NSCharacterSet whitespaceAndNewlineCharacterSet];
 		
-		catalogInfo = [NSMutableDictionary dictionary];
+		NSString            *partNumber         = nil;
+		NSString			*partDescription	= nil;
+		NSString			*category			= nil;
+		NSMutableArray		*keywords			= nil;
 		
-		// Get the name of the part.
-		// We need a standard way to reference it; use lower-case to avoid any
-		// case-sensitivity issues.
-		partNumber = [[filepath lastPathComponent] lowercaseString];
-		[catalogInfo setObject:partNumber forKey:PART_NUMBER_KEY];
 		
-		while(nextlineStartIndex < stringLength)
+		// Read the first line of the file. Make sure the file is parsable.
+		if(		fileContents != nil
+		   &&	[fileContents length] > 0 )
 		{
-			// LDraw uses DOS lineendings
-			[fileContents getLineStart: &lineStartIndex
-								   end: &nextlineStartIndex
-						   contentsEnd: &newlineIndex
-							  forRange: NSMakeRange(nextlineStartIndex,1) ]; //that is, contains the first character.
+			NSUInteger	stringLength		= [fileContents length];
+			NSUInteger	lineStartIndex		= 0;
+			NSUInteger	nextlineStartIndex	= 0;
+			NSUInteger	newlineIndex		= 0; //index of the first newline character in the line.
+			NSInteger	lineLength			= 0;
+			NSString	*line				= nil;
+			NSString	*lineCode			= nil;
+			NSString	*lineRemainder		= nil;
+			NSString	*implicitCategory	= nil;
 			
-			lineLength	= newlineIndex - lineStartIndex;
-			line		= [fileContents substringWithRange:NSMakeRange(lineStartIndex, lineLength)];
-			lineCode	= [LDrawUtilities readNextField:line remainder:&lineRemainder ];
-
-			//Check to see if this is a valid LDraw header.
-			if(lineStartIndex == 0)
+			catalogInfo = [NSMutableDictionary dictionary];
+			
+			// Get the name of the part.
+			// We need a standard way to reference it; use lower-case to avoid any
+			// case-sensitivity issues.
+			partNumber = [[filepath lastPathComponent] lowercaseString];
+			[catalogInfo setObject:partNumber forKey:PART_NUMBER_KEY];
+			
+			while(nextlineStartIndex < stringLength)
 			{
-				if([lineCode isEqualToString:@"0"] == NO)
-					break;
-					
-				partDescription = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
-				implicitCategory = [self categoryForDescription:partDescription];
-				[catalogInfo setObject:partDescription forKey:PART_NAME_KEY];
-			}
-			else if([lineCode isEqualToString:@"0"] == YES)
-			{
-				// Try to find keywords or category
-				NSString *meta = [LDrawUtilities readNextField:lineRemainder remainder:&lineRemainder];
+				// LDraw uses DOS lineendings
+				[fileContents getLineStart: &lineStartIndex
+									   end: &nextlineStartIndex
+							   contentsEnd: &newlineIndex
+								  forRange: NSMakeRange(nextlineStartIndex,1) ]; //that is, contains the first character.
 				
-				if([meta isEqualToString:LDRAW_CATEGORY])
+				lineLength	= newlineIndex - lineStartIndex;
+				line		= [fileContents substringWithRange:NSMakeRange(lineStartIndex, lineLength)];
+				lineCode	= [LDrawUtilities readNextField:line remainder:&lineRemainder ];
+
+				//Check to see if this is a valid LDraw header.
+				if(lineStartIndex == 0)
 				{
-					// Turns out !CATEGORY is not as reliable as it ought to be.
-					// In typical LDraw fashion, the feature was not have a
-					// simultaneous, universal deployment. Circa 2014, the only
-					// categories I deemed to be consistent and advantageous
-					// under the current system are the two-word categories that
-					// couldn't be represented under the old system.
-					//
-					// 2020 update: I am not going to fight !CATEGORY anymore.
-					// With one exception: Duplo parts should not be mixed in,
-					// and LDraw is making no attempt to separate them. So if
-					// the description begins with Duplo, I'm ignoring the
-					// !CATEGORY, which will cause implicitCategory (Duplo) to
-					// win.
-					//
-					// Also, allow the !LDRAW_ORG Part Alias to take precedence
-					// if it has already been found.
-					if(		[implicitCategory hasPrefix:@"Duplo"] == NO
-					   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil )
+					if([lineCode isEqualToString:@"0"] == NO)
+						break;
+						
+					partDescription = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+					implicitCategory = [self categoryForDescription:partDescription];
+					[catalogInfo setObject:partDescription forKey:PART_NAME_KEY];
+				}
+				else if([lineCode isEqualToString:@"0"] == YES)
+				{
+					// Try to find keywords or category
+					NSString *meta = [LDrawUtilities readNextField:lineRemainder remainder:&lineRemainder];
+					
+					if([meta isEqualToString:LDRAW_CATEGORY])
 					{
-						category = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
-						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
+						// Turns out !CATEGORY is not as reliable as it ought to be.
+						// In typical LDraw fashion, the feature was not have a
+						// simultaneous, universal deployment. Circa 2014, the only
+						// categories I deemed to be consistent and advantageous
+						// under the current system are the two-word categories that
+						// couldn't be represented under the old system.
+						//
+						// 2020 update: I am not going to fight !CATEGORY anymore.
+						// With one exception: Duplo parts should not be mixed in,
+						// and LDraw is making no attempt to separate them. So if
+						// the description begins with Duplo, I'm ignoring the
+						// !CATEGORY, which will cause implicitCategory (Duplo) to
+						// win.
+						//
+						// Also, allow the !LDRAW_ORG Part Alias to take precedence
+						// if it has already been found.
+						if(		[implicitCategory hasPrefix:@"Duplo"] == NO
+						   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil )
+						{
+							category = [lineRemainder stringByTrimmingCharactersInSet:whitespace];
+							[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
+						}
+					}
+					else if([meta isEqualToString:LDRAW_KEYWORDS])
+					{
+						if(keywords == nil)
+						{
+							keywords = [NSMutableArray array];
+							[catalogInfo setObject:keywords forKey:PART_KEYWORDS_KEY];
+						}
+						// Keywords can be multiline, so must add to any we've already collected!
+						NSArray *newKeywords = [lineRemainder componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
+						for(NSString *keyword in newKeywords)
+						{
+							[keywords addObject:[keyword stringByTrimmingCharactersInSet:whitespace]];
+						}
+					}
+					else if([meta isEqualToString:LDRAW_ORG])
+					{
+						// Force alias parts into a ghetto category which will keep
+						// them far away from normal building.
+						// !LDRAW_ORG: optional qualifier Alias can appear with Part/Shortcut/etc https://www.ldraw.org/article/398.html
+						if([lineRemainder ams_containsString:@"Alias" options:kNilOptions])
+						{
+							category = Category_Alias;
+							[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
+						}
 					}
 				}
-				else if([meta isEqualToString:LDRAW_KEYWORDS])
+				else if([lineCode length] == 0)
 				{
-					if(keywords == nil)
-					{
-						keywords = [NSMutableArray array];
-						[catalogInfo setObject:keywords forKey:PART_KEYWORDS_KEY];
-					}
-					// Keywords can be multiline, so must add to any we've already collected!
-					NSArray *newKeywords = [lineRemainder componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@","]];
-					for(NSString *keyword in newKeywords)
-					{
-						[keywords addObject:[keyword stringByTrimmingCharactersInSet:whitespace]];
-					}
+					// line is blank. Skip.
 				}
-				else if([meta isEqualToString:LDRAW_ORG])
+				else
 				{
-					// Force alias parts into a ghetto category which will keep
-					// them far away from normal building.
-					// !LDRAW_ORG: optional qualifier Alias can appear with Part/Shortcut/etc https://www.ldraw.org/article/398.html
-					if([lineRemainder ams_containsString:@"Alias" options:kNilOptions])
-					{
-						category = Category_Alias;
-						[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
-					}
+					// Non-comment, non-blank line. This cannot be part of the header.
+					break;
 				}
 			}
-			else if([lineCode length] == 0)
+			
+			// If no !CATEGORY directive, the the category is to be derived from the
+			// first word of the description.
+			if(		[catalogInfo objectForKey:PART_NAME_KEY]
+			   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil)
 			{
-				// line is blank. Skip.
+				partDescription = [catalogInfo objectForKey:PART_NAME_KEY];
+				category		= implicitCategory;
+				[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
 			}
-			else
-			{
-				// Non-comment, non-blank line. This cannot be part of the header.
-				break;
-			}
+		}
+		else
+		{
+			NSLog(@"%@ is not a valid file", filepath);
 		}
 		
-		// If no !CATEGORY directive, the the category is to be derived from the
-		// first word of the description.
-		if(		[catalogInfo objectForKey:PART_NAME_KEY]
-		   &&	[catalogInfo objectForKey:PART_CATEGORY_KEY] == nil)
-		{
-			partDescription = [catalogInfo objectForKey:PART_NAME_KEY];
-			category		= implicitCategory;
-			[catalogInfo setObject:category forKey:PART_CATEGORY_KEY];
-		}
-	}
-	else
-	{
-		NSLog(@"%@ is not a valid file", filepath);
 	}
 	
-	[catalogInfo retain];
-	[pool drain];
-	
-	return [catalogInfo autorelease];
+	return catalogInfo;
 	
 }//end catalogInfoForFileAtPath
 

@@ -84,22 +84,22 @@
 
 // Panel widgets
 
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawViewerContainer*	minifigurePreview;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		hatsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		headsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		necksColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		torsosColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		rightArmsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		rightHandsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		rightHandAccessoriesColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		leftArmsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		leftHandsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		leftHandAccessoriesColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		hipsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		rightLegsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		rightLegAccessoriesColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		leftLegsColorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet LDrawColorWell*		leftLegAccessoriesColorWell;
+@property (nonatomic, weak) IBOutlet LDrawViewerContainer*	minifigurePreview;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		hatsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		headsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		necksColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		torsosColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		rightArmsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		rightHandsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		rightHandAccessoriesColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		leftArmsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		leftHandsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		leftHandAccessoriesColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		hipsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		rightLegsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		rightLegAccessoriesColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		leftLegsColorWell;
+@property (nonatomic, weak) IBOutlet LDrawColorWell*		leftLegAccessoriesColorWell;
 
 @end
 
@@ -134,7 +134,7 @@
 {
 	self = [super init];
 	
-	iniFile = [[MLCadIni iniFile] retain];
+	iniFile = [MLCadIni iniFile];
 	[self setMinifigureName:NSLocalizedString(@"UntitledMinifigure", nil)];
 	
 	//we'll call -generateMinifigure: when the dialog is ready and loaded with 
@@ -171,9 +171,6 @@
 //==============================================================================
 - (void) setMinifigure:(LDrawMPDModel *)newMinifigure
 {
-	[newMinifigure		retain];
-	[self->minifigure	release];
-	
 	self->minifigure = newMinifigure;
 	
 	[_minifigurePreview.glView setLDrawDirective:newMinifigure];
@@ -237,9 +234,6 @@
 //==============================================================================
 - (void) setMinifigureName:(NSString *)newName
 {
-	[newName retain];
-	[self->minifigureName release];
-	
 	minifigureName = newName;
 	
 	[self->minifigure setModelDisplayName:newName];
@@ -586,24 +580,6 @@
 	
 	//this is it! We've got a minifigure!
 	[self setMinifigure:newMinifigure];
-	
-	
-	//Free memory
-	[hat				release];
-	[head				release];
-	[neck				release];
-	[torso				release];
-	[leftArm			release];
-	[leftHand			release];
-	[leftHandAccessory	release];
-	[rightArm			release];
-	[rightHand			release];
-	[rightHandAccessory	release];
-	[hips				release];
-	[leftLeg			release];
-	[leftLegAccessory	release];
-	[rightLeg			release];
-	[rightLegAccessory	release];
 
 }//end generateMinifigure
 
@@ -933,28 +909,7 @@
 //==============================================================================
 - (void) dealloc
 {
-	[_objectController release];
-	[_degreesFormatter release];
-	[_hatsController release];
-	[_headsController release];
-	[_necksController release];
-	[_torsosController release];
-	[_rightArmsController release];
-	[_rightHandsController release];
-	[_rightHandAccessoriesController release];
-	[_leftArmsController release];
-	[_leftHandsController release];
-	[_leftHandAccessoriesController release];
-	[_hipsController release];
-	[_rightLegsController release];
-	[_rightLegAccessoriesController release];
-	[_leftLegsController release];
-	[_leftLegAccessoriesController release];
-	[_minifigureGeneratorPanel release];
-
-	[iniFile			release];
-
-	[super dealloc];
+    CFRelease((__bridge CFTypeRef)_minifigureGeneratorPanel);
 	
 }//end dealloc
 
