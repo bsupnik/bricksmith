@@ -62,9 +62,9 @@
 @interface PreferencesDialogController ()
 
 // General Tab
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingFineField;
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingMediumField;
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingCoarseField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingFineField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingMediumField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingCoarseField;
 
 
 @end

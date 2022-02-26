@@ -19,7 +19,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 
 // provides a way to look up the enclosing view pane
 @interface ViewportArrangerPlacard: NSView
-@property (nonatomic, unsafe_unretained)	LDrawViewerContainer*	container;
+@property (nonatomic, weak)	LDrawViewerContainer*	container;
 @end
 
 @implementation ViewportArrangerPlacard

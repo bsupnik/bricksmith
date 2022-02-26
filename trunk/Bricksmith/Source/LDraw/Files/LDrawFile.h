@@ -28,9 +28,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawFile : LDrawContainer
 {
-	NSDictionary	*nameModelDict;
-	LDrawMPDModel	*activeModel;
-	NSString		*filePath;			//where this file came from on disk.
+	NSDictionary			*nameModelDict;
+	__weak LDrawMPDModel	*activeModel;
+	NSString				*filePath;			//where this file came from on disk.
 }
 
 // Initialization

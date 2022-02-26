@@ -38,26 +38,26 @@ typedef enum
 
 // Window widgets
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		partDescriptionField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		partNameField;
-@property (nonatomic, unsafe_unretained) IBOutlet	LDrawColorWell*		colorWell;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSPopUpButton*		rotationTypePopUp;
+@property (nonatomic, weak) IBOutlet	NSTextField*		partDescriptionField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		partNameField;
+@property (nonatomic, weak) IBOutlet	LDrawColorWell*		colorWell;
+@property (nonatomic, weak) IBOutlet	NSPopUpButton*		rotationTypePopUp;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationXField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		locationZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		locationXField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		locationYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		locationZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationXField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		rotationZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		rotationXField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		rotationYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		rotationZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleXField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		scaleZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		scaleXField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		scaleYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		scaleZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearXZField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*		shearYZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		shearXYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		shearXZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*		shearYZField;
 
 @end
 

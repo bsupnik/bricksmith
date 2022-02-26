@@ -11,11 +11,11 @@
 
 @interface LDrawViewerContainer ()
 
-@property (nonatomic, unsafe_unretained) LDrawGLView* glView;
+@property (nonatomic) LDrawGLView* glView;
 @property (nonatomic, strong) NSView* verticalPlacard;
 
-@property (nonatomic, unsafe_unretained) NSScroller* horizontalScroller;
-@property (nonatomic, unsafe_unretained) NSScroller* verticalScroller;
+@property (nonatomic, weak) NSScroller* horizontalScroller;
+@property (nonatomic, weak) NSScroller* verticalScroller;
 
 @property (nonatomic, assign) Box2 documentRect;
 @property (nonatomic, assign) Box2 scrollVisibleRect;
