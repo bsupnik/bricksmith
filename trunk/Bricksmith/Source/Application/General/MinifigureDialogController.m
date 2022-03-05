@@ -63,7 +63,7 @@
 //top-level objects
 
 @property (nonatomic, strong) IBOutlet NSObjectController* 		objectController;
-@property (nonatomic, strong) IBOutlet NSNumberFormatter*		degreesFormatter;
+@property (nonatomic, weak)   IBOutlet NSNumberFormatter*		degreesFormatter;
 @property (nonatomic, strong) IBOutlet NSArrayController* 		hatsController;
 @property (nonatomic, strong) IBOutlet NSArrayController* 		headsController;
 @property (nonatomic, strong) IBOutlet NSArrayController* 		necksController;

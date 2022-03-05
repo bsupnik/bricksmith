@@ -23,8 +23,8 @@
 
 @interface PieceCountPanel ()
 
-@property (nonatomic, strong) IBOutlet NSTableView			*pieceCountTable;
-@property (nonatomic, strong) IBOutlet LDrawViewerContainer	*partPreview;
+@property (nonatomic, weak) IBOutlet NSTableView			*pieceCountTable;
+@property (nonatomic, weak) IBOutlet LDrawViewerContainer	*partPreview;
 
 @end
 

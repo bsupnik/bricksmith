@@ -11,8 +11,8 @@
 
 @interface LDrawViewerContainer ()
 
-@property (nonatomic) LDrawGLView* glView;
-@property (nonatomic, strong) NSView* verticalPlacard;
+@property (nonatomic, weak) LDrawGLView* glView;
+@property (nonatomic, weak) NSView* verticalPlacard;
 
 @property (nonatomic, weak) NSScroller* horizontalScroller;
 @property (nonatomic, weak) NSScroller* verticalScroller;

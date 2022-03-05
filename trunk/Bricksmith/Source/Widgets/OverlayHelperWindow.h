@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface OverlayHelperWindow : NSWindow
 {
-	NSView                  *parentView;
+	__weak NSView           *parentView;
 	NSWindowOrderingMode    order;
 }
 

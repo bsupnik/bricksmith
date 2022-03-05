@@ -40,12 +40,12 @@
 	// calls must pass through the LDrawOpenGLView first. 
 	LDrawGLRenderer			*renderer;
 	
-	FocusRingView			*focusRingView;
+	__weak FocusRingView	*focusRingView;
 	
-	IBOutlet id             delegate;
-	id                      target;
-	SEL                     backAction;
-	SEL                     forwardAction;
+	__weak IBOutlet id		delegate;
+	__weak id				target;
+	SEL						backAction;
+	SEL						forwardAction;
 	SEL						nudgeAction;
 	
 	BOOL                    acceptsFirstResponder;	// YES if we can become key

@@ -17,10 +17,10 @@
 
 @interface PieceCountPanel : DialogPanel
 {
-	LDrawFile		*file;
-	LDrawMPDModel	*activeModel;
-	PartReport		*partReport;
-	NSMutableArray	*flattenedReport;
+	__weak LDrawFile		*file;
+	__weak LDrawMPDModel	*activeModel;
+	__weak PartReport		*partReport;
+	__weak NSMutableArray	*flattenedReport;
 }
 
 //Initialization

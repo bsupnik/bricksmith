@@ -32,9 +32,9 @@ typedef enum
 @interface InspectionPart ()
 
 // Top-level objects
-@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterBasic;
-@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterAngle;
-@property (nonatomic, strong) IBOutlet				NSNumberFormatter*	formatterScale;
+@property (nonatomic, weak) IBOutlet				NSNumberFormatter*	formatterBasic;
+@property (nonatomic, weak) IBOutlet				NSNumberFormatter*	formatterAngle;
+@property (nonatomic, weak) IBOutlet				NSNumberFormatter*	formatterScale;
 
 // Window widgets
 

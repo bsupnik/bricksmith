@@ -901,11 +901,11 @@
 - (void) dealloc
 {
 	#if NEW_SET
-		for (id<LDrawObserver> o in observers.objectEnumerator)
-		{
-			[o observableSaysGoodbyeCruelWorld:self];
-		}
-		observers = nil;
+        for (NSValue * o in observers.objectEnumerator)
+        {
+            id<LDrawObserver> oo = [o pointerValue];
+            [oo observableSaysGoodbyeCruelWorld:self];
+        }
 	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");

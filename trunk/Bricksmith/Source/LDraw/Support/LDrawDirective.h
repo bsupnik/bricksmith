@@ -175,15 +175,15 @@ typedef void(^LDrawPartVisitor)(LDrawPart *);
 @interface LDrawDirective : NSObject <NSCoding, NSCopying, LDrawObservable>
 {
 	@private
-	LDrawContainer *enclosingDirective; //LDraw files are a hierarchy.
+	__weak LDrawContainer  *enclosingDirective; //LDraw files are a hierarchy.
 	#if NEW_SET
-		FastSet		   *observers;
+		FastSet			   *observers;
 	#else
-		NSMutableSet   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
+		NSMutableSet	   *observers;			//Any observers watching us.  This is an array of NSValues of pointers to create WEAK references.
 	#endif
-	CacheFlagsT		invalFlags;
-	BOOL			isSelected;
-    NSString       *iconName;
+	CacheFlagsT				invalFlags;
+	BOOL					isSelected;
+	NSString			   *iconName;
 	
 }
 
