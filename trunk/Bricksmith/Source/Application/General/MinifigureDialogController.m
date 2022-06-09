@@ -320,6 +320,10 @@
 //==============================================================================
 - (IBAction) generateMinifigure:(id)sender
 {
+	if (_objectController.content == nil) {
+		return;
+	}
+
 	LDrawMPDModel	*newMinifigure	= [LDrawMPDModel model];
 	LDrawStep		*firstStep		= [[newMinifigure steps] objectAtIndex:0];
 	
