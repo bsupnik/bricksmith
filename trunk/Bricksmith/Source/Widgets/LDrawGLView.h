@@ -40,7 +40,7 @@
 	// calls must pass through the LDrawOpenGLView first. 
 	LDrawGLRenderer			*renderer;
 	
-	__weak FocusRingView	*focusRingView;
+	FocusRingView	*focusRingView;
 	
 	__weak IBOutlet id		delegate;
 	__weak id				target;
