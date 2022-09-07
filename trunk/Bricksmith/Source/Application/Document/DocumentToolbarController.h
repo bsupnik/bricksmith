@@ -41,13 +41,13 @@
 {
 	__weak IBOutlet LDrawDocument			*document; //link to the documnt to which this is attached.
 
-	__weak IBOutlet NSView					*nudgeXToolView;
-	__weak IBOutlet NSView					*nudgeYToolView;
-	__weak IBOutlet NSView					*nudgeZToolView;
-	__weak IBOutlet NSView					*zoomToolView; //enter zoom percentage.
+	IBOutlet NSView					*nudgeXToolView;
+	IBOutlet NSView					*nudgeYToolView;
+	IBOutlet NSView					*nudgeZToolView;
+	IBOutlet NSView					*zoomToolView; //enter zoom percentage.
 	
-	__weak IBOutlet NSSegmentedControl		*gridSegmentedControl;
-	__weak IBOutlet NSSegmentedControl		*orientationSegmentedControl;
+	IBOutlet NSSegmentedControl		*gridSegmentedControl;
+	IBOutlet NSSegmentedControl		*orientationSegmentedControl;
 }
 
 //Button factories
