@@ -19,8 +19,8 @@
 {
 	__weak LDrawFile		*file;
 	__weak LDrawMPDModel	*activeModel;
-	__weak PartReport		*partReport;
-	__weak NSMutableArray	*flattenedReport;
+	PartReport				*partReport;
+	NSMutableArray			*flattenedReport;
 }
 
 //Initialization
