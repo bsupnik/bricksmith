@@ -33,6 +33,23 @@
 
 static LDrawColorWell *sharedActiveColorWell = nil;
 
+//========== initWithCoder: ====================================================
+///
+/// @abstract	Called by objects in a Nib file.
+///
+//==============================================================================
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if (self) {
+		// fix macOS 14 issue with default value = NO
+		// it looks like the entire window is filled with some color
+		self.clipsToBounds = YES;
+	}
+	return self;
+}
+
+
 #pragma mark -
 #pragma mark ACTIVE COLOR WELL
 #pragma mark -

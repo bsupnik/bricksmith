@@ -17,6 +17,23 @@
 @implementation LDrawColorBar
 
 
+//========== initWithCoder: ====================================================
+///
+/// @abstract	Designated initializer
+///
+//==============================================================================
+- (instancetype)initWithFrame:(NSRect)frame
+{
+	self = [super initWithFrame:frame];
+	if (self) {
+		// fix macOS 14 issue with default value = NO
+		// it looks like the entire window is filled with some color
+		self.clipsToBounds = YES;
+	}
+	return self;
+}
+
+
 //========== drawRect: =========================================================
 //
 // Purpose:		Paints the represented color inside the bar, along with a small 
