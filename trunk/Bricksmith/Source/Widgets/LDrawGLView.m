@@ -183,6 +183,28 @@ static Box2 NSRectToBox2(NSRect rect)
 }//end internalInit
 
 
+//========== setFocusRingVisible: ==============================================
+///
+/// @abstract	Setup the focus ring view.
+///
+/// @discussion	In Minifigure Generator the focus ring view prevents that window
+/// 			to deinitialize correctly (macOS 14 issue). On the other hand
+/// 			there is only one GLView in that window, so we don't need to
+/// 			have focus ring there.
+/// 			Why we have this extra method?
+/// 			Bec we set view property in Interface Builder, it is visible only
+///				after initialization.
+///
+//==============================================================================
+- (void) setFocusRingVisible:(BOOL)isVisible
+{
+	if (!isVisible) {
+		[focusRingView setFocusSource:nil];
+		[self removeOverlayView:focusRingView];
+	}
+}
+
+
 //========== prepareOpenGL =====================================================
 //
 // Purpose:		The context is all set up; this is where we prepare our OpenGL 

@@ -155,6 +155,8 @@
 	}
 
 	_glView.frame = viewerFrame;
+	
+	[_glView setFocusRingVisible:self.focusRingType != NSFocusRingTypeNone];
 }
 
 
