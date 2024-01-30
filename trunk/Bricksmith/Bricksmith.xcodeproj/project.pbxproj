@@ -919,6 +919,7 @@
 			);
 			name = "Mac LDraw";
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		2A37F4ABFDCFA73011CA2CEA /* Classes */ = {
 			isa = PBXGroup;
