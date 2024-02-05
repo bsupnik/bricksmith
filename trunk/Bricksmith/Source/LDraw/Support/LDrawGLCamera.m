@@ -25,7 +25,7 @@
 
 @interface LDrawGLCamera ()
 {
-	id<LDrawGLCameraScroller>	scroller;
+	__weak id<LDrawGLCameraScroller>	scroller;
 	
 	GLfloat					projection[16];
 	GLfloat					modelView[16];
