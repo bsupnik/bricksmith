@@ -265,6 +265,11 @@
                             <customView fixedFrame="YES" id="mg7-Ka-RVr" customClass="LDrawViewerContainer">
                                 <rect key="frame" x="0.0" y="328" width="416" height="135"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="focusRingType">
+                                        <integer key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
                             </customView>
                         </subviews>
                         <holdingPriorities>

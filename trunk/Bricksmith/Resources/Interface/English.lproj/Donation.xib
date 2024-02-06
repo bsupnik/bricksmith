@@ -80,6 +80,11 @@ DQ
                             <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Eyc-Pv-Ma8" customClass="LDrawViewerContainer">
                                 <rect key="frame" x="322" y="20" width="334" height="346"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="focusRingType">
+                                        <integer key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
                             </customView>
                         </subviews>
                     </customView>
