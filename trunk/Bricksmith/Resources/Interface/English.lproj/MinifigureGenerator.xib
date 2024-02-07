@@ -1457,7 +1457,7 @@ Gw
                             <binding destination="326" name="value" keyPath="selection.hasHips" id="818"/>
                         </connections>
                     </button>
-                    <customView id="2NJ-bS-eod" customClass="LDrawViewerContainer">
+                    <customView clipsToBounds="YES" id="2NJ-bS-eod" customClass="LDrawViewerContainer">
                         <rect key="frame" x="537" y="362" width="243" height="289"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <userDefinedRuntimeAttributes>

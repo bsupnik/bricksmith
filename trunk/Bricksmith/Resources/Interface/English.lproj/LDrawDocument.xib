@@ -436,7 +436,7 @@
                         </button>
                     </subviews>
                 </customView>
-                <customView id="0IQ-mb-Liq" customClass="LDrawViewerContainer">
+                <customView clipsToBounds="YES" id="0IQ-mb-Liq" customClass="LDrawViewerContainer">
                     <rect key="frame" x="256" y="37" width="187" height="129"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" heightSizable="YES"/>
                     <userDefinedRuntimeAttributes>
