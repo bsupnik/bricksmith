@@ -52,9 +52,9 @@ typedef enum
 	NSPanel					*palettePanel;
 
 	//Nib connections
-	IBOutlet NSView			*paletteContents;
-	IBOutlet NSMatrix		*toolButtons;
-	IBOutlet LDrawColorWell	*colorWell;
+	__weak IBOutlet NSView			*paletteContents;
+	__weak IBOutlet NSMatrix		*toolButtons;
+	__weak IBOutlet LDrawColorWell	*colorWell;
 }
 
 

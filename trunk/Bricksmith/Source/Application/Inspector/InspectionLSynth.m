@@ -370,18 +370,4 @@
 }
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Cockle warming for larger ladies
-//
-//==============================================================================
-- (void)dealloc {
-   // [typePopup release];
-    [super dealloc];
-}//end dealloc
-
 @end

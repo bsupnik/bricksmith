@@ -41,9 +41,6 @@
 //==============================================================================
 - (void) setBackgroundColor:(NSColor *)colorIn
 {
-	[colorIn retain];
-	[self->backgroundColor release];
-	
 	self->backgroundColor = colorIn;
 	
 }//end setBackgroundColor:
@@ -61,22 +58,5 @@
 	
 }//end drawRect:
 
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Turning a shade of blue.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[self->backgroundColor release];
-
-	[super dealloc];
-	
-}//end dealloc
 
 @end

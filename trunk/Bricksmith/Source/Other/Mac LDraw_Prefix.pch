@@ -30,11 +30,6 @@
 //#define USE_BLOCKS				NS_BLOCKS_AVAILABLE
 #define USE_BLOCKS				0
 
-#if !USE_BLOCKS
-	#define dispatch_queue_t    void *
-	#define dispatch_group_t    void *
-#endif
-
 #ifndef OPEN_GL_HEADER
 	#define OPEN_GL_HEADER		<OpenGL/gl.h>
 	#define OPEN_GL_EXT_HEADER	<OpenGL/glext.h>

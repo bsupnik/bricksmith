@@ -77,13 +77,18 @@ DQ
                                     <action selector="donateButtonClicked:" target="-2" id="21"/>
                                 </connections>
                             </button>
-                            <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Eyc-Pv-Ma8" customClass="LDrawViewerContainer">
+                            <customView clipsToBounds="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Eyc-Pv-Ma8" customClass="LDrawViewerContainer">
                                 <rect key="frame" x="322" y="20" width="334" height="346"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="focusRingType">
+                                        <integer key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
                             </customView>
                         </subviews>
                     </customView>
-                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="11" customClass="BackgroundColorView">
+                    <customView clipsToBounds="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="11" customClass="BackgroundColorView">
                         <rect key="frame" x="0.0" y="0.0" width="676" height="60"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <subviews>

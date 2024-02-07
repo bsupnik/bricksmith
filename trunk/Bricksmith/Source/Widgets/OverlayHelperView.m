@@ -118,24 +118,6 @@
 }//end viewWillMoveToSuperview:
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We are of help no more.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[helperWindow release];
-
-	[super dealloc];
-
-}//end dealloc
-
-
 @end
 
 

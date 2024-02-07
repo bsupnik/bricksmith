@@ -110,7 +110,6 @@ static PartBrowserPanelController *sharedPartBrowserPanel = nil;
 {
 	//Make sure our memory is all released.
 	sharedPartBrowserPanel = nil;
-	[self autorelease];
 	
 }//end windowWillClose:
 
@@ -141,24 +140,6 @@ static PartBrowserPanelController *sharedPartBrowserPanel = nil;
 	return 96;
 	
 }//end splitView:constrainMinCoordinate:ofSubviewAt:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We're checking out of this fleabag hotel.
-//
-//==============================================================================
-- (void) dealloc
-{
-	// no need to release top-level nib objects, as this is an NSWindowController
-
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

@@ -50,7 +50,7 @@
 {
 	self = [super initWithCoder:decoder];
 	
-	containedObjects = [[decoder decodeObjectForKey:@"containedObjects"] retain];
+	containedObjects = [decoder decodeObjectForKey:@"containedObjects"];
 	
 	for(id<LDrawObservable> i in containedObjects)
 		[i addObserver:self];
@@ -95,7 +95,6 @@
 	{
 		copiedObject = [currentObject copy];
 		[copiedContainer insertDirective:copiedObject atIndex:counter];
-		[copiedObject release];
 	}
 	
 	return copiedContainer;
@@ -477,11 +476,6 @@
 	[self->containedObjects makeObjectsPerformSelector:@selector(setEnclosingDirective:)
 											withObject:nil ];
 
-	//release instance variables
-	[containedObjects release];
-	
-	[super dealloc];
-	
 }//end dealloc
 
 

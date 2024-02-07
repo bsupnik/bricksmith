@@ -19,7 +19,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 
 // provides a way to look up the enclosing view pane
 @interface ViewportArrangerPlacard: NSView
-@property (nonatomic, unsafe_unretained)	LDrawViewerContainer*	container;
+@property (nonatomic, weak)	LDrawViewerContainer*	container;
 @end
 
 @implementation ViewportArrangerPlacard
@@ -153,7 +153,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 	NSSplitView 			*arrangementView	= (NSSplitView*)[sourceColumn superview];
 	
 	ExtendedSplitView		*newColumn			= nil;
-	LDrawViewerContainer	*newViewport		= [[self newViewport] autorelease];
+	LDrawViewerContainer	*newViewport		= [self newViewport];
 	
 	NSRect					sourceViewFrame 	= NSZeroRect;
 	NSRect					newViewFrame		= NSZeroRect;
@@ -162,7 +162,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 	if(makeNewColumn == YES)
 	{
 		sourceViewFrame = [sourceColumn frame];
-		newColumn       = [[[ExtendedSplitView alloc] initWithFrame:NSMakeRect(0,0,12,12)] autorelease];
+		newColumn       = [[ExtendedSplitView alloc] initWithFrame:NSMakeRect(0,0,12,12)];
 		[newColumn setDelegate:self];
 		
 		
@@ -426,7 +426,7 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //==============================================================================
 - (ViewportArrangerPlacard *) newSplitPlacard
 {
-	NSButton				*splitButton		= [[self newSplitButton] autorelease];
+	NSButton				*splitButton		= [self newSplitButton];
 	ViewportArrangerPlacard *placardContainer	= [[ViewportArrangerPlacard alloc] initWithFrame:NSMakeRect(0, 0, 12, 12)];
 
 	[placardContainer addSubview:splitButton];
@@ -448,8 +448,8 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 //==============================================================================
 - (ViewportArrangerPlacard *) newSplitClosePlacard
 {
-	NSButton*					splitButton 		= [[self newSplitButton] autorelease];
-	NSButton*					closeButton 		= [[self newCloseButton] autorelease];
+	NSButton*					splitButton 		= [self newSplitButton];
+	NSButton*					closeButton 		= [self newCloseButton];
 	ViewportArrangerPlacard*	placardContainer	= [[ViewportArrangerPlacard alloc] initWithFrame:NSMakeRect(0, 0, 12, 24)];
 
 	[placardContainer addSubview:splitButton];
@@ -593,14 +593,14 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 		rows = [[viewCountPerColumn objectAtIndex:columnCounter] integerValue];
 		
 		// The Column. 
-		columnView = [[[ExtendedSplitView alloc] initWithFrame:NSMakeRect(0, 0, 256, 256)] autorelease];
+		columnView = [[ExtendedSplitView alloc] initWithFrame:NSMakeRect(0, 0, 256, 256)];
 		[columnView setDelegate:self];
 		[self addSubview:columnView];
 		
 		// The Rows
 		for(rowCounter = 0; rowCounter < rows; rowCounter++)
 		{
-			rowView = [[self newViewport] autorelease];
+			rowView = [self newViewport];
 			[columnView addSubview:rowView];
 			
 			if([self->delegate respondsToSelector:@selector(viewportArranger:didAddViewport:sourceViewport:)])
@@ -717,11 +717,11 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 			// If there only one viewport in the column, disable the close box.
 			if(columnCount == 1 && rowCount == 1)
 			{
-				placard = [[self newSplitPlacard] autorelease];
+				placard = [self newSplitPlacard];
 			}
 			else
 			{
-				placard = [[self newSplitClosePlacard] autorelease];
+				placard = [self newSplitClosePlacard];
 			}
 			
 			placard.container = currentRow;
@@ -729,22 +729,6 @@ const NSString *VIEWS_PER_COLUMN				= @"ViewsPerColumn";
 		}
 	}
 }//end updatePlacardsForViewports
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Making our final arrangements.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

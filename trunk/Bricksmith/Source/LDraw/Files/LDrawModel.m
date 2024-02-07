@@ -67,7 +67,7 @@
 	//Need to create a blank step.
 	[newModel addStep];
 
-	return [newModel autorelease];
+	return newModel;
 	
 }//end model
 
@@ -117,17 +117,19 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSUInteger		contentStartIndex	= 0;
-	NSRange			stepRange			= range;
-	NSUInteger		maxLineIndex		= 0;
-	NSUInteger      insertIndex			= 0;
-	id *			substeps			= NULL;
+	NSUInteger			contentStartIndex	= 0;
+	NSRange				stepRange			= range;
+	NSUInteger			maxLineIndex		= 0;
+	NSUInteger			insertIndex			= 0;
+	__strong LDrawStep	**substeps			= NULL;
 	
 	//Start with a nice blank model.
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	self->cachedBounds = InvalidBox;
 
-	substeps = calloc(range.length, sizeof(LDrawDirective*));
+	// Creation a C array of retained pointers under ARC
+	// (see Transitioning to ARC Release Notes for details)
+	substeps = (__strong LDrawStep **)calloc(range.length, sizeof(LDrawStep *));
 	
 	//Try and get the header out of the file. If it's there, the lines returned 
 	// will not contain it.
@@ -172,7 +174,9 @@
 			LDrawStep * step = substeps[counter];
 			
 			[self addStep:step];
-			[step release];
+			
+			// Tell ARC to release the object
+			substeps[counter] = nil;
 		}
 
 		free(substeps);
@@ -187,7 +191,6 @@
 		if(parentGroup != NULL)
 			dispatch_group_leave(parentGroup);
 	});
-	dispatch_release(modelDispatchGroup);	
 #endif	
 	return self;
 	
@@ -207,9 +210,9 @@
 	self->cachedBounds = InvalidBox;
 	[self invalCache:CacheFlagBounds];	
 	
-	modelDescription	= [[decoder decodeObjectForKey:@"modelDescription"] retain];
-	fileName			= [[decoder decodeObjectForKey:@"fileName"] retain];
-	author				= [[decoder decodeObjectForKey:@"author"] retain];
+	modelDescription	= [decoder decodeObjectForKey:@"modelDescription"];
+	fileName			= [decoder decodeObjectForKey:@"fileName"];
+	author				= [decoder decodeObjectForKey:@"author"];
 	
 	return self;
 	
@@ -1045,9 +1048,6 @@
 						 recursive:NO];
 	}
 	
-	[dragStep retain];
-	[self->draggingDirectives release];
-	
 	self->draggingDirectives = dragStep;
 	
 }//end setDraggingDirectives:
@@ -1060,9 +1060,6 @@
 //==============================================================================
 - (void) setModelDescription:(NSString *)newDescription
 {
-	[newDescription retain];
-	[modelDescription release];
-	
 	modelDescription = newDescription;
 	
 }//end setModelDescription:
@@ -1078,9 +1075,6 @@
 //==============================================================================
 - (void) setFileName:(NSString *)newName
 {
-	[newName retain];
-	[fileName release];
-	
 	fileName = newName;
 	
 }//end setFileName:
@@ -1097,8 +1091,6 @@
     // behavior in the inspector
     if (newAuthor == nil)
         newAuthor = @"";
-	[newAuthor retain];
-	[author release];
 	
 	author = newAuthor;
 	
@@ -1572,30 +1564,6 @@
 	
 }//end registerUndoActions:
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		So I go to the pet store to buy a dog. And this guy sells me 
-//				this puppy with three heads. Where in the world did he find a 
-//				freak like that? So I says, "buddy, I want a normal dog." And 
-//				the guy says, "Mister, where you're going, this dog *is* normal.
-//				Weird.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[modelDescription	release];
-	[fileName			release];
-	[author				release];
-	
-	[colorLibrary		release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 //- (void) invalCache:(CacheFlagsT) flags
 //{

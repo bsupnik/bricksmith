@@ -46,34 +46,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawDocument : NSDocument <ViewportArrangerDelegate>
 {
-	IBOutlet DocumentToolbarController	*toolbarController;
-	IBOutlet NSObjectController			*bindingsController;
+	__weak IBOutlet DocumentToolbarController	*toolbarController;
+	__weak IBOutlet NSObjectController			*bindingsController;
 	
 	// Window satellites
-	IBOutlet NSDrawer					*partBrowserDrawer;
-	IBOutlet PartBrowserDataSource		*partsBrowser;
+	__weak IBOutlet NSDrawer					*partBrowserDrawer;
+	__weak IBOutlet PartBrowserDataSource		*partsBrowser;
 	
 	// Scope bar
-	IBOutlet NSButton					*viewAllButton;
-	IBOutlet NSButton					*viewStepsButton;
-	IBOutlet NSPopUpButton				*submodelPopUpMenu;
-	IBOutlet NSView						*scopeStepControlsContainer;
-	IBOutlet NSTextField				*stepField;
-	IBOutlet NSSegmentedControl			*stepNavigator;
+	__weak IBOutlet NSButton					*viewAllButton;
+	__weak IBOutlet NSButton					*viewStepsButton;
+	__weak IBOutlet NSPopUpButton				*submodelPopUpMenu;
+	__weak IBOutlet NSView						*scopeStepControlsContainer;
+	__weak IBOutlet NSTextField					*stepField;
+	__weak IBOutlet NSSegmentedControl			*stepNavigator;
 	
 	// Window contents
-	IBOutlet ExtendedSplitView			*fileContentsSplitView;
-	IBOutlet LDrawFileOutlineView		*fileContentsOutline;
-	IBOutlet NSPopUpButton				*addReferenceButton;
+	__weak IBOutlet ExtendedSplitView			*fileContentsSplitView;
+	__weak IBOutlet LDrawFileOutlineView		*fileContentsOutline;
+	__weak IBOutlet NSPopUpButton				*addReferenceButton;
 	
 	// LDraw graphic view
-	IBOutlet ViewportArranger			*viewportArranger;
-	IBOutlet NSTextField				*coordinateLabelX;
-	IBOutlet NSTextField				*coordinateLabelY;
-	IBOutlet NSTextField				*coordinateLabelZ;
-	IBOutlet NSTextField				*coordinateFieldX;
-	IBOutlet NSTextField				*coordinateFieldY;
-	IBOutlet NSTextField				*coordinateFieldZ;
+	__weak IBOutlet ViewportArranger			*viewportArranger;
+	__weak IBOutlet NSTextField					*coordinateLabelX;
+	__weak IBOutlet NSTextField					*coordinateLabelY;
+	__weak IBOutlet NSTextField					*coordinateLabelZ;
+	__weak IBOutlet NSTextField					*coordinateFieldX;
+	__weak IBOutlet NSTextField					*coordinateFieldY;
+	__weak IBOutlet NSTextField					*coordinateFieldZ;
 	
 	@private
 		LDrawFile		*documentContents;

@@ -17,15 +17,15 @@
 
 @interface InspectionLine ()
 
-@property (nonatomic, unsafe_unretained) IBOutlet	LDrawColorWell*	colorWell;
+@property (nonatomic, weak) IBOutlet	LDrawColorWell*	colorWell;
 	
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	startPointXField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	startPointYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	startPointZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	startPointXField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	startPointYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	startPointZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	endPointXField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	endPointYField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	endPointZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	endPointXField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	endPointYField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	endPointZField;
 
 @end
 

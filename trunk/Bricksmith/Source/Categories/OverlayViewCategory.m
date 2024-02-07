@@ -66,8 +66,6 @@
 	
 	[self addSubview:helperView];
 	
-	[helperView release];
-	
 }//end addOverlayView:ordered:
 
 

@@ -23,6 +23,7 @@
 #import "LDrawColor.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
+#import "LDrawMPDModel.h"
 #import "LDrawPaths.h"
 
 @implementation ColorLibrary
@@ -56,7 +57,7 @@ static ColorLibrary	*sharedColorLibrary	= nil;
 		// "Draw" it so that all the colors are recorded in the library
 		[ldconfigFile draw:DRAW_NO_OPTIONS viewScale:1.0 parentColor:nil];
 		
-		sharedColorLibrary	= [[[ldconfigFile activeModel] colorLibrary] retain];
+		sharedColorLibrary	= [[ldconfigFile activeModel] colorLibrary];
 		
 		
 		//---------- Special Colors --------------------------------------------
@@ -64,8 +65,8 @@ static ColorLibrary	*sharedColorLibrary	= nil;
 		// context. But we still need to create entries for them in the library 
 		// so that they can be selected in the color palette. 
 		
-		LDrawColor	*currentColor			= [[[LDrawColor alloc] init] autorelease];
-		LDrawColor	*edgeColor				= [[[LDrawColor alloc] init] autorelease];
+		LDrawColor	*currentColor			= [[LDrawColor alloc] init];
+		LDrawColor	*edgeColor				= [[LDrawColor alloc] init];
 		GLfloat		 currentColorRGBA[4]	= {1.0, 1.0, 0.81, 1.0};
 		GLfloat		 edgeColorRGBA[4]		= {0.75, 0.75, 0.75, 1.0};
 		
@@ -300,24 +301,6 @@ void complimentColor(const GLfloat *originalColor, GLfloat *complimentColor)
 	complimentColor[3] = originalColor[3];
 	
 }//end complimentColor
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		It's like the Blue Period. Depression and gloom abound as we 
-//				consider the ultimate fate of being deallocated. 
-//
-//==============================================================================
-- (void) dealloc
-{
-	[colors release];
-	
-	[super dealloc];
-}
 
 
 @end

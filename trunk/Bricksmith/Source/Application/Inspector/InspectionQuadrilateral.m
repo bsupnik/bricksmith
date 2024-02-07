@@ -47,23 +47,23 @@
 
 @interface InspectionQuadrilateral ()
 
-@property (nonatomic, unsafe_unretained) IBOutlet	LDrawColorWell*	colorWell;
+@property (nonatomic, weak) IBOutlet	LDrawColorWell*	colorWell;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1XField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1YField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex1ZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex1XField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex1YField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex1ZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2XField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2YField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex2ZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex2XField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex2YField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex2ZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex3XField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex3YField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex3ZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex3XField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex3YField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex3ZField;
 
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex4XField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex4YField;
-@property (nonatomic, unsafe_unretained) IBOutlet	NSTextField*	vertex4ZField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex4XField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex4YField;
+@property (nonatomic, weak) IBOutlet	NSTextField*	vertex4ZField;
 
 @end
 

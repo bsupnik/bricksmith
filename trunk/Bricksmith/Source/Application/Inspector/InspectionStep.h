@@ -30,15 +30,15 @@ typedef enum
 ////////////////////////////////////////////////////////////////////////////////
 @interface InspectionStep : ObjectInspectionController
 {
-	IBOutlet NSMatrix			*rotationTypeRadioButtons;
+	__weak IBOutlet NSMatrix		*rotationTypeRadioButtons;
 
-	IBOutlet NSPopUpButton		*relativeRotationPopUpMenu;
-	IBOutlet NSPopUpButton		*absoluteRotationPopUpMenu;
+	__weak IBOutlet NSPopUpButton	*relativeRotationPopUpMenu;
+	__weak IBOutlet NSPopUpButton	*absoluteRotationPopUpMenu;
 	
-	IBOutlet NSTextField		*rotationXField;
-	IBOutlet NSTextField		*rotationYField;
-	IBOutlet NSTextField		*rotationZField;
-	IBOutlet NSButton			*useCurrentAngleButton;
+	__weak IBOutlet NSTextField		*rotationXField;
+	__weak IBOutlet NSTextField		*rotationYField;
+	__weak IBOutlet NSTextField		*rotationZField;
+	__weak IBOutlet NSButton		*useCurrentAngleButton;
 }
 
 // Constraints

@@ -33,14 +33,14 @@ typedef enum {
 
 @interface SearchPanelController : NSWindowController <NSWindowDelegate, NSDraggingDestination>
 {
-	IBOutlet NSMatrix		*scopeMatrix;
-	IBOutlet NSMatrix		*colorMatrix;
-	IBOutlet LDrawColorWell *colorWell;
-	IBOutlet NSMatrix		*findTypeMatrix;
-	IBOutlet NSButton		*searchInsideLSynthContainers;
-	IBOutlet NSButton		*searchHiddenParts;
-	IBOutlet NSTextField	*partName;
-	IBOutlet NSTextField	*warningText;
+	__weak IBOutlet NSMatrix		*scopeMatrix;
+	__weak IBOutlet NSMatrix		*colorMatrix;
+	__weak IBOutlet LDrawColorWell	*colorWell;
+	__weak IBOutlet NSMatrix		*findTypeMatrix;
+	__weak IBOutlet NSButton		*searchInsideLSynthContainers;
+	__weak IBOutlet NSButton		*searchHiddenParts;
+	__weak IBOutlet NSTextField		*partName;
+	__weak IBOutlet NSTextField		*warningText;
 }
 
 //Initialization

@@ -45,9 +45,9 @@
     iconName = @"";
 
 	#if NEW_SET
-		LDrawFastSetInit(observers);
+		observers = [[FastSet alloc] init];
 	#else
-		observers = [[NSMutableArray alloc] init];
+		observers = [[NSMutableSet alloc] init];
 	#endif
 	return self;
 	
@@ -73,7 +73,6 @@
 	
 #if USE_BLOCKS
 	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-	dispatch_release(group);
 #endif
 	
 	return directive;
@@ -106,7 +105,6 @@
 	
 	if([lines count] == 0)
 	{
-		[self autorelease];
 		self = nil;
 	}
 	
@@ -128,7 +126,7 @@
 	self = [super init];
 
 	#if NEW_SET
-		LDrawFastSetInit(observers);
+		observers = [[FastSet alloc] init];
 	#else
 		observers = [[NSMutableArray alloc] init];
 	#endif
@@ -682,8 +680,6 @@
 //==============================================================================
 - (void) setIconName:(NSString *)icon
 {
-    [icon retain];
-    [self->iconName release];
     self->iconName = icon;
 }//end setIconName:
 
@@ -814,7 +810,7 @@
 - (void) addObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetInsert(observers, observer);	
+		[observers addObject:observer];
 	#else
 	if(observers == nil)
 		printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -833,8 +829,8 @@
 - (void) removeObserver:(id<LDrawObserver>) observer
 {
 	#if NEW_SET
-		LDrawFastSetRemove(observers,observer);
-	#else	
+		[observers removeObject:observer];
+	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");
 		//printf("directive %p told to lose observer %p.\n", self,observer);
@@ -905,8 +901,11 @@
 - (void) dealloc
 {
 	#if NEW_SET
-		MESSAGE_FOR_SET(observers,LDrawObserver,observableSaysGoodbyeCruelWorld:self);
-		LDrawFastSetDealloc(observers);
+        for (NSValue * o in observers.objectEnumerator)
+        {
+            id<LDrawObserver> oo = [o pointerValue];
+            [oo observableSaysGoodbyeCruelWorld:self];
+        }
 	#else
 		if(observers == nil)
 			printf("WARNING: OBSERVERS ARE NULL.\n");
@@ -922,12 +921,9 @@
 			}
 		}
 		[observers release];
-		observers = (id) 0xDEADBEEF;
+		observers = nil;
 	#endif
 
-
-
-	[super dealloc];
 	//printf(" %p is clear.\n",self);
 }
 
@@ -942,7 +938,11 @@
 - (void) sendMessageToObservers:(MessageT) msg
 {
 	#if NEW_SET
-		MESSAGE_FOR_SET(observers,LDrawObserver,receiveMessage:msg who:self);
+		for (NSValue * o in observers.objectEnumerator)
+		{
+			id<LDrawObserver> oo = [o pointerValue];
+			[oo receiveMessage:msg who:self];
+		}
 	#else
 		NSSet * orig = [NSSet setWithSet:observers];
 		for (NSValue * o in orig)
@@ -977,8 +977,12 @@
 		invalFlags |= newFlags;
 		
 		#if NEW_SET
-			MESSAGE_FOR_SET(observers,LDrawObserver,statusInvalidated:newFlags who:self);
-		#else		
+			for (NSValue * o in observers.objectEnumerator)
+			{
+				id<LDrawObserver> oo = [o pointerValue];
+                [oo statusInvalidated:newFlags who:self];
+			}
+		#else
 			NSSet * orig = [NSSet setWithSet:observers];
 			for (NSValue * o in orig)
 			{

@@ -132,7 +132,6 @@
 	{
 		NSLog(@"the quadrilateral primitive %@ was fatally invalid", [lines objectAtIndex:range.location]);
 		NSLog(@" raised exception %@", [exception name]);
-		[self release];
 		self = nil;
 	}
 	
@@ -753,10 +752,10 @@
 	// Create the drag handle objects
 	if(flag == YES)
 	{
-		LDrawDragHandle *handle1 = [[[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1] autorelease];
-		LDrawDragHandle *handle2 = [[[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2] autorelease];
-		LDrawDragHandle *handle3 = [[[LDrawDragHandle alloc] initWithTag:3 position:self->vertex3] autorelease];
-		LDrawDragHandle *handle4 = [[[LDrawDragHandle alloc] initWithTag:4 position:self->vertex4] autorelease];
+		LDrawDragHandle *handle1 = [[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1];
+		LDrawDragHandle *handle2 = [[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2];
+		LDrawDragHandle *handle3 = [[LDrawDragHandle alloc] initWithTag:3 position:self->vertex3];
+		LDrawDragHandle *handle4 = [[LDrawDragHandle alloc] initWithTag:4 position:self->vertex4];
 		
 		[handle1 setTarget:self];
 		[handle2 setTarget:self];
@@ -772,7 +771,6 @@
 	}
 	else
 	{
-		[self->dragHandles release];
 		self->dragHandles = nil;
 	}
 	
@@ -1040,23 +1038,6 @@
 	[undoManager setActionName:NSLocalizedString(@"UndoAttributesQuadrilateral", nil)];
 	
 }//end registerUndoActions:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		The Big Sleep.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[dragHandles release];
-	
-	[super dealloc];
-}
 
 
 @end

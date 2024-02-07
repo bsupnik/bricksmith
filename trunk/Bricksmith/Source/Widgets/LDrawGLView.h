@@ -40,12 +40,12 @@
 	// calls must pass through the LDrawOpenGLView first. 
 	LDrawGLRenderer			*renderer;
 	
-	FocusRingView			*focusRingView;
+	FocusRingView	*focusRingView;
 	
-	IBOutlet id             delegate;
-	id                      target;
-	SEL                     backAction;
-	SEL                     forwardAction;
+	__weak IBOutlet id		delegate;
+	__weak id				target;
+	SEL						backAction;
+	SEL						forwardAction;
 	SEL						nudgeAction;
 	
 	BOOL                    acceptsFirstResponder;	// YES if we can become key
@@ -62,7 +62,7 @@
 	Vector3					nudgeVector;			// direction of nudge action (valid only in nudgeAction callback)
 }
 
-- (void) internalInit;
+- (void) setFocusRingVisible:(BOOL)isVisible;
 
 // Drawing
 - (void) draw;

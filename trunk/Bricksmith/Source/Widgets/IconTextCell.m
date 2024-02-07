@@ -64,7 +64,7 @@
 	
 	//The pitfall is that it releases it too. So we have to  retain our 
 	// instance variables here.
-    cell->image = [image retain];
+    cell->image = image;
 	
 	return cell;
 	
@@ -281,8 +281,6 @@
 //==============================================================================
 - (void) setImage:(NSImage *)newImage
 {
-	[newImage retain];
-	[image release];
 	image = newImage;
 	
 }//end setImage:
@@ -317,20 +315,6 @@
 {
 	self->verticallyCentersTitle = flag;
 }
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//==============================================================================
-- (void) dealloc
-{
-	[image release];
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

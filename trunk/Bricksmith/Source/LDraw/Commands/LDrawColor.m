@@ -72,8 +72,8 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	self->hasLuminance          = [decoder decodeBoolForKey:@"hasLuminance"];
 	self->luminance             = (uint8_t)[decoder decodeIntForKey:@"luminance"];
 	self->material              = [decoder decodeIntForKey:@"material"];
-	self->materialParameters    = [[decoder decodeObjectForKey:@"materialParameters"] retain];
-	self->name                  = [[decoder decodeObjectForKey:@"name"] retain];
+	self->materialParameters    = [decoder decodeObjectForKey:@"materialParameters"];
+	self->name                  = [decoder decodeObjectForKey:@"name"];
 	
 	return self;
 	
@@ -128,7 +128,7 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	// return the object itself for its "copy." 
 	//
 	// The -hash implementation will die if this is not the case.
-	return [self retain];
+	return self;
 
 //	LDrawColor *copied = (LDrawColor *)[super copyWithZone:zone];
 //	
@@ -344,7 +344,7 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	[blendedColor setColorRGBA:blendedComponents];
 	[blendedColor setName:[NSString stringWithFormat:@"BlendedColor%d", colorCode]];
 	
-	return [blendedColor autorelease];
+	return blendedColor;
 	
 }//end blendedColorForCode:
 
@@ -605,7 +605,7 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 		// Since spaces are verboten in !COLOUR directives, color names tend to 
 		// have a bunch of unsightly underscores in them. We don't want to show 
 		// that to the user. 
-		NSMutableString *fixedName = [[[self name] mutableCopy] autorelease];
+		NSMutableString *fixedName = [[self name] mutableCopy];
 		[fixedName replaceOccurrencesOfString:@"_" withString:@" " options:NSLiteralSearch range:NSMakeRange(0, [fixedName length])];
 		colorName = fixedName;
 		
@@ -761,9 +761,6 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 //==============================================================================
 - (void) setMaterialParameters:(NSString *)newValue
 {
-	[newValue retain];
-	[self->materialParameters release];
-	
 	self->materialParameters = newValue;
 	
 }//end setMaterialParameters:
@@ -777,9 +774,6 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 //==============================================================================
 - (void) setName:(NSString *)newName
 {
-	[newName retain];
-	[self->name release];
-	
 	self->name = newName;
 	
 }//end setName:
@@ -961,27 +955,6 @@ void RGBtoHSV( float r, float g, float b, float *h, float *s, float *v );
 	return success;
 	
 }//end parseHexString:intoRGB:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We're turning blue.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[materialParameters		release];
-	[name					release];
-	
-	[fakeComplimentColor	release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

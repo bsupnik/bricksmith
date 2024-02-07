@@ -165,7 +165,6 @@ RotationPanelController *sharedRotationPanel = nil;
 	// cycle in order to fully deallocate.
 	[objectController setContent:nil];
 	
-	[self autorelease];
 	sharedRotationPanel = nil;
 }
 
@@ -184,24 +183,6 @@ RotationPanelController *sharedRotationPanel = nil;
 	
 	return [currentDocument undoManager];
 }
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		For everything there is a season/(turn, turn, turn)/a time for 
-//				every purpose under heaven/(turn, turn, turn)/a time be born, 
-//				a time to DIE!!!/(turn, turn, turn)/...
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-
-}//end dealloc
 
 
 @end

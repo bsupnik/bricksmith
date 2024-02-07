@@ -122,7 +122,7 @@
 			{
 				// Didn't specifically recognize this metacommand. Create a 
 				// non-functional generic command to record its existence. 
-				directive = [self retain];
+				directive = self;
 				NSString *command = [[scanner string] substringFromIndex:metaLineStart];
 		
 				[directive setStringValue:command];
@@ -132,7 +132,7 @@
 		{
 			// This is presumably an empty line, and the following will 
 			// incorrectly add a 0 linetype to it. 
-			directive = [self retain];
+			directive = self;
 			NSString *command = [scanner string];
 	
 			[directive setStringValue:command];
@@ -150,7 +150,6 @@
 	}
 	
 	// The new directive should replace the receiver!
-	[self release];
 	self = nil;
 	
 	return directive;
@@ -169,7 +168,7 @@
 {
 	self = [super initWithCoder:decoder];
 	
-	commandString	= [[decoder decodeObjectForKey:@"commandString"] retain];
+	commandString	= [decoder decodeObjectForKey:@"commandString"];
 	
 	return self;
 	
@@ -313,9 +312,6 @@
 //==============================================================================
 -(void) setStringValue:(NSString *)newString
 {
-	[newString retain];
-	[commandString release];
-	
 	commandString = newString;
 	
 }//end setStringValue:
@@ -353,22 +349,5 @@
 	
 }//end registerUndoActions:
 
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Embraced by the light.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[commandString release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 @end

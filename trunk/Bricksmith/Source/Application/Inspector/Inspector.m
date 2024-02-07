@@ -45,8 +45,8 @@
 	
 	//When the Nib first loads, it contains the view we intend to use for an 
 	// empty inspector. 
-	emptyInspectorTitle = [[inspectorPanel title] retain];
-	emptyInspectorView = [[inspectorPanel contentView] retain];
+	emptyInspectorTitle = [inspectorPanel title];
+	emptyInspectorView = [inspectorPanel contentView];
 	
 	//Display a message appropriate to inspecting nothing.
 	[self inspectObject:nil];
@@ -189,7 +189,6 @@
 	// End any editing happening in the current inspector. It is very important 
 	// to do this *before* attempting to replace the inspector!
 	[inspectorPanel makeFirstResponder:nil];
-	[currentInspector release];
 	currentInspector = nil;
 }
 
@@ -242,27 +241,6 @@
 	return [currentDocument undoManager];
 
 }//end windowWillReturnUndoManager:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		The Class Vanishes.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[inspectorPanel			release];
-	[emptyInspectorTitle	release];
-	[emptyInspectorView		release];
-	[currentInspector		release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

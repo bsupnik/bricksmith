@@ -22,25 +22,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface PartBrowserDataSource : NSObject <NSOutlineViewDelegate, NSOutlineViewDataSource>
 {
-	IBOutlet NSButton		*searchAllCategoriesButton;
-	IBOutlet NSButton		*searchSelectedCategoryButton;
-	IBOutlet NSSearchField	*searchField;
+	__weak IBOutlet NSButton		*searchAllCategoriesButton;
+	__weak IBOutlet NSButton		*searchSelectedCategoryButton;
+	__weak IBOutlet NSSearchField	*searchField;
 	
-	IBOutlet NSOutlineView	*categoryTable;
-	IBOutlet NSTableView	*partsTable;
-	IBOutlet LDrawGLView	*partPreview;
-	IBOutlet LDrawViewerContainer	*partPreviewViewport;
-	IBOutlet NSButton		*zoomInButton;
-	IBOutlet NSButton		*zoomOutButton;
-	IBOutlet NSButton		*addRemoveFavoriteButton;
-	IBOutlet NSButton		*insertButton;
-	IBOutlet NSMenu			*contextualMenu;
+	__weak IBOutlet NSOutlineView	*categoryTable;
+	__weak IBOutlet NSTableView		*partsTable;
+	__weak IBOutlet LDrawGLView		*partPreview;
+	__weak IBOutlet LDrawViewerContainer	*partPreviewViewport;
+	__weak IBOutlet NSButton		*zoomInButton;
+	__weak IBOutlet NSButton		*zoomOutButton;
+	__weak IBOutlet NSButton		*addRemoveFavoriteButton;
+	__weak IBOutlet NSButton		*insertButton;
+	__weak IBOutlet NSMenu			*contextualMenu;
 
-	PartLibrary     *partLibrary; //weak reference to the shared part catalog.
-	NSString		*selectedCategory;
-	NSArray         *categoryList;
-	NSMutableArray  *tableDataSource;
-	SearchModeT		searchMode;
+	__weak PartLibrary	*partLibrary; //weak reference to the shared part catalog.
+	__weak NSString		*selectedCategory;
+	__weak NSArray 		*categoryList;
+	NSMutableArray  	*tableDataSource;
+	SearchModeT			searchMode;
 
 }
 

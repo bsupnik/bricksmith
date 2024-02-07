@@ -55,7 +55,7 @@
 {
 	LDrawStep *newStep = [[LDrawStep alloc] init];
 	
-	return [newStep autorelease];
+	return newStep;
 	
 }//end emptyStep
 
@@ -85,7 +85,7 @@
 //==============================================================================
 - (id) init
 {
-	[super init];
+	if (!(self = [super init])) return nil;
 	
 	stepRotationType	= LDrawStepRotationNone;
 	rotationAngle		= ZeroPoint3;
@@ -106,15 +106,19 @@
 			 inRange:(NSRange)range
 		 parentGroup:(dispatch_group_t)parentGroup
 {
-	NSString        *currentLine        = nil;
-	Class           CommandClass        = Nil;
-	NSRange         commandRange        = range;
-	id              *directives         = calloc(range.length, sizeof(LDrawDirective*));
-	NSUInteger      lineIndex           = 0;
-	NSUInteger      insertIndex         = 0;
+	NSString				*currentLine        = nil;
+	Class					CommandClass        = Nil;
+	NSRange					commandRange        = range;
+	__strong LDrawDirective	**directives        = NULL;
+	NSUInteger				lineIndex           = 0;
+	NSUInteger				insertIndex         = 0;
 		
 	self = [super initWithLines:lines inRange:range parentGroup:parentGroup];
 	
+	// Creation a C array of retained pointers under ARC
+	// (see Transitioning to ARC Release Notes for details)
+	directives = (__strong LDrawDirective **)calloc(range.length, sizeof(LDrawDirective *));
+
 	cachedBounds = InvalidBox;
 	
 	dispatch_group_t    stepDispatchGroup   = NULL;
@@ -209,7 +213,9 @@
 			currentDirective = directives[counter];
 			
 			[self addDirective:currentDirective];
-			[currentDirective release];
+			
+			// Tell ARC to release the object
+			directives[counter] = nil;
 		}
 		free(directives);
 		
@@ -221,7 +227,6 @@
 			dispatch_group_leave(parentGroup);
 		}
 	});
-	dispatch_release(stepDispatchGroup);
 #endif
 	
 	return self;
@@ -963,11 +968,9 @@
 - (void) removeDirectiveAtIndex:(NSInteger)index
 {
 	[self invalCache:CacheFlagBounds|DisplayList];
-	LDrawDirective *directive = [[[self subdirectives] objectAtIndex:index] retain];
+	LDrawDirective *directive = [[self subdirectives] objectAtIndex:index];
 
 	[super removeDirectiveAtIndex:index];
-	
-	[directive release];
 	
 }//end removeDirectiveAtIndex:
 
@@ -1149,20 +1152,5 @@
 	
 }//end registerUndoActions:
 
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		The Fat Lady has sung.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-	
-}//end dealloc
 
 @end

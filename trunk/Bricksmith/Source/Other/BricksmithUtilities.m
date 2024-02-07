@@ -58,7 +58,7 @@
 		(*dragImageOffset).y -= (arrowSize.height/2 + [dragImage size].height/2);
 	}
 	
-	return [dragImage autorelease];
+	return dragImage;
 	
 }//end dragImageWithOffset:
 

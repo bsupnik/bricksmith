@@ -80,22 +80,4 @@ MovePanel *sharedMovePanel = nil;
 }//end moveButtonClicked:
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Moving on to greener pastures.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[formatterPoints release];
-	
-	[super dealloc];
-	
-}//end dealloc
-
-
 @end

@@ -65,6 +65,8 @@
 		[self setAlphaValue:.999];
 		[self setIgnoresMouseEvents:YES];
 		[self setBackgroundColor: [NSColor clearColor]];
+		// for visual debugging uncomment this:
+		// [self setBackgroundColor: [NSColor colorWithRed:0 green:1 blue:0 alpha:0.2]];
 	}
 	
 	return self;

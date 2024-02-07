@@ -31,51 +31,51 @@ typedef enum {
 ////////////////////////////////////////////////////////////////////////////////
 @interface PreferencesDialogController : NSObject <NSToolbarDelegate, NSTextFieldDelegate>
 {
-    IBOutlet NSWindow		*preferencesWindow;
+		   IBOutlet NSWindow		*preferencesWindow;
 	
-			 NSView			*blankContent; //the initial, empty content of the window in the Nib.
-	IBOutlet NSView			*generalTabContentView;
-	IBOutlet NSView			*stylesContentView;
-	IBOutlet NSView			*ldrawContentView;
-    IBOutlet NSView         *lsynthContentView;
+	__weak          NSView			*blankContent; //the initial, empty content of the window in the Nib.
+	__weak IBOutlet NSView			*generalTabContentView;
+	__weak IBOutlet NSView			*stylesContentView;
+	__weak IBOutlet NSView			*ldrawContentView;
+	__weak IBOutlet NSView			*lsynthContentView;
 	
 	// General Tab
-	IBOutlet NSMatrix		*mouseDraggingRadioButtons;
+	__weak IBOutlet NSMatrix		*mouseDraggingRadioButtons;
 	
-	IBOutlet NSMatrix		*rotateModeRadioButtons;
-	IBOutlet NSMatrix		*rightButtonRadioButtons;
-	IBOutlet NSMatrix		*mouseWheelRadioButtons;
+	__weak IBOutlet NSMatrix		*rotateModeRadioButtons;
+	__weak IBOutlet NSMatrix		*rightButtonRadioButtons;
+	__weak IBOutlet NSMatrix		*mouseWheelRadioButtons;
 
 	// Parts Tab
-    IBOutlet NSTextField	*LDrawPathTextField;
-    IBOutlet NSMatrix		*partBrowserStyleRadioButtons;
+	__weak IBOutlet NSTextField		*LDrawPathTextField;
+	__weak IBOutlet NSMatrix		*partBrowserStyleRadioButtons;
 	
 	// Style Tab
-	IBOutlet NSColorWell	*backgroundColorWell;
+	__weak IBOutlet NSColorWell		*backgroundColorWell;
 	
-	IBOutlet NSColorWell	*modelsColorWell;
-	IBOutlet NSColorWell	*stepsColorWell;
-	IBOutlet NSColorWell	*partsColorWell;
-	IBOutlet NSColorWell	*primitivesColorWell;
-	IBOutlet NSColorWell	*colorsColorWell;
-	IBOutlet NSColorWell	*commentsColorWell;
-	IBOutlet NSColorWell	*unknownColorWell;
+	__weak IBOutlet NSColorWell		*modelsColorWell;
+	__weak IBOutlet NSColorWell		*stepsColorWell;
+	__weak IBOutlet NSColorWell		*partsColorWell;
+	__weak IBOutlet NSColorWell		*primitivesColorWell;
+	__weak IBOutlet NSColorWell		*colorsColorWell;
+	__weak IBOutlet NSColorWell		*commentsColorWell;
+	__weak IBOutlet NSColorWell		*unknownColorWell;
 	
     // LSynth Tab
-    IBOutlet NSTextField    *lsynthExecutablePath;
-    IBOutlet NSTextField    *lsynthConfigurationPath;
-    IBOutlet NSMatrix       *lsynthSelectionModeMatrix;
-    IBOutlet NSSlider       *lsynthTransparencySlider;
-    IBOutlet NSTextField    *lsynthTransparencyText;
-    IBOutlet NSColorWell    *lsynthSelectionColorWell;
-    IBOutlet NSButton       *lsynthSaveSynthesizedParts;
-    IBOutlet NSView         *lsynthExecutableChooserAccessoryView;
-    IBOutlet NSView         *lsynthConfigurationChooserAccessoryView;
-    NSTextField             *lsynthTransparencyNumberChanged;
-    IBOutlet NSButton       *lsynthShowBasicPartsList;
+	__weak IBOutlet NSTextField    	*lsynthExecutablePath;
+	__weak IBOutlet NSTextField    	*lsynthConfigurationPath;
+	__weak IBOutlet NSMatrix       	*lsynthSelectionModeMatrix;
+	__weak IBOutlet NSSlider       	*lsynthTransparencySlider;
+	__weak IBOutlet NSTextField    	*lsynthTransparencyText;
+	__weak IBOutlet NSColorWell    	*lsynthSelectionColorWell;
+	__weak IBOutlet NSButton       	*lsynthSaveSynthesizedParts;
+	__weak IBOutlet NSView         	*lsynthExecutableChooserAccessoryView;
+	__weak IBOutlet NSView         	*lsynthConfigurationChooserAccessoryView;
+	__weak NSTextField             	*lsynthTransparencyNumberChanged;
+	__weak IBOutlet NSButton       	*lsynthShowBasicPartsList;
     
     // Miscellaneous
-	IBOutlet NSView			*folderChooserAccessoryView;
+	__weak IBOutlet NSView			*folderChooserAccessoryView;
 }
 
 //Initialization

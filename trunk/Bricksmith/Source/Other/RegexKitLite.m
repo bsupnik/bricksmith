@@ -3,6 +3,8 @@
 //  http://regexkit.sourceforge.net/
 //  Licensed under the terms of the BSD License, as specified below.
 //
+// Note:        This file uses manual reference counting.
+//
 
 /*
  Copyright (c) 2008-2010, John Engelhart

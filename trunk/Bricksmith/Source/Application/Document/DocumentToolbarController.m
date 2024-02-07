@@ -29,18 +29,6 @@
 //==============================================================================
 - (void) awakeFromNib
 {
-	// Retain all our custom views for toolbar items. Why? Because all of these 
-	// could be inserted into the toolbar's view hierarchy, thereby *removing* 
-	// them from their current superview, which holds the ONLY retain on them!
-	// The result is that without retains here, all these views would be 
-	// deallocated once added then removed from the toolbar!
-	[gridSegmentedControl	retain];
-	[orientationSegmentedControl retain];
-	[nudgeXToolView			retain];
-	[nudgeYToolView			retain];
-	[nudgeZToolView			retain];
-	[zoomToolView			retain];
-	
 	[gridSegmentedControl	removeFromSuperview];
 	[orientationSegmentedControl removeFromSuperview];
 	[nudgeXToolView			removeFromSuperview];
@@ -128,7 +116,7 @@
 	 itemForItemIdentifier:(NSString *)itemIdentifier
  willBeInsertedIntoToolbar:(BOOL)flag
 {
-	NSToolbarItem *newItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	NSToolbarItem *newItem = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
 	
 	if([itemIdentifier isEqualToString:TOOLBAR_NUDGE_X_IDENTIFIER])
 	{
@@ -264,7 +252,7 @@
 	[newItem setLabel:NSLocalizedString(@"GridSpacing",nil)];
 	[newItem setPaletteLabel:NSLocalizedString(@"GridSpacing",nil)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeGridSpacingItem
 
@@ -287,7 +275,7 @@
 	[newItem setLabel:NSLocalizedString(@"GridOrientation",nil)];
 	[newItem setPaletteLabel:NSLocalizedString(@"GridOrientation",nil)];
 	
-	return [newItem autorelease];
+	return newItem;
 }//end makeGridOrientationItem
 
 
@@ -310,7 +298,7 @@
 	[newItem setTarget:nil];
 	[newItem setAction:@selector(doPartBrowser:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makePartBrowserItem
 
@@ -333,7 +321,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotatePositiveXTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationPlusXItem
 
@@ -356,7 +344,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotateNegativeXTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationMinusXItem
 
@@ -379,7 +367,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotatePositiveYTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationPlusYItem
 
@@ -402,7 +390,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotateNegativeYTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationMinusYItem
 
@@ -425,7 +413,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotatePositiveZTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationPlusZItem
 
@@ -448,7 +436,7 @@
 	[newItem setAction:@selector(quickRotateClicked:)];
 	[newItem setTag:rotateNegativeZTag];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeRotationMinusZItem
 
@@ -471,7 +459,7 @@
 	[newItem setTarget:nil];
 	[newItem setAction:@selector(showColors:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeShowColorsItem
 
@@ -494,7 +482,7 @@
 	[newItem setTarget:nil];
 	[newItem setAction:@selector(showInspector:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeShowInspectorItem
 
@@ -516,7 +504,7 @@
 	[newItem setTarget:self->document];
 	[newItem setAction:@selector(snapSelectionToGrid:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeSnapToGridItem
 
@@ -540,7 +528,7 @@
 	[newItem setTarget:self->document];
 	[newItem setAction:@selector(zoomIn:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeZoomInItem
 
@@ -564,7 +552,7 @@
 	[newItem setTarget:self->document];
 	[newItem setAction:@selector(zoomOut:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeZoomOutItem
 
@@ -588,7 +576,7 @@
 	[newItem setView:zoomToolView];
 	[newItem setMinSize:[zoomToolView frame].size];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end makeZoomItem
 
@@ -764,31 +752,6 @@
 	return enabled;
 	
 }//end validateToolbarItem:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		My heart will go on...
-//
-// Note:		We DO NOT RELEASE TOP-LEVEL NIB OBJECTS HERE! NSWindowController 
-//				(which comes with our NSDocument) does that automagically.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[gridSegmentedControl	release];
-	[nudgeXToolView			release];
-	[nudgeYToolView			release];
-	[nudgeZToolView			release];
-	[zoomToolView			release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

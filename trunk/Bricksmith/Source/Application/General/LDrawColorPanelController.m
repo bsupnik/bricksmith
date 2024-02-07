@@ -51,7 +51,7 @@ LDrawColorPanelController *sharedColorPanel = nil;
 //==============================================================================
 - (void) windowDidLoad
 {
-	LDrawColorCell	*colorCell		= [[[LDrawColorCell alloc] init] autorelease];
+	LDrawColorCell	*colorCell		= [[LDrawColorCell alloc] init];
 	NSTableColumn	*colorColumn	= [colorTable tableColumnWithIdentifier:@"colorCode"];
 	
 	[colorColumn setDataCell:colorCell];
@@ -629,10 +629,6 @@ LDrawColorPanelController *sharedColorPanel = nil;
 {
 	[colorListController removeObserver:self forKeyPath:@"selectedObjects"];
 	[colorListController removeObserver:self forKeyPath:@"sortDescriptors"];
-
-	[colorListController	release];
-	
-	[super dealloc];
 	
 }//end dealloc
 

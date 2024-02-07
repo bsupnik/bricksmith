@@ -38,7 +38,7 @@
 //==============================================================================
 + (AMSProgressPanel *) progressPanel
 {
-	AMSProgressPanel *progressWindow = [[[AMSProgressPanel alloc] init] autorelease];
+	AMSProgressPanel *progressWindow = [[AMSProgressPanel alloc] init];
 	
 	return progressWindow;
 }
@@ -54,9 +54,9 @@
 								 forWindow:(NSWindow *)parentWindow
 								   message:(NSString*)messageKey
 {
-	AMSProgressPanel *progressWindow = [[[AMSProgressPanel alloc]
+	AMSProgressPanel *progressWindow = [[AMSProgressPanel alloc]
 												initWithMax:maximum
-													message:messageKey] autorelease];
+													message:messageKey];
 	
 	[progressWindow showAsSheetForWindow:parentWindow];
 	
@@ -93,7 +93,7 @@
 - (id) initWithMax:(double)maximum
 		   message:(NSString*)message
 {
-	[self init];
+	if (!(self = [self init])) return nil;
 	
 	[progressBar setDoubleValue:0.0];
 	[progressBar setMaxValue:maximum];
@@ -349,25 +349,6 @@
 	[dialogWindow orderOut:self];
 	
 }//end close
-
-
-#pragma mark -
-#pragma mark Destructor
-#pragma mark -
-
-//========== dealloc ===========================================================
-//==============================================================================
-- (void) dealloc
-{
-	//Release top-level nib objects
-	[dialogWindow release];
-	
-	[_startTime release];
-	[_previousUpdateTime release];
-	
-	//Finish deallocation
-	[super dealloc];
-}
 
 
 @end
