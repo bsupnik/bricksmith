@@ -1747,8 +1747,10 @@ To work, this needs to multiply the modelViewGLMatrix by the part transform.
 		{
 			// We found exactly one part.  Unresolve and copy out its names for future use.
 			[self unresolvePart];
-			referenceName = [redirect referenceName];
-			displayName = [redirect displayName];
+			[referenceName release];
+			referenceName = [[redirect referenceName] retain];
+			[displayName release];
+			displayName = [[redirect displayName] retain];
 
 			// Our new location is our old location with the relative transform of that part applied.
 			Matrix4 new_loc = Matrix4Multiply([redirect transformationMatrix], [self transformationMatrix]);
