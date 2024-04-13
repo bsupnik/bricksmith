@@ -974,7 +974,15 @@
 //==============================================================================
 - (void) moveCamera:(Vector3)delta
 {
-	[camera setRotationCenter:V3Add([camera rotationCenter], delta)];
+	// Transform the nudge vector from eye to MV space
+	// so walk forward means forwadr where the user is looking.
+	GLfloat * mv = [camera getModelView];
+	Vector3 invertedDelta = V3Make(
+		mv[0] * delta.x + mv[4] * delta.y + mv[8] * delta.z,
+		mv[1] * delta.x + mv[5] * delta.y + mv[9] * delta.z,
+		mv[2] * delta.x + mv[6] * delta.y + mv[10] * delta.z);
+
+	[camera setRotationCenter:V3Add([camera rotationCenter], invertedDelta)];
 	[delegate LDrawGLRendererNeedsRedisplay:self];
 }//end moveCamera
 
