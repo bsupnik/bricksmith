@@ -81,8 +81,6 @@ static NSString				*defaultAuthor		= @"anonymous";
     // LLW: If the incoming nameIn is nil, leave this alone.
     if (nameIn != nil)
     {
-        [nameIn retain];
-        [defaultAuthor release];
         defaultAuthor = nameIn;
     }
 }
@@ -216,7 +214,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 				break;
 		}
 		
-		color = [[[LDrawColor alloc] init] autorelease];
+		color = [[LDrawColor alloc] init];
 		[color setColorCode:LDrawColorCustomRGB];
 		[color setEdgeColorCode:LDrawBlack];
 		[color setColorRGBA:components];
@@ -230,7 +228,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 		if(color == nil)
 		{
 			// This is probably a file-local color. Or a file from the future.
-			color = [[[LDrawColor alloc] init] autorelease];
+			color = [[LDrawColor alloc] init];
 			[color setColorCode:colorCode];
 			[color setEdgeColorCode:LDrawBlack];
 		}
@@ -389,7 +387,7 @@ static NSString				*defaultAuthor		= @"anonymous";
 											   encoding:NSMacOSRomanStringEncoding ];
 	}
 
-	return [fileString autorelease];
+	return fileString;
 	
 }//end stringFromFileData:
 
@@ -528,11 +526,11 @@ static NSString				*defaultAuthor		= @"anonymous";
 	// wrap the pointers. 
 	if(creditObject == nil)
 	{
-		key = [NSValue valueWithPointer:hitObject];
+		key = [NSValue valueWithPointer:(__bridge const void *)(hitObject)];
 	}
 	else
 	{
-		key = [NSValue valueWithPointer:creditObject];
+		key = [NSValue valueWithPointer:(__bridge const void *)(creditObject)];
 	}
 
 	existingRecord = [hits objectForKey:key];
@@ -571,11 +569,11 @@ static NSString				*defaultAuthor		= @"anonymous";
 	// wrap the pointers. 
 	if(creditObject == nil)
 	{
-		key = [NSValue valueWithPointer:hitObject];
+		key = [NSValue valueWithPointer:(__bridge const void *)(hitObject)];
 	}
 	else
 	{
-		key = [NSValue valueWithPointer:creditObject];
+		key = [NSValue valueWithPointer:(__bridge const void *)(creditObject)];
 	}
 
 	[hits addObject:key];
@@ -594,24 +592,9 @@ static NSString				*defaultAuthor		= @"anonymous";
 //------------------------------------------------------------------------------
 + (CGImageRef) imageAtPath:(NSString *)imagePath
 {
-	NSURL				*fileURL	= nil;
-	CGImageSourceRef	imageSource = NULL;
-	CGImageRef			image		= NULL;
+	NSImage *image = [[NSImage alloc] initWithContentsOfFile:imagePath];
 	
-	if(imagePath)
-	{
-		fileURL	= [NSURL fileURLWithPath:imagePath];
-
-		imageSource = CGImageSourceCreateWithURL( (CFURLRef)fileURL, NULL );
-		if(imageSource != NULL)
-		{
-			image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
-		}
-	}
-	
-	if(imageSource) CFRelease(imageSource);
-	
-	return (CGImageRef)[(id)image autorelease];
+	return [image CGImageForProposedRect:NULL context:nil hints:nil];
 }
 
 

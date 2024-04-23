@@ -25,7 +25,7 @@
 
 @interface LDrawGLCamera ()
 {
-	id<LDrawGLCameraScroller>	scroller;
+	__weak id<LDrawGLCameraScroller>	scroller;
 	
 	GLfloat					projection[16];
 	GLfloat					modelView[16];
@@ -79,18 +79,6 @@
 	
 	return self;	
 }//end init
-
-
-//========== dealloc ===========================================================
-///
-/// @abstract	It's time to kick the bucket and go to meet the great head of
-///				light entertainment in the sky.
-///
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-}//end dealloc
 
 
 //========== setScroller: ======================================================

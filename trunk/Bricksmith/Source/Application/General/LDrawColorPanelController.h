@@ -20,12 +20,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface LDrawColorPanelController : NSWindowController <LDrawColorable>
 {
-	IBOutlet	LDrawColorBar		*colorBar;
-	IBOutlet	NSPopUpButton		*materialPopUpButton;
-	IBOutlet	NSTableView			*colorTable;
-	IBOutlet	NSSearchField		*searchField;
+	__weak IBOutlet	LDrawColorBar		*colorBar;
+	__weak IBOutlet	NSPopUpButton		*materialPopUpButton;
+	__weak IBOutlet	NSTableView			*colorTable;
+	__weak IBOutlet	NSSearchField		*searchField;
 				
-	IBOutlet	NSArrayController	*colorListController;
+	__weak IBOutlet	NSArrayController	*colorListController;
 	
 				//YES if we are in the middle of updating the color panel to 
 				// reflect the current selection, NO any other time.

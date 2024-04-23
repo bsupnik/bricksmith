@@ -52,7 +52,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //------------------------------------------------------------------------------
 + (void) initialize
 {
-	TransformerIntMinus1 *minus1Transformer = [[[TransformerIntMinus1 alloc] init] autorelease];
+	TransformerIntMinus1 *minus1Transformer = [[TransformerIntMinus1 alloc] init];
 	
 	[NSValueTransformer setValueTransformer:minus1Transformer
 									forName:@"TransformerIntMinus1" ];
@@ -112,7 +112,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 															0};
 
 	pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes: pixelAttributes];
-	return [pixelFormat autorelease];
+	return pixelFormat;
 }
 
 
@@ -544,8 +544,6 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 		[donation runModal];
 	}
 	
-	[donation release];
-	
 	return NSTerminateNow;
 	
 }//end applicationShouldTerminate:
@@ -818,7 +816,7 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
                     // User has turned off filtering in prefs
                     ![userDefaults boolForKey:LSYNTH_SHOW_BASIC_PARTS_LIST_KEY])
             {
-                NSMenuItem *entryMenuItem = [[[NSMenuItem alloc] init] autorelease];
+                NSMenuItem *entryMenuItem = [[NSMenuItem alloc] init];
                 [entryMenuItem setTitle:[entry objectForKey:[menuSpec objectForKey:@"entry_key"]]];
                 [entryMenuItem setRepresentedObject:entry];
                 [entryMenuItem setAction:NSSelectorFromString([menuSpec objectForKey:@"action"])];
@@ -852,21 +850,21 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 //  [invertSelectionItem setTag:lsynthInvertINSIDEOUTSIDETag];
 //  [insideOutsideMenu addItem:invertSelectionItem];
 	
-	NSMenuItem *addInsideItem = [[[NSMenuItem alloc] init] autorelease];
+	NSMenuItem *addInsideItem = [[NSMenuItem alloc] init];
 	[addInsideItem setTitle:@"Insert INSIDE"];
 	[addInsideItem setTarget:nil];
 	[addInsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
 	[addInsideItem setTag:lsynthInsertINSIDETag];
 	[insideOutsideMenu addItem:addInsideItem];
 	
-	NSMenuItem *addOutsideItem = [[[NSMenuItem alloc] init] autorelease];
+	NSMenuItem *addOutsideItem = [[NSMenuItem alloc] init];
 	[addOutsideItem setTitle:@"Insert OUTSIDE"];
 	[addOutsideItem setTarget:nil];
 	[addOutsideItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
 	[addOutsideItem setTag:lsynthInsertOUTSIDETag];
 	[insideOutsideMenu addItem:addOutsideItem];
 	
-	NSMenuItem *addCrossItem = [[[NSMenuItem alloc] init] autorelease];
+	NSMenuItem *addCrossItem = [[NSMenuItem alloc] init];
 	[addCrossItem setTitle:@"Insert CROSS"];
 	[addCrossItem setTarget:nil];
 	[addCrossItem setAction:@selector(insertINSIDEOUTSIDELSynthDirective:)];
@@ -893,26 +891,6 @@ extern OSErr InstallConnexionHandlers() __attribute__((weak_import));
 	
 	return fullName;
 }
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		The curtain falls.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[partLibraryController	release];
-	[inspector				release];
-	[sharedGLContext		release];
-
-	[super dealloc];
-	
-}//end dealloc
 
 
 #pragma mark -

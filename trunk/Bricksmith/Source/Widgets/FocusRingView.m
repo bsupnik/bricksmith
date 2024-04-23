@@ -116,19 +116,4 @@
 }//end hitTest:
 
 
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Out of focus.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-}
-
-
 @end

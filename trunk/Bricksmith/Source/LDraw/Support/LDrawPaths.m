@@ -87,8 +87,6 @@
 //==============================================================================
 - (void) setPreferredLDrawPath:(NSString *)pathIn
 {
-	[pathIn retain];
-	[self->preferredLDrawPath release];
 	self->preferredLDrawPath = pathIn;
 }
 
@@ -179,7 +177,7 @@
 //==============================================================================
 - (NSString *) ldconfigPath
 {
-	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
+	NSFileManager	*fileManager	= [[NSFileManager alloc] init];
 	NSBundle		*mainBundle		= nil;
 	NSString		*installedPath	= nil;
 	NSString		*builtInPath	= nil;
@@ -226,7 +224,7 @@
 //==============================================================================
 - (NSString *) MLCadIniPath
 {
-	NSFileManager	*fileManager		= [[[NSFileManager alloc] init] autorelease];
+	NSFileManager	*fileManager		= [[NSFileManager alloc] init];
 	NSString		*preferredPath		= [[self preferredLDrawPath] stringByAppendingPathComponent:MLCAD_INI_FILE_NAME];
 	NSString		*actualPath			= nil;
 	
@@ -383,7 +381,7 @@
 //==============================================================================
 - (NSString *) pathForPartName:(NSString *)partName
 {
-	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
+	NSFileManager	*fileManager	= [[NSFileManager alloc] init];
 	static NSArray	*searchPaths	= nil;
 	NSMutableString *fixedPartName	= [NSMutableString stringWithString:partName];
 	NSString		*partPath		= nil;
@@ -469,7 +467,7 @@
 	NSString *partsFolderPath		= [folderPath stringByAppendingPathComponent:PARTS_DIRECTORY_NAME];
 	NSString *primitivesFolderPath	= [folderPath stringByAppendingPathComponent:PRIMITIVES_DIRECTORY_NAME];
 	
-	NSFileManager	*fileManager = [[[NSFileManager alloc] init] autorelease];
+	NSFileManager	*fileManager = [[NSFileManager alloc] init];
 	BOOL			folderIsValid = NO;
 	
 	if(		[fileManager fileExistsAtPath:folderPath]

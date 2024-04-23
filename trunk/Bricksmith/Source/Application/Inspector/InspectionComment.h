@@ -13,7 +13,7 @@
 
 @interface InspectionComment : ObjectInspectionController {
 
-	IBOutlet	NSTextField		*commandField;
+	__weak IBOutlet	NSTextField		*commandField;
 	
 }
 

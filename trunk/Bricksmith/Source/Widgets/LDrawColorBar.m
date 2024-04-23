@@ -17,6 +17,23 @@
 @implementation LDrawColorBar
 
 
+//========== initWithCoder: ====================================================
+///
+/// @abstract	Designated initializer
+///
+//==============================================================================
+- (instancetype)initWithFrame:(NSRect)frame
+{
+	self = [super initWithFrame:frame];
+	if (self) {
+		// fix macOS 14 issue with default value = NO
+		// it looks like the entire window is filled with some color
+		self.clipsToBounds = YES;
+	}
+	return self;
+}
+
+
 //========== drawRect: =========================================================
 //
 // Purpose:		Paints the represented color inside the bar, along with a small 
@@ -74,18 +91,15 @@
 	GLfloat     components[4];
 	
 	// assign ivar
-	[newColor retain];
-	[self->color release];
 	self->color = newColor;
 	
 	// Set cached NSColor too
 	[newColor getColorRGBA:components];
 	
-	[self->nsColor release];
-	self->nsColor = [[NSColor colorWithCalibratedRed:components[0]
-											   green:components[1]
-												blue:components[2]
-											   alpha:1.0 ] retain];
+	self->nsColor = [NSColor colorWithCalibratedRed:components[0]
+											  green:components[1]
+											   blue:components[2]
+											  alpha:1.0 ];
 	
 	//Create a tool tip to identify the LDraw color code.
 	description	= [newColor localizedName];
@@ -94,24 +108,6 @@
 	[self setNeedsDisplay:YES];
 	
 }//end setLDrawColor:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Entering the long dark night.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[self->nsColor	release];
-	
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end

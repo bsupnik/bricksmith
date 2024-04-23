@@ -161,12 +161,6 @@
 												 selector: @selector(sharedPartCatalogDidChange:)
 													 name: LDrawPartLibraryDidChangeNotification
 												   object: nil ];
-		
-		
-		//---------- Free Memory -----------------------------------------------
-		[searchMenuTemplate	release];
-		[recentsItem		release];
-		[noRecentsItem		release];
 	}
 	// Loading "PartBrowserAccessories.nib"
 	else
@@ -189,8 +183,8 @@
 	[NSBundle loadNibNamed:@"PartBrowserAccessories" owner:self];
 	
 	// Not displaying anything yet.
-	categoryList	= [[NSArray array] retain];
-	tableDataSource	= [[NSMutableArray array] retain];
+	categoryList	= [NSArray array];
+	tableDataSource	= [NSMutableArray array];
 	searchMode		= [[NSUserDefaults standardUserDefaults] integerForKey:PART_BROWSER_SEARCH_MODE];
 	
 	return self;
@@ -256,14 +250,12 @@
 	success = (partsInCategory != nil);
 	
 	// Assign instance variable
-	[newCategory retain];
-	[self->selectedCategory release];
 	self->selectedCategory = newCategory;
 	
 	if(success == YES)
 	{
 		// Build the (sortable) list of part records.
-		allPartRecords = [[partsInCategory mutableCopy] autorelease];
+		allPartRecords = [partsInCategory mutableCopy];
 		
 		// Update data
 		[self setTableDataSource:allPartRecords];
@@ -314,9 +306,6 @@
 - (void) setCategoryList:(NSArray *)newCategoryList
 {
 	//swap the variable
-	[newCategoryList retain];
-	[categoryList release];
-	
 	categoryList = newCategoryList;
 	
 	//Update the category chooser
@@ -348,9 +337,6 @@
 	[allPartRecords sortUsingDescriptors:[partsTable sortDescriptors]];
 	
 	// Swap out the variable
-	[allPartRecords retain];
-	[self->tableDataSource release];
-	
 	self->tableDataSource = allPartRecords;
 	[partsTable reloadData];
 	
@@ -770,7 +756,7 @@
 - (void) sharedPartCatalogDidChange:(NSNotification *)notification
 {
 	PartLibrary *newLibrary 				= [notification object];
-	NSString	*originalSelectedCategory	= [self->selectedCategory retain];
+	NSString	*originalSelectedCategory	= self->selectedCategory;
 	NSString	*originalSearch				= [self->searchField stringValue];
 	NSInteger	selectedRow 				= [self->partsTable selectedRow];
 	
@@ -790,8 +776,6 @@
 	[partsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:selectedRow]
 			byExtendingSelection:NO];
 	[self syncSelectionAndPartDisplayed];
-	
-	[originalSelectedCategory release];
 	
 }//end sharedPartCatalogDidChange:
 
@@ -1103,7 +1087,7 @@
 		// the model. 
 //		modelToView = [self->partLibrary modelForName:selectedPartName];
 
-		newPart		= [[[LDrawPart alloc] init] autorelease];
+		newPart		= [[LDrawPart alloc] init];
 		
 		//Set up the part attributes
 		[newPart setLDrawColor:[[ColorLibrary sharedColorLibrary] colorForCode:LDrawCurrentColor]];
@@ -1132,7 +1116,7 @@
 	//We got a part; let's add it!
 	if(partName != nil)
 	{
-		newPart		= [[[LDrawPart alloc] init] autorelease];
+		newPart		= [[LDrawPart alloc] init];
 		
 		//Set up the part attributes
 		[newPart setLDrawColor:selectedColor];
@@ -1172,13 +1156,6 @@
 {
 	//Remove notifications
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	
-	//Release data
-	[categoryList		release];
-	[tableDataSource	release];
-	[contextualMenu		release];
-	
-	[super dealloc];
 	
 }//end dealloc
 

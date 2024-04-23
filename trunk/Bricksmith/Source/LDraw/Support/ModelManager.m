@@ -86,10 +86,10 @@
 	
 	//NSLog(@"Init service table %p\n", self);
 	self->file				= inFile;
-	self->fileName			= [inFileName retain];
-	self->parentDirectory	= [inParentDir retain];
+	self->fileName			= inFileName;
+	self->parentDirectory	= inParentDir;
 	
-	NSFileManager	*fileManager	= [[[NSFileManager alloc] init] autorelease];
+	NSFileManager	*fileManager	= [[NSFileManager alloc] init];
 	NSArray 		*partNames		= [fileManager contentsOfDirectoryAtPath:inParentDir error:NULL];
 	
 	// Must use reference-style names. Peer file names are only cached for the 
@@ -130,15 +130,7 @@
 
 	}
 	
-	[peerFileNames release];
-	// When we nuke the trackedFiles we release our retain count on the 
-	// LDrawFiles.
-	[trackedFiles release];
-	[fileName release];
-	[parentDirectory release];
-
-	//NSLog(@"%p Gone\n",self);	
-	[super dealloc];
+	//NSLog(@"%p Gone\n",self);
 }
 
 
@@ -154,7 +146,7 @@
 	NSString *		fullPath	= [parentDirectory stringByAppendingPathComponent:inPartialPath];
 	fullPath = [fullPath stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
 
-	NSFileManager * fileManager = [[[NSFileManager alloc] init] autorelease];
+	NSFileManager * fileManager = [[NSFileManager alloc] init];
 
 	// Quick check whether the file is still there.
 	if (![fileManager fileExistsAtPath:fullPath])
@@ -174,14 +166,11 @@
 	
 #if USE_BLOCKS
 	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-	dispatch_release(group);
 #endif	
 	if(parsedFile)
 	{
 		[parsedFile setPath:fullPath];
 		[trackedFiles setObject:parsedFile forKey:fullPath];
-		[parsedFile release];			// Hash table tracked files retains the ONLY
-										// ref count - our "init" ref count gets tossed!
 		
 		// The model we just opened (to help the user's doc) might in turn refer to yet more 
 		// peer files, so recursively open service on it.  The "internal" version won't freak
@@ -258,29 +247,9 @@ static ModelManager *SharedModelManager = nil;
 {
 	self = [super init];	
 	serviceTables = [[NSMutableDictionary alloc] init];	
-	dirChars = [[NSCharacterSet characterSetWithCharactersInString:@"\\/"] retain];
+	dirChars = [NSCharacterSet characterSetWithCharactersInString:@"\\/"];
 	return self;
 }
-
-
-//========== dealloc ===========================================================
-//
-// Purpose:		This is the end...my beautiful friend...the end...
-//
-//==============================================================================
-- (void) dealloc
-{
-	//NSLog(@"model mgr gone - why?\n");
-//	for(NSValue * key in serviceTables)
-//	{
-//		LDrawFile * f = [key pointerValue];
-//		[f release];
-//	}
-	[serviceTables release];
-	[dirChars release];
-	[super dealloc];
-}
-
 
 
 //========== documentSignIn:withFile ===========================================
@@ -293,7 +262,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignIn:(NSString *) docPath withFile:(LDrawFile *) file
 {
-	if([serviceTables objectForKey:[NSValue valueWithPointer:file]] != nil)
+	if([serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(file)]] != nil)
 		return;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
@@ -329,8 +298,7 @@ static ModelManager *SharedModelManager = nil;
 	} while(did_drop);
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
-	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
-	[newTable release];
+	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:(__bridge const void *)(file)]];
 }//end documentSignIn:withFile:
 
 
@@ -344,7 +312,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignInInternal:(NSString *) docPath withFile:(LDrawFile *) file
 {
-	if([serviceTables objectForKey:[NSValue valueWithPointer:file]] != nil)
+	if([serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(file)]] != nil)
 		return;
 
 	//NSLog(@"Accepting sign-in of document %@ as file %p\n", docPath, file);
@@ -353,8 +321,7 @@ static ModelManager *SharedModelManager = nil;
 	NSString *	docFileName 	= [docPath lastPathComponent];
 	
 	ModelServiceTable * newTable = [[ModelServiceTable alloc] initWithFileName:docFileName parentDir:docParentDir file:file];	
-	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:file]];
-	[newTable release];
+	[serviceTables setObject:newTable forKey:[NSValue valueWithPointer:(__bridge const void *)(file)]];
 }
 
 
@@ -367,38 +334,12 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (void) documentSignOut:(LDrawFile *) doc
 {
-	ModelServiceTable * t = [serviceTables objectForKey:[NSValue valueWithPointer:doc]];
+	ModelServiceTable * t = [serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(doc)]];
 	if(t)
 	{
 		//NSLog(@"Accepting sign-out for doc %p\n", doc);
 		
-		// Ben says: the extra retain/release matter!!  If we don't retain "t", then
-		// the ONLY strong reference to T comes frmo the servicesTables dictionary 
-		// (the logical owner of all service tables) - removing the object at key 
-		// releases the last ref and deletes the service table.
-		//
-		// Buuuuuuut!  The dealloc method of the service table kills off sub-files by
-		// calling...wait for it...documentSignOut!  The child will go and try to
-		// remove _its_ own services table.
-		//
-		// At this point we are calling removeObjectForKey on an object from INSIDE
-		// the callstack of removeObjectForKey on the same object.  In other words,
-		// we're single threaded but still re-entrant.  Is this okay?
-		//
-		// The answer seems to be: NO for 10.6.8 but MAYBE for 10.7 and later.  
-		// NSMutableDictionary is Implemented via a CFMutableDictionary, and the code
-		// got a rework from 10.6.8 to 10.7.5.  I haven't found any docs saying it's
-		// okay to re-entrantly remove keys, but the newer code looks like it could
-		// be plausibly safe - it sets all keys to nulls (recursive) first and then
-		// winds down the hash table.  The old code mixed container mutation and 
-		// callbacks, which seems dangerous.
-		//
-		// Either way we can MOOT the issue by simply retaining t.  When we remove
-		// it from the dictionary, now WE own the last reference, and our release
-		// triggers the recursive-dealloc.  This happens outside a CF container call.
-		[t retain];
-		[serviceTables removeObjectForKey:[NSValue valueWithPointer:doc]];
-		[t release];
+		[serviceTables removeObjectForKey:[NSValue valueWithPointer:(__bridge const void *)(doc)]];
 	}
 }
 
@@ -415,7 +356,7 @@ static ModelManager *SharedModelManager = nil;
 //==============================================================================
 - (LDrawModel *) requestModel:(NSString *) partName withDocument:(LDrawFile *) whoIsAsking
 {
-	ModelServiceTable * table = [serviceTables objectForKey:[NSValue valueWithPointer:whoIsAsking]];
+	ModelServiceTable * table = [serviceTables objectForKey:[NSValue valueWithPointer:(__bridge const void *)(whoIsAsking)]];
 	if(table == nil) 
 	{
 		//NSLog(@"    ignoring part lookup on part %@ because file %p is unknown.\n", partName, whoIsAsking);

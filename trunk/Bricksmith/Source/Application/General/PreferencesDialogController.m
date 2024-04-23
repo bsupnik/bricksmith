@@ -62,9 +62,9 @@
 @interface PreferencesDialogController ()
 
 // General Tab
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingFineField;
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingMediumField;
-@property (nonatomic, unsafe_unretained) IBOutlet NSTextField*			gridSpacingCoarseField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingFineField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingMediumField;
+@property (nonatomic, weak) IBOutlet NSTextField*			gridSpacingCoarseField;
 
 
 @end
@@ -89,9 +89,9 @@ PreferencesDialogController *preferencesDialog = nil;
 {
 	//Grab the current window content from the Nib (it should be blank). 
 	// We will display this while changing panes.
-	blankContent = [[preferencesWindow contentView] retain];
+	blankContent = [preferencesWindow contentView];
 
-	NSToolbar *tabToolbar = [[[NSToolbar alloc] initWithIdentifier:@"Preferences"] autorelease];
+	NSToolbar *tabToolbar = [[NSToolbar alloc] initWithIdentifier:@"Preferences"];
 	[tabToolbar setDelegate:self];
 	[preferencesWindow setToolbar:tabToolbar];
 	
@@ -901,7 +901,7 @@ PreferencesDialogController *preferencesDialog = nil;
 	[newItem setTarget:self];
 	[newItem setAction:@selector(changeTab:)];
 	
-	return [newItem autorelease];
+	return newItem;
 	
 }//end toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
@@ -928,9 +928,6 @@ PreferencesDialogController *preferencesDialog = nil;
 	// Cocoa autosaving doesn't necessarily get restored when we need it to, so 
 	// we have to track in manually.  
 	[self->preferencesWindow saveFrameUsingName:PREFERENCES_WINDOW_AUTOSAVE_NAME];
-	
-	//Make sure our memory is all released.
-	[preferencesDialog autorelease];
 	
 	return YES;
 	
@@ -1291,15 +1288,11 @@ PreferencesDialogController *preferencesDialog = nil;
 //==============================================================================
 - (void) dealloc
 {
-	[generalTabContentView	release];
-	[preferencesWindow		release];
-	[blankContent			release];
+	CFRelease((__bridge CFTypeRef)(preferencesDialog));
 	
 	//clear out our global preferences controller. 
 	// It will be reinitialized when needed.
 	preferencesDialog = nil;
-	
-	[super dealloc];
 	
 }//end dealloc
 

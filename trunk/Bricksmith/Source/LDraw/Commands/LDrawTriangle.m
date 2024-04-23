@@ -120,7 +120,6 @@
 	{
 		NSLog(@"the triangle primitive %@ was fatally invalid", [lines objectAtIndex:range.location]);
 		NSLog(@" raised exception %@", [exception name]);
-		[self release];
 		self = nil;
 	}
 	
@@ -656,9 +655,9 @@
 	
 	if(flag == YES)
 	{
-		LDrawDragHandle *handle1 = [[[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1] autorelease];
-		LDrawDragHandle *handle2 = [[[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2] autorelease];
-		LDrawDragHandle *handle3 = [[[LDrawDragHandle alloc] initWithTag:3 position:self->vertex3] autorelease];
+		LDrawDragHandle *handle1 = [[LDrawDragHandle alloc] initWithTag:1 position:self->vertex1];
+		LDrawDragHandle *handle2 = [[LDrawDragHandle alloc] initWithTag:2 position:self->vertex2];
+		LDrawDragHandle *handle3 = [[LDrawDragHandle alloc] initWithTag:3 position:self->vertex3];
 		
 		[handle1 setTarget:self];
 		[handle2 setTarget:self];
@@ -672,7 +671,6 @@
 	}
 	else
 	{
-		[self->dragHandles release];
 		self->dragHandles = nil;
 	}
 
@@ -850,23 +848,6 @@
 	[undoManager setActionName:NSLocalizedString(@"UndoAttributesTriangle", nil)];
 	
 }//end registerUndoActions:
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		Taking a dirt nap.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[dragHandles release];
-	
-	[super dealloc];
-}
 
 
 @end

@@ -14,8 +14,8 @@
 
 @interface PartBrowserPanelController : NSWindowController
 {
-	IBOutlet	PartBrowserDataSource	   *partsBrowser;
-	IBOutlet	ExtendedSplitView		   *splitView;
+	__weak IBOutlet	PartBrowserDataSource	   *partsBrowser;
+	__weak IBOutlet	ExtendedSplitView		   *splitView;
 }
 
 //Initialization

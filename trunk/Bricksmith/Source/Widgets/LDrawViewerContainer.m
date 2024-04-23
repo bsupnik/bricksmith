@@ -11,11 +11,11 @@
 
 @interface LDrawViewerContainer ()
 
-@property (nonatomic, unsafe_unretained) LDrawGLView* glView;
-@property (nonatomic, strong) NSView* verticalPlacard;
+@property (nonatomic, weak) LDrawGLView* glView;
+@property (nonatomic, weak) NSView* verticalPlacard;
 
-@property (nonatomic, unsafe_unretained) NSScroller* horizontalScroller;
-@property (nonatomic, unsafe_unretained) NSScroller* verticalScroller;
+@property (nonatomic, weak) NSScroller* horizontalScroller;
+@property (nonatomic, weak) NSScroller* verticalScroller;
 
 @property (nonatomic, assign) Box2 documentRect;
 @property (nonatomic, assign) Box2 scrollVisibleRect;
@@ -34,11 +34,10 @@
 {
 	self = [super initWithFrame:frameRect];
 	
-	_glView = [[LDrawGLView alloc] initWithFrame:self.bounds];
+    LDrawGLView *glView = [[LDrawGLView alloc] initWithFrame:self.bounds];
+    _glView = glView;
 	[self addSubview:_glView];
 	
-	[_glView release];
-
 	return self;
 }
 
@@ -57,7 +56,8 @@
 		
 		if(showsScrollbars)
 		{
-			_horizontalScroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, 50, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy])];
+			NSScroller *scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, 50, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy])];
+			_horizontalScroller = scroller;
 			_horizontalScroller.scrollerStyle = NSScrollerStyleLegacy;
 			_horizontalScroller.controlSize = NSControlSizeSmall;
 			_horizontalScroller.enabled = YES;
@@ -65,16 +65,14 @@
 			_horizontalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_horizontalScroller];
 			
-			_verticalScroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy], 50)];
+			scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, [NSScroller scrollerWidthForControlSize:NSControlSizeSmall scrollerStyle:NSScrollerStyleLegacy], 50)];
+			_verticalScroller = scroller;
 			_verticalScroller.scrollerStyle = NSScrollerStyleLegacy;
 			_verticalScroller.controlSize = NSControlSizeSmall;
 			_verticalScroller.enabled = YES;
 			_verticalScroller.target = self;
 			_verticalScroller.action = @selector(scrollerDidChange:);
 			[self addSubview:_verticalScroller];
-																				
-			[_horizontalScroller release];
-			[_verticalScroller release];
 		}
 		else
 		{
@@ -96,10 +94,7 @@
 //==============================================================================
 - (void) setVerticalPlacard:(NSView *)newPlacard
 {
-	[newPlacard retain];
-	
 	[_verticalPlacard removeFromSuperview];
-	[_verticalPlacard release];
 	
 	_verticalPlacard = newPlacard;
 	
@@ -160,6 +155,8 @@
 	}
 
 	_glView.frame = viewerFrame;
+	
+	[_glView setFocusRingVisible:self.focusRingType != NSFocusRingTypeNone];
 }
 
 

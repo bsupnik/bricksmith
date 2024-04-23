@@ -147,12 +147,12 @@
 +(NSArray *)tangentBetweenCircle:(NSMutableDictionary *)circle1 andCircle:(NSMutableDictionary *)circle2
 {
     // Recast the supplied dictionaries as Circles for clarity in the main algorithm
-    Circle *c1 = [[[Circle alloc] initWithX:[[circle1 valueForKey:@"x"] integerValue]
+    Circle *c1 = [[Circle alloc] initWithX:[[circle1 valueForKey:@"x"] integerValue]
                                          Y:[[circle1 valueForKey:@"y"] integerValue]
-                                         R:[[circle1 valueForKey:@"r"] integerValue]] autorelease];
-    Circle *c2 = [[[Circle alloc] initWithX:[[circle2 valueForKey:@"x"] integerValue]
+                                         R:[[circle1 valueForKey:@"r"] integerValue]];
+    Circle *c2 = [[Circle alloc] initWithX:[[circle2 valueForKey:@"x"] integerValue]
                                          Y:[[circle2 valueForKey:@"y"] integerValue]
-                                         R:[[circle2 valueForKey:@"r"] integerValue]] autorelease];
+                                         R:[[circle2 valueForKey:@"r"] integerValue]];
 
     double d_sq = pow([c1 x] - [c2 x], 2) + pow([c1 y] - [c2 y], 2);
     if (d_sq <= pow([c1 r] - [c2 r], 2)) {

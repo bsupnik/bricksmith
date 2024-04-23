@@ -12,10 +12,10 @@
 
 @interface AMSProgressPanel : NSObject
 {
-    IBOutlet NSWindow				*dialogWindow;
-    IBOutlet NSTextField			*explanatoryText;
-    IBOutlet NSProgressIndicator	*progressBar;
-    IBOutlet NSTextField			*timeRemaining;
+		   IBOutlet NSWindow			*dialogWindow;
+	__weak IBOutlet NSTextField			*explanatoryText;
+	__weak IBOutlet NSProgressIndicator	*progressBar;
+	__weak IBOutlet NSTextField			*timeRemaining;
 	
 	double			 progressAmount; //the value of the progress bar.
 	BOOL			 endsIndeterminate;

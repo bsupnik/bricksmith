@@ -18,7 +18,7 @@
 	float			movementY;
 	float			movementZ;
 	
-	IBOutlet NSFormatter	*formatterPoints;
+	__weak IBOutlet NSFormatter		*formatterPoints;
 }
 
 //initialization

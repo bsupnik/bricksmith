@@ -76,10 +76,6 @@
 						  name:LDrawDirectiveDidChangeNotification
 						object:nil ];
 		
-		//Retain-release in preparation for changing the instance variable.
-		[newObject retain];
-		[editingObject release];
-		
 		//Update the the object being edited.
 		editingObject = newObject;
 		[self revert:self]; //calling revert should set the values of the palette.
@@ -259,12 +255,6 @@
 {
 	//Cancel notification registration
 	[[NSNotificationCenter defaultCenter] removeObserver:self ];
-	
-	//Release top-level nib objects and instance variables.
-	[window			release];
-	[editingObject	release];
-	
-	[super dealloc];
 	
 }//end dealloc
 

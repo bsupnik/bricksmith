@@ -132,7 +132,6 @@
 	{
 		NSLog(@"the conditional line primitive %@ was fatally invalid", [lines objectAtIndex:range.location]);
 		NSLog(@" raised exception %@", [exception name]);
-		[self release];
 		self = nil;
 	}
 	

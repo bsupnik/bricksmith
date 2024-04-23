@@ -19,7 +19,7 @@
 
 @interface DonationDialogController ()
 
-@property (nonatomic, strong) IBOutlet LDrawViewerContainer*	bumViewer;
+@property (nonatomic, weak) IBOutlet LDrawViewerContainer*	bumViewer;
 
 @end
 

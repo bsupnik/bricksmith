@@ -16,6 +16,8 @@
 //				more importantly, figures out what it *means*. The *meaning* is 
 //				what the renderer's methods care about. 
 //
+// Note:        This file uses manual reference counting.
+//
 //  Created by Allen Smith on 4/17/05.
 //  Copyright 2005. All rights reserved.
 //==============================================================================
@@ -26,6 +28,7 @@
 #import "LDrawDragHandle.h"
 #import "LDrawFile.h"
 #import "LDrawModel.h"
+#import "LDrawMPDModel.h"
 #import "LDrawPart.h"
 #import "LDrawStep.h"
 #import "LDrawUtilities.h"

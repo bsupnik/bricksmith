@@ -80,7 +80,7 @@
 //==============================================================================
 - (void) reloadPartCatalog:(void (^)(BOOL success))completionHandler
 {
-	AMSProgressPanel* progressPanel	= [[AMSProgressPanel progressPanel] retain];
+	AMSProgressPanel* progressPanel	= [AMSProgressPanel progressPanel];
 	
 	[progressPanel setMessage:@"Loading Parts"];
 	[progressPanel showProgressPanel];
@@ -144,8 +144,6 @@
 		[error setInformativeText:NSLocalizedString(@"LDrawFolderChooserErrorInformative", nil)];
 		
 		[error runModal];
-		
-		[error release];
 	}
 	
 	return folderIsValid;
@@ -168,22 +166,6 @@
 	
 	[userDefaults setObject:newFavorites forKey:FAVORITE_PARTS_KEY];
 }
-
-
-#pragma mark -
-#pragma mark DESTRUCTOR
-#pragma mark -
-
-//========== dealloc ===========================================================
-//
-// Purpose:		We're, uh, checking out.
-//
-//==============================================================================
-- (void) dealloc
-{
-	[super dealloc];
-	
-}//end dealloc
 
 
 @end
